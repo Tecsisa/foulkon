@@ -1,10 +1,10 @@
 package main
 
 import (
-	"net/http"
-	internalhttp "github.com/tecsisa/authorizr/http"
-	"github.com/tecsisa/authorizr/authorizr"
 	"fmt"
+	"github.com/tecsisa/authorizr/authorizr"
+	internalhttp "github.com/tecsisa/authorizr/http"
+	"net/http"
 )
 
 func main() {
