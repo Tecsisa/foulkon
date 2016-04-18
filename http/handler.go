@@ -1,27 +1,32 @@
 package http
 
 import (
-	"net/http"
+	"github.com/julienschmidt/httprouter"
 	"github.com/tecsisa/authorizr/authorizr"
+	"net/http"
 )
 
 // Handler returns an http.Handler for the APIs.
 func Handler(core *authorizr.Core) http.Handler {
 	// Create the muxer to handle the actual endpoints
-	mux := http.NewServeMux()
+	router := httprouter.New()
 
 	// User api
-	mux.Handle("/users", handleGetUsers(core))
+	userHandler := UserHandler{core: core}
+	router.GET("/users", userHandler.handleGetUsers)
+	router.POST("/users", userHandler.handlePostUsers)
+
+	router.GET("/users/:id", userHandler.handleGetUserId)
+	router.DELETE("/users/:id", userHandler.handleDeleteUserId)
+
+	router.GET("/users/:id/groups", userHandler.handleUserIdGroups)
 
 	// Group api
-	mux.Handle("/groups", handleGetGroups(core))
+	//router.GET("/groups", handleGroups(core))
 
 	// Policy api
-	mux.Handle("/policies", handleGetPolicy(core))
+	//router.GET("/policies", handlePolicies(core))
 
-	// Create request handler
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		mux.ServeHTTP(w, req)
-		return
-	})
+	// Return handler
+	return router
 }

@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func handleGetGroups(core *authorizr.Core) http.Handler{
+func handleGroups(core *authorizr.Core) http.Handler{
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
