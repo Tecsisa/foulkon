@@ -27,3 +27,10 @@ If you have a question, preferably use the [mailing list](mailto:dev.whiterabbit
 ## License
 
 This code is open source software licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
+
+
+
+## TODO
+- DBs: PostgreSQL. Cayley?
+- support OIDC token
+- Logging: https://golang.org/pkg/log/syslog // https://github.com/op/go-logging // https://github.com/Sirupsen/logrus // https://github.com/coreos/go-log
