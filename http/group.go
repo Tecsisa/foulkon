@@ -6,13 +6,13 @@ import (
 	"net/http"
 )
 
-func handleGroups(core *authorizr.Core) http.Handler{
+func handleGroups(core *authorizr.Core) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
 			getGroups(core, w, r)
 		default:
-			authorizr.RespondError(w,http.StatusBadRequest,nil)
+			authorizr.RespondError(w, http.StatusBadRequest, nil)
 		}
 	})
 }
