@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -22,20 +21,12 @@ type UsersAPI struct {
 
 // Retrieve user by id
 func (u *UsersAPI) GetUserById(id uint64) (User, error) {
-	user, err := u.UserRepo.GetUserByID(id)
-	if err != nil {
-		fmt.Errorf(err.Error())
-	}
-	return user, err
+	return u.UserRepo.GetUserByID(id)
 }
 
 // Retrieve users that has path
-func (u *UsersAPI) GetListUsers(path string) ([]User, error) {
-	users, err := u.UserRepo.GetUsersByPath(path)
-	if err != nil {
-		fmt.Errorf(err.Error())
-	}
-	return users, err
+func (u *UsersAPI) GetListUsers(org string, path string) ([]User, error) {
+	return u.UserRepo.GetUsersByPath(org, path)
 }
 
 // Add an User to database
@@ -45,18 +36,10 @@ func (u *UsersAPI) AddUser(user User) error {
 
 // Remove user with this id
 func (u *UsersAPI) RemoveUserById(id uint64) error {
-	err := u.UserRepo.RemoveUser(id)
-	if err != nil {
-		fmt.Errorf(err.Error())
-	}
-	return err
+	return u.UserRepo.RemoveUser(id)
 }
 
 // Get groups for an user
 func (u *UsersAPI) GetGroupsByUserId(id uint64) ([]Group, error) {
-	groups, err := u.UserRepo.GetGroupsByUserID(id)
-	if err != nil {
-		fmt.Errorf(err.Error())
-	}
-	return groups, err
+	return u.UserRepo.GetGroupsByUserID(id)
 }

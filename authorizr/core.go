@@ -3,6 +3,7 @@ package authorizr
 import (
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/database/postgresql"
+	"log"
 	"net/http"
 )
 
@@ -14,13 +15,17 @@ type Core struct {
 	policyapi *api.PolicyAPI
 }
 
-func NewCore() *Core {
+func NewCore() (*Core, error) {
+	db := postgresql.InitDb("/tmp/authorizer/sql.bin")
+
 	userapiimp := &api.UsersAPI{
-		UserRepo: postgresql.PostgresRepo{},
+		UserRepo: postgresql.PostgresRepo{
+			Dbmap: db,
+		},
 	}
 	return &Core{
 		userapi: userapiimp,
-	}
+	}, nil
 
 }
 
@@ -37,6 +42,7 @@ func (core *Core) GetPolicyAPI() *api.PolicyAPI {
 }
 
 func RespondError(w http.ResponseWriter, status int, err error) {
+	log.Println("Error received ", err)
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(status)
 }

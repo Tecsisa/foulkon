@@ -8,8 +8,12 @@ import (
 )
 
 func main() {
-	core := authorizr.NewCore()
+	core, err := authorizr.NewCore()
+	if err != nil {
+		fmt.Errorf(err.Error())
+		return
+	}
 	fmt.Printf("Server running - binding :8000")
-	err := http.ListenAndServe(":8000", internalhttp.Handler(core))
+	err = http.ListenAndServe(":8000", internalhttp.Handler(core))
 	fmt.Errorf(err.Error())
 }
