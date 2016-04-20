@@ -2,23 +2,26 @@ package postgresql
 
 import (
 	"database/sql"
+	"errors"
+	"time"
+
+	"gopkg.in/gorp.v1"
+
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/tecsisa/authorizr/api"
-	"gopkg.in/gorp.v1"
-	"log"
-	"time"
 )
 
 type PostgresRepo struct {
-	// TODO: incluir aqui todo lo necesario para conectar a la BD
 	Dbmap *gorp.DbMap
 }
 
-func InitDb(datasourcename string) *gorp.DbMap {
+func InitDb(datasourcename string) (*gorp.DbMap, error) {
 	// connect to db using standard Go database/sql API
 	// use whatever database/sql driver you wish
 	db, err := sql.Open("sqlite3", datasourcename)
-	checkErr(err, "sql.Open failed")
+	if err != nil {
+		return nil, err
+	}
 
 	// construct a gorp DbMap
 	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
@@ -30,15 +33,11 @@ func InitDb(datasourcename string) *gorp.DbMap {
 	// create the table. in a production system you'd generally
 	// use a migration tool, or create the tables via scripts
 	err = dbmap.CreateTablesIfNotExists()
-	checkErr(err, "Create tables failed")
-
-	return dbmap
-}
-
-func checkErr(err error, msg string) {
 	if err != nil {
-		log.Fatalln(msg, err)
+		return nil, err
 	}
+
+	return dbmap, nil
 }
 
 // User database
@@ -51,11 +50,11 @@ type User struct {
 	Org        string `db:"org"`
 }
 
-func (u PostgresRepo) GetUserByID(id uint64) (api.User, error) {
+func (u PostgresRepo) GetUserByID(id uint64) (*api.User, error) {
 	obj, err := u.Dbmap.Get(User{}, id)
 	if obj != nil {
 		user := obj.(*User)
-		return api.User{Id: uint64(user.Id),
+		return &api.User{Id: uint64(user.Id),
 			Name: user.Name,
 			Path: user.Path,
 			Date: time.Unix(0, user.CreateDate),
@@ -63,7 +62,7 @@ func (u PostgresRepo) GetUserByID(id uint64) (api.User, error) {
 			Org:  user.Org,
 		}, nil
 	}
-	return api.User{}, err
+	return nil, err
 }
 
 func (u PostgresRepo) AddUser(user api.User) error {
@@ -81,8 +80,14 @@ func (u PostgresRepo) AddUser(user api.User) error {
 
 func (u PostgresRepo) GetUsersByPath(org string, path string) ([]api.User, error) {
 	var users []User
-	_, err := u.Dbmap.Select(&users, "select * from users where org like '?' and urn like '%?%'", org, path)
-	checkErr(err, "Select users by org and urn failed")
+	query := "select * from users where org like :org and path like :path"
+	_, err := u.Dbmap.Select(&users, query, map[string]interface{}{
+		"org":  org,
+		"path": path,
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	apiusers := make([]api.User, len(users), cap(users))
 	for i, u := range users {
@@ -90,7 +95,7 @@ func (u PostgresRepo) GetUsersByPath(org string, path string) ([]api.User, error
 			Id:   uint64(u.Id),
 			Name: u.Name,
 			Path: u.Path,
-			Date: time.Unix(u.CreateDate, 0).UTC(),
+			Date: time.Unix(0, u.CreateDate).UTC(),
 			Urn:  u.Urn,
 			Org:  u.Org,
 		}
@@ -104,5 +109,13 @@ func (u PostgresRepo) GetGroupsByUserID(id uint64) ([]api.Group, error) {
 }
 
 func (u PostgresRepo) RemoveUser(id uint64) error {
-	return nil
+	obj, err := u.Dbmap.Get(User{}, id)
+	if obj != nil {
+		user := obj.(*User)
+		_, err := u.Dbmap.Delete(user)
+		return err
+	} else {
+		return errors.New("User not found")
+	}
+	return err
 }

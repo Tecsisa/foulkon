@@ -1,32 +1,59 @@
 package authorizr
 
 import (
+	"net/http"
+
+	"io"
+
+	log "github.com/Sirupsen/logrus"
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/database/postgresql"
-	"log"
-	"net/http"
 )
 
 // Core is the manager of authorizR. This use abstractions of connectors for backends,
 // that you define at startup
 type Core struct {
+	// APIs
 	userapi   *api.UsersAPI
 	groupapi  *api.GroupAPI
 	policyapi *api.PolicyAPI
+
+	// Logger
+	Logger *log.Logger
 }
 
-func NewCore() (*Core, error) {
-	db := postgresql.InitDb("/tmp/authorizer/sql.bin")
+type CoreConfig struct {
+	LogFile        io.Writer
+	DatasourceName string
+}
 
-	userapiimp := &api.UsersAPI{
+func NewCore(coreconfig *CoreConfig) (*Core, error) {
+
+	// Create logger
+	logger := &log.Logger{
+		Out:       coreconfig.LogFile,
+		Formatter: &log.JSONFormatter{},
+		Hooks:     make(log.LevelHooks),
+		Level:     log.InfoLevel,
+	}
+
+	// Start DB
+	db, err := postgresql.InitDb(coreconfig.DatasourceName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Instantiate APIs
+	userApi := &api.UsersAPI{
 		UserRepo: postgresql.PostgresRepo{
 			Dbmap: db,
 		},
 	}
-	return &Core{
-		userapi: userapiimp,
-	}, nil
 
+	return &Core{
+		userapi: userApi,
+		Logger:  logger,
+	}, nil
 }
 
 func (core *Core) GetUserAPI() *api.UsersAPI {
@@ -41,13 +68,13 @@ func (core *Core) GetPolicyAPI() *api.PolicyAPI {
 	return core.policyapi
 }
 
-func RespondError(w http.ResponseWriter, status int, err error) {
-	log.Println("Error received ", err)
+func (core *Core) RespondError(w http.ResponseWriter, status int, err error) {
+	core.Logger.Error(err)
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(status)
 }
 
-func RespondOk(w http.ResponseWriter, status int) {
+func (core *Core) RespondOk(w http.ResponseWriter, status int) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(status)
 }

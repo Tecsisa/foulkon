@@ -20,7 +20,7 @@ type UsersAPI struct {
 }
 
 // Retrieve user by id
-func (u *UsersAPI) GetUserById(id uint64) (User, error) {
+func (u *UsersAPI) GetUserById(id uint64) (*User, error) {
 	return u.UserRepo.GetUserByID(id)
 }
 

@@ -1,9 +1,10 @@
 package http
 
 import (
-	"github.com/tecsisa/authorizr/authorizr"
 	"io"
 	"net/http"
+
+	"github.com/tecsisa/authorizr/authorizr"
 )
 
 func handlePolicies(core *authorizr.Core) http.Handler {
@@ -12,7 +13,7 @@ func handlePolicies(core *authorizr.Core) http.Handler {
 		case "GET":
 			io.WriteString(w, core.GetPolicyAPI().GetPolicies("/mipath"))
 		default:
-			authorizr.RespondError(w, http.StatusBadRequest, nil)
+			core.RespondError(w, http.StatusBadRequest, nil)
 		}
 	})
 }
