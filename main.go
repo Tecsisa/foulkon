@@ -13,7 +13,7 @@ import (
 func main() {
 
 	// Retrieve datasource name
-	datasourcename := "/tmp/authorizer/sql.bin"
+	datasourcename := "postgres://authorizr:password@localhost:5432/authorizrdb?sslmode=disable"
 	// Log dir
 	logFileDir := "/tmp/authorizer/authorizer.log"
 	// Create log file
@@ -28,7 +28,7 @@ func main() {
 	}
 	core, err := authorizr.NewCore(coreconfig)
 	if err != nil {
-		fmt.Errorf(err.Error())
+		fmt.Fprint(os.Stderr, err.Error())
 		return
 	}
 

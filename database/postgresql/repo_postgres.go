@@ -7,7 +7,7 @@ import (
 
 	"gopkg.in/gorp.v1"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 	"github.com/tecsisa/authorizr/api"
 )
 
@@ -18,13 +18,13 @@ type PostgresRepo struct {
 func InitDb(datasourcename string) (*gorp.DbMap, error) {
 	// connect to db using standard Go database/sql API
 	// use whatever database/sql driver you wish
-	db, err := sql.Open("sqlite3", datasourcename)
+	db, err := sql.Open("postgres", datasourcename)
 	if err != nil {
 		return nil, err
 	}
 
 	// construct a gorp DbMap
-	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
+	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.PostgresDialect{}}
 
 	// add a table, setting the table name to 'users' and
 	// specifying that the Id property is an auto incrementing PK
@@ -54,20 +54,13 @@ func (u PostgresRepo) GetUserByID(id uint64) (*api.User, error) {
 	obj, err := u.Dbmap.Get(User{}, id)
 	if obj != nil {
 		user := obj.(*User)
-		return &api.User{Id: uint64(user.Id),
-			Name: user.Name,
-			Path: user.Path,
-			Date: time.Unix(0, user.CreateDate),
-			Urn:  user.Urn,
-			Org:  user.Org,
-		}, nil
+		return userDBToUserAPI(user), nil
 	}
 	return nil, err
 }
 
-func (u PostgresRepo) AddUser(user api.User) error {
+func (u PostgresRepo) AddUser(user api.User) (*api.User, error) {
 	userDB := &User{
-		Id:         int64(user.Id),
 		Name:       user.Name,
 		Path:       user.Path,
 		CreateDate: time.Now().UTC().UnixNano(),
@@ -75,7 +68,11 @@ func (u PostgresRepo) AddUser(user api.User) error {
 		Org:        user.Org,
 	}
 
-	return u.Dbmap.Insert(userDB)
+	err := u.Dbmap.Insert(userDB)
+	if err != nil {
+		return nil, err
+	}
+	return userDBToUserAPI(userDB), nil
 }
 
 func (u PostgresRepo) GetUsersByPath(org string, path string) ([]api.User, error) {
@@ -91,14 +88,7 @@ func (u PostgresRepo) GetUsersByPath(org string, path string) ([]api.User, error
 
 	apiusers := make([]api.User, len(users), cap(users))
 	for i, u := range users {
-		apiusers[i] = api.User{
-			Id:   uint64(u.Id),
-			Name: u.Name,
-			Path: u.Path,
-			Date: time.Unix(0, u.CreateDate).UTC(),
-			Urn:  u.Urn,
-			Org:  u.Org,
-		}
+		apiusers[i] = *userDBToUserAPI(&u)
 	}
 
 	return apiusers, nil
@@ -118,4 +108,16 @@ func (u PostgresRepo) RemoveUser(id uint64) error {
 		return errors.New("User not found")
 	}
 	return err
+}
+
+// Transform a user retrieved from db into a user for API
+func userDBToUserAPI(userdb *User) *api.User {
+	return &api.User{
+		Id:   uint64(userdb.Id),
+		Name: userdb.Name,
+		Path: userdb.Path,
+		Date: time.Unix(0, userdb.CreateDate).UTC(),
+		Urn:  userdb.Urn,
+		Org:  userdb.Org,
+	}
 }

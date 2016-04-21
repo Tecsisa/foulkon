@@ -37,9 +37,11 @@ func NewCore(coreconfig *CoreConfig) (*Core, error) {
 		Level:     log.InfoLevel,
 	}
 
+	logger.Info("Accesing to db with DSN " + coreconfig.DatasourceName)
 	// Start DB
 	db, err := postgresql.InitDb(coreconfig.DatasourceName)
 	if err != nil {
+		logger.Error(err)
 		return nil, err
 	}
 

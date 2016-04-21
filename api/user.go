@@ -30,7 +30,7 @@ func (u *UsersAPI) GetListUsers(org string, path string) ([]User, error) {
 }
 
 // Add an User to database
-func (u *UsersAPI) AddUser(user User) error {
+func (u *UsersAPI) AddUser(user User) (*User, error) {
 	return u.UserRepo.AddUser(user)
 }
 
