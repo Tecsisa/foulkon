@@ -22,7 +22,7 @@ func printChildren(n *node, prefix string) {
 	}
 }
 
-// Used as a workaround since we can't compare functions or their addresses
+// Used as a workaround since we can't compare functions or their adresses
 var fakeHandlerValue string
 
 func fakeHandler(val string) Handle {
@@ -89,7 +89,7 @@ func checkMaxParams(t *testing.T, n *node) uint8 {
 			maxParams = params
 		}
 	}
-	if n.nType > root && !n.wildChild {
+	if n.nType != static && !n.wildChild {
 		maxParams++
 	}
 
@@ -394,9 +394,6 @@ func TestTreeTrailingSlashRedirect(t *testing.T) {
 		"/1/:id/2",
 		"/aa",
 		"/a/",
-		"/admin",
-		"/admin/:category",
-		"/admin/:category/:page",
 		"/doc",
 		"/doc/go_faq.html",
 		"/doc/go1.html",
@@ -426,9 +423,6 @@ func TestTreeTrailingSlashRedirect(t *testing.T) {
 		"/0/go/",
 		"/1/go",
 		"/a",
-		"/admin/",
-		"/admin/config/",
-		"/admin/config/permissions/",
 		"/doc/",
 	}
 	for _, route := range tsrRoutes {
@@ -458,24 +452,6 @@ func TestTreeTrailingSlashRedirect(t *testing.T) {
 	}
 }
 
-func TestTreeRootTrailingSlashRedirect(t *testing.T) {
-	tree := &node{}
-
-	recv := catchPanic(func() {
-		tree.addRoute("/:test", fakeHandler("/:test"))
-	})
-	if recv != nil {
-		t.Fatalf("panic inserting test route: %v", recv)
-	}
-
-	handler, _, tsr := tree.getValue("/")
-	if handler != nil {
-		t.Fatalf("non-nil handler")
-	} else if tsr {
-		t.Errorf("expected no TSR recommendation")
-	}
-}
-
 func TestTreeFindCaseInsensitivePath(t *testing.T) {
 	tree := &node{}
 
@@ -502,16 +478,6 @@ func TestTreeFindCaseInsensitivePath(t *testing.T) {
 		"/doc/go/away",
 		"/no/a",
 		"/no/b",
-		"/Π",
-		"/u/apfêl/",
-		"/u/äpfêl/",
-		"/u/öpfêl",
-		"/v/Äpfêl/",
-		"/v/Öpfêl",
-		"/w/♬",  // 3 byte
-		"/w/♭/", // 3 byte, last byte differs
-		"/w/𠜎",  // 4 byte
-		"/w/𠜏/", // 4 byte
 	}
 
 	for _, route := range routes {
@@ -590,20 +556,6 @@ func TestTreeFindCaseInsensitivePath(t *testing.T) {
 		{"/DOC/", "/doc", true, true},
 		{"/NO", "", false, true},
 		{"/DOC/GO", "", false, true},
-		{"/π", "/Π", true, false},
-		{"/π/", "/Π", true, true},
-		{"/u/ÄPFÊL/", "/u/äpfêl/", true, false},
-		{"/u/ÄPFÊL", "/u/äpfêl/", true, true},
-		{"/u/ÖPFÊL/", "/u/öpfêl", true, true},
-		{"/u/ÖPFÊL", "/u/öpfêl", true, false},
-		{"/v/äpfêL/", "/v/Äpfêl/", true, false},
-		{"/v/äpfêL", "/v/Äpfêl/", true, true},
-		{"/v/öpfêL/", "/v/Öpfêl", true, true},
-		{"/v/öpfêL", "/v/Öpfêl", true, false},
-		{"/w/♬/", "/w/♬", true, true},
-		{"/w/♭", "/w/♭/", true, true},
-		{"/w/𠜎/", "/w/𠜎", true, true},
-		{"/w/𠜏", "/w/𠜏/", true, true},
 	}
 	// With fixTrailingSlash = true
 	for _, test := range tests {

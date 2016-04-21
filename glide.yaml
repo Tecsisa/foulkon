@@ -1,0 +1,12 @@
+package: github.com/tecsisa/authorizr
+ignore:
+- golang.org/x/sys/unix
+import:
+- package: github.com/Sirupsen/logrus
+  version: 0.10.0
+- package: github.com/julienschmidt/httprouter
+  version: "1.1"
+- package: github.com/lib/pq
+  version: go1.0-cutoff
+- package: gopkg.in/gorp.v1
+  version: 1.7.1

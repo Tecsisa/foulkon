@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"database/sql"
 	"database/sql/driver"
+	"github.com/lib/pq/oid"
 	"io"
 	"math/rand"
 	"net"
@@ -16,8 +17,6 @@ import (
 	"sync"
 	"testing"
 	"time"
-
-	"github.com/lib/pq/oid"
 )
 
 var (
@@ -36,6 +35,7 @@ func BenchmarkSelectSeries(b *testing.B) {
 }
 
 func benchQuery(b *testing.B, query string, result interface{}) {
+	b.Skip("current pq database-backed benchmarks are inconsistent")
 	b.StopTimer()
 	db := openTestConn(b)
 	defer db.Close()
@@ -183,6 +183,7 @@ func BenchmarkPreparedSelectSeries(b *testing.B) {
 }
 
 func benchPreparedQuery(b *testing.B, query string, result interface{}) {
+	b.Skip("current pq database-backed benchmarks are inconsistent")
 	b.StopTimer()
 	db := openTestConn(b)
 	defer db.Close()
@@ -325,7 +326,7 @@ var testIntBytes = []byte("1234")
 
 func BenchmarkDecodeInt64(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		decode(&parameterStatus{}, testIntBytes, oid.T_int8, formatText)
+		decode(&parameterStatus{}, testIntBytes, oid.T_int8)
 	}
 }
 
@@ -333,7 +334,7 @@ var testFloatBytes = []byte("3.14159")
 
 func BenchmarkDecodeFloat64(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		decode(&parameterStatus{}, testFloatBytes, oid.T_float8, formatText)
+		decode(&parameterStatus{}, testFloatBytes, oid.T_float8)
 	}
 }
 
@@ -341,7 +342,7 @@ var testBoolBytes = []byte{'t'}
 
 func BenchmarkDecodeBool(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		decode(&parameterStatus{}, testBoolBytes, oid.T_bool, formatText)
+		decode(&parameterStatus{}, testBoolBytes, oid.T_bool)
 	}
 }
 
@@ -358,7 +359,7 @@ var testTimestamptzBytes = []byte("2013-09-17 22:15:32.360754-07")
 
 func BenchmarkDecodeTimestamptz(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		decode(&parameterStatus{}, testTimestamptzBytes, oid.T_timestamptz, formatText)
+		decode(&parameterStatus{}, testTimestamptzBytes, oid.T_timestamptz)
 	}
 }
 
@@ -371,7 +372,7 @@ func BenchmarkDecodeTimestamptzMultiThread(b *testing.B) {
 	f := func(wg *sync.WaitGroup, loops int) {
 		defer wg.Done()
 		for i := 0; i < loops; i++ {
-			decode(&parameterStatus{}, testTimestamptzBytes, oid.T_timestamptz, formatText)
+			decode(&parameterStatus{}, testTimestamptzBytes, oid.T_timestamptz)
 		}
 	}
 

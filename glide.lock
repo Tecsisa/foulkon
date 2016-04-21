@@ -1,0 +1,14 @@
+hash: 94de71ee6f8479a4cd31f07d074d47292c81bc6d050ce31e8a77dba1571957ed
+updated: 2016-04-21T12:46:09.310648914+02:00
+imports:
+- name: github.com/julienschmidt/httprouter
+  version: 8c199fb6259ffc1af525cc3ad52ee60ba8359669
+- name: github.com/lib/pq
+  version: 5da87320b996b433460a8930bb6b8f4e5672d371
+  subpackages:
+  - oid
+- name: github.com/Sirupsen/logrus
+  version: 4b6ea7319e214d98c938f12692336f7ca9348d6b
+- name: gopkg.in/gorp.v1
+  version: c87af80f3cc5036b55b83d77171e156791085e2e
+devImports: []
