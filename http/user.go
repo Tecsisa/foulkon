@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"errors"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/authorizr"
+	"strings"
 )
 
 type UserHandler struct {
@@ -19,9 +19,9 @@ type UserHandler struct {
 
 // Requests
 type CreateUserRequest struct {
-	Name string
-	Org  string
-	Path string
+	ExternalID string `json:"ExternalID, omitempty"`
+	Org        string `json:"Org, omitempty"`
+	Path       string `json:"Path, omitempty"`
 }
 
 // Responses
@@ -30,7 +30,11 @@ type CreateUserResponse struct {
 }
 
 type GetUsersResponse struct {
-	users []api.User
+	Users []api.User
+}
+
+type GetUserByIdResponse struct {
+	User *api.User
 }
 
 // This method return a list of users that belongs to Org param and have PathPrefix
@@ -47,8 +51,11 @@ func (u *UserHandler) handleGetUsers(w http.ResponseWriter, r *http.Request, _ h
 		org = queryorg
 	}
 
+	// Retrieve PathPrefix
+	pathPrefix := r.URL.Query().Get("PathPrefix")
+
 	// Call user API
-	result, err := u.core.GetUserAPI().GetListUsers(org, r.URL.Query().Get("PathPrefix"))
+	result, err := u.core.Userapi.GetListUsers(org, pathPrefix)
 	if err != nil {
 		u.core.RespondError(w, http.StatusInternalServerError, err)
 		return
@@ -62,7 +69,7 @@ func (u *UserHandler) handleGetUsers(w http.ResponseWriter, r *http.Request, _ h
 
 	// Create response
 	response := &GetUsersResponse{
-		users: result,
+		Users: result,
 	}
 
 	b, err := json.Marshal(response)
@@ -88,12 +95,21 @@ func (u *UserHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
+	// Check parameters
+	if len(strings.TrimSpace(request.ExternalID)) == 0 ||
+		len(strings.TrimSpace(request.Org)) == 0 ||
+		len(strings.TrimSpace(request.Path)) == 0 {
+		u.core.RespondError(w, http.StatusBadRequest, err)
+		return
+	}
+
 	// Call user API to create an user
-	result, err := u.core.GetUserAPI().AddUser(createUserFromRequest(request))
+	result, err := u.core.Userapi.AddUser(createUserFromRequest(request))
 
 	// Check response
 	if err != nil {
 		u.core.RespondError(w, http.StatusInternalServerError, err)
+		return
 	}
 	response := &CreateUserResponse{
 		User: result,
@@ -115,14 +131,10 @@ func (u *UserHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, ps
 	u.logRequest(r)
 
 	// Retrieve user id from path
-	id, err := strconv.ParseUint(ps.ByName("id"), 10, 64)
-	if err != nil {
-		u.core.RespondError(w, http.StatusInternalServerError, err)
-		return
-	}
+	id := ps.ByName("id")
 
 	// Call user API to retrieve user
-	result, err := u.core.GetUserAPI().GetUserById(id)
+	result, err := u.core.Userapi.GetUserById(id)
 
 	// Check if there were errors
 	if err != nil {
@@ -136,8 +148,12 @@ func (u *UserHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, ps
 		return
 	}
 
+	response := GetUserByIdResponse{
+		User: result,
+	}
+
 	// Write user to response
-	b, err := json.Marshal(result)
+	b, err := json.Marshal(response)
 	if err != nil {
 		u.core.RespondError(w, http.StatusInternalServerError, err)
 		return
@@ -152,20 +168,16 @@ func (u *UserHandler) handleDeleteUserId(w http.ResponseWriter, r *http.Request,
 	u.logRequest(r)
 
 	// Retrieve user id from path
-	id, err := strconv.ParseUint(ps.ByName("id"), 10, 64)
-	if err != nil {
-		u.core.RespondError(w, http.StatusInternalServerError, err)
-		return
-	}
+	id := ps.ByName("id")
 
 	// Call user API to delete user
-	err = u.core.GetUserAPI().RemoveUserById(id)
+	err := u.core.Userapi.RemoveUserById(id)
 
 	// Check if there were errors
 	if err != nil {
 		u.core.RespondError(w, http.StatusBadRequest, err)
 	} else {
-		u.core.RespondOk(w, http.StatusCreated)
+		u.core.RespondOk(w, http.StatusAccepted)
 	}
 }
 
@@ -173,11 +185,9 @@ func (u *UserHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Request,
 	u.logRequest(r)
 
 	// Retrieve users using path
-	id, err := strconv.ParseUint(ps.ByName("id"), 10, 64)
-	if err != nil {
-		u.core.RespondError(w, http.StatusInternalServerError, err)
-	}
-	result, err := u.core.GetUserAPI().GetGroupsByUserId(id)
+	id := ps.ByName("id")
+
+	result, err := u.core.Userapi.GetGroupsByUserId(id)
 	if err != nil {
 		u.core.RespondError(w, http.StatusInternalServerError, err)
 	}
@@ -190,13 +200,13 @@ func (u *UserHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Request,
 }
 
 func createUserFromRequest(request CreateUserRequest) api.User {
-	path := request.Path + "/" + request.Name
+	path := request.Path + "/" + request.ExternalID
 	urn := fmt.Sprintf("urn:iws:iam:%v:user/%v", request.Org, path)
 	user := api.User{
-		Name: request.Name,
-		Path: path,
-		Urn:  urn,
-		Org:  request.Org,
+		ExternalID: request.ExternalID,
+		Path:       path,
+		Urn:        urn,
+		Org:        request.Org,
 	}
 
 	return user

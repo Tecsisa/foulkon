@@ -33,4 +33,4 @@ This code is open source software licensed under the [Apache 2.0 License](http:/
 ## TODO
 - DBs: PostgreSQL. Cayley?
 - support OIDC token
-- Logging: https://golang.org/pkg/log/syslog // https://github.com/op/go-logging // https://github.com/Sirupsen/logrus // https://github.com/coreos/go-log
+- Logging: https://github.com/Sirupsen/logrus

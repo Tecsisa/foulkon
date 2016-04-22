@@ -14,9 +14,9 @@ import (
 // that you define at startup
 type Core struct {
 	// APIs
-	userapi   *api.UsersAPI
-	groupapi  *api.GroupAPI
-	policyapi *api.PolicyAPI
+	Userapi   *api.UsersAPI
+	Groupapi  *api.GroupAPI
+	Policyapi *api.PolicyAPI
 
 	// Logger
 	Logger *log.Logger
@@ -53,21 +53,9 @@ func NewCore(coreconfig *CoreConfig) (*Core, error) {
 	}
 
 	return &Core{
-		userapi: userApi,
+		Userapi: userApi,
 		Logger:  logger,
 	}, nil
-}
-
-func (core *Core) GetUserAPI() *api.UsersAPI {
-	return core.userapi
-}
-
-func (core *Core) GetGroupAPI() *api.GroupAPI {
-	return core.groupapi
-}
-
-func (core *Core) GetPolicyAPI() *api.PolicyAPI {
-	return core.policyapi
 }
 
 func (core *Core) RespondError(w http.ResponseWriter, status int, err error) {

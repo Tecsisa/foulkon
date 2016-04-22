@@ -19,5 +19,5 @@ func handleGroups(core *authorizr.Core) http.Handler {
 }
 
 func getGroups(core *authorizr.Core, w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, core.GetGroupAPI().GetGroups("/mipath"))
+	io.WriteString(w, core.Groupapi.GetGroups("/mipath"))
 }

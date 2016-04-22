@@ -8,5 +8,5 @@ import:
   version: "1.1"
 - package: github.com/lib/pq
   version: go1.0-cutoff
-- package: gopkg.in/gorp.v1
-  version: 1.7.1
+- package: github.com/jinzhu/gorm
+  version: 5174cc5c242a728b435ea2be8a2f7f998e15429b

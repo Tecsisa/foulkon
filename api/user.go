@@ -6,12 +6,11 @@ import (
 
 // User domain
 type User struct {
-	Id   uint64    `json:"ID, omitempty"`
-	Name string    `json:"Name, omitempty"`
-	Path string    `json:"Path, omitempty"`
-	Date time.Time `json:"Date, omitempty"`
-	Urn  string    `json:"Urn, omitempty"`
-	Org  string    `json:"Org, omitempty"`
+	ExternalID string    `json:"ExternalID, omitempty"`
+	Path       string    `json:"Path, omitempty"`
+	Date       time.Time `json:"Date, omitempty"`
+	Urn        string    `json:"Urn, omitempty"`
+	Org        string    `json:"Org, omitempty"`
 }
 
 // User api
@@ -20,7 +19,7 @@ type UsersAPI struct {
 }
 
 // Retrieve user by id
-func (u *UsersAPI) GetUserById(id uint64) (*User, error) {
+func (u *UsersAPI) GetUserById(id string) (*User, error) {
 	return u.UserRepo.GetUserByID(id)
 }
 
@@ -35,11 +34,11 @@ func (u *UsersAPI) AddUser(user User) (*User, error) {
 }
 
 // Remove user with this id
-func (u *UsersAPI) RemoveUserById(id uint64) error {
+func (u *UsersAPI) RemoveUserById(id string) error {
 	return u.UserRepo.RemoveUser(id)
 }
 
 // Get groups for an user
-func (u *UsersAPI) GetGroupsByUserId(id uint64) ([]Group, error) {
+func (u *UsersAPI) GetGroupsByUserId(id string) ([]Group, error) {
 	return u.UserRepo.GetGroupsByUserID(id)
 }
