@@ -15,15 +15,15 @@ func main() {
 	// Retrieve datasource name
 	datasourcename := "postgres://authorizr:password@localhost:5432/authorizrdb?sslmode=disable"
 	// Log dir
-	logFileDir := "/tmp/authorizer/authorizer.log"
+	//logFileDir := "/tmp/authorizer/authorizer.log"
 	// Create log file
-	logfile, err := os.OpenFile(logFileDir, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
-	if err != nil {
-		fmt.Printf("error opening file: %v", err)
-	}
+	//logfile, err := os.OpenFile(logFileDir, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+	//if err != nil {
+	//	fmt.Printf("error opening file: %v", err)
+	//}
 	// Create a core
 	coreconfig := &authorizr.CoreConfig{
-		LogFile:        logfile,
+		LogFile:        os.Stdout,
 		DatasourceName: datasourcename,
 	}
 	core, err := authorizr.NewCore(coreconfig)
