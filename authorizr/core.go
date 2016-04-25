@@ -15,7 +15,7 @@ import (
 type Core struct {
 	// APIs
 	Userapi   *api.UsersAPI
-	Groupapi  *api.GroupAPI
+	Groupapi  *api.GroupsAPI
 	Policyapi *api.PolicyAPI
 
 	// Logger

@@ -131,7 +131,7 @@ func (u *UserHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, ps
 	u.logRequest(r)
 
 	// Retrieve user id from path
-	id := ps.ByName("id")
+	id := ps.ByName(USER_ID)
 
 	// Call user API to retrieve user
 	result, err := u.core.Userapi.GetUserById(id)
@@ -168,7 +168,7 @@ func (u *UserHandler) handleDeleteUserId(w http.ResponseWriter, r *http.Request,
 	u.logRequest(r)
 
 	// Retrieve user id from path
-	id := ps.ByName("id")
+	id := ps.ByName(USER_ID)
 
 	// Call user API to delete user
 	err := u.core.Userapi.RemoveUserById(id)
@@ -185,7 +185,7 @@ func (u *UserHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Request,
 	u.logRequest(r)
 
 	// Retrieve users using path
-	id := ps.ByName("id")
+	id := ps.ByName(USER_ID)
 
 	result, err := u.core.Userapi.GetGroupsByUserId(id)
 	if err != nil {
