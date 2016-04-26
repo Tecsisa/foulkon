@@ -11,27 +11,32 @@ const (
 	USER_ID   = "/:userid"
 	GROUP_ID  = "/:groupid"
 	POLICY_ID = "/:policyid"
+	ORG_ID    = "/:orgid"
 
 	// API root reference
 	API_ROOT      = "/api"
 	API_VERSION_1 = API_ROOT + "/v1"
+
+	// Organization API ROOT
+	ORG_ROOT = "/organization" + ORG_ID
 
 	// User API urls
 	USER_ROOT_URL      = API_VERSION_1 + "/users"
 	USER_ID_URL        = USER_ROOT_URL + USER_ID
 	USER_ID_GROUPS_URL = USER_ID_URL + "/groups"
 
-	// Group API urls
-	GROUP_ROOT_URL           = API_VERSION_1 + "/groups"
-	GROUP_ID_URL             = GROUP_ROOT_URL + GROUP_ID
+	// Group organization API urls
+	GROUP_ORG_ROOT_URL       = API_VERSION_1 + ORG_ROOT + "/groups"
+	GROUP_ID_URL             = GROUP_ORG_ROOT_URL + GROUP_ID
 	GROUP_ID_USERS_URL       = GROUP_ID_URL + "/users"
 	GROUP_ID_USERS_ID_URL    = GROUP_ID_USERS_URL + USER_ID
 	GROUP_ID_POLICIES_URL    = GROUP_ID_URL + "/policies"
 	GROUP_ID_POLICIES_ID_URL = GROUP_ID_POLICIES_URL + POLICY_ID
 
 	// Policy API urls
-	POLICY_ROOT_URL = API_VERSION_1 + "/policies"
-	POLICY_ID_URL   = POLICY_ROOT_URL + POLICY_ID
+	POLICY_ROOT_URL      = API_VERSION_1 + ORG_ROOT + "/policies"
+	POLICY_ID_URL        = POLICY_ROOT_URL + POLICY_ID
+	POLICY_ID_GROUPS_URL = POLICY_ROOT_URL + POLICY_ID + "/groups"
 )
 
 // Handler returns an http.Handler for the APIs.
@@ -45,14 +50,18 @@ func Handler(core *authorizr.Core) http.Handler {
 	router.POST(USER_ROOT_URL, userHandler.handlePostUsers)
 
 	router.GET(USER_ID_URL, userHandler.handleGetUserId)
+	router.PUT(USER_ID_URL, userHandler.handlePutUser)
 	router.DELETE(USER_ID_URL, userHandler.handleDeleteUserId)
 
 	router.GET(USER_ID_GROUPS_URL, userHandler.handleUserIdGroups)
 
+	// Special endpoint with organization URI for users
+	router.GET(API_VERSION_1+ORG_ROOT+"/users", userHandler.handleOrgListUsers)
+
 	// Group api
 	groupHandler := GroupHandler{core: core}
-	router.POST(GROUP_ROOT_URL, groupHandler.handleCreateGroup)
-	router.GET(GROUP_ROOT_URL, groupHandler.handleListGroups)
+	router.POST(GROUP_ORG_ROOT_URL, groupHandler.handleCreateGroup)
+	router.GET(GROUP_ORG_ROOT_URL, groupHandler.handleListGroups)
 
 	router.DELETE(GROUP_ID_URL, groupHandler.handleDeleteGroup)
 	router.GET(GROUP_ID_URL, groupHandler.handleGetGroup)
@@ -68,6 +77,9 @@ func Handler(core *authorizr.Core) http.Handler {
 
 	router.DELETE(GROUP_ID_POLICIES_ID_URL, groupHandler.handleDetachGroupPolicy)
 
+	// Special endpoint without organization URI for groups
+	router.GET(API_VERSION_1+"/groups", groupHandler.handleListAllGroups)
+
 	// Policy api
 	policyHandler := PolicyHandler{core: core}
 	router.GET(POLICY_ROOT_URL, policyHandler.handleListPolicies)
@@ -75,6 +87,11 @@ func Handler(core *authorizr.Core) http.Handler {
 
 	router.DELETE(POLICY_ID_URL, policyHandler.handleDeletePolicy)
 	router.GET(POLICY_ID_URL, policyHandler.handleGetPolicy)
+
+	router.GET(POLICY_ID_GROUPS_URL, policyHandler.handleGetPolicyAttachedGroups)
+
+	// Special endpoint without organization URI for policies
+	router.GET(API_VERSION_1+"/policies", policyHandler.handleListAllPolicies)
 
 	// Return handler
 	return router

@@ -54,3 +54,7 @@ func (g *GroupHandler) handleDetachGroupPolicy(w http.ResponseWriter, r *http.Re
 func (g *GroupHandler) handleListAtachhedGroupPolicies(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 }
+
+func (g *GroupHandler) handleListAllGroups(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
+}

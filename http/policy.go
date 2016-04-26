@@ -26,3 +26,11 @@ func (p *PolicyHandler) handleDeletePolicy(w http.ResponseWriter, r *http.Reques
 func (p *PolicyHandler) handleGetPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 }
+
+func (p *PolicyHandler) handleGetPolicyAttachedGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+}
+
+func (p *PolicyHandler) handleListAllPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+}

@@ -127,6 +127,10 @@ func (u *UserHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ 
 	w.Write(b)
 }
 
+func (u *UserHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	//TODO: Unimplemented
+}
+
 func (u *UserHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u.logRequest(r)
 
@@ -199,14 +203,17 @@ func (u *UserHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Request,
 	w.Write(b)
 }
 
+func (u *UserHandler) handleOrgListUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	//TODO: Unimplemented
+}
+
 func createUserFromRequest(request CreateUserRequest) api.User {
 	path := request.Path + "/" + request.ExternalID
-	urn := fmt.Sprintf("urn:iws:iam:%v:user/%v", request.Org, path)
+	urn := fmt.Sprintf("urn:iws:iam:user/%v", path)
 	user := api.User{
 		ExternalID: request.ExternalID,
 		Path:       path,
 		Urn:        urn,
-		Org:        request.Org,
 	}
 
 	return user

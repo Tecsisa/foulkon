@@ -4,7 +4,7 @@ import "time"
 
 // Group domain
 type Group struct {
-	Id   uint64    `json:"ID, omitempty"`
+	//Id   uint64    `json:"ID, omitempty"`
 	Name string    `json:"Name, omitempty"`
 	Path string    `json:"Path, omitempty"`
 	Date time.Time `json:"Date, omitempty"`

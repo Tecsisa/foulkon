@@ -10,7 +10,6 @@ type User struct {
 	Path       string    `json:"Path, omitempty"`
 	Date       time.Time `json:"Date, omitempty"`
 	Urn        string    `json:"Urn, omitempty"`
-	Org        string    `json:"Org, omitempty"`
 }
 
 // User api

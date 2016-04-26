@@ -51,7 +51,6 @@ type User struct {
 	Path       string `gorm:"not null"`
 	CreateDate int64  `gorm:"not null"`
 	Urn        string `gorm:"not null;unique"`
-	Org        string `gorm:"not null"`
 }
 
 // set User's table name to be `profiles
@@ -78,7 +77,6 @@ func (u PostgresRepo) AddUser(user api.User) (*api.User, error) {
 		Path:       user.Path,
 		CreateDate: time.Now().UTC().UnixNano(),
 		Urn:        user.Urn,
-		Org:        user.Org,
 	}
 
 	err := u.Dbmap.Create(userDB).Error
@@ -133,6 +131,5 @@ func userDBToUserAPI(userdb *User) *api.User {
 		Path:       userdb.Path,
 		Date:       time.Unix(0, userdb.CreateDate).UTC(),
 		Urn:        userdb.Urn,
-		Org:        userdb.Org,
 	}
 }
