@@ -56,7 +56,7 @@ func (u PostgresRepo) GetUsersFiltered(path string) ([]api.User, error) {
 		query = query.Where("path like ?", path+"%")
 	}
 
-	if err := query.Where("name = ?", "jinzhu").First(&users).Error; err != nil {
+	if err := query.Find(&users).Error; err != nil {
 		return nil, err
 	}
 
