@@ -23,8 +23,8 @@ func (u *UsersAPI) GetUserById(id string) (*User, error) {
 }
 
 // Retrieve users that has path
-func (u *UsersAPI) GetListUsers(org string, path string) ([]User, error) {
-	return u.UserRepo.GetUsersByPath(org, path)
+func (u *UsersAPI) GetListUsers(path string) ([]User, error) {
+	return u.UserRepo.GetUsersFiltered(path)
 }
 
 // Add an User to database

@@ -8,35 +8,38 @@ import (
 
 const (
 	// Constants for values in url
-	USER_ID   = "/:userid"
-	GROUP_ID  = "/:groupid"
-	POLICY_ID = "/:policyid"
-	ORG_ID    = "/:orgid"
+	USER_ID   = "userid"
+	GROUP_ID  = "groupid"
+	POLICY_ID = "policyid"
+	ORG_ID    = "orgid"
+
+	// URI Path param prefix
+	URI_PATH_PREFIX = "/:"
 
 	// API root reference
 	API_ROOT      = "/api"
 	API_VERSION_1 = API_ROOT + "/v1"
 
 	// Organization API ROOT
-	ORG_ROOT = "/organization" + ORG_ID
+	ORG_ROOT = "/organization/:" + ORG_ID
 
 	// User API urls
 	USER_ROOT_URL      = API_VERSION_1 + "/users"
-	USER_ID_URL        = USER_ROOT_URL + USER_ID
+	USER_ID_URL        = USER_ROOT_URL + URI_PATH_PREFIX + USER_ID
 	USER_ID_GROUPS_URL = USER_ID_URL + "/groups"
 
 	// Group organization API urls
 	GROUP_ORG_ROOT_URL       = API_VERSION_1 + ORG_ROOT + "/groups"
-	GROUP_ID_URL             = GROUP_ORG_ROOT_URL + GROUP_ID
+	GROUP_ID_URL             = GROUP_ORG_ROOT_URL + URI_PATH_PREFIX + GROUP_ID
 	GROUP_ID_USERS_URL       = GROUP_ID_URL + "/users"
-	GROUP_ID_USERS_ID_URL    = GROUP_ID_USERS_URL + USER_ID
+	GROUP_ID_USERS_ID_URL    = GROUP_ID_USERS_URL + URI_PATH_PREFIX + USER_ID
 	GROUP_ID_POLICIES_URL    = GROUP_ID_URL + "/policies"
-	GROUP_ID_POLICIES_ID_URL = GROUP_ID_POLICIES_URL + POLICY_ID
+	GROUP_ID_POLICIES_ID_URL = GROUP_ID_POLICIES_URL + URI_PATH_PREFIX + POLICY_ID
 
 	// Policy API urls
 	POLICY_ROOT_URL      = API_VERSION_1 + ORG_ROOT + "/policies"
-	POLICY_ID_URL        = POLICY_ROOT_URL + POLICY_ID
-	POLICY_ID_GROUPS_URL = POLICY_ROOT_URL + POLICY_ID + "/groups"
+	POLICY_ID_URL        = POLICY_ROOT_URL + URI_PATH_PREFIX + POLICY_ID
+	POLICY_ID_GROUPS_URL = POLICY_ROOT_URL + URI_PATH_PREFIX + POLICY_ID + "/groups"
 )
 
 // Handler returns an http.Handler for the APIs.

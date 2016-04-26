@@ -4,7 +4,7 @@ package api
 type UserRepo interface {
 	GetUserByID(id string) (*User, error)
 	AddUser(User) (*User, error)
-	GetUsersByPath(org string, path string) ([]User, error)
+	GetUsersFiltered(path string) ([]User, error)
 	GetGroupsByUserID(id string) ([]Group, error)
 	RemoveUser(id string) error
 }

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"errors"
-
 	"github.com/julienschmidt/httprouter"
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/authorizr"
@@ -20,7 +18,6 @@ type UserHandler struct {
 // Requests
 type CreateUserRequest struct {
 	ExternalID string `json:"ExternalID, omitempty"`
-	Org        string `json:"Org, omitempty"`
 	Path       string `json:"Path, omitempty"`
 }
 
@@ -41,21 +38,11 @@ type GetUserByIdResponse struct {
 func (u *UserHandler) handleGetUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	u.logRequest(r)
 
-	// Retrieve org
-	var org string
-	queryorg := r.URL.Query().Get("Org")
-	if queryorg == "" {
-		u.core.RespondError(w, http.StatusBadRequest, errors.New("Org missing"))
-		return
-	} else {
-		org = queryorg
-	}
-
 	// Retrieve PathPrefix
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call user API
-	result, err := u.core.Userapi.GetListUsers(org, pathPrefix)
+	result, err := u.core.Userapi.GetListUsers(pathPrefix)
 	if err != nil {
 		u.core.RespondError(w, http.StatusInternalServerError, err)
 		return
@@ -97,7 +84,6 @@ func (u *UserHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ 
 
 	// Check parameters
 	if len(strings.TrimSpace(request.ExternalID)) == 0 ||
-		len(strings.TrimSpace(request.Org)) == 0 ||
 		len(strings.TrimSpace(request.Path)) == 0 {
 		u.core.RespondError(w, http.StatusBadRequest, err)
 		return
@@ -220,5 +206,5 @@ func createUserFromRequest(request CreateUserRequest) api.User {
 }
 
 func (u *UserHandler) logRequest(request *http.Request) {
-	u.core.Logger.Infoln(request)
+	u.core.Logger.Debugln(request)
 }

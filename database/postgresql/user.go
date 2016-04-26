@@ -4,45 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/jinzhu/gorm"
-	_ "github.com/lib/pq"
 	"github.com/tecsisa/authorizr/api"
 )
-
-type PostgresRepo struct {
-	Dbmap *gorm.DB
-}
-
-func InitDb(datasourcename string) (*gorm.DB, error) {
-	// connect to db using standard Go database/sql API
-	// use whatever database/sql driver you wish
-	db, err := gorm.Open("postgres", datasourcename)
-	if err != nil {
-		return nil, err
-	}
-
-	// construct a gorp DbMap
-	db.DB().SetMaxIdleConns(10)
-	db.DB().SetMaxOpenConns(100)
-	db.DB().SetConnMaxLifetime(5 * time.Minute)
-
-	// Check connection
-	err = db.DB().Ping()
-	if err != nil {
-		return nil, err
-	}
-
-	// Create tables if not exist
-	err = db.AutoMigrate(&User{}).Error
-	if err != nil {
-		return nil, err
-	}
-
-	// Activate sql logger
-	db.LogMode(true)
-
-	return db, nil
-}
 
 // User database
 type User struct {
@@ -60,7 +23,7 @@ func (User) TableName() string {
 
 func (u PostgresRepo) GetUserByID(id string) (*api.User, error) {
 	user := &User{}
-	err := u.Dbmap.Where("external_id = ?", id).Find(user).Error
+	err := u.Dbmap.Where("external_id like ?", id).Find(user).Error
 	// Error Handling
 	if err != nil {
 		return nil, err
@@ -86,14 +49,17 @@ func (u PostgresRepo) AddUser(user api.User) (*api.User, error) {
 	return userDBToUserAPI(userDB), nil
 }
 
-func (u PostgresRepo) GetUsersByPath(org string, path string) ([]api.User, error) {
+func (u PostgresRepo) GetUsersFiltered(path string) ([]api.User, error) {
 	users := []User{}
-	err := u.Dbmap.Where("org like ? AND path like ?", org, path+"%").Find(&users).Error
+	query := u.Dbmap
+	if len(path) > 0 {
+		query = query.Where("path like ?", path+"%")
+	}
 
-	// Error Handling
-	if err != nil {
+	if err := query.Where("name = ?", "jinzhu").First(&users).Error; err != nil {
 		return nil, err
 	}
+
 	if users != nil {
 		apiusers := make([]api.User, len(users), cap(users))
 		for i, u := range users {
