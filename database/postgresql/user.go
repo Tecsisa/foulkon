@@ -1,65 +1,80 @@
 package postgresql
 
 import (
-	"errors"
 	"time"
 
+	"fmt"
 	"github.com/tecsisa/authorizr/api"
+	"github.com/tecsisa/authorizr/database"
 )
 
-// User database
-type User struct {
-	ID         int    `gorm:"primary_key"`
-	ExternalID string `gorm:"not null;unique"`
-	Path       string `gorm:"not null"`
-	CreateDate int64  `gorm:"not null"`
-	Urn        string `gorm:"not null;unique"`
-}
-
-// set User's table name to be `profiles
-func (User) TableName() string {
-	return "users"
-}
-
-func (u PostgresRepo) GetUserByID(id string) (*api.User, error) {
+func (u PostgresRepo) GetUserByExternalID(id string) (*api.User, error) {
 	user := &User{}
-	err := u.Dbmap.Where("external_id like ?", id).Find(user).Error
+	query := u.Dbmap.Where("external_id like ?", id).First(user)
+
+	// Check if user exist
+	if query.RecordNotFound() {
+		return nil, &database.Error{
+			Code:    database.USER_NOT_FOUND,
+			Message: fmt.Sprintf("User with ExternalID %v not found", id),
+		}
+	}
+
 	// Error Handling
-	if err != nil {
-		return nil, err
+	if err := query.Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
 	}
-	if user != nil {
-		return userDBToUserAPI(user), nil
-	}
-	return nil, nil
+
+	// Return user
+	return userDBToUserAPI(user), nil
 }
 
 func (u PostgresRepo) AddUser(user api.User) (*api.User, error) {
+
+	// Create user model
 	userDB := &User{
+		ID:         user.ID,
 		ExternalID: user.ExternalID,
 		Path:       user.Path,
-		CreateDate: time.Now().UTC().UnixNano(),
+		CreateAt:   time.Now().UTC().UnixNano(),
 		Urn:        user.Urn,
 	}
 
+	// Store user
 	err := u.Dbmap.Create(userDB).Error
+
+	// Error handling
 	if err != nil {
-		return nil, err
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
 	}
+
 	return userDBToUserAPI(userDB), nil
 }
 
-func (u PostgresRepo) GetUsersFiltered(path string) ([]api.User, error) {
+func (u PostgresRepo) GetUsersFiltered(pathPrefix string) ([]api.User, error) {
 	users := []User{}
 	query := u.Dbmap
-	if len(path) > 0 {
-		query = query.Where("path like ?", path+"%")
+
+	// Check if path is filled, else it doesn't use it to filter
+	if len(pathPrefix) > 0 {
+		query = query.Where("path like ?", pathPrefix+"%")
 	}
 
+	// Error handling
 	if err := query.Find(&users).Error; err != nil {
-		return nil, err
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
 	}
 
+	// Transform users for API
 	if users != nil {
 		apiusers := make([]api.User, len(users), cap(users))
 		for i, u := range users {
@@ -68,6 +83,7 @@ func (u PostgresRepo) GetUsersFiltered(path string) ([]api.User, error) {
 		return apiusers, nil
 	}
 
+	// No data to return
 	return nil, nil
 }
 
@@ -76,26 +92,33 @@ func (u PostgresRepo) GetGroupsByUserID(id string) ([]api.Group, error) {
 }
 
 func (u PostgresRepo) RemoveUser(id string) error {
-	user := &User{}
-	err := u.Dbmap.Where("external_id = ?", id).Find(user).Error
-	// Error Handling
-	if err != nil {
-		return err
+	// Retrieve user with this external id
+	user, err := u.GetUserByExternalID(id)
+
+	// Go to delete user
+	if user != nil {
+		err = u.Dbmap.Delete(&user).Error
+		// Error handling
+		if err != nil {
+			return database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: err.Error(),
+			}
+		}
+		return nil
 	}
 
-	if user != nil {
-		return u.Dbmap.Delete(&user).Error
-	} else {
-		return errors.New("User not found")
-	}
+	// Return error if user isn't found
+	return err
 }
 
 // Transform a user retrieved from db into a user for API
 func userDBToUserAPI(userdb *User) *api.User {
 	return &api.User{
+		ID:         userdb.ID,
 		ExternalID: userdb.ExternalID,
 		Path:       userdb.Path,
-		Date:       time.Unix(0, userdb.CreateDate).UTC(),
+		CreateAt:   time.Unix(0, userdb.CreateAt).UTC(),
 		Urn:        userdb.Urn,
 	}
 }

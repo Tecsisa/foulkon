@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"strings"
+
 	"github.com/julienschmidt/httprouter"
+	"github.com/satori/go.uuid"
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/authorizr"
-	"strings"
 )
 
 type UserHandler struct {
@@ -16,12 +18,14 @@ type UserHandler struct {
 }
 
 // Requests
+
 type CreateUserRequest struct {
 	ExternalID string `json:"ExternalID, omitempty"`
 	Path       string `json:"Path, omitempty"`
 }
 
 // Responses
+
 type CreateUserResponse struct {
 	User *api.User
 }
@@ -36,21 +40,14 @@ type GetUserByIdResponse struct {
 
 // This method return a list of users that belongs to Org param and have PathPrefix
 func (u *UserHandler) handleGetUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	u.logRequest(r)
-
 	// Retrieve PathPrefix
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call user API
 	result, err := u.core.Userapi.GetListUsers(pathPrefix)
 	if err != nil {
-		u.core.RespondError(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	// Check if there are results
-	if result == nil {
-		u.core.RespondOk(w, http.StatusNotFound)
+		u.core.Logger.Errorln(err)
+		RespondInternalServerError(w)
 		return
 	}
 
@@ -59,58 +56,52 @@ func (u *UserHandler) handleGetUsers(w http.ResponseWriter, r *http.Request, _ h
 		Users: result,
 	}
 
-	b, err := json.Marshal(response)
-	if err != nil {
-		u.core.RespondError(w, http.StatusInternalServerError, err)
-		return
-	}
-
 	// Return data
-	u.core.RespondOk(w, http.StatusOK)
-	w.Write(b)
+	RespondOk(w, response)
 }
 
 // This method create the user passed by form request and return the user created
 func (u *UserHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	u.logRequest(r)
-
 	// Decode request
 	request := CreateUserRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		u.core.RespondError(w, http.StatusBadRequest, err)
+		u.core.Logger.Errorln(err)
+		RespondBadRequest(w)
 		return
 	}
 
 	// Check parameters
 	if len(strings.TrimSpace(request.ExternalID)) == 0 ||
 		len(strings.TrimSpace(request.Path)) == 0 {
-		u.core.RespondError(w, http.StatusBadRequest, err)
+		u.core.Logger.Errorf("There are mising parameters: ExternalID %v, Path %v", request.ExternalID, request.Path)
+		RespondBadRequest(w)
 		return
 	}
 
 	// Call user API to create an user
 	result, err := u.core.Userapi.AddUser(createUserFromRequest(request))
 
-	// Check response
+	// Error handling
 	if err != nil {
-		u.core.RespondError(w, http.StatusInternalServerError, err)
-		return
+		u.core.Logger.Errorln(err)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		if apiError.Code == api.USER_ALREADY_EXIST {
+			RespondConflict(w)
+			return
+		} else { // Unexpected API error
+			RespondInternalServerError(w)
+			return
+		}
 	}
+
 	response := &CreateUserResponse{
 		User: result,
 	}
 
 	// Write user to response
-	b, err := json.Marshal(response)
-	if err != nil {
-		u.core.RespondError(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	// Return data
-	u.core.RespondOk(w, http.StatusOK)
-	w.Write(b)
+	RespondOk(w, response)
 }
 
 func (u *UserHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -118,24 +109,24 @@ func (u *UserHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps h
 }
 
 func (u *UserHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	u.logRequest(r)
-
 	// Retrieve user id from path
 	id := ps.ByName(USER_ID)
 
 	// Call user API to retrieve user
-	result, err := u.core.Userapi.GetUserById(id)
+	result, err := u.core.Userapi.GetUserByExternalId(id)
 
-	// Check if there were errors
+	// Error handling
 	if err != nil {
-		u.core.RespondError(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	// Check if there are results
-	if result == nil {
-		u.core.RespondOk(w, http.StatusNotFound)
-		return
+		u.core.Logger.Errorln(err)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		if apiError.Code == api.USER_BY_EXTERNAL_ID_NOT_FOUND {
+			RespondNotFound(w)
+			return
+		} else { // Unexpected API error
+			RespondInternalServerError(w)
+			return
+		}
 	}
 
 	response := GetUserByIdResponse{
@@ -143,20 +134,10 @@ func (u *UserHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, ps
 	}
 
 	// Write user to response
-	b, err := json.Marshal(response)
-	if err != nil {
-		u.core.RespondError(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	// Return data
-	u.core.RespondOk(w, http.StatusOK)
-	w.Write(b)
+	RespondOk(w, response)
 }
 
 func (u *UserHandler) handleDeleteUserId(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	u.logRequest(r)
-
 	// Retrieve user id from path
 	id := ps.ByName(USER_ID)
 
@@ -165,25 +146,31 @@ func (u *UserHandler) handleDeleteUserId(w http.ResponseWriter, r *http.Request,
 
 	// Check if there were errors
 	if err != nil {
-		u.core.RespondError(w, http.StatusBadRequest, err)
-	} else {
-		u.core.RespondOk(w, http.StatusAccepted)
+		u.core.Logger.Errorln(err)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		// If user doesn't exist
+		if apiError.Code == api.USER_BY_EXTERNAL_ID_NOT_FOUND {
+			RespondNotFound(w)
+		} else { // Unexpected error
+			RespondInternalServerError(w)
+		}
+	} else { // Respond without content
+		RespondNoContent(w)
 	}
 }
 
 func (u *UserHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	u.logRequest(r)
-
 	// Retrieve users using path
 	id := ps.ByName(USER_ID)
 
 	result, err := u.core.Userapi.GetGroupsByUserId(id)
 	if err != nil {
-		u.core.RespondError(w, http.StatusInternalServerError, err)
+		RespondInternalServerError(w)
 	}
 	b, err := json.Marshal(result)
 	if err != nil {
-		u.core.RespondError(w, http.StatusBadRequest, err)
+		RespondInternalServerError(w)
 	}
 
 	w.Write(b)
@@ -197,14 +184,11 @@ func createUserFromRequest(request CreateUserRequest) api.User {
 	path := request.Path + "/" + request.ExternalID
 	urn := fmt.Sprintf("urn:iws:iam:user/%v", path)
 	user := api.User{
+		ID:         uuid.NewV4().String(),
 		ExternalID: request.ExternalID,
 		Path:       path,
 		Urn:        urn,
 	}
 
 	return user
-}
-
-func (u *UserHandler) logRequest(request *http.Request) {
-	u.core.Logger.Debugln(request)
 }

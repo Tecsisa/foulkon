@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"github.com/julienschmidt/httprouter"
 	"github.com/tecsisa/authorizr/authorizr"
 	"net/http"
@@ -98,4 +99,43 @@ func Handler(core *authorizr.Core) http.Handler {
 
 	// Return handler
 	return router
+}
+
+// HTTP responses
+
+// 2xx RESPONSES
+
+func RespondOk(w http.ResponseWriter, value interface{}) {
+	b, err := json.Marshal(value)
+	if err != nil {
+		RespondInternalServerError(w)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(b)
+
+}
+
+func RespondNoContent(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// 4xx RESPONSES
+func RespondNotFound(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNotFound)
+}
+
+func RespondBadRequest(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNotFound)
+}
+
+func RespondConflict(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusConflict)
+}
+
+// 5xx RESPONSES
+
+func RespondInternalServerError(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusInternalServerError)
 }

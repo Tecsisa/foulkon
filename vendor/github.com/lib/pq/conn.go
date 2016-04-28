@@ -870,7 +870,6 @@ func (cn *conn) verifyCA(client *tls.Conn, tlsConf *tls.Config) {
 	}
 }
 
-
 // This function sets up SSL client certificates based on either the "sslkey"
 // and "sslcert" settings (possibly set via the environment variables PGSSLKEY
 // and PGSSLCERT, respectively), or if they aren't set, from the .postgresql

@@ -10,3 +10,5 @@ import:
   version: go1.0-cutoff
 - package: github.com/jinzhu/gorm
   version: 5174cc5c242a728b435ea2be8a2f7f998e15429b
+- package: github.com/satori/go.uuid
+  version: 1.0.0

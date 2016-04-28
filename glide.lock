@@ -1,16 +1,18 @@
-hash: 5eaf486548358c6dc0153023c989aaf546e544d064aac22c33548a88f7640bdc
-updated: 2016-04-22T13:24:36.142352346+02:00
+hash: 1adf3ab6c6d5b39bd28944bd18ad033311477ce46c4ba104a62c28fa7ca3616d
+updated: 2016-04-27T15:17:15.161695478+02:00
 imports:
 - name: github.com/jinzhu/gorm
-  version: 5174cc5c242a728b435ea2be8a2f7f998e15429b
+  version: ""
 - name: github.com/jinzhu/inflection
-  version: 3272df6c21d04180007eb3349844c89a3856bc25
+  version: 21be09846880afcef01a4c635b234ddd42ddad8a
 - name: github.com/julienschmidt/httprouter
-  version: 8c199fb6259ffc1af525cc3ad52ee60ba8359669
+  version: ""
 - name: github.com/lib/pq
-  version: 5da87320b996b433460a8930bb6b8f4e5672d371
+  version: ""
   subpackages:
   - oid
+- name: github.com/satori/go.uuid
+  version: f9ab0dce87d815821e221626b772e3475a0d2749
 - name: github.com/Sirupsen/logrus
-  version: 4b6ea7319e214d98c938f12692336f7ca9348d6b
+  version: ""
 devImports: []

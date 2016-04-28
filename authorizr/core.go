@@ -1,8 +1,6 @@
 package authorizr
 
 import (
-	"net/http"
-
 	"io"
 
 	log "github.com/Sirupsen/logrus"
@@ -56,15 +54,4 @@ func NewCore(coreconfig *CoreConfig) (*Core, error) {
 		Userapi: userApi,
 		Logger:  logger,
 	}, nil
-}
-
-func (core *Core) RespondError(w http.ResponseWriter, status int, err error) {
-	core.Logger.Error(err)
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(status)
-}
-
-func (core *Core) RespondOk(w http.ResponseWriter, status int) {
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(status)
 }
