@@ -1,9 +1,9 @@
 package postgresql
 
 import (
+	"fmt"
 	"time"
 
-	"fmt"
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/database"
 )

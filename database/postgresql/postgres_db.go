@@ -1,10 +1,10 @@
 package postgresql
 
 import (
-	_ "github.com/lib/pq"
+	"time"
 
 	"github.com/jinzhu/gorm"
-	"time"
+	_ "github.com/lib/pq"
 )
 
 type PostgresRepo struct {

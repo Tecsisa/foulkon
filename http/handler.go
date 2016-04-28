@@ -2,9 +2,10 @@ package http
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/tecsisa/authorizr/authorizr"
-	"net/http"
 )
 
 const (
