@@ -16,7 +16,7 @@ func (g PostgresRepo) GetGroupByName(org string, name string) (*api.Group, error
 	if query.RecordNotFound() {
 		return nil, &database.Error{
 			Code:    database.GROUP_NOT_FOUND,
-			Message: fmt.Sprintf("Gruop with organization %v and name %v not found", org, name),
+			Message: fmt.Sprintf("Group with organization %v and name %v not found", org, name),
 		}
 	}
 
