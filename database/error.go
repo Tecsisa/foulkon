@@ -7,8 +7,10 @@ const (
 	INTERNAL_ERROR = "InternalError"
 
 	// User Codes
-	USER_NOT_FOUND     = "UserNotFound"
-	USER_ALREADY_EXIST = "UserAlreadyExist"
+	USER_NOT_FOUND = "UserNotFound"
+
+	// Group Codes
+	GROUP_NOT_FOUND = "GroupNotFound"
 )
 
 type Error struct {
