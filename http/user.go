@@ -44,7 +44,7 @@ func (u *UserHandler) handleGetUsers(w http.ResponseWriter, r *http.Request, _ h
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call user API
-	result, err := u.core.Userapi.GetListUsers(pathPrefix)
+	result, err := u.core.UserApi.GetListUsers(pathPrefix)
 	if err != nil {
 		u.core.Logger.Errorln(err)
 		RespondInternalServerError(w)
@@ -80,7 +80,7 @@ func (u *UserHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	// Call user API to create an user
-	result, err := u.core.Userapi.AddUser(createUserFromRequest(request))
+	result, err := u.core.UserApi.AddUser(createUserFromRequest(request))
 
 	// Error handling
 	if err != nil {
@@ -113,7 +113,7 @@ func (u *UserHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, ps
 	id := ps.ByName(USER_ID)
 
 	// Call user API to retrieve user
-	result, err := u.core.Userapi.GetUserByExternalId(id)
+	result, err := u.core.UserApi.GetUserByExternalId(id)
 
 	// Error handling
 	if err != nil {
@@ -142,7 +142,7 @@ func (u *UserHandler) handleDeleteUserId(w http.ResponseWriter, r *http.Request,
 	id := ps.ByName(USER_ID)
 
 	// Call user API to delete user
-	err := u.core.Userapi.RemoveUserById(id)
+	err := u.core.UserApi.RemoveUserById(id)
 
 	// Check if there were errors
 	if err != nil {
@@ -164,7 +164,7 @@ func (u *UserHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Request,
 	// Retrieve users using path
 	id := ps.ByName(USER_ID)
 
-	result, err := u.core.Userapi.GetGroupsByUserId(id)
+	result, err := u.core.UserApi.GetGroupsByUserId(id)
 	if err != nil {
 		RespondInternalServerError(w)
 	}
