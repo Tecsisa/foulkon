@@ -12,3 +12,5 @@ import:
   version: 5174cc5c242a728b435ea2be8a2f7f998e15429b
 - package: github.com/satori/go.uuid
   version: 1.0.0
+- package: github.com/emanoelxavier/openid2go
+  version: 90f51ccdd292798d4995b9c5057d4cbc94a8b782

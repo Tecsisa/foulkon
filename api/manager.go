@@ -4,14 +4,13 @@ package api
 type UserRepo interface {
 	// This method get a user with specified External ID.
 	// If user exists, it will return the user with error param as nil
-	// If user doesn't exists, it will return the error code database.Err
-	// If there is an error, it will return error param with associated error, bool param as false and user as nil
+	// If user doesn't exists, it will return the error code database.USER_NOT_FOUND
+	// If there is an error, it will return error param with associated error message
+	// and error code database.INTERNAL_ERROR
 	GetUserByExternalID(id string) (*User, error)
 
 	// This method store a user.
-	// If there is an user with this external ID, it will return an error
-	// If user doesn't exists, it will return the bool param as false and other params as nil
-	// If there is an error, it will return error param with associated error, bool param as false and user as nil
+	// If there are a problem inserting user it will return an database.Error error
 	AddUser(User) (*User, error)
 
 	GetUsersFiltered(pathPrefix string) ([]User, error)

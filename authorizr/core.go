@@ -5,6 +5,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/tecsisa/authorizr/api"
+	"github.com/tecsisa/authorizr/auth"
 	"github.com/tecsisa/authorizr/database/postgresql"
 )
 
@@ -18,6 +19,9 @@ type Core struct {
 
 	// Logger
 	Logger *log.Logger
+
+	//  Auth connector
+	Authenticator *auth.Authenticator
 }
 
 type CoreConfig struct {
@@ -43,6 +47,15 @@ func NewCore(coreconfig *CoreConfig) (*Core, error) {
 		return nil, err
 	}
 
+	// Instantiate Auth Connector
+	authConnector, err := auth.InitOIDCConnector()
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	authenticator := auth.NewAuthenticator(authConnector, "authorizr")
+
 	// Instantiate APIs
 	userApi := &api.UsersAPI{
 		UserRepo: postgresql.PostgresRepo{
@@ -51,7 +64,8 @@ func NewCore(coreconfig *CoreConfig) (*Core, error) {
 	}
 
 	return &Core{
-		Userapi: userApi,
-		Logger:  logger,
+		Userapi:       userApi,
+		Logger:        logger,
+		Authenticator: authenticator,
 	}, nil
 }

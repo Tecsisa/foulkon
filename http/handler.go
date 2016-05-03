@@ -99,7 +99,7 @@ func Handler(core *authorizr.Core) http.Handler {
 	router.GET(API_VERSION_1+"/policies", policyHandler.handleListAllPolicies)
 
 	// Return handler
-	return router
+	return core.Authenticator.Authenticate(router)
 }
 
 // HTTP responses

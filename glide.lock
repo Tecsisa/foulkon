@@ -1,10 +1,16 @@
-hash: 1adf3ab6c6d5b39bd28944bd18ad033311477ce46c4ba104a62c28fa7ca3616d
-updated: 2016-04-27T15:17:15.161695478+02:00
+hash: 9123490a6e7a3551772c5760fed1260088cd1675e2e0f76445302df885175022
+updated: 2016-05-03T15:26:11.148284899+02:00
 imports:
+- name: github.com/dgrijalva/jwt-go
+  version: a2c85815a77d0f951e33ba4db5ae93629a1530af
+- name: github.com/emanoelxavier/openid2go
+  version: 90f51ccdd292798d4995b9c5057d4cbc94a8b782
+  subpackages:
+  - openid
 - name: github.com/jinzhu/gorm
   version: ""
 - name: github.com/jinzhu/inflection
-  version: 21be09846880afcef01a4c635b234ddd42ddad8a
+  version: 8403adc07082f754701c93fd8fd0d63188390853
 - name: github.com/julienschmidt/httprouter
   version: ""
 - name: github.com/lib/pq
@@ -12,7 +18,12 @@ imports:
   subpackages:
   - oid
 - name: github.com/satori/go.uuid
-  version: f9ab0dce87d815821e221626b772e3475a0d2749
+  version: ""
 - name: github.com/Sirupsen/logrus
   version: ""
+- name: github.com/square/go-jose
+  version: d2a847139a1442cada879cc05cc4080485b8d193
+  subpackages:
+  - cipher
+  - json
 devImports: []
