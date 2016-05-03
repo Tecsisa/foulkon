@@ -9,6 +9,10 @@ const (
 	// User API error codes
 	USER_BY_EXTERNAL_ID_NOT_FOUND = "UserWithExternalIDNotFound"
 	USER_ALREADY_EXIST            = "UserAlreadyExist"
+
+	// Group API error codes
+	GROUP_BY_ORG_AND_NAME_NOT_FOUND = "GroupWithOrgAndNameNotFound"
+	GROUP_ALREADY_EXIST             = "GroupAlreadyExist"
 )
 
 type Error struct {

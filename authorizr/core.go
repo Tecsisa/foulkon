@@ -13,9 +13,9 @@ import (
 // that you define at startup
 type Core struct {
 	// APIs
-	Userapi   *api.UsersAPI
-	Groupapi  *api.GroupsAPI
-	Policyapi *api.PolicyAPI
+	UserApi   *api.UsersAPI
+	GroupApi  *api.GroupsAPI
+	PolicyApi *api.PolicyAPI
 
 	// Logger
 	Logger *log.Logger
@@ -63,9 +63,17 @@ func NewCore(coreconfig *CoreConfig) (*Core, error) {
 		},
 	}
 
+	groupApi := &api.GroupsAPI{
+		GroupRepo: postgresql.PostgresRepo{
+			Dbmap: db,
+		},
+	}
+
 	return &Core{
-		Userapi:       userApi,
 		Logger:        logger,
 		Authenticator: authenticator,
+		UserApi:       userApi,
+		GroupApi:      groupApi,
+		Logger:        logger,
 	}, nil
 }
