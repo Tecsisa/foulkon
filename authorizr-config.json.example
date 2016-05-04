@@ -1,0 +1,20 @@
+{
+	"LoggerConfig": {
+		"log_type": "file",
+		"log_file_dir": "/tmp/authorizr/authorizr.log",
+		"log_level_debug": "true"
+	},
+	"DatabaseConfig": {
+		"db_type": "postgres",
+		"db_postgres_datasourcename": "postgres://authorizr:password@localhost:5432/authorizrdb?sslmode=disable"
+	},
+	"AuthConnectorConfig": {
+		"auth_connector_type": "oidc",
+		"auth_connector_oidc_issuer": "http://localhost:5556",
+		"auth_connector_oidc_client_ids": "9jCU4aaDHjV-y59SSlGwfrmpdo4mIkGBW4E41QvI-X0=@127.0.0.1"
+	},
+	"AdminUserConfig": {
+		"auth_admin_username": "admin",
+		"auth_admin_password": "admin"
+	}
+}
