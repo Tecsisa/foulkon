@@ -4,14 +4,19 @@ import (
 	"net/http"
 )
 
-// Authenticator system, with connector and digest admin authentication
+// Authenticator system, with connector and basic admin authentication
 type Authenticator struct {
-	Connector AuthConnector
+	Connector     AuthConnector
+	adminUser     string
+	adminPassword string
 }
 
-func NewAuthenticator(connector AuthConnector, realm string) *Authenticator {
+// Returns a configured Authenticator with associated connector
+func NewAuthenticator(connector AuthConnector, adminUser string, adminPassword string) *Authenticator {
 	return &Authenticator{
-		Connector: connector,
+		Connector:     connector,
+		adminUser:     adminUser,
+		adminPassword: adminPassword,
 	}
 }
 
@@ -24,7 +29,7 @@ type AuthConnector interface {
 func (a *Authenticator) Authenticate(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var handler http.Handler
-		if checkAdmin(r) {
+		if checkAdmin(r, a.adminUser, a.adminPassword) {
 			// Admin check
 			handler = h
 
@@ -38,10 +43,10 @@ func (a *Authenticator) Authenticate(h http.Handler) http.Handler {
 }
 
 // This method check if user is an admin
-func checkAdmin(r *http.Request) bool {
+func checkAdmin(r *http.Request, adminUser string, adminPassword string) bool {
 	username, password, ok := r.BasicAuth()
-	// TODO rsoleto: Hay que cambiarlo para que utilice a través de un fichero de configuración o de BD
-	if ok && username == "admin" && password == "admin" {
+	// Password is never stored in DB
+	if ok && username == adminUser && password == adminPassword {
 		return true
 	}
 	return false
