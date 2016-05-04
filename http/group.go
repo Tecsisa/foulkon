@@ -30,6 +30,10 @@ type GetGroupNameResponse struct {
 	Group *api.Group
 }
 
+type GetGroupsResponse struct {
+	Groups []api.Group
+}
+
 type GroupHandler struct {
 	core *authorizr.Core
 }
@@ -71,8 +75,28 @@ func (g *GroupHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request,
 	RespondOk(w, response)
 }
 
-func (g *GroupHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (g *GroupHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Retrieve group org and name from path
+	org := ps.ByName(ORG_ID)
+	name := ps.ByName(GROUP_ID)
 
+	// Call user API to delete group
+	err := g.core.GroupApi.RemoveGroup(org, name)
+
+	// Check if there were errors
+	if err != nil {
+		g.core.Logger.Errorln(err)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		// If group doesn't exist
+		if apiError.Code == api.GROUP_BY_ORG_AND_NAME_NOT_FOUND {
+			RespondNotFound(w)
+		} else { // Unexpected error
+			RespondInternalServerError(w)
+		}
+	} else { // Respond without content
+		RespondNoContent(w)
+	}
 }
 
 func (g *GroupHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -105,7 +129,25 @@ func (g *GroupHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, ps
 	RespondOk(w, response)
 }
 
-func (g *GroupHandler) handleListGroups(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (g *GroupHandler) handleListGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Retrieve group org from path
+	org := ps.ByName(ORG_ID)
+
+	// Call group API to retrieve groups
+	result, err := g.core.GroupApi.GetListGroups(org)
+	if err != nil {
+		g.core.Logger.Errorln(err)
+		RespondInternalServerError(w)
+		return
+	}
+
+	// Create response
+	response := &GetGroupsResponse{
+		Groups: result,
+	}
+
+	// Return data
+	RespondOk(w, response)
 
 }
 

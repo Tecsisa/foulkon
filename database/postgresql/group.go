@@ -58,6 +58,52 @@ func (g PostgresRepo) AddGroup(group api.Group) (*api.Group, error) {
 	return groupDBToGroupAPI(groupDB), nil
 }
 
+func (g PostgresRepo) GetListGroups(org string) ([]api.Group, error) {
+	groups := []Group{}
+	query := g.Dbmap.Where("org like ?", org)
+
+	// Error handling
+	if err := query.Find(&groups).Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	// Transform users for API
+	if groups != nil {
+		apigroups := make([]api.Group, len(groups), cap(groups))
+		for i, g := range groups {
+			apigroups[i] = *groupDBToGroupAPI(&g)
+		}
+		return apigroups, nil
+	}
+
+	// No data to return
+	return nil, nil
+}
+
+func (g PostgresRepo) RemoveGroup(org string, name string) error {
+	// Retrieve group with this org and name
+	group, err := g.GetGroupByName(org, name)
+
+	// Go to delete group
+	if group != nil {
+		err = g.Dbmap.Delete(&group).Error
+		// Error handling
+		if err != nil {
+			return database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: err.Error(),
+			}
+		}
+		return nil
+	}
+
+	// Return error if group isn't found
+	return err
+}
+
 // Transform a Group retrieved from db into a group for API
 func groupDBToGroupAPI(groupdb *Group) *api.Group {
 	return &api.Group{

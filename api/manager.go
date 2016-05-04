@@ -21,6 +21,8 @@ type UserRepo interface {
 // Group repository that contains all user operations for this domain
 type GroupRepo interface {
 	GetGroupByName(org string, name string) (*Group, error)
+	GetListGroups(org string) ([]Group, error)
+	RemoveGroup(org string, name string) error
 
 	AddGroup(Group) (*Group, error)
 }
