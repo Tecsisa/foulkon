@@ -1,0 +1,33 @@
+# Server config
+[server]
+host = "localhost"
+port = "8000"
+
+# Logger
+[logger]
+type = "file" #If not specified default is StdOut
+level = "INFO"
+	# Directory for file configuration
+	[logger.file]
+	dir = "/tmp/authorizr/authorizr.log"
+
+# Database config
+[database]
+type = "postgres"
+	# Postgres database config
+	[database.postgres]
+	datasourcename = "postgres://authorizr:password@localhost:5432/authorizrdb?sslmode=disable"
+
+# Authenticator config
+[authenticator]
+type = "oidc"
+
+	# OIDC connector config
+	[authenticator.oidc]
+	issuer = "http://localhost:5556"
+	clientids = "9jCU4aaDHjV-y59SSlGwfrmpdo4mIkGBW4E41QvI-X0=@127.0.0.1"
+
+# Admin user config
+[admin]
+username = "admin"
+password = "admin"

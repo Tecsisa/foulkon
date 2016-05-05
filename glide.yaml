@@ -14,3 +14,5 @@ import:
   version: 1.0.0
 - package: github.com/emanoelxavier/openid2go
   version: 90f51ccdd292798d4995b9c5057d4cbc94a8b782
+- package: github.com/pelletier/go-toml
+  version: 0.3.4

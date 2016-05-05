@@ -1,28 +1,32 @@
-hash: 9123490a6e7a3551772c5760fed1260088cd1675e2e0f76445302df885175022
-updated: 2016-05-03T15:26:11.148284899+02:00
+hash: 20a3d42a0c6eb6b615480e88560c128223b47a4e8907a602a45217ee69b7205c
+updated: 2016-05-05T13:58:50.210375854+02:00
 imports:
 - name: github.com/dgrijalva/jwt-go
-  version: a2c85815a77d0f951e33ba4db5ae93629a1530af
+  version: 6bde83e2d052f56259bc66e1d8210ff13d3584c1
 - name: github.com/emanoelxavier/openid2go
-  version: 90f51ccdd292798d4995b9c5057d4cbc94a8b782
+  version: ""
   subpackages:
   - openid
 - name: github.com/jinzhu/gorm
   version: ""
 - name: github.com/jinzhu/inflection
-  version: 8403adc07082f754701c93fd8fd0d63188390853
+  version: 6bde83e2d052f56259bc66e1d8210ff13d3584c1
 - name: github.com/julienschmidt/httprouter
   version: ""
 - name: github.com/lib/pq
   version: ""
   subpackages:
   - oid
+- name: github.com/pelletier/go-buffruneio
+  version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
+- name: github.com/pelletier/go-toml
+  version: 8e6ab94eec2ae84996ed00ec774b2e15c540d7f9
 - name: github.com/satori/go.uuid
   version: ""
 - name: github.com/Sirupsen/logrus
   version: ""
 - name: github.com/square/go-jose
-  version: d2a847139a1442cada879cc05cc4080485b8d193
+  version: 6bde83e2d052f56259bc66e1d8210ff13d3584c1
   subpackages:
   - cipher
   - json

@@ -7,10 +7,9 @@ import (
 
 	"os"
 
-	"encoding/json"
+	"github.com/pelletier/go-toml"
 	"github.com/tecsisa/authorizr/authorizr"
 	internalhttp "github.com/tecsisa/authorizr/http"
-	"io/ioutil"
 )
 
 func main() {
@@ -24,27 +23,19 @@ func main() {
 	}
 
 	// Access to file
-	file, e := ioutil.ReadFile(*configFile)
+	config, e := toml.LoadFile(*configFile)
 	if e != nil {
-		fmt.Printf("Cannot read configuration file %v File error: %v\n", *configFile, e)
-		os.Exit(1)
-	}
-
-	// Transform json
-	var coreConfig *authorizr.CoreConfig
-	err := json.Unmarshal(file, &coreConfig)
-	if err != nil {
-		fmt.Printf("Unmarshal file error: %v\n", err)
+		fmt.Printf("Cannot read configuration file %v, error: %v", *configFile, e)
 		os.Exit(1)
 	}
 
 	// Create core
-	core, err := authorizr.NewCore(coreConfig)
+	core, err := authorizr.NewCore(config)
 	if err != nil {
 		fmt.Fprint(os.Stderr, err.Error())
 		return
 	}
 
-	core.Logger.Printf("Server running - binding :8000")
-	core.Logger.Fatal(http.ListenAndServe(":8000", internalhttp.Handler(core)).Error())
+	core.Logger.Printf("Server running in %v:%v", core.Host, core.Port)
+	core.Logger.Fatal(http.ListenAndServe(core.Host+":"+core.Port, internalhttp.Handler(core)).Error())
 }
