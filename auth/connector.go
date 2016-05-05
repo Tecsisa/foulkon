@@ -23,13 +23,14 @@ func NewAuthenticator(connector AuthConnector, adminUser string, adminPassword s
 // Interface for authentication that connectors implement
 type AuthConnector interface {
 	Authenticate(h http.Handler) http.Handler
+	RetrieveUserID(r http.Request) string
 }
 
-// Authenticate method
+// Authenticate method. This checks all problem related to user authentication, so if somthing goes wrong, it return a error message.
 func (a *Authenticator) Authenticate(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var handler http.Handler
-		if checkAdmin(r, a.adminUser, a.adminPassword) {
+		if checkAdmin(*r, a.adminUser, a.adminPassword) {
 			// Admin check
 			handler = h
 
@@ -42,8 +43,17 @@ func (a *Authenticator) Authenticate(h http.Handler) http.Handler {
 	})
 }
 
+// Retrieve user from request. This method never fail because Authentication deal with all problems related to this
+func (a *Authenticator) RetrieveUserID(r http.Request) (userID string, admin bool) {
+	if checkAdmin(r, a.adminUser, a.adminPassword) {
+		return a.adminUser, true
+	} else {
+		return a.Connector.RetrieveUserID(r), false
+	}
+}
+
 // This method check if user is an admin
-func checkAdmin(r *http.Request, adminUser string, adminPassword string) bool {
+func checkAdmin(r http.Request, adminUser string, adminPassword string) bool {
 	username, password, ok := r.BasicAuth()
 	// Password is never stored in DB
 	if ok && username == adminUser && password == adminPassword {
