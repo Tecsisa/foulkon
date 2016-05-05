@@ -37,7 +37,7 @@ func InitDb(datasourcename string) (*gorm.DB, error) {
 	}
 
 	// Activate sql logger
-	db.LogMode(true)
+	//db.LogMode(true)
 
 	return db, nil
 }
