@@ -12,6 +12,9 @@ const (
 	// Group Codes
 	GROUP_NOT_FOUND = "GroupNotFound"
 
+	// Group User Relation Codes
+	GROUP_USER_RELATION_NOT_FOUND = "GroupUserRelationNotFound"
+
 	// Policy Codes
 	POLICY_NOT_FOUND = "PolicyNotFound"
 )

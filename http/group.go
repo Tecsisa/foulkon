@@ -159,8 +159,27 @@ func (g *GroupHandler) handleListMembers(w http.ResponseWriter, r *http.Request,
 
 }
 
-func (g *GroupHandler) handleAddMember(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (g *GroupHandler) handleAddMember(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Retrieve group, org and user from path
+	org := ps.ByName(ORG_ID)
+	user := ps.ByName(USER_ID)
+	group := ps.ByName(GROUP_ID)
 
+	// Call group API to create an group
+	err := g.core.GroupApi.AddMember(user, group, org)
+	// Error handling
+	if err != nil {
+		g.core.Logger.Errorln(err)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		if apiError.Code == api.GROUP_BY_ORG_AND_NAME_NOT_FOUND || apiError.Code == api.USER_BY_EXTERNAL_ID_NOT_FOUND {
+			RespondNotFound(w)
+			return
+		} else { // Unexpected API error
+			RespondInternalServerError(w)
+			return
+		}
+	}
 }
 
 func (g *GroupHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

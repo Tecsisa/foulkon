@@ -31,7 +31,7 @@ func InitDb(datasourcename string) (*gorm.DB, error) {
 	}
 
 	// Create tables if not exist
-	err = db.AutoMigrate(&User{}, &Group{}, &Policy{}, &Statement{}).Error
+	err = db.AutoMigrate(&User{}, &Group{}, &Policy{}, &Statement{}, &GroupUserRelation{}).Error
 	if err != nil {
 		return nil, err
 	}
@@ -98,4 +98,15 @@ type Statement struct {
 // set Statement's table name
 func (Statement) TableName() string {
 	return "statements"
+}
+
+// Group-Users Relationship
+type GroupUserRelation struct {
+	UserID  string `gorm:"primary_key"`
+	GroupID string `gorm:"primary_key"`
+}
+
+// set GroupUserRelation's table name
+func (GroupUserRelation) TableName() string {
+	return "group_user_relations"
 }

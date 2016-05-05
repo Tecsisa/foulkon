@@ -32,6 +32,30 @@ func (u PostgresRepo) GetUserByExternalID(id string) (*api.User, error) {
 	return userDBToUserAPI(user), nil
 }
 
+func (u PostgresRepo) GetUserByID(id string) (*api.User, error) {
+	user := &User{}
+	query := u.Dbmap.Where("id like ?", id).First(user)
+
+	// Check if user exist
+	if query.RecordNotFound() {
+		return nil, &database.Error{
+			Code:    database.USER_NOT_FOUND,
+			Message: fmt.Sprintf("User with id %v not found", id),
+		}
+	}
+
+	// Error Handling
+	if err := query.Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	// Return user
+	return userDBToUserAPI(user), nil
+}
+
 func (u PostgresRepo) AddUser(user api.User) (*api.User, error) {
 
 	// Create user model

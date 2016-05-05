@@ -21,7 +21,7 @@ type UsersAPI struct {
 	UserRepo UserRepo
 }
 
-// Retrieve user by id
+// Retrieve user by external id
 func (u *UsersAPI) GetUserByExternalId(id string) (*User, error) {
 	// Call repo to retrieve the user
 	user, err := u.UserRepo.GetUserByExternalID(id)
@@ -46,7 +46,33 @@ func (u *UsersAPI) GetUserByExternalId(id string) (*User, error) {
 
 	// Return user
 	return user, nil
+}
 
+// Retrieve user by id
+func (u *UsersAPI) GetUserByID(id string) (*User, error) {
+	// Call repo to retrieve the user
+	user, err := u.UserRepo.GetUserByID(id)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		// User doesn't exist in DB
+		if dbError.Code == database.USER_NOT_FOUND {
+			return nil, &Error{
+				Code:    USER_BY_ID_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		} else { // Unexpected error
+			return nil, &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+
+	// Return user
+	return user, nil
 }
 
 // Retrieve users that has path
