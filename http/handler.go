@@ -128,7 +128,7 @@ func RespondNotFound(w http.ResponseWriter) {
 }
 
 func RespondBadRequest(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusNotFound)
+	w.WriteHeader(http.StatusBadRequest)
 }
 
 func RespondConflict(w http.ResponseWriter) {

@@ -73,13 +73,12 @@ func (Group) TableName() string {
 
 // Policy table
 type Policy struct {
-	ID         string      `gorm:"primary_key"`
-	Name       string      `gorm:"not null"`
-	Path       string      `gorm:"not null"`
-	Org        string      `gorm:"not null"`
-	CreateAt   int64       `gorm:"not null"`
-	Urn        string      `gorm:"not null;unique"`
-	Statements []Statement `gorm:"ForeignKey:PolicyID;;AssociationForeignKey:ID"`
+	ID       string `gorm:"primary_key"`
+	Name     string `gorm:"not null"`
+	Path     string `gorm:"not null"`
+	Org      string `gorm:"not null"`
+	CreateAt int64  `gorm:"not null"`
+	Urn      string `gorm:"not null;unique"`
 }
 
 // set Policy's table name

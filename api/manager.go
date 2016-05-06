@@ -29,4 +29,6 @@ type GroupRepo interface {
 
 // Policy repository that contains all user operations for this domain
 type PolicyRepo interface {
+	GetPolicyByName(org string, name string) (*Policy, error)
+	AddPolicy(Policy) (*Policy, error)
 }

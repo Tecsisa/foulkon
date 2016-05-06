@@ -5,7 +5,7 @@ port = "8000"
 
 # Logger
 [logger]
-type = "file" #If not specified default is StdOut
+type = "default" #If not specified default is StdOut
 level = "INFO"
 	# Directory for file configuration
 	[logger.file]

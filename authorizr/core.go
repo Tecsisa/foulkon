@@ -25,7 +25,7 @@ type Core struct {
 	// APIs
 	UserApi   *api.UsersAPI
 	GroupApi  *api.GroupsAPI
-	PolicyApi *api.PolicyAPI
+	PolicyApi *api.PoliciesAPI
 
 	// Logger
 	Logger *log.Logger
@@ -66,6 +66,7 @@ func NewCore(config *toml.TomlTree) (*Core, error) {
 	// Start DB with APIs
 	var userApi *api.UsersAPI
 	var groupApi *api.GroupsAPI
+	var policyApi *api.PoliciesAPI
 
 	switch getMandatoryValue(config, "database.type") {
 	case "postgres": // Postgres DB
@@ -83,6 +84,11 @@ func NewCore(config *toml.TomlTree) (*Core, error) {
 		}
 		groupApi = &api.GroupsAPI{
 			GroupRepo: postgresql.PostgresRepo{
+				Dbmap: db,
+			},
+		}
+		policyApi = &api.PoliciesAPI{
+			PolicyRepo: postgresql.PostgresRepo{
 				Dbmap: db,
 			},
 		}
@@ -131,6 +137,7 @@ func NewCore(config *toml.TomlTree) (*Core, error) {
 		Authenticator: authenticator,
 		UserApi:       userApi,
 		GroupApi:      groupApi,
+		PolicyApi:     policyApi,
 	}, nil
 }
 
