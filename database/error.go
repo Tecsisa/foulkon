@@ -11,6 +11,9 @@ const (
 
 	// Group Codes
 	GROUP_NOT_FOUND = "GroupNotFound"
+
+	// Policy Codes
+	POLICY_NOT_FOUND = "PolicyNotFound"
 )
 
 type Error struct {

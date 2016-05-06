@@ -13,6 +13,9 @@ const (
 	// Group API error codes
 	GROUP_BY_ORG_AND_NAME_NOT_FOUND = "GroupWithOrgAndNameNotFound"
 	GROUP_ALREADY_EXIST             = "GroupAlreadyExist"
+
+	// Policy API error codes
+	POLICY_ALREADY_EXIST = "PolicyAlreadyExist"
 )
 
 type Error struct {
