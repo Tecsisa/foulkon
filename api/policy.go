@@ -27,8 +27,22 @@ type PoliciesAPI struct {
 	PolicyRepo PolicyRepo
 }
 
-func (p *PoliciesAPI) GetPolicies(path string) string {
-	return path
+func (p *PoliciesAPI) GetPolicies(org string, pathPrefix string) ([]Policy, error) {
+	// Call repo to retrieve the groups
+	policies, err := p.PolicyRepo.GetPoliciesFiltered(org, pathPrefix)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return nil, &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	// Return groups
+	return policies, nil
 }
 
 func (p *PoliciesAPI) AddPolicy(policy Policy) (*Policy, error) {

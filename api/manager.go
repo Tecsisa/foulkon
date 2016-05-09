@@ -31,4 +31,5 @@ type GroupRepo interface {
 type PolicyRepo interface {
 	GetPolicyByName(org string, name string) (*Policy, error)
 	AddPolicy(Policy) (*Policy, error)
+	GetPoliciesFiltered(org string, pathPrefix string) ([]Policy, error)
 }
