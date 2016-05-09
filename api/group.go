@@ -21,9 +21,15 @@ type GroupMembers struct {
 	Users []User `json:"Users, omitempty"`
 }
 
+type GroupPolicies struct {
+	Group    Group    `json:"Group, omitempty"`
+	Policies []Policy `json:"Policies, omitempty"`
+}
+
 type GroupsAPI struct {
-	GroupRepo GroupRepo
-	UserRepo  UserRepo
+	GroupRepo  GroupRepo
+	UserRepo   UserRepo
+	PolicyRepo PolicyRepo
 }
 
 // Add an Group to database if not exist
@@ -100,13 +106,13 @@ func (g *GroupsAPI) AddMember(userID string, groupName string, org string) error
 	}
 
 	// Call repo to retrieve the GroupUserRelation
-	groupMembers, err := g.GroupRepo.GetGroupUserRelation(*userDB, *groupDB)
+	groupMembers, err := g.GroupRepo.GetGroupUserRelation(userDB.ID, groupDB.ID)
 
 	// Error handling
 	if groupMembers != nil {
 		return &Error{
-			Code:    USER_ALREADY_IS_A_MEMBER_OF_GROUP,
-			Message: fmt.Sprintf("User: %v already is a member of Group: %v", userID, groupName),
+			Code:    USER_IS_ALREADY_A_MEMBER_OF_GROUP,
+			Message: fmt.Sprintf("User: %v is already a member of Group: %v", userID, groupName),
 		}
 	}
 
@@ -221,4 +227,57 @@ func (g *GroupsAPI) GetListGroups(org string) ([]Group, error) {
 
 	// Return groups
 	return groups, nil
+}
+
+func (g *GroupsAPI) AttachPolicyToGroup(org string, groupName string, policyName string) error {
+	// Check if group exist
+	group, err := g.GetGroupByName(org, groupName)
+
+	// Error handling
+	if err != nil {
+		return err
+	}
+
+	// Check if policy exist
+	policy, err := g.PolicyRepo.GetPolicyByName(org, policyName)
+
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		if dbError.Code == database.POLICY_NOT_FOUND {
+			return &Error{
+				Code:    POLICY_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		} else { // Unexpected error
+			return &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+
+	// Check if exist this relation
+	groupPolicies, err := g.GroupRepo.GetGroupPolicyRelation(group.ID, policy.ID)
+
+	if groupPolicies != nil {
+		// Unexpected error
+		return &Error{
+			Code:    POLICY_IS_ALREADY_ATTACHED_TO_GROUP,
+			Message: fmt.Sprintf("Policy: %v is already attached to Group: %v", policy.ID, group.ID),
+		}
+	}
+
+	// Attach Policy to Group
+	err = g.GroupRepo.AttachPolicy(*group, *policy)
+
+	if err != nil {
+		dbError := err.(*database.Error)
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	return nil
 }

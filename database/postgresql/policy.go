@@ -10,6 +10,45 @@ import (
 	"github.com/tecsisa/authorizr/database"
 )
 
+func (p PostgresRepo) GetPolicyById(id string) (*api.Policy, error) {
+	policy := &Policy{}
+	query := p.Dbmap.Where("id like ?", id).First(&policy)
+
+	// Check if policy exist
+	if query.RecordNotFound() {
+		return nil, &database.Error{
+			Code:    database.POLICY_NOT_FOUND,
+			Message: fmt.Sprintf("Policy with id %v not found", id),
+		}
+	}
+
+	// Error Handling
+	if err := query.Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	// Retrieve associated statements
+	statements := []Statement{}
+	query = p.Dbmap.Where("policy_id like ?", policy.ID).Find(&statements)
+	// Error Handling
+	if err := query.Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	// Create API policy
+	policyApi := policyDBToPolicyAPI(policy)
+	policyApi.Statements = statementsDBToStatetmentsAPI(statements)
+
+	// Return group
+	return policyApi, nil
+}
+
 func (p PostgresRepo) GetPolicyByName(org string, name string) (*api.Policy, error) {
 	policy := &Policy{}
 	query := p.Dbmap.Where("org like ? AND name like ?", org, name).First(policy)

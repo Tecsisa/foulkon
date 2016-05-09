@@ -34,6 +34,11 @@ type GetGroupsResponse struct {
 	Groups []api.Group
 }
 
+type GetGroupPolicies struct {
+	Group    api.Group
+	Policies []api.Policy
+}
+
 type GroupHandler struct {
 	core *authorizr.Core
 }
@@ -186,7 +191,33 @@ func (g *GroupHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request
 
 }
 
-func (g *GroupHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (g *GroupHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Retrieve group, org and policy from path
+	org := ps.ByName(ORG_ID)
+	groupName := ps.ByName(GROUP_ID)
+	policyName := ps.ByName(POLICY_ID)
+
+	// Call group API to attach policy to group
+	err := g.core.GroupApi.AttachPolicyToGroup(org, groupName, policyName)
+
+	// Error handling
+	if err != nil {
+		g.core.Logger.Errorln(err)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
+		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
+			RespondNotFound(w)
+			return
+		case api.POLICY_IS_ALREADY_ATTACHED_TO_GROUP:
+			RespondConflict(w)
+			return
+		default: // Unexpected API error
+			RespondInternalServerError(w)
+			return
+		}
+
+	}
 
 }
 

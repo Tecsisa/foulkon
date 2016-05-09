@@ -17,10 +17,14 @@ const (
 	GROUP_ALREADY_EXIST             = "GroupAlreadyExist"
 
 	// GroupMembers error codes
-	USER_ALREADY_IS_A_MEMBER_OF_GROUP = "UserAlreadyIsAMemberOfGroup"
+	USER_IS_ALREADY_A_MEMBER_OF_GROUP = "UserIsAlreadyAMemberOfGroup"
+
+	// GroupPolicies error codes
+	POLICY_IS_ALREADY_ATTACHED_TO_GROUP = "PolicyIsAlreadyAttachedToGroup"
 
 	// Policy API error codes
-	POLICY_ALREADY_EXIST = "PolicyAlreadyExist"
+	POLICY_ALREADY_EXIST             = "PolicyAlreadyExist"
+	POLICY_BY_ORG_AND_NAME_NOT_FOUND = "PolicyWithOrgAndNameNotFound"
 )
 
 type Error struct {
