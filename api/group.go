@@ -16,8 +16,14 @@ type Group struct {
 	Org      string    `json:"Org, omitempty"`
 }
 
+type GroupMembers struct {
+	Group Group  `json:"Group, omitempty"`
+	Users []User `json:"Users, omitempty"`
+}
+
 type GroupsAPI struct {
 	GroupRepo GroupRepo
+	UserRepo  UserRepo
 }
 
 // Add an Group to database if not exist
@@ -47,6 +53,77 @@ func (g *GroupsAPI) AddGroup(group Group) (*Group, error) {
 
 	// Return group created
 	return groupCreated, nil
+}
+
+//
+func (g *GroupsAPI) AddMember(userID string, groupName string, org string) error {
+	// Call repo to retrieve the group
+	groupDB, err := g.GroupRepo.GetGroupByName(org, groupName)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		// Group doesn't exist in DB
+		if dbError.Code == database.GROUP_NOT_FOUND {
+			return &Error{
+				Code:    GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		} else { // Unexpected error
+			return &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+
+	// Call repo to retrieve the user
+	userDB, err := g.UserRepo.GetUserByExternalID(userID)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		// User doesn't exist in DB
+		if dbError.Code == database.USER_NOT_FOUND {
+			return &Error{
+				Code:    USER_BY_EXTERNAL_ID_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		} else { // Unexpected error
+			return &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+
+	// Call repo to retrieve the GroupUserRelation
+	groupMembers, err := g.GroupRepo.GetGroupUserRelation(*userDB, *groupDB)
+
+	// Error handling
+	if groupMembers != nil {
+		return &Error{
+			Code:    USER_ALREADY_IS_A_MEMBER_OF_GROUP,
+			Message: fmt.Sprintf("User: %v already is a member of Group: %v", userID, groupName),
+		}
+	}
+
+	// Add Member
+	err = g.GroupRepo.AddMember(*userDB, *groupDB)
+
+	// Check if there is an unexpected error in DB
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	return nil
 }
 
 // Remove group
@@ -86,6 +163,33 @@ func (g *GroupsAPI) GetGroupByName(org string, name string) (*Group, error) {
 		if dbError.Code == database.GROUP_NOT_FOUND {
 			return nil, &Error{
 				Code:    GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		} else { // Unexpected error
+			return nil, &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+
+	// Return group
+	return group, nil
+
+}
+
+func (g *GroupsAPI) GetGroupById(id string) (*Group, error) {
+	// Call repo to retrieve the group
+	group, err := g.GroupRepo.GetGroupById(id)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		// Group doesn't exist in DB
+		if dbError.Code == database.GROUP_NOT_FOUND {
+			return nil, &Error{
+				Code:    GROUP_BY_ID_NOT_FOUND,
 				Message: dbError.Message,
 			}
 		} else { // Unexpected error

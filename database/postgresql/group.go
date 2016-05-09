@@ -32,6 +32,30 @@ func (g PostgresRepo) GetGroupByName(org string, name string) (*api.Group, error
 	return groupDBToGroupAPI(group), nil
 }
 
+func (g PostgresRepo) GetGroupById(id string) (*api.Group, error) {
+	group := &Group{}
+	query := g.Dbmap.Where("id like ?", id).First(group)
+
+	// Check if group exist
+	if query.RecordNotFound() {
+		return nil, &database.Error{
+			Code:    database.GROUP_NOT_FOUND,
+			Message: fmt.Sprintf("Group with id %v not found", id),
+		}
+	}
+
+	// Error Handling
+	if err := query.Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	// Return group
+	return groupDBToGroupAPI(group), nil
+}
+
 func (g PostgresRepo) AddGroup(group api.Group) (*api.Group, error) {
 
 	// Create group model
@@ -58,6 +82,28 @@ func (g PostgresRepo) AddGroup(group api.Group) (*api.Group, error) {
 	return groupDBToGroupAPI(groupDB), nil
 }
 
+func (g PostgresRepo) AddMember(user api.User, group api.Group) error {
+
+	// Create relation
+	relation := &GroupUserRelation{
+		UserID:  user.ID,
+		GroupID: group.ID,
+	}
+
+	// Store relation
+	err := g.Dbmap.Create(relation).Error
+
+	// Error handling
+	if err != nil {
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	return nil
+}
+
 func (g PostgresRepo) GetListGroups(org string) ([]api.Group, error) {
 	groups := []Group{}
 	query := g.Dbmap.Where("org like ?", org)
@@ -81,6 +127,33 @@ func (g PostgresRepo) GetListGroups(org string) ([]api.Group, error) {
 
 	// No data to return
 	return nil, nil
+}
+
+func (g PostgresRepo) GetGroupUserRelation(user api.User, group api.Group) (*api.GroupMembers, error) {
+	relation := GroupUserRelation{}
+	query := g.Dbmap.Where("user_id like ? AND group_id like ?", user.ID, group.ID).First(&relation)
+
+	// Check if relation exist
+	if query.RecordNotFound() {
+		return nil, &database.Error{
+			Code:    database.GROUP_USER_RELATION_NOT_FOUND,
+			Message: fmt.Sprintf("Relation doesn't exist with UserID %v and groupID %v", user.ID, group.ID),
+		}
+	}
+
+	// Error Handling
+	if err := query.Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	// Return GroupMembers
+	return &api.GroupMembers{
+		Group: group,
+		Users: []api.User{user},
+	}, nil
 }
 
 func (g PostgresRepo) RemoveGroup(org string, name string) error {
