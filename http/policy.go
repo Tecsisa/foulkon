@@ -27,8 +27,32 @@ type CreatePolicyResponse struct {
 	Policy api.Policy
 }
 
-func (p *PolicyHandler) handleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+type ListPoliciesResponse struct {
+	Policies []api.Policy
+}
 
+func (p *PolicyHandler) handleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Retrieve org from path
+	org := ps.ByName(ORG_ID)
+
+	// Retrieve query param if exist
+	pathPrefix := r.URL.Query().Get("PathPrefix")
+
+	// Call group API to retrieve groups
+	result, err := p.core.PolicyApi.GetPolicies(org, pathPrefix)
+	if err != nil {
+		p.core.Logger.Errorln(err)
+		RespondInternalServerError(w)
+		return
+	}
+
+	// Create response
+	response := &ListPoliciesResponse{
+		Policies: result,
+	}
+
+	// Return data
+	RespondOk(w, response)
 }
 
 func (p *PolicyHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

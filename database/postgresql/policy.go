@@ -96,6 +96,55 @@ func (p PostgresRepo) AddPolicy(policy api.Policy) (*api.Policy, error) {
 	return policyApi, nil
 }
 
+func (p PostgresRepo) GetPoliciesFiltered(org string, pathPrefix string) ([]api.Policy, error) {
+	policies := []Policy{}
+	query := p.Dbmap
+	if len(org) > 0 {
+		query = p.Dbmap.Where("org like ? ", org)
+	}
+	if len(pathPrefix) > 0 {
+		query = p.Dbmap.Where("path like ? ", pathPrefix+"%")
+	}
+
+	// Error handling
+	if err := query.Find(&policies).Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	// Transform policies for API
+	if policies != nil {
+		apiPolicies := make([]api.Policy, len(policies), cap(policies))
+
+		for i, pol := range policies {
+			policy := policyDBToPolicyAPI(&pol)
+
+			// Retrieve associated statements
+			statements := []Statement{}
+			query = p.Dbmap.Where("policy_id like ?", policy.ID).Find(&statements)
+			// Error Handling
+			if err := query.Error; err != nil {
+				return nil, &database.Error{
+					Code:    database.INTERNAL_ERROR,
+					Message: err.Error(),
+				}
+			}
+
+			policy.Statements = statementsDBToStatetmentsAPI(statements)
+
+			// Assign policy
+			apiPolicies[i] = *policy
+		}
+
+		return apiPolicies, nil
+	}
+
+	// No data to return
+	return nil, nil
+}
+
 // Private helper methods
 
 // Transform a policy retrieved from db into a policy for API
