@@ -104,10 +104,15 @@ func (g PostgresRepo) AddMember(user api.User, group api.Group) error {
 	return nil
 }
 
-func (g PostgresRepo) GetListGroups(org string) ([]api.Group, error) {
+func (g PostgresRepo) GetGroupsFiltered(org string, pathPrefix string) ([]api.Group, error) {
 	groups := []Group{}
-	query := g.Dbmap.Where("org like ?", org)
-
+	query := g.Dbmap
+	if len(org) > 0 {
+		query = g.Dbmap.Where("org like ? ", org)
+	}
+	if len(pathPrefix) > 0 {
+		query = g.Dbmap.Where("path like ? ", pathPrefix+"%")
+	}
 	// Error handling
 	if err := query.Find(&groups).Error; err != nil {
 		return nil, &database.Error{
