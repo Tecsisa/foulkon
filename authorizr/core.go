@@ -89,6 +89,9 @@ func NewCore(config *toml.TomlTree) (*Core, error) {
 			UserRepo: postgresql.PostgresRepo{
 				Dbmap: db,
 			},
+			PolicyRepo: postgresql.PostgresRepo{
+				Dbmap: db,
+			},
 		}
 		policyApi = &api.PoliciesAPI{
 			PolicyRepo: postgresql.PostgresRepo{

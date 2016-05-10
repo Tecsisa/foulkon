@@ -12,7 +12,7 @@ type UserRepo interface {
 
 	// This method store a user.
 	// If there are a problem inserting user it will return an database.Error error
-	AddUser(User) (*User, error)
+	AddUser(user User) (*User, error)
 
 	GetUsersFiltered(pathPrefix string) ([]User, error)
 	GetGroupsByUserID(id string) ([]Group, error)
@@ -24,17 +24,20 @@ type GroupRepo interface {
 	GetGroupById(id string) (*Group, error)
 
 	GetGroupByName(org string, name string) (*Group, error)
-	GetGroupUserRelation(User, Group) (*GroupMembers, error)
+	GetGroupUserRelation(userID string, groupID string) (*GroupMembers, error)
+	GetGroupPolicyRelation(groupID string, policyID string) (*GroupPolicies, error)
 	GetListGroups(org string) ([]Group, error)
 	RemoveGroup(org string, name string) error
 
-	AddGroup(Group) (*Group, error)
-	AddMember(User, Group) error
+	AddGroup(group Group) (*Group, error)
+	AddMember(user User, group Group) error
+	AttachPolicy(group Group, policy Policy) error
 }
 
 // Policy repository that contains all user operations for this domain
 type PolicyRepo interface {
+	GetPolicyById(id string) (*Policy, error)
 	GetPolicyByName(org string, name string) (*Policy, error)
-	AddPolicy(Policy) (*Policy, error)
+	AddPolicy(policy Policy) (*Policy, error)
 	GetPoliciesFiltered(org string, pathPrefix string) ([]Policy, error)
 }

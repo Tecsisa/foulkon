@@ -23,7 +23,7 @@ const (
 	API_VERSION_1 = API_ROOT + "/v1"
 
 	// Organization API ROOT
-	ORG_ROOT = "/organization/:" + ORG_ID
+	ORG_ROOT = "/organizations/:" + ORG_ID
 
 	// User API urls
 	USER_ROOT_URL      = API_VERSION_1 + "/users"
@@ -77,9 +77,9 @@ func Handler(core *authorizr.Core) http.Handler {
 
 	router.DELETE(GROUP_ID_USERS_ID_URL, groupHandler.handleRemoveMember)
 
-	router.POST(GROUP_ID_POLICIES_URL, groupHandler.handleAttachGroupPolicy)
 	router.GET(GROUP_ID_POLICIES_URL, groupHandler.handleListAtachhedGroupPolicies)
 
+	router.POST(GROUP_ID_POLICIES_ID_URL, groupHandler.handleAttachGroupPolicy)
 	router.DELETE(GROUP_ID_POLICIES_ID_URL, groupHandler.handleDetachGroupPolicy)
 
 	// Special endpoint without organization URI for groups
