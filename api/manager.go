@@ -31,6 +31,7 @@ type GroupRepo interface {
 
 	AddGroup(group Group) (*Group, error)
 	AddMember(user User, group Group) error
+	UpdateGroup(group Group, name string, path string, urn string) (*Group, error)
 	AttachPolicy(group Group, policy Policy) error
 }
 

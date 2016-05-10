@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"strings"
@@ -20,9 +19,18 @@ type CreateGroupRequest struct {
 	Path string `json:"Path, omitempty"`
 }
 
+type UpdateGroupRequest struct {
+	Name string `json:"Name, omitempty"`
+	Path string `json:"Path, omitempty"`
+}
+
 // Responses
 
 type CreateGroupResponse struct {
+	Group *api.Group
+}
+
+type UpdateGroupResponse struct {
 	Group *api.Group
 }
 
@@ -159,8 +167,45 @@ func (g *GroupHandler) handleListGroups(w http.ResponseWriter, r *http.Request, 
 
 }
 
-func (g *GroupHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (g *GroupHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Decode request
+	request := UpdateGroupRequest{}
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		g.core.Logger.Errorln(err)
+		RespondBadRequest(w)
+		return
+	}
 
+	// Check parameters
+	if len(strings.TrimSpace(request.Name)) == 0 ||
+		len(strings.TrimSpace(request.Path)) == 0 {
+		g.core.Logger.Errorf("There are mising parameters: Name %v, Path %v", request.Name, request.Path)
+		RespondBadRequest(w)
+		return
+	}
+
+	// Retrieve group, org from path
+	org := ps.ByName(ORG_ID)
+	groupName := ps.ByName(GROUP_ID)
+
+	// Call group API to update group
+	result, err := g.core.GroupApi.UpdateGroup(org, groupName, request.Name, request.Path)
+
+	// Error handling
+	if err != nil {
+		g.core.Logger.Errorln(err)
+		RespondInternalServerError(w)
+		return
+	}
+
+	// Create response
+	response := &UpdateGroupResponse{
+		Group: result,
+	}
+
+	// Write group to response
+	RespondOk(w, response)
 }
 
 func (g *GroupHandler) handleListMembers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -238,7 +283,7 @@ func (g *GroupHandler) handleListAllGroups(w http.ResponseWriter, r *http.Reques
 
 func createGroupFromRequest(request CreateGroupRequest, org string) api.Group {
 	path := request.Path + "/" + request.Name
-	urn := fmt.Sprintf("urn:iws:iam:%v:group/%v", org, path)
+	urn := api.CreateUrn(org, api.RESOURCE_GROUP, path)
 	group := api.Group{
 		ID:   uuid.NewV4().String(),
 		Name: request.Name,

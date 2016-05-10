@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"strings"
@@ -182,7 +181,7 @@ func (u *UserHandler) handleOrgListUsers(w http.ResponseWriter, r *http.Request,
 
 func createUserFromRequest(request CreateUserRequest) api.User {
 	path := request.Path + "/" + request.ExternalID
-	urn := fmt.Sprintf("urn:iws:iam:user/%v", path)
+	urn := api.CreateUrn("", api.RESOURCE_USER, path)
 	user := api.User{
 		ID:         uuid.NewV4().String(),
 		ExternalID: request.ExternalID,

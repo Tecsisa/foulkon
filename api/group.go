@@ -229,6 +229,48 @@ func (g *GroupsAPI) GetListGroups(org string, pathPrefix string) ([]Group, error
 	return groups, nil
 }
 
+func (g *GroupsAPI) UpdateGroup(org string, groupName string, name string, path string) (*Group, error) {
+	// Call repo to retrieve the group
+	groupDB, err := g.GroupRepo.GetGroupByName(org, groupName)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		// Group doesn't exist in DB
+		if dbError.Code == database.GROUP_NOT_FOUND {
+			return nil, &Error{
+				Code:    GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		} else { // Unexpected error
+			return nil, &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+
+	// Get Urn
+	urn := CreateUrn(org, RESOURCE_GROUP, path)
+
+	// Update group
+	group, err := g.GroupRepo.UpdateGroup(*groupDB, name, path, urn)
+
+	// Check if there is an unexpected error in DB
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return nil, &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	return group, nil
+
+}
+
 func (g *GroupsAPI) AttachPolicyToGroup(org string, groupName string, policyName string) error {
 	// Check if group exist
 	group, err := g.GetGroupByName(org, groupName)

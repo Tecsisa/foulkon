@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"encoding/json"
-	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"github.com/satori/go.uuid"
 	"github.com/tecsisa/authorizr/api"
@@ -124,7 +123,7 @@ func createPolicy(name string, path string, org string, statements *[]api.Statem
 	// TODO rsoleto: Hay que validar la entrada acorde a una expresion regular
 	// y quitar los elementos repetidos o no validos
 	completePath := path + "/" + name
-	urn := fmt.Sprintf("urn:iws:iam:%v:policy/%v", org, completePath)
+	urn := api.CreateUrn(org, api.RESOURCE_POLICY, completePath)
 	policy := api.Policy{
 		ID:         uuid.NewV4().String(),
 		Name:       name,

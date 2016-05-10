@@ -104,6 +104,46 @@ func (g PostgresRepo) AddMember(user api.User, group api.Group) error {
 	return nil
 }
 
+func (g PostgresRepo) UpdateGroup(group api.Group, name string, path string, urn string) (*api.Group, error) {
+
+	// Create new group
+	groupUpdated := Group{
+		Name: name,
+		Path: path,
+		Urn:  urn,
+	}
+
+	groupDB := Group{
+		ID:       group.ID,
+		Name:     group.Name,
+		Path:     group.Path,
+		CreateAt: group.CreateAt.UTC().UnixNano(),
+		Urn:      group.Urn,
+		Org:      group.Org,
+	}
+
+	// Update group
+	query := g.Dbmap.Model(&groupDB).Update(groupUpdated)
+
+	// Check if group exist
+	if query.RecordNotFound() {
+		return nil, &database.Error{
+			Code:    database.GROUP_NOT_FOUND,
+			Message: fmt.Sprintf("Group with name %v not found", name),
+		}
+	}
+
+	// Error Handling
+	if err := query.Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	return groupDBToGroupAPI(&groupDB), nil
+}
+
 func (g PostgresRepo) GetGroupsFiltered(org string, pathPrefix string) ([]api.Group, error) {
 	groups := []Group{}
 	query := g.Dbmap
