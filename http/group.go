@@ -138,8 +138,11 @@ func (g *GroupHandler) handleListGroups(w http.ResponseWriter, r *http.Request, 
 	// Retrieve group org from path
 	org := ps.ByName(ORG_ID)
 
+	// Retrieve query param if exist
+	pathPrefix := r.URL.Query().Get("PathPrefix")
+
 	// Call group API to retrieve groups
-	result, err := g.core.GroupApi.GetListGroups(org)
+	result, err := g.core.GroupApi.GetListGroups(org, pathPrefix)
 	if err != nil {
 		g.core.Logger.Errorln(err)
 		RespondInternalServerError(w)

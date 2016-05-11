@@ -211,9 +211,9 @@ func (g *GroupsAPI) GetGroupById(id string) (*Group, error) {
 
 }
 
-func (g *GroupsAPI) GetListGroups(org string) ([]Group, error) {
+func (g *GroupsAPI) GetListGroups(org string, pathPrefix string) ([]Group, error) {
 	// Call repo to retrieve the groups
-	groups, err := g.GroupRepo.GetListGroups(org)
+	groups, err := g.GroupRepo.GetGroupsFiltered(org, pathPrefix)
 
 	// Error handling
 	if err != nil {
