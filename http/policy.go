@@ -8,6 +8,7 @@ import (
 	"github.com/satori/go.uuid"
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/authorizr"
+	"strings"
 )
 
 type PolicyHandler struct {
@@ -21,9 +22,19 @@ type CreatePolicyRequest struct {
 	Statements []api.Statement `json:"Statements, omitempty"`
 }
 
+type UpdatePolicyRequest struct {
+	Name       string          `json:"Name, omitempty"`
+	Path       string          `json:"Path, omitempty"`
+	Statements []api.Statement `json:"Statements, omitempty"`
+}
+
 // Responses
 type CreatePolicyResponse struct {
-	Policy api.Policy
+	Policy *api.Policy
+}
+
+type UpdatePolicyResponse struct {
+	Policy *api.Policy
 }
 
 type ListPoliciesResponse struct {
@@ -68,14 +79,30 @@ func (p *PolicyHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// Check parameters
+	if len(strings.TrimSpace(request.Name)) == 0 ||
+		len(strings.TrimSpace(request.Path)) == 0 ||
+		len(request.Statements) == 0 {
+		p.core.Logger.Errorf("There are mising parameters: Name %v, Path %v, Statements number %v", request.Name, request.Path, len(request.Statements))
+		RespondBadRequest(w)
+		return
+	}
+
 	// Validate policy
 	policy, err := validatePolicy(createPolicy(request.Name, request.Path, org, &request.Statements))
 
 	// Check errors
 	if err != nil {
 		p.core.Logger.Errorln(err)
-		RespondBadRequest(w)
-		return
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		if apiError.Code == api.POLICY_ALREADY_EXIST {
+			RespondConflict(w)
+			return
+		} else { // Unexpected API error
+			RespondInternalServerError(w)
+			return
+		}
 	}
 
 	// Store this policy
@@ -89,7 +116,7 @@ func (p *PolicyHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Reques
 	}
 
 	response := &CreatePolicyResponse{
-		Policy: *storedPolicy,
+		Policy: storedPolicy,
 	}
 
 	// Write group to response
@@ -98,6 +125,62 @@ func (p *PolicyHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Reques
 
 func (p *PolicyHandler) handleDeletePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
+}
+
+func (p *PolicyHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Decode request
+	request := UpdatePolicyRequest{}
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		p.core.Logger.Errorln(err)
+		RespondBadRequest(w)
+		return
+	}
+
+	// Check parameters
+	if len(strings.TrimSpace(request.Name)) == 0 ||
+		len(strings.TrimSpace(request.Path)) == 0 ||
+		len(request.Statements) == 0 {
+		p.core.Logger.Errorf("There are mising parameters: Name %v, Path %v, Statements number %v", request.Name, request.Path, len(request.Statements))
+		RespondBadRequest(w)
+		return
+	}
+
+	// Retrieve policy, org from path
+	org := ps.ByName(ORG_ID)
+	policyName := ps.ByName(POLICY_ID)
+
+	// Check errors
+	if err != nil {
+		p.core.Logger.Errorln(err)
+		RespondBadRequest(w)
+		return
+	}
+
+	// Call group API to update policy
+	result, err := p.core.PolicyApi.UpdatePolicy(org, policyName, request.Name, request.Path, request.Statements)
+
+	// Check errors
+	if err != nil {
+		p.core.Logger.Errorln(err)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		if apiError.Code == api.POLICY_BY_ORG_AND_NAME_NOT_FOUND {
+			RespondNotFound(w)
+			return
+		} else { // Unexpected API error
+			RespondInternalServerError(w)
+			return
+		}
+	}
+
+	// Create response
+	response := &UpdatePolicyResponse{
+		Policy: result,
+	}
+
+	// Write group to response
+	RespondOk(w, response)
 }
 
 func (p *PolicyHandler) handleGetPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

@@ -184,6 +184,70 @@ func (p PostgresRepo) GetPoliciesFiltered(org string, pathPrefix string) ([]api.
 	return nil, nil
 }
 
+func (p PostgresRepo) UpdatePolicy(policy api.Policy, name string, path string, urn string, statements []api.Statement) (*api.Policy, error) {
+	// Create policy to update
+	policyUpdated := Policy{
+		Name: name,
+		Path: path,
+		Urn:  urn,
+	}
+
+	policyDB := Policy{
+		ID:       policy.ID,
+		Name:     policy.Name,
+		Path:     policy.Path,
+		CreateAt: policy.CreateAt.UTC().UnixNano(),
+		Urn:      policy.Urn,
+		Org:      policy.Org,
+	}
+
+	transaction := p.Dbmap.Begin()
+
+	// Update policy
+	transaction.Model(&policyDB).Update(policyUpdated)
+
+	// Check if policy exist
+	if transaction.RecordNotFound() {
+		transaction.Rollback()
+		return nil, &database.Error{
+			Code:    database.POLICY_NOT_FOUND,
+			Message: fmt.Sprintf("Policy with name %v not found", name),
+		}
+	}
+
+	// Clear old statements
+	transaction.Where("policy_id like ?", policy.ID).Delete(Statement{})
+
+	// Create new statements
+	for _, s := range statements {
+		statementDB := &Statement{
+			ID:        uuid.NewV4().String(),
+			PolicyID:  policy.ID,
+			Effect:    s.Effect,
+			Action:    stringArrayToSplitedString(s.Action),
+			Resources: stringArrayToSplitedString(s.Resources),
+		}
+		transaction.Create(statementDB)
+	}
+
+	// Error Handling
+	if err := transaction.Error; err != nil {
+		transaction.Rollback()
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	transaction.Commit()
+
+	// Create API policy
+	policyApi := policyDBToPolicyAPI(&policyDB)
+	policyApi.Statements = &statements
+
+	return policyApi, nil
+}
+
 // Private helper methods
 
 // Transform a policy retrieved from db into a policy for API

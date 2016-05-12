@@ -73,3 +73,44 @@ func (p *PoliciesAPI) AddPolicy(policy Policy) (*Policy, error) {
 	// Return policy created
 	return policyCreated, nil
 }
+
+func (p *PoliciesAPI) UpdatePolicy(org string, policyName string, newName string, newPath string, newStatements []Statement) (*Policy, error) {
+	// Call repo to retrieve the policy
+	policyDB, err := p.PolicyRepo.GetPolicyByName(org, policyName)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		// Group doesn't exist in DB
+		if dbError.Code == database.POLICY_NOT_FOUND {
+			return nil, &Error{
+				Code:    POLICY_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		} else { // Unexpected error
+			return nil, &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+
+	// Get Urn
+	urn := CreateUrn(org, RESOURCE_POLICY, newPath)
+
+	// Update policy
+	policy, err := p.PolicyRepo.UpdatePolicy(*policyDB, newName, newPath, urn, newStatements)
+
+	// Check if there is an unexpected error in DB
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return nil, &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	return policy, nil
+}
