@@ -4,11 +4,12 @@ import (
 	"net/http"
 
 	"encoding/json"
+	"strings"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/satori/go.uuid"
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/authorizr"
-	"strings"
 )
 
 type PolicyHandler struct {
