@@ -92,6 +92,7 @@ func Handler(core *authorizr.Core) http.Handler {
 
 	router.DELETE(POLICY_ID_URL, policyHandler.handleDeletePolicy)
 	router.GET(POLICY_ID_URL, policyHandler.handleGetPolicy)
+	router.PUT(POLICY_ID_URL, policyHandler.handleUpdatePolicy)
 
 	router.GET(POLICY_ID_GROUPS_URL, policyHandler.handleGetPolicyAttachedGroups)
 
