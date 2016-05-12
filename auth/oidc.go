@@ -1,7 +1,8 @@
 package auth
 
-import "net/http"
 import (
+	"net/http"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/emanoelxavier/openid2go/openid"
 )

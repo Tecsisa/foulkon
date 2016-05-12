@@ -4,11 +4,12 @@ import (
 	"net/http"
 
 	"encoding/json"
+	"strings"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/satori/go.uuid"
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/authorizr"
-	"strings"
 )
 
 type PolicyHandler struct {
@@ -38,6 +39,10 @@ type UpdatePolicyResponse struct {
 }
 
 type ListPoliciesResponse struct {
+	Policies []api.Policy
+}
+
+type ListAllPoliciesResponse struct {
 	Policies []api.Policy
 }
 
@@ -193,6 +198,25 @@ func (p *PolicyHandler) handleGetPolicyAttachedGroups(w http.ResponseWriter, r *
 
 func (p *PolicyHandler) handleListAllPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
+	// get Org and PathPrefix from request, so the query can be filtered
+	org := r.URL.Query().Get("Org")
+	pathPrefix := r.URL.Query().Get("PathPrefix")
+
+	// Call policies API to retrieve policies
+	result, err := p.core.PolicyApi.GetPolicies(org, pathPrefix)
+	if err != nil {
+		p.core.Logger.Errorln(err)
+		RespondInternalServerError(w)
+		return
+	}
+
+	// Create response
+	response := &ListAllPoliciesResponse{
+		Policies: result,
+	}
+
+	// Return data
+	RespondOk(w, response)
 }
 
 // This method validates policies created

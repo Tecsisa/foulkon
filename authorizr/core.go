@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"fmt"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/pelletier/go-toml"
 	"github.com/tecsisa/authorizr/api"

@@ -2,8 +2,9 @@ package api
 
 import (
 	"fmt"
-	"github.com/tecsisa/authorizr/database"
 	"time"
+
+	"github.com/tecsisa/authorizr/database"
 )
 
 // Group domain

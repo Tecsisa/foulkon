@@ -139,10 +139,10 @@ func (p PostgresRepo) GetPoliciesFiltered(org string, pathPrefix string) ([]api.
 	policies := []Policy{}
 	query := p.Dbmap
 	if len(org) > 0 {
-		query = p.Dbmap.Where("org like ? ", org)
+		query = query.Where("org like ? ", org)
 	}
 	if len(pathPrefix) > 0 {
-		query = p.Dbmap.Where("path like ? ", pathPrefix+"%")
+		query = query.Where("path like ? ", pathPrefix+"%")
 	}
 
 	// Error handling
