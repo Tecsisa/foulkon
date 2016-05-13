@@ -2,6 +2,7 @@ package authorizr
 
 import (
 	"io"
+	"regexp"
 
 	"errors"
 	"os"
@@ -153,17 +154,45 @@ func getMandatoryValue(config *toml.TomlTree, key string) string {
 	if !config.Has(key) {
 		fmt.Fprintf(os.Stderr, "Cannot retrieve configuration value %v", key)
 		os.Exit(1)
+		return ""
 	} else {
-		return config.Get(key).(string)
+		value := getVar(config, key)
+		if value == "" {
+			fmt.Fprintf(os.Stderr, "Cannot retrieve configuration value %v", key)
+			os.Exit(1)
+		}
+		return value
 	}
-	return ""
+
 }
 
 // This aux method returns a value if exist or default value
 func getDefaultValue(config *toml.TomlTree, key string, def string) string {
 	value := def
 	if config.Has(key) {
-		value = config.Get(key).(string)
+		value = getVar(config, key)
 	}
 	return value
+}
+
+// Check variables in TOML file.
+// If the value of a key is '${SOMETHING}', we will search the value in the OS ENV vars
+// If the value of a key is something else, return that value
+func getVar(config *toml.TomlTree, key string) string {
+	r, err := regexp.Compile(`^\$\{(\w+)\}$`)
+	if err != nil {
+		fmt.Printf("Regexp compilation error.\n")
+		os.Exit(1)
+		return ""
+	}
+
+	value := config.Get(key).(string)
+	match := r.FindStringSubmatch(value)
+	if match != nil && len(match) > 1 {
+		if match[1] != "" {
+			return os.Getenv(match[1])
+		}
+	}
+	return value
+
 }

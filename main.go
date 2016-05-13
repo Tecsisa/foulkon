@@ -23,9 +23,9 @@ func main() {
 	}
 
 	// Access to file
-	config, e := toml.LoadFile(*configFile)
-	if e != nil {
-		fmt.Printf("Cannot read configuration file %v, error: %v", *configFile, e)
+	config, err := toml.LoadFile(*configFile)
+	if err != nil {
+		fmt.Printf("Cannot read configuration file %v, error: %v", *configFile, err)
 		os.Exit(1)
 	}
 
