@@ -230,7 +230,7 @@ func (g *GroupsAPI) GetListGroups(org string, pathPrefix string) ([]Group, error
 	return groups, nil
 }
 
-func (g *GroupsAPI) UpdateGroup(org string, groupName string, name string, path string) (*Group, error) {
+func (g *GroupsAPI) UpdateGroup(org string, groupName string, newName string, newPath string) (*Group, error) {
 	// Call repo to retrieve the group
 	groupDB, err := g.GroupRepo.GetGroupByName(org, groupName)
 
@@ -253,10 +253,10 @@ func (g *GroupsAPI) UpdateGroup(org string, groupName string, name string, path 
 	}
 
 	// Get Urn
-	urn := CreateUrn(org, RESOURCE_GROUP, path)
+	urn := CreateUrn(org, RESOURCE_GROUP, newPath, newName)
 
 	// Update group
-	group, err := g.GroupRepo.UpdateGroup(*groupDB, name, path, urn)
+	group, err := g.GroupRepo.UpdateGroup(*groupDB, newName, newPath, urn)
 
 	// Check if there is an unexpected error in DB
 	if err != nil {

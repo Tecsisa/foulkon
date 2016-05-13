@@ -23,9 +23,17 @@ type CreateUserRequest struct {
 	Path       string `json:"Path, omitempty"`
 }
 
+type UpdateUserRequest struct {
+	Path string `json:"Path, omitempty"`
+}
+
 // Responses
 
 type CreateUserResponse struct {
+	User *api.User
+}
+
+type UpdateUserResponse struct {
 	User *api.User
 }
 
@@ -104,7 +112,49 @@ func (u *UserHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ 
 }
 
 func (u *UserHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	//TODO: Unimplemented
+	// Decode request
+	request := UpdateUserRequest{}
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		u.core.Logger.Errorln(err)
+		RespondBadRequest(w)
+		return
+	}
+
+	// Check parameters
+	if len(strings.TrimSpace(request.Path)) == 0 {
+		u.core.Logger.Errorf("There are mising parameters: Path %v", request.Path)
+		RespondBadRequest(w)
+		return
+	}
+
+	// Retrieve user id from path
+	id := ps.ByName(USER_ID)
+
+	// Call user API to update user
+	result, err := u.core.UserApi.UpdateUser(id, request.Path)
+
+	// Check errors
+	if err != nil {
+		u.core.Logger.Errorln(err)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
+		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
+			RespondNotFound(w)
+			return
+		default:
+			RespondInternalServerError(w)
+			return
+		}
+	}
+	// Create response
+	response := &UpdateUserResponse{
+		User: result,
+	}
+
+	// Write user to response
+	RespondOk(w, response)
 }
 
 func (u *UserHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -180,12 +230,11 @@ func (u *UserHandler) handleOrgListUsers(w http.ResponseWriter, r *http.Request,
 }
 
 func createUserFromRequest(request CreateUserRequest) api.User {
-	path := request.Path + "/" + request.ExternalID
-	urn := api.CreateUrn("", api.RESOURCE_USER, path)
+	urn := api.CreateUrn("", api.RESOURCE_USER, request.Path, request.ExternalID)
 	user := api.User{
 		ID:         uuid.NewV4().String(),
 		ExternalID: request.ExternalID,
-		Path:       path,
+		Path:       request.Path,
 		Urn:        urn,
 	}
 

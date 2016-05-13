@@ -13,6 +13,7 @@ type UserRepo interface {
 	// This method store a user.
 	// If there are a problem inserting user it will return an database.Error error
 	AddUser(user User) (*User, error)
+	UpdateUser(user User, newPath string, newUrn string) (*User, error)
 
 	GetUsersFiltered(pathPrefix string) ([]User, error)
 	GetGroupsByUserID(id string) ([]Group, error)
@@ -31,7 +32,7 @@ type GroupRepo interface {
 
 	AddGroup(group Group) (*Group, error)
 	AddMember(user User, group Group) error
-	UpdateGroup(group Group, name string, path string, urn string) (*Group, error)
+	UpdateGroup(group Group, newName string, newPath string, newUrn string) (*Group, error)
 	AttachPolicy(group Group, policy Policy) error
 }
 
@@ -40,6 +41,6 @@ type PolicyRepo interface {
 	GetPolicyById(id string) (*Policy, error)
 	GetPolicyByName(org string, name string) (*Policy, error)
 	AddPolicy(policy Policy) (*Policy, error)
-	UpdatePolicy(policy Policy, name string, path string, urn string, statements []Statement) (*Policy, error)
+	UpdatePolicy(policy Policy, newName string, newPath string, newUrn string, newStatements []Statement) (*Policy, error)
 	GetPoliciesFiltered(org string, pathPrefix string) ([]Policy, error)
 }

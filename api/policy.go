@@ -98,7 +98,7 @@ func (p *PoliciesAPI) UpdatePolicy(org string, policyName string, newName string
 	}
 
 	// Get Urn
-	urn := CreateUrn(org, RESOURCE_POLICY, newPath)
+	urn := CreateUrn(org, RESOURCE_POLICY, newPath, newName)
 
 	// Update policy
 	policy, err := p.PolicyRepo.UpdatePolicy(*policyDB, newName, newPath, urn, newStatements)

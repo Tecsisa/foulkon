@@ -104,12 +104,12 @@ func (g PostgresRepo) AddMember(user api.User, group api.Group) error {
 	return nil
 }
 
-func (g PostgresRepo) UpdateGroup(group api.Group, name string, path string, urn string) (*api.Group, error) {
+func (g PostgresRepo) UpdateGroup(group api.Group, newName string, newPath string, urn string) (*api.Group, error) {
 
 	// Create new group
 	groupUpdated := Group{
-		Name: name,
-		Path: path,
+		Name: newName,
+		Path: newPath,
 		Urn:  urn,
 	}
 
@@ -129,7 +129,7 @@ func (g PostgresRepo) UpdateGroup(group api.Group, name string, path string, urn
 	if query.RecordNotFound() {
 		return nil, &database.Error{
 			Code:    database.GROUP_NOT_FOUND,
-			Message: fmt.Sprintf("Group with name %v not found", name),
+			Message: fmt.Sprintf("Group with name %v not found", group.Name),
 		}
 	}
 

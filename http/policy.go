@@ -162,7 +162,7 @@ func (p *PolicyHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Call group API to update policy
+	// Call policy API to update policy
 	result, err := p.core.PolicyApi.UpdatePolicy(org, policyName, request.Name, request.Path, request.Statements)
 
 	// Check errors
@@ -184,7 +184,7 @@ func (p *PolicyHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Reques
 		Policy: result,
 	}
 
-	// Write group to response
+	// Write policy to response
 	RespondOk(w, response)
 }
 
@@ -229,12 +229,11 @@ func validatePolicy(policy api.Policy) (api.Policy, error) {
 func createPolicy(name string, path string, org string, statements *[]api.Statement) api.Policy {
 	// TODO rsoleto: Hay que validar la entrada acorde a una expresion regular
 	// y quitar los elementos repetidos o no validos
-	completePath := path + "/" + name
-	urn := api.CreateUrn(org, api.RESOURCE_POLICY, completePath)
+	urn := api.CreateUrn(org, api.RESOURCE_POLICY, path, name)
 	policy := api.Policy{
 		ID:         uuid.NewV4().String(),
 		Name:       name,
-		Path:       completePath,
+		Path:       path,
 		Org:        org,
 		Urn:        urn,
 		Statements: statements,
