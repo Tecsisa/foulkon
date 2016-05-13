@@ -4,7 +4,9 @@ import "fmt"
 
 const (
 	// Generic API error codes
-	UNKNOWN_API_ERROR = "UnknownApiError"
+	UNKNOWN_API_ERROR       = "UnknownApiError"
+	MISSING_PARAMETER_ERROR = "MissingParameterError"
+	INVALID_PARAMETER_ERROR = "InvalidParameterError"
 
 	// User API error codes
 	USER_BY_ID_NOT_FOUND          = "UserWithIDNotFound"
