@@ -252,6 +252,17 @@ func (g *GroupsAPI) UpdateGroup(org string, groupName string, newName string, ne
 		}
 	}
 
+	// Check if group with newName exist
+	_, err = g.GroupRepo.GetGroupByName(org, newName)
+
+	if err == nil {
+		// Unexpected error
+		return nil, &Error{
+			Code:    GROUP_ALREADY_EXIST,
+			Message: fmt.Sprintf("Name: %v is already exist", newName),
+		}
+	}
+
 	// Get Urn
 	urn := CreateUrn(org, RESOURCE_GROUP, newPath, newName)
 
