@@ -197,13 +197,15 @@ func (g *GroupHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request,
 		g.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
-		if apiError.Code == api.GROUP_BY_ORG_AND_NAME_NOT_FOUND {
+		switch apiError.Code {
+		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
 			RespondNotFound(w)
-			return
-		} else { // Unexpected API error
+		case api.GROUP_ALREADY_EXIST:
+			RespondConflict(w)
+		default:
 			RespondInternalServerError(w)
-			return
 		}
+		return
 	}
 	// Create response
 	response := &UpdateGroupResponse{
@@ -262,14 +264,12 @@ func (g *GroupHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.Re
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
 			RespondNotFound(w)
-			return
 		case api.POLICY_IS_ALREADY_ATTACHED_TO_GROUP:
 			RespondConflict(w)
-			return
 		default: // Unexpected API error
 			RespondInternalServerError(w)
-			return
 		}
+		return
 
 	}
 
