@@ -42,6 +42,10 @@ type GetGroupsResponse struct {
 	Groups []api.Group
 }
 
+type GetGroupMembersResponse struct {
+	Members *api.GroupMembers
+}
+
 type GetGroupPolicies struct {
 	Group    api.Group
 	Policies []api.Policy
@@ -216,7 +220,35 @@ func (g *GroupHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request,
 	RespondOk(w, response)
 }
 
-func (g *GroupHandler) handleListMembers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (g *GroupHandler) handleListMembers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Retrieve group, org
+	org := ps.ByName(ORG_ID)
+	group := ps.ByName(GROUP_ID)
+
+	// Call group API to list members
+	result, err := g.core.GroupApi.ListMembers(org, group)
+
+	// Check errors
+	if err != nil {
+		g.core.Logger.Errorln(err)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
+		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
+			RespondNotFound(w)
+		default:
+			RespondInternalServerError(w)
+		}
+		return
+	}
+
+	// Create response
+	response := &GetGroupMembersResponse{
+		Members: result,
+	}
+
+	// Write GroupMembers to response
+	RespondOk(w, response)
 
 }
 

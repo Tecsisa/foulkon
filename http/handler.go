@@ -33,7 +33,7 @@ const (
 	// Group organization API urls
 	GROUP_ORG_ROOT_URL       = API_VERSION_1 + ORG_ROOT + "/groups"
 	GROUP_ID_URL             = GROUP_ORG_ROOT_URL + URI_PATH_PREFIX + GROUP_ID
-	GROUP_ID_USERS_URL       = GROUP_ID_URL + "/users/:" + USER_ID
+	GROUP_ID_USERS_URL       = GROUP_ID_URL + "/users"
 	GROUP_ID_USERS_ID_URL    = GROUP_ID_USERS_URL + URI_PATH_PREFIX + USER_ID
 	GROUP_ID_POLICIES_URL    = GROUP_ID_URL + "/policies"
 	GROUP_ID_POLICIES_ID_URL = GROUP_ID_POLICIES_URL + URI_PATH_PREFIX + POLICY_ID
@@ -73,8 +73,8 @@ func Handler(core *authorizr.Core) http.Handler {
 	router.PUT(GROUP_ID_URL, groupHandler.handleUpdateGroup)
 
 	router.GET(GROUP_ID_USERS_URL, groupHandler.handleListMembers)
-	router.POST(GROUP_ID_USERS_URL, groupHandler.handleAddMember)
 
+	router.POST(GROUP_ID_USERS_ID_URL, groupHandler.handleAddMember)
 	router.DELETE(GROUP_ID_USERS_ID_URL, groupHandler.handleRemoveMember)
 
 	router.GET(GROUP_ID_POLICIES_URL, groupHandler.handleListAtachhedGroupPolicies)
