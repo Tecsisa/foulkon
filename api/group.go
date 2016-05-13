@@ -133,6 +133,45 @@ func (g *GroupsAPI) AddMember(userID string, groupName string, org string) error
 	return nil
 }
 
+func (g *GroupsAPI) ListMembers(org string, groupName string) (*GroupMembers, error) {
+	// Call repo to retrieve the group
+	group, err := g.GroupRepo.GetGroupByName(org, groupName)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		// Group doesn't exist in DB
+		if dbError.Code == database.GROUP_NOT_FOUND {
+			return nil, &Error{
+				Code:    GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		} else { // Unexpected error
+			return nil, &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+
+	// Get Members
+	members, err := g.GroupRepo.GetAllGroupUserRelation(group.ID)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return nil, &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	// Return members
+	return members, nil
+}
+
 // Remove group
 func (g *GroupsAPI) RemoveGroup(org string, name string) error {
 	// Remove group with given org and name

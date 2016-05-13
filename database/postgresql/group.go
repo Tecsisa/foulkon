@@ -215,6 +215,50 @@ func (g PostgresRepo) GetGroupUserRelation(userID string, groupID string) (*api.
 	}, nil
 }
 
+func (g PostgresRepo) GetAllGroupUserRelation(groupID string) (*api.GroupMembers, error) {
+	members := []GroupUserRelation{}
+	query := g.Dbmap.Where("group_id like ?", groupID)
+
+	// Error handling
+	if err := query.Find(&members).Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+	// Retrieve group
+	group, err := g.GetGroupById(groupID)
+	// Error Handling
+	if err != nil {
+		return nil, err
+	}
+
+	// Transform relations to API domain
+	if members != nil {
+		apiUsers := make([]api.User, len(members), cap(members))
+		for i, m := range members {
+			user, err := g.GetUserByID(m.UserID)
+			// Error handling
+			if err != nil {
+				return nil, &database.Error{
+					Code:    database.INTERNAL_ERROR,
+					Message: err.Error(),
+				}
+			}
+
+			apiUsers[i] = *user
+		}
+
+		// Return GroupMembers
+		return &api.GroupMembers{
+			Group: *group,
+			Users: apiUsers,
+		}, nil
+	}
+
+	return nil, nil
+}
+
 func (g PostgresRepo) RemoveGroup(org string, name string) error {
 	// Retrieve group with this org and name
 	group, err := g.GetGroupByName(org, name)
