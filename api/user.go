@@ -137,6 +137,49 @@ func (u *UsersAPI) AddUser(user User) (*User, error) {
 	return userCreated, nil
 }
 
+// Update an User to database if exist
+func (u *UsersAPI) UpdateUser(externalID string, newPath string) (*User, error) {
+	// Call repo to retrieve the user
+	userDB, err := u.UserRepo.GetUserByExternalID(externalID)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		// User doesn't exist in DB
+		if dbError.Code == database.USER_NOT_FOUND {
+			return nil, &Error{
+				Code:    USER_BY_EXTERNAL_ID_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		} else { // Unexpected error
+			return nil, &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+
+	// Get Urn
+	urn := CreateUrn("", RESOURCE_USER, newPath, externalID)
+
+	// Update user
+	user, err := u.UserRepo.UpdateUser(*userDB, newPath, urn)
+
+	// Check if there is an unexpected error in DB
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return nil, &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	return user, nil
+
+}
+
 // Remove user with this id
 func (u *UsersAPI) RemoveUserById(id string) error {
 	// Remove user with given external id

@@ -81,6 +81,44 @@ func (u PostgresRepo) AddUser(user api.User) (*api.User, error) {
 	return userDBToUserAPI(userDB), nil
 }
 
+func (u PostgresRepo) UpdateUser(user api.User, newPath string, newUrn string) (*api.User, error) {
+
+	// Create new user
+	userUpdated := User{
+		Path: newPath,
+		Urn:  newUrn,
+	}
+
+	userDB := User{
+		ID:         user.ID,
+		ExternalID: user.ExternalID,
+		Path:       user.Path,
+		CreateAt:   user.CreateAt.UTC().UnixNano(),
+		Urn:        user.Urn,
+	}
+
+	// Update user
+	query := u.Dbmap.Model(&userDB).Update(userUpdated)
+
+	// Check if user exist
+	if query.RecordNotFound() {
+		return nil, &database.Error{
+			Code:    database.USER_NOT_FOUND,
+			Message: fmt.Sprintf("User with externalID %v not found", user.ExternalID),
+		}
+	}
+
+	// Error Handling
+	if err := query.Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	return userDBToUserAPI(&userDB), nil
+}
+
 func (u PostgresRepo) GetUsersFiltered(pathPrefix string) ([]api.User, error) {
 	users := []User{}
 	query := u.Dbmap

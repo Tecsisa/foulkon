@@ -192,13 +192,19 @@ func (g *GroupHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request,
 	// Call group API to update group
 	result, err := g.core.GroupApi.UpdateGroup(org, groupName, request.Name, request.Path)
 
-	// Error handling
+	// Check errors
 	if err != nil {
 		g.core.Logger.Errorln(err)
-		RespondInternalServerError(w)
-		return
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		if apiError.Code == api.GROUP_BY_ORG_AND_NAME_NOT_FOUND {
+			RespondNotFound(w)
+			return
+		} else { // Unexpected API error
+			RespondInternalServerError(w)
+			return
+		}
 	}
-
 	// Create response
 	response := &UpdateGroupResponse{
 		Group: result,
@@ -282,12 +288,11 @@ func (g *GroupHandler) handleListAllGroups(w http.ResponseWriter, r *http.Reques
 }
 
 func createGroupFromRequest(request CreateGroupRequest, org string) api.Group {
-	path := request.Path + "/" + request.Name
-	urn := api.CreateUrn(org, api.RESOURCE_GROUP, path)
+	urn := api.CreateUrn(org, api.RESOURCE_GROUP, request.Path, request.Name)
 	group := api.Group{
 		ID:   uuid.NewV4().String(),
 		Name: request.Name,
-		Path: path,
+		Path: request.Path,
 		Urn:  urn,
 		Org:  org,
 	}
