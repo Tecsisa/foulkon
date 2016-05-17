@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/satori/go.uuid"
 	"github.com/tecsisa/authorizr/database"
 )
 
@@ -32,55 +33,71 @@ type GroupsAPI struct {
 }
 
 // Add an Group to database if not exist
-func (g *GroupsAPI) AddGroup(group Group) (*Group, error) {
-	// Check if group already exist
-	groupDB, err := g.Repo.GroupRepo.GetGroupByName(group.Org, group.Name)
+func (g *GroupsAPI) AddGroup(org string, name string, path string) (*Group, error) {
+	// Validate name
+	if !IsValidName(name) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: Name %v", name),
+		}
+	}
+	// Validate path
+	if !IsValidPath(path) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: Path %v", path),
+		}
+	}
 
-	// If group exist it can't create it
-	if groupDB != nil {
+	// Check if group already exist
+	groupDB, err := g.Repo.GroupRepo.GetGroupByName(org, name)
+
+	// Check if group could be retrieved
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		// User doesn't exist in DB
+		switch dbError.Code {
+		// Create group
+		case database.GROUP_NOT_FOUND:
+			// Create group
+			groupCreated, err := g.Repo.GroupRepo.AddGroup(createGroup(org, name, path))
+
+			// Check if there is an unexpected error in DB
+			if err != nil {
+				//Transform to DB error
+				dbError := err.(*database.Error)
+				return nil, &Error{
+					Code:    UNKNOWN_API_ERROR,
+					Message: dbError.Message,
+				}
+			}
+
+			// Return group created
+			return groupCreated, nil
+		default: // Unexpected error
+			return nil, &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	} else {
 		return nil, &Error{
 			Code:    GROUP_ALREADY_EXIST,
 			Message: fmt.Sprintf("Unable to create group, group with org %v and name %v already exist", groupDB.Org, groupDB.Name),
 		}
 	}
-	// Create group
-	groupCreated, err := g.Repo.GroupRepo.AddGroup(group)
 
-	// Check if there is an unexpected error in DB
-	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		return nil, &Error{
-			Code:    UNKNOWN_API_ERROR,
-			Message: dbError.Message,
-		}
-	}
-
-	// Return group created
-	return groupCreated, nil
 }
 
 //  Add a new member into an existing group
 func (g *GroupsAPI) AddMember(userID string, groupName string, org string) error {
 	// Call repo to retrieve the group
-	groupDB, err := g.Repo.GroupRepo.GetGroupByName(org, groupName)
+	groupDB, err := g.getGroupByName(org, groupName)
 
 	// Error handling
 	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		// Group doesn't exist in DB
-		if dbError.Code == database.GROUP_NOT_FOUND {
-			return &Error{
-				Code:    GROUP_BY_ORG_AND_NAME_NOT_FOUND,
-				Message: dbError.Message,
-			}
-		} else { // Unexpected error
-			return &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
-		}
+		return err
 	}
 
 	// Call repo to retrieve the user
@@ -91,16 +108,18 @@ func (g *GroupsAPI) AddMember(userID string, groupName string, org string) error
 		//Transform to DB error
 		dbError := err.(*database.Error)
 		// User doesn't exist in DB
-		if dbError.Code == database.USER_NOT_FOUND {
+		switch dbError.Code {
+		case database.USER_NOT_FOUND:
 			return &Error{
 				Code:    USER_BY_EXTERNAL_ID_NOT_FOUND,
 				Message: dbError.Message,
 			}
-		} else { // Unexpected error
+		default: // Unexpected error
 			return &Error{
 				Code:    UNKNOWN_API_ERROR,
 				Message: dbError.Message,
 			}
+
 		}
 	}
 
@@ -134,24 +153,11 @@ func (g *GroupsAPI) AddMember(userID string, groupName string, org string) error
 //  Remove a member from a group
 func (g *GroupsAPI) RemoveMember(userID string, groupName string, org string) error {
 	// Call repo to retrieve the group
-	groupDB, err := g.Repo.GroupRepo.GetGroupByName(org, groupName)
+	groupDB, err := g.getGroupByName(org, groupName)
 
 	// Error handling
 	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		// Group doesn't exist in DB
-		if dbError.Code == database.GROUP_NOT_FOUND {
-			return &Error{
-				Code:    GROUP_BY_ORG_AND_NAME_NOT_FOUND,
-				Message: dbError.Message,
-			}
-		} else { // Unexpected error
-			return &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
-		}
+		return err
 	}
 
 	// Call repo to retrieve the user
@@ -162,12 +168,13 @@ func (g *GroupsAPI) RemoveMember(userID string, groupName string, org string) er
 		//Transform to DB error
 		dbError := err.(*database.Error)
 		// User doesn't exist in DB
-		if dbError.Code == database.USER_NOT_FOUND {
+		switch dbError.Code {
+		case database.USER_NOT_FOUND:
 			return &Error{
 				Code:    USER_BY_EXTERNAL_ID_NOT_FOUND,
 				Message: dbError.Message,
 			}
-		} else { // Unexpected error
+		default: // Unexpected error
 			return &Error{
 				Code:    UNKNOWN_API_ERROR,
 				Message: dbError.Message,
@@ -182,13 +189,14 @@ func (g *GroupsAPI) RemoveMember(userID string, groupName string, org string) er
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
-		// relation doesn't exist in DB
-		if dbError.Code == database.GROUP_USER_RELATION_NOT_FOUND {
+		// Relation doesn't exist in DB
+		switch dbError.Code {
+		case database.GROUP_USER_RELATION_NOT_FOUND:
 			return &Error{
 				Code:    USER_IS_NOT_A_MEMBER_OF_GROUP,
 				Message: dbError.Message,
 			}
-		} else { // Unexpected error
+		default: // Unexpected error
 			return &Error{
 				Code:    UNKNOWN_API_ERROR,
 				Message: dbError.Message,
@@ -215,24 +223,11 @@ func (g *GroupsAPI) RemoveMember(userID string, groupName string, org string) er
 // List members of a group
 func (g *GroupsAPI) ListMembers(org string, groupName string) (*GroupMembers, error) {
 	// Call repo to retrieve the group
-	group, err := g.Repo.GroupRepo.GetGroupByName(org, groupName)
+	group, err := g.getGroupByName(org, groupName)
 
 	// Error handling
 	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		// Group doesn't exist in DB
-		if dbError.Code == database.GROUP_NOT_FOUND {
-			return nil, &Error{
-				Code:    GROUP_BY_ORG_AND_NAME_NOT_FOUND,
-				Message: dbError.Message,
-			}
-		} else { // Unexpected error
-			return nil, &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
-		}
+		return nil, err
 	}
 
 	// Get Members
@@ -254,23 +249,24 @@ func (g *GroupsAPI) ListMembers(org string, groupName string) (*GroupMembers, er
 
 // Remove group
 func (g *GroupsAPI) RemoveGroup(org string, name string) error {
-	// Remove group with given org and name
-	err := g.Repo.GroupRepo.RemoveGroup(org, name)
+	// Call repo to retrieve the group
+	group, err := g.getGroupByName(org, name)
 
+	// Error handling
+	if err != nil {
+		return err
+	}
+
+	// Remove group with given org and name
+	err = g.Repo.GroupRepo.RemoveGroup(group.ID)
+
+	// Error handling
 	if err != nil {
 		//Transform to DB error
-		dbError := err.(database.Error)
-		// If group doesn't exist
-		if dbError.Code == database.GROUP_NOT_FOUND {
-			return &Error{
-				Code:    GROUP_BY_ORG_AND_NAME_NOT_FOUND,
-				Message: dbError.Message,
-			}
-		} else { // Unexpected error
-			return &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
+		dbError := err.(*database.Error)
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
 		}
 	}
 
@@ -279,24 +275,11 @@ func (g *GroupsAPI) RemoveGroup(org string, name string) error {
 
 func (g *GroupsAPI) GetGroupByName(org string, name string) (*Group, error) {
 	// Call repo to retrieve the group
-	group, err := g.Repo.GroupRepo.GetGroupByName(org, name)
+	group, err := g.getGroupByName(org, name)
 
 	// Error handling
 	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		// Group doesn't exist in DB
-		if dbError.Code == database.GROUP_NOT_FOUND {
-			return nil, &Error{
-				Code:    GROUP_BY_ORG_AND_NAME_NOT_FOUND,
-				Message: dbError.Message,
-			}
-		} else { // Unexpected error
-			return nil, &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
-		}
+		return nil, err
 	}
 
 	// Return group
@@ -313,16 +296,18 @@ func (g *GroupsAPI) GetGroupById(id string) (*Group, error) {
 		//Transform to DB error
 		dbError := err.(*database.Error)
 		// Group doesn't exist in DB
-		if dbError.Code == database.GROUP_NOT_FOUND {
+		switch dbError.Code {
+		case database.GROUP_NOT_FOUND:
 			return nil, &Error{
 				Code:    GROUP_BY_ID_NOT_FOUND,
 				Message: dbError.Message,
 			}
-		} else { // Unexpected error
+		default: // Unexpected error
 			return nil, &Error{
 				Code:    UNKNOWN_API_ERROR,
 				Message: dbError.Message,
 			}
+
 		}
 	}
 
@@ -350,32 +335,34 @@ func (g *GroupsAPI) GetListGroups(org string, pathPrefix string) ([]Group, error
 }
 
 func (g *GroupsAPI) UpdateGroup(org string, groupName string, newName string, newPath string) (*Group, error) {
-	// Call repo to retrieve the group
-	groupDB, err := g.Repo.GroupRepo.GetGroupByName(org, groupName)
-
-	// Error handling
-	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		// Group doesn't exist in DB
-		if dbError.Code == database.GROUP_NOT_FOUND {
-			return nil, &Error{
-				Code:    GROUP_BY_ORG_AND_NAME_NOT_FOUND,
-				Message: dbError.Message,
-			}
-		} else { // Unexpected error
-			return nil, &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
+	// Validate name
+	if !IsValidName(newName) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: Name %v", newName),
+		}
+	}
+	// Validate path
+	if !IsValidPath(newPath) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: Path %v", newPath),
 		}
 	}
 
+	// Call repo to retrieve the group
+	groupDB, err := g.getGroupByName(org, groupName)
+
+	// Error handling
+	if err != nil {
+		return nil, err
+	}
+
 	// Check if group with newName exist
-	_, err = g.Repo.GroupRepo.GetGroupByName(org, newName)
+	_, err = g.getGroupByName(org, newName)
 
 	if err == nil {
-		// Unexpected error
+		// Group already exists
 		return nil, &Error{
 			Code:    GROUP_ALREADY_EXIST,
 			Message: fmt.Sprintf("Name: %v is already exist", newName),
@@ -404,7 +391,7 @@ func (g *GroupsAPI) UpdateGroup(org string, groupName string, newName string, ne
 
 func (g *GroupsAPI) AttachPolicyToGroup(org string, groupName string, policyName string) error {
 	// Check if group exist
-	group, err := g.GetGroupByName(org, groupName)
+	group, err := g.getGroupByName(org, groupName)
 
 	// Error handling
 	if err != nil {
@@ -417,12 +404,13 @@ func (g *GroupsAPI) AttachPolicyToGroup(org string, groupName string, policyName
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
-		if dbError.Code == database.POLICY_NOT_FOUND {
+		switch dbError.Code {
+		case database.POLICY_NOT_FOUND:
 			return &Error{
 				Code:    POLICY_BY_ORG_AND_NAME_NOT_FOUND,
 				Message: dbError.Message,
 			}
-		} else { // Unexpected error
+		default: // Unexpected error
 			return &Error{
 				Code:    UNKNOWN_API_ERROR,
 				Message: dbError.Message,
@@ -453,4 +441,48 @@ func (g *GroupsAPI) AttachPolicyToGroup(org string, groupName string, policyName
 	}
 
 	return nil
+}
+
+// Private helper methods
+
+func createGroup(org string, name string, path string) Group {
+	urn := CreateUrn(org, RESOURCE_GROUP, path, name)
+	group := Group{
+		ID:   uuid.NewV4().String(),
+		Name: name,
+		Path: path,
+		Urn:  urn,
+		Org:  org,
+	}
+
+	return group
+}
+
+// This method gets the group by name and organization
+func (g *GroupsAPI) getGroupByName(org string, name string) (*Group, error) {
+	// Call repo to retrieve the group
+	group, err := g.Repo.GroupRepo.GetGroupByName(org, name)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		// Group doesn't exist in DB
+		switch dbError.Code {
+		case database.GROUP_NOT_FOUND:
+			return nil, &Error{
+				Code:    GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		default: // Unexpected error
+			return nil, &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+
+	// Return group
+	return group, nil
+
 }

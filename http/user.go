@@ -44,7 +44,7 @@ type GetUserByIdResponse struct {
 	User *api.User
 }
 
-// This method return a list of users that belongs to Org param and have PathPrefix
+// This method returns a list of users that belongs to Org param and have PathPrefix
 func (u *UserHandler) handleGetUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Retrieve PathPrefix
 	pathPrefix := r.URL.Query().Get("PathPrefix")
@@ -66,7 +66,7 @@ func (u *UserHandler) handleGetUsers(w http.ResponseWriter, r *http.Request, _ h
 	RespondOk(w, response)
 }
 
-// This method create the user passed by form request and return the user created
+// This method creates the user passed by form request and return the user created
 func (u *UserHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Decode request
 	request := CreateUserRequest{}
