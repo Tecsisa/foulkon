@@ -82,12 +82,12 @@ func (g PostgresRepo) AddGroup(group api.Group) (*api.Group, error) {
 	return groupDBToGroupAPI(groupDB), nil
 }
 
-func (g PostgresRepo) AddMember(user api.User, group api.Group) error {
+func (g PostgresRepo) AddMember(userID string, groupID string) error {
 
 	// Create relation
 	relation := &GroupUserRelation{
-		UserID:  user.ID,
-		GroupID: group.ID,
+		UserID:  userID,
+		GroupID: groupID,
 	}
 
 	// Store relation
@@ -101,6 +101,20 @@ func (g PostgresRepo) AddMember(user api.User, group api.Group) error {
 		}
 	}
 
+	return nil
+}
+
+func (g PostgresRepo) RemoveMember(userID string, groupID string) error {
+	// Go to delete member
+	err := g.Dbmap.Where("user_id like ? AND group_id like ?", userID, groupID).Delete(&GroupUserRelation{}).Error
+
+	// Error handling
+	if err != nil {
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
 	return nil
 }
 

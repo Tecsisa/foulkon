@@ -62,7 +62,7 @@ func (g *GroupsAPI) AddGroup(group Group) (*Group, error) {
 	return groupCreated, nil
 }
 
-//
+//  Add a new member into an existing group
 func (g *GroupsAPI) AddMember(userID string, groupName string, org string) error {
 	// Call repo to retrieve the group
 	groupDB, err := g.GroupRepo.GetGroupByName(org, groupName)
@@ -118,7 +118,7 @@ func (g *GroupsAPI) AddMember(userID string, groupName string, org string) error
 	}
 
 	// Add Member
-	err = g.GroupRepo.AddMember(*userDB, *groupDB)
+	err = g.GroupRepo.AddMember(userDB.ID, groupDB.ID)
 
 	// Check if there is an unexpected error in DB
 	if err != nil {
@@ -133,6 +133,88 @@ func (g *GroupsAPI) AddMember(userID string, groupName string, org string) error
 	return nil
 }
 
+//  Remove a member from a group
+func (g *GroupsAPI) RemoveMember(userID string, groupName string, org string) error {
+	// Call repo to retrieve the group
+	groupDB, err := g.GroupRepo.GetGroupByName(org, groupName)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		// Group doesn't exist in DB
+		if dbError.Code == database.GROUP_NOT_FOUND {
+			return &Error{
+				Code:    GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		} else { // Unexpected error
+			return &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+
+	// Call repo to retrieve the user
+	userDB, err := g.UserRepo.GetUserByExternalID(userID)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		// User doesn't exist in DB
+		if dbError.Code == database.USER_NOT_FOUND {
+			return &Error{
+				Code:    USER_BY_EXTERNAL_ID_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		} else { // Unexpected error
+			return &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+
+	// Call repo to retrieve the GroupUserRelation
+	_, err = g.GroupRepo.GetGroupUserRelation(userDB.ID, groupDB.ID)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		// relation doesn't exist in DB
+		if dbError.Code == database.GROUP_USER_RELATION_NOT_FOUND {
+			return &Error{
+				Code:    USER_IS_NOT_A_MEMBER_OF_GROUP,
+				Message: dbError.Message,
+			}
+		} else { // Unexpected error
+			return &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+
+	// Remove Member
+	err = g.GroupRepo.RemoveMember(userDB.ID, groupDB.ID)
+
+	// Check if there is an unexpected error in DB
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	return nil
+}
+
+// List members of a group
 func (g *GroupsAPI) ListMembers(org string, groupName string) (*GroupMembers, error) {
 	// Call repo to retrieve the group
 	group, err := g.GroupRepo.GetGroupByName(org, groupName)
