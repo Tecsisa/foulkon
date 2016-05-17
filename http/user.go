@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/satori/go.uuid"
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/authorizr"
 )
@@ -78,29 +77,23 @@ func (u *UserHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	// Check parameters
-	if len(strings.TrimSpace(request.ExternalID)) == 0 ||
-		len(strings.TrimSpace(request.Path)) == 0 {
-		u.core.Logger.Errorf("There are mising parameters: ExternalID %v, Path %v", request.ExternalID, request.Path)
-		RespondBadRequest(w)
-		return
-	}
-
 	// Call user API to create an user
-	result, err := u.core.UserApi.AddUser(createUserFromRequest(request))
+	result, err := u.core.UserApi.AddUser(request.ExternalID, request.Path)
 
 	// Error handling
 	if err != nil {
 		u.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
-		if apiError.Code == api.USER_ALREADY_EXIST {
+		switch apiError.Code {
+		case api.USER_ALREADY_EXIST:
 			RespondConflict(w)
-			return
-		} else { // Unexpected API error
+		case api.INVALID_PARAMETER_ERROR:
+			RespondBadRequest(w)
+		default: // Unexpected API error
 			RespondInternalServerError(w)
-			return
 		}
+		return
 	}
 
 	response := &CreateUserResponse{
@@ -134,7 +127,7 @@ func (u *UserHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps h
 	// Call user API to update user
 	result, err := u.core.UserApi.UpdateUser(id, request.Path)
 
-	// Check errors
+	// Error handling
 	if err != nil {
 		u.core.Logger.Errorln(err)
 		// Transform to API errors
@@ -142,12 +135,14 @@ func (u *UserHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps h
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
 			RespondNotFound(w)
-			return
-		default:
+		case api.INVALID_PARAMETER_ERROR:
+			RespondBadRequest(w)
+		default: // Unexpected API error
 			RespondInternalServerError(w)
-			return
 		}
+		return
 	}
+
 	// Create response
 	response := &UpdateUserResponse{
 		User: result,
@@ -169,13 +164,13 @@ func (u *UserHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, ps
 		u.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
-		if apiError.Code == api.USER_BY_EXTERNAL_ID_NOT_FOUND {
+		switch apiError.Code {
+		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
 			RespondNotFound(w)
-			return
-		} else { // Unexpected API error
+		default: // Unexpected API error
 			RespondInternalServerError(w)
-			return
 		}
+		return
 	}
 
 	response := GetUserByIdResponse{
@@ -193,20 +188,20 @@ func (u *UserHandler) handleDeleteUserId(w http.ResponseWriter, r *http.Request,
 	// Call user API to delete user
 	err := u.core.UserApi.RemoveUserById(id)
 
-	// Check if there were errors
 	if err != nil {
 		u.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
-		// If user doesn't exist
-		if apiError.Code == api.USER_BY_EXTERNAL_ID_NOT_FOUND {
+		switch apiError.Code {
+		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
 			RespondNotFound(w)
-		} else { // Unexpected error
+		default: // Unexpected API error
 			RespondInternalServerError(w)
 		}
-	} else { // Respond without content
-		RespondNoContent(w)
+		return
 	}
+
+	RespondNoContent(w)
 }
 
 func (u *UserHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -227,16 +222,4 @@ func (u *UserHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Request,
 
 func (u *UserHandler) handleOrgListUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	//TODO: Unimplemented
-}
-
-func createUserFromRequest(request CreateUserRequest) api.User {
-	urn := api.CreateUrn("", api.RESOURCE_USER, request.Path, request.ExternalID)
-	user := api.User{
-		ID:         uuid.NewV4().String(),
-		ExternalID: request.ExternalID,
-		Path:       request.Path,
-		Urn:        urn,
-	}
-
-	return user
 }

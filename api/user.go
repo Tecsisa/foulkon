@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"strings"
+
+	"github.com/satori/go.uuid"
 	"github.com/tecsisa/authorizr/database"
 )
 
@@ -96,15 +99,40 @@ func (u *UsersAPI) GetListUsers(pathPrefix string) ([]User, error) {
 }
 
 // Add an User to database if not exist
-func (u *UsersAPI) AddUser(user User) (*User, error) {
+func (u *UsersAPI) AddUser(externalID string, path string) (*User, error) {
+	// Check parameters
+	if len(strings.TrimSpace(externalID)) == 0 ||
+		len(strings.TrimSpace(path)) == 0 {
+		return nil, &Error{
+			Code:    MISSING_PARAMETER_ERROR,
+			Message: fmt.Sprintf("There are mising parameters: ExternalID %v, Path %v", externalID, path),
+		}
+	}
+
+	// Validate external ID
+	if !IsValidUserExternalID(externalID) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", externalID),
+		}
+	}
+
+	// Validate path
+	if !IsValidPath(path) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: Path %v", path),
+		}
+	}
+
 	// Check if user already exist
-	userDB, err := u.UserRepo.GetUserByExternalID(user.ExternalID)
+	userDB, err := u.UserRepo.GetUserByExternalID(externalID)
 
 	// If user exist it can't create it
 	if userDB != nil {
 		return nil, &Error{
 			Code:    USER_ALREADY_EXIST,
-			Message: fmt.Sprintf("Unable to create user, user with ExternalID %v already exist", user.ExternalID),
+			Message: fmt.Sprintf("Unable to create user, user with ExternalID %v already exist", externalID),
 		}
 	}
 
@@ -121,6 +149,7 @@ func (u *UsersAPI) AddUser(user User) (*User, error) {
 	}
 
 	// Create user
+	user := createUser(externalID, path)
 	userCreated, err := u.UserRepo.AddUser(user)
 
 	// Check if there is an unexpected error in DB
@@ -139,6 +168,31 @@ func (u *UsersAPI) AddUser(user User) (*User, error) {
 
 // Update an User to database if exist
 func (u *UsersAPI) UpdateUser(externalID string, newPath string) (*User, error) {
+	// Check parameters
+	if len(strings.TrimSpace(externalID)) == 0 ||
+		len(strings.TrimSpace(newPath)) == 0 {
+		return nil, &Error{
+			Code:    MISSING_PARAMETER_ERROR,
+			Message: fmt.Sprintf("There are mising parameters: ExternalID %v, Path %v", externalID, newPath),
+		}
+	}
+
+	// Validate external ID
+	if !IsValidUserExternalID(externalID) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", externalID),
+		}
+	}
+
+	// Validate path
+	if !IsValidPath(newPath) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: Path %v", newPath),
+		}
+	}
+
 	// Call repo to retrieve the user
 	userDB, err := u.UserRepo.GetUserByExternalID(externalID)
 
@@ -208,4 +262,18 @@ func (u *UsersAPI) RemoveUserById(id string) error {
 // Get groups for an user
 func (u *UsersAPI) GetGroupsByUserId(id string) ([]Group, error) {
 	return u.UserRepo.GetGroupsByUserID(id)
+}
+
+// Private helper methods
+
+func createUser(externalID string, path string) User {
+	urn := CreateUrn("", RESOURCE_USER, path, externalID)
+	user := User{
+		ID:         uuid.NewV4().String(),
+		ExternalID: externalID,
+		Path:       path,
+		Urn:        urn,
+	}
+
+	return user
 }
