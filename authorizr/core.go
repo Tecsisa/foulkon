@@ -79,26 +79,26 @@ func NewCore(config *toml.TomlTree) (*Core, error) {
 			return nil, err
 		}
 		logger.Info("Connected to postgres database")
+
+		// Create repository
+		repoDB := postgresql.PostgresRepo{
+			Dbmap: db,
+		}
+		repo := api.Repo{
+			GroupRepo:  repoDB,
+			UserRepo:   repoDB,
+			PolicyRepo: repoDB,
+		}
+
+		// Instantiate APIs
 		userApi = &api.UsersAPI{
-			UserRepo: postgresql.PostgresRepo{
-				Dbmap: db,
-			},
+			Repo: repo,
 		}
 		groupApi = &api.GroupsAPI{
-			GroupRepo: postgresql.PostgresRepo{
-				Dbmap: db,
-			},
-			UserRepo: postgresql.PostgresRepo{
-				Dbmap: db,
-			},
-			PolicyRepo: postgresql.PostgresRepo{
-				Dbmap: db,
-			},
+			Repo: repo,
 		}
 		policyApi = &api.PoliciesAPI{
-			PolicyRepo: postgresql.PostgresRepo{
-				Dbmap: db,
-			},
+			Repo: repo,
 		}
 	default:
 		err := errors.New("Unexpected db_type value in configuration file (Maybe it is empty)")

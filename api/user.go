@@ -21,13 +21,13 @@ type User struct {
 
 // User api
 type UsersAPI struct {
-	UserRepo UserRepo
+	Repo Repo
 }
 
 // Retrieve user by external id
 func (u *UsersAPI) GetUserByExternalId(id string) (*User, error) {
 	// Call repo to retrieve the user
-	user, err := u.UserRepo.GetUserByExternalID(id)
+	user, err := u.Repo.UserRepo.GetUserByExternalID(id)
 
 	// Error handling
 	if err != nil {
@@ -54,7 +54,7 @@ func (u *UsersAPI) GetUserByExternalId(id string) (*User, error) {
 // Retrieve user by id
 func (u *UsersAPI) GetUserByID(id string) (*User, error) {
 	// Call repo to retrieve the user
-	user, err := u.UserRepo.GetUserByID(id)
+	user, err := u.Repo.UserRepo.GetUserByID(id)
 
 	// Error handling
 	if err != nil {
@@ -82,7 +82,7 @@ func (u *UsersAPI) GetUserByID(id string) (*User, error) {
 func (u *UsersAPI) GetListUsers(pathPrefix string) ([]User, error) {
 
 	// Retrieve users with specified path prefix
-	users, err := u.UserRepo.GetUsersFiltered(pathPrefix)
+	users, err := u.Repo.UserRepo.GetUsersFiltered(pathPrefix)
 
 	// Error handling
 	if err != nil {
@@ -126,7 +126,7 @@ func (u *UsersAPI) AddUser(externalID string, path string) (*User, error) {
 	}
 
 	// Check if user already exist
-	userDB, err := u.UserRepo.GetUserByExternalID(externalID)
+	userDB, err := u.Repo.UserRepo.GetUserByExternalID(externalID)
 
 	// If user exist it can't create it
 	if userDB != nil {
@@ -150,7 +150,7 @@ func (u *UsersAPI) AddUser(externalID string, path string) (*User, error) {
 
 	// Create user
 	user := createUser(externalID, path)
-	userCreated, err := u.UserRepo.AddUser(user)
+	userCreated, err := u.Repo.UserRepo.AddUser(user)
 
 	// Check if there is an unexpected error in DB
 	if err != nil {
@@ -194,7 +194,7 @@ func (u *UsersAPI) UpdateUser(externalID string, newPath string) (*User, error) 
 	}
 
 	// Call repo to retrieve the user
-	userDB, err := u.UserRepo.GetUserByExternalID(externalID)
+	userDB, err := u.Repo.UserRepo.GetUserByExternalID(externalID)
 
 	// Error handling
 	if err != nil {
@@ -218,7 +218,7 @@ func (u *UsersAPI) UpdateUser(externalID string, newPath string) (*User, error) 
 	urn := CreateUrn("", RESOURCE_USER, newPath, externalID)
 
 	// Update user
-	user, err := u.UserRepo.UpdateUser(*userDB, newPath, urn)
+	user, err := u.Repo.UserRepo.UpdateUser(*userDB, newPath, urn)
 
 	// Check if there is an unexpected error in DB
 	if err != nil {
@@ -237,7 +237,7 @@ func (u *UsersAPI) UpdateUser(externalID string, newPath string) (*User, error) 
 // Remove user with this id
 func (u *UsersAPI) RemoveUserById(id string) error {
 	// Remove user with given external id
-	err := u.UserRepo.RemoveUser(id)
+	err := u.Repo.UserRepo.RemoveUser(id)
 
 	if err != nil {
 		//Transform to DB error
@@ -261,7 +261,7 @@ func (u *UsersAPI) RemoveUserById(id string) error {
 
 // Get groups for an user
 func (u *UsersAPI) GetGroupsByUserId(id string) ([]Group, error) {
-	return u.UserRepo.GetGroupsByUserID(id)
+	return u.Repo.UserRepo.GetGroupsByUserID(id)
 }
 
 // Private helper methods
