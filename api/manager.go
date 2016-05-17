@@ -1,5 +1,12 @@
 package api
 
+// This Repo contains all Repositories that manages the domain
+type Repo struct {
+	UserRepo   UserRepo
+	GroupRepo  GroupRepo
+	PolicyRepo PolicyRepo
+}
+
 // User repository that contains all user operations for this domain
 type UserRepo interface {
 	// This method get a user with specified External ID.
