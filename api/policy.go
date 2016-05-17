@@ -58,6 +58,21 @@ func (p *PoliciesAPI) AddPolicy(policy Policy) (*Policy, error) {
 		}
 	}
 
+	// Validate fields
+	if !IsValidName(policy.Name) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid policy name"),
+		}
+	}
+	if !IsValidStatement(policy.Statements) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid statement definition"),
+		}
+
+	}
+
 	// Create policy
 	policyCreated, err := p.Repo.PolicyRepo.AddPolicy(policy)
 
@@ -95,6 +110,21 @@ func (p *PoliciesAPI) UpdatePolicy(org string, policyName string, newName string
 				Message: dbError.Message,
 			}
 		}
+	}
+
+	// Validate fields
+	if !IsValidName(policyName) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid policy name"),
+		}
+	}
+	if !IsValidStatement(&newStatements) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid statement definition"),
+		}
+
 	}
 
 	// Get Urn

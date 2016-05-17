@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 const (
@@ -13,6 +14,7 @@ const (
 
 	// Constraints
 	MAX_EXTERNAL_ID_LENGTH = 128
+	MAX_NAME_LENGTH        = 128
 	MAX_PATH_LENGTH        = 512
 
 	// Actions
@@ -60,12 +62,56 @@ func CreateUrn(org string, resource string, path string, name string) string {
 }
 
 func IsValidUserExternalID(externalID string) bool {
-	r, _ := regexp.Compile(`^[\w+=,.@-]+$`)
+	r, _ := regexp.Compile(`^[\w+.@\-]+$`)
 	return r.MatchString(externalID) && len(externalID) < MAX_EXTERNAL_ID_LENGTH
 }
 
+// this func validates group and policy names
+func IsValidName(name string) bool {
+	r, _ := regexp.Compile(`^[\w\-]+$`)
+	return r.MatchString(name) && len(name) < MAX_NAME_LENGTH
+}
+
 func IsValidPath(path string) bool {
-	r, _ := regexp.Compile(`^/$|^/[\w+/]+\w+/$`)
-	r2, _ := regexp.Compile(`/{2,}`)
+	r, _ := regexp.Compile(`^/$|^/[\w+/\-]+\w+/$`)
+	r2, _ := regexp.Compile(`[/*:]{2,}`)
 	return r.MatchString(path) && !r2.MatchString(path) && len(path) < MAX_PATH_LENGTH
+}
+
+func IsValidEffect(effect string) bool {
+	if strings.ToLower(effect) == "allow" || strings.ToLower(effect) == "deny" {
+		return true
+	}
+	return false
+}
+
+func IsValidAction(actions []string) bool {
+	r, _ := regexp.Compile(`^[\w\-:]+\*?$`)
+	r2, _ := regexp.Compile(`[*:]{2,}`)
+	for _, action := range actions {
+		if !r.MatchString(action) || r2.MatchString(action) || len(action) > MAX_NAME_LENGTH {
+			return false
+		}
+	}
+	return true
+}
+
+func IsValidResource(resources []string) bool {
+	r, _ := regexp.Compile(`^[\w+.@\-/:]+\*?$`)
+	r2, _ := regexp.Compile(`[/*:]{2,}`)
+	for _, resource := range resources {
+		if !r.MatchString(resource) || r2.MatchString(resource) || len(resource) > MAX_PATH_LENGTH {
+			return false
+		}
+	}
+	return true
+}
+
+func IsValidStatement(statements *[]Statement) bool {
+	for _, statement := range *statements {
+		if !IsValidEffect(statement.Effect) || !IsValidAction(statement.Action) || !IsValidResource(statement.Resources) {
+			return false
+		}
+	}
+	return true
 }

@@ -101,10 +101,11 @@ func (p *PolicyHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Reques
 		p.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
-		if apiError.Code == api.POLICY_ALREADY_EXIST {
+		switch apiError.Code {
+		case api.POLICY_ALREADY_EXIST:
 			RespondConflict(w)
 			return
-		} else { // Unexpected API error
+		default:
 			RespondInternalServerError(w)
 			return
 		}
@@ -116,6 +117,17 @@ func (p *PolicyHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Reques
 	// Error handling
 	if err != nil {
 		p.core.Logger.Errorln(err)
+		switch err.(*api.Error).Code {
+		case api.POLICY_ALREADY_EXIST:
+			RespondConflict(w)
+			return
+		case api.INVALID_PARAMETER_ERROR:
+			RespondBadRequest(w)
+			return
+		default:
+			RespondInternalServerError(w)
+			return
+		}
 		RespondInternalServerError(w)
 		return
 	}
