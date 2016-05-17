@@ -34,7 +34,7 @@ type GroupRepo interface {
 	AddGroup(group Group) (*Group, error)
 	AddMember(user User, group Group) error
 	UpdateGroup(group Group, newName string, newPath string, newUrn string) (*Group, error)
-	AttachPolicy(group Group, policy Policy) error
+	AttachPolicy(groupID string, policyID string) error
 }
 
 // Policy repository that contains all user operations for this domain
