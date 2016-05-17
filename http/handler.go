@@ -77,7 +77,7 @@ func Handler(core *authorizr.Core) http.Handler {
 	router.POST(GROUP_ID_USERS_ID_URL, groupHandler.handleAddMember)
 	router.DELETE(GROUP_ID_USERS_ID_URL, groupHandler.handleRemoveMember)
 
-	router.GET(GROUP_ID_POLICIES_URL, groupHandler.handleListAtachhedGroupPolicies)
+	router.GET(GROUP_ID_POLICIES_URL, groupHandler.handleListAttachedGroupPolicies)
 
 	router.POST(GROUP_ID_POLICIES_ID_URL, groupHandler.handleAttachGroupPolicy)
 	router.DELETE(GROUP_ID_POLICIES_ID_URL, groupHandler.handleDetachGroupPolicy)

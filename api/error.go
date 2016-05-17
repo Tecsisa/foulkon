@@ -20,6 +20,7 @@ const (
 
 	// GroupMembers error codes
 	USER_IS_ALREADY_A_MEMBER_OF_GROUP = "UserIsAlreadyAMemberOfGroup"
+	USER_IS_NOT_A_MEMBER_OF_GROUP     = "UserIsNotAMemberOfGroup"
 
 	// GroupPolicies error codes
 	POLICY_IS_ALREADY_ATTACHED_TO_GROUP = "PolicyIsAlreadyAttachedToGroup"

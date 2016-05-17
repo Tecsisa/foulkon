@@ -32,7 +32,8 @@ type GroupRepo interface {
 	RemoveGroup(org string, name string) error
 
 	AddGroup(group Group) (*Group, error)
-	AddMember(user User, group Group) error
+	AddMember(userID string, groupID string) error
+	RemoveMember(userID string, groupID string) error
 	UpdateGroup(group Group, newName string, newPath string, newUrn string) (*Group, error)
 	AttachPolicy(groupID string, policyID string) error
 }

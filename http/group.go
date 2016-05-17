@@ -265,17 +265,41 @@ func (g *GroupHandler) handleAddMember(w http.ResponseWriter, r *http.Request, p
 		g.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
-		if apiError.Code == api.GROUP_BY_ORG_AND_NAME_NOT_FOUND || apiError.Code == api.USER_BY_EXTERNAL_ID_NOT_FOUND {
+		switch apiError.Code {
+		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.USER_BY_EXTERNAL_ID_NOT_FOUND:
 			RespondNotFound(w)
-			return
-		} else { // Unexpected API error
+		case api.USER_IS_ALREADY_A_MEMBER_OF_GROUP:
+			RespondConflict(w)
+		default:
 			RespondInternalServerError(w)
-			return
 		}
+		return
 	}
 }
 
-func (g *GroupHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (g *GroupHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Retrieve group, org and user from path
+	org := ps.ByName(ORG_ID)
+	user := ps.ByName(USER_ID)
+	group := ps.ByName(GROUP_ID)
+
+	// Call group API to create an group
+	err := g.core.GroupApi.RemoveMember(user, group, org)
+	// Error handling
+	if err != nil {
+		g.core.Logger.Errorln(err)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
+		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.USER_BY_EXTERNAL_ID_NOT_FOUND:
+			RespondNotFound(w)
+		case api.USER_IS_NOT_A_MEMBER_OF_GROUP:
+			RespondConflict(w)
+		default:
+			RespondInternalServerError(w)
+		}
+		return
+	}
 
 }
 
@@ -311,7 +335,7 @@ func (g *GroupHandler) handleDetachGroupPolicy(w http.ResponseWriter, r *http.Re
 
 }
 
-func (g *GroupHandler) handleListAtachhedGroupPolicies(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (g *GroupHandler) handleListAttachedGroupPolicies(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 }
 
