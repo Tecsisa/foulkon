@@ -362,7 +362,7 @@ func (g *GroupsAPI) AttachPolicyToGroup(org string, groupName string, policyName
 	}
 
 	// Attach Policy to Group
-	err = g.GroupRepo.AttachPolicy(*group, *policy)
+	err = g.GroupRepo.AttachPolicy(group.ID, policy.ID)
 
 	if err != nil {
 		dbError := err.(*database.Error)

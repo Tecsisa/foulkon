@@ -321,11 +321,11 @@ func (g PostgresRepo) GetGroupPolicyRelation(groupID string, policyID string) (*
 	}, nil
 }
 
-func (g PostgresRepo) AttachPolicy(group api.Group, policy api.Policy) error {
+func (g PostgresRepo) AttachPolicy(groupID string, policyID string) error {
 	// Create relation
 	relation := &GroupPolicyRelation{
-		GroupID:  group.ID,
-		PolicyID: policy.ID,
+		GroupID:  groupID,
+		PolicyID: policyID,
 	}
 
 	// Store relation
