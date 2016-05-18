@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/satori/go.uuid"
 	"github.com/tecsisa/authorizr/database"
 )
 
@@ -46,26 +47,22 @@ func (p *PoliciesAPI) GetPolicies(org string, pathPrefix string) ([]Policy, erro
 	return policies, nil
 }
 
-func (p *PoliciesAPI) AddPolicy(policy Policy) (*Policy, error) {
-	// Check if policy already exist
-	policyDB, err := p.Repo.PolicyRepo.GetPolicyByName(policy.Org, policy.Name)
-
-	// If policy exist it can't create it
-	if policyDB != nil {
-		return nil, &Error{
-			Code:    POLICY_ALREADY_EXIST,
-			Message: fmt.Sprintf("Unable to create policy, policy with org %v and name %v already exist", policy.Org, policy.Name),
-		}
-	}
-
+func (p *PoliciesAPI) AddPolicy(name string, path string, org string, statements *[]Statement) (*Policy, error) {
 	// Validate fields
-	if !IsValidName(policy.Name) {
+	if !IsValidName(name) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid policy name"),
 		}
 	}
-	if !IsValidStatement(policy.Statements) {
+	if !IsValidPath(path) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid path"),
+		}
+
+	}
+	if !IsValidStatement(statements) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid statement definition"),
@@ -73,8 +70,19 @@ func (p *PoliciesAPI) AddPolicy(policy Policy) (*Policy, error) {
 
 	}
 
+	// Check if policy already exist
+	policyDB, err := p.Repo.PolicyRepo.GetPolicyByName(org, name)
+
+	// If policy exist it can't create it
+	if policyDB != nil {
+		return nil, &Error{
+			Code:    POLICY_ALREADY_EXIST,
+			Message: fmt.Sprintf("Unable to create policy, policy with org %v and name %v already exist", org, name),
+		}
+	}
+
 	// Create policy
-	policyCreated, err := p.Repo.PolicyRepo.AddPolicy(policy)
+	policyCreated, err := p.Repo.PolicyRepo.AddPolicy(createPolicy(name, path, org, statements))
 
 	// Check if there is an unexpected error in DB
 	if err != nil {
@@ -119,6 +127,13 @@ func (p *PoliciesAPI) UpdatePolicy(org string, policyName string, newName string
 			Message: fmt.Sprintf("Invalid policy name"),
 		}
 	}
+	if !IsValidPath(newPath) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid path"),
+		}
+
+	}
 	if !IsValidStatement(&newStatements) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -144,4 +159,18 @@ func (p *PoliciesAPI) UpdatePolicy(org string, policyName string, newName string
 	}
 
 	return policy, nil
+}
+
+func createPolicy(name string, path string, org string, statements *[]Statement) Policy {
+	urn := CreateUrn(org, RESOURCE_POLICY, path, name)
+	policy := Policy{
+		ID:         uuid.NewV4().String(),
+		Name:       name,
+		Path:       path,
+		Org:        org,
+		Urn:        urn,
+		Statements: statements,
+	}
+
+	return policy
 }

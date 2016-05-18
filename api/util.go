@@ -74,7 +74,7 @@ func IsValidName(name string) bool {
 
 func IsValidPath(path string) bool {
 	r, _ := regexp.Compile(`^/$|^/[\w+/\-]+\w+/$`)
-	r2, _ := regexp.Compile(`[/*:]{2,}`)
+	r2, _ := regexp.Compile(`[/:]{2,}`)
 	return r.MatchString(path) && !r2.MatchString(path) && len(path) < MAX_PATH_LENGTH
 }
 
