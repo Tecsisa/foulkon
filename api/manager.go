@@ -36,7 +36,7 @@ type GroupRepo interface {
 	GetAllGroupUserRelation(groupID string) (*GroupMembers, error)
 	GetGroupPolicyRelation(groupID string, policyID string) (*GroupPolicies, error)
 	GetGroupsFiltered(org string, pathPrefix string) ([]Group, error)
-	RemoveGroup(org string, name string) error
+	RemoveGroup(id string) error
 
 	AddGroup(group Group) (*Group, error)
 	AddMember(userID string, groupID string) error

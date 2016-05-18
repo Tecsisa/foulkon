@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/satori/go.uuid"
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/authorizr"
 )
@@ -65,22 +64,23 @@ func (g *GroupHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	// Check parameters
-	if len(strings.TrimSpace(request.Name)) == 0 ||
-		len(strings.TrimSpace(request.Path)) == 0 {
-		g.core.Logger.Errorf("There are mising parameters: Name %v, Path %v", request.Name, request.Path)
-		RespondBadRequest(w)
-		return
-	}
-
 	org := ps.ByName(ORG_ID)
 	// Call group API to create an group
-	result, err := g.core.GroupApi.AddGroup(createGroupFromRequest(request, org))
+	result, err := g.core.GroupApi.AddGroup(org, request.Name, request.Path)
 
 	// Error handling
 	if err != nil {
 		g.core.Logger.Errorln(err)
-		RespondInternalServerError(w)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
+		case api.GROUP_ALREADY_EXIST:
+			RespondConflict(w)
+		case api.INVALID_PARAMETER_ERROR:
+			RespondBadRequest(w)
+		default: // Unexpected API error
+			RespondInternalServerError(w)
+		}
 		return
 	}
 
@@ -206,11 +206,14 @@ func (g *GroupHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request,
 			RespondNotFound(w)
 		case api.GROUP_ALREADY_EXIST:
 			RespondConflict(w)
+		case api.INVALID_PARAMETER_ERROR:
+			RespondBadRequest(w)
 		default:
 			RespondInternalServerError(w)
 		}
 		return
 	}
+
 	// Create response
 	response := &UpdateGroupResponse{
 		Group: result,
@@ -274,6 +277,8 @@ func (g *GroupHandler) handleAddMember(w http.ResponseWriter, r *http.Request, p
 			RespondInternalServerError(w)
 		}
 		return
+	} else { // Respond without content
+		RespondNoContent(w)
 	}
 }
 
@@ -299,6 +304,8 @@ func (g *GroupHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request
 			RespondInternalServerError(w)
 		}
 		return
+	} else { // Respond without content
+		RespondNoContent(w)
 	}
 
 }
@@ -327,6 +334,8 @@ func (g *GroupHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.Re
 		}
 		return
 
+	} else { // Respond without content
+		RespondNoContent(w)
 	}
 
 }
@@ -341,17 +350,4 @@ func (g *GroupHandler) handleListAttachedGroupPolicies(w http.ResponseWriter, r 
 
 func (g *GroupHandler) handleListAllGroups(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-}
-
-func createGroupFromRequest(request CreateGroupRequest, org string) api.Group {
-	urn := api.CreateUrn(org, api.RESOURCE_GROUP, request.Path, request.Name)
-	group := api.Group{
-		ID:   uuid.NewV4().String(),
-		Name: request.Name,
-		Path: request.Path,
-		Urn:  urn,
-		Org:  org,
-	}
-
-	return group
 }
