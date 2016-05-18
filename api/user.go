@@ -236,8 +236,8 @@ func (u *UsersAPI) UpdateUser(externalID string, newPath string) (*User, error) 
 
 // Remove user with this id
 func (u *UsersAPI) RemoveUserById(id string) error {
-	// Remove user with given external id
-	err := u.Repo.UserRepo.RemoveUser(id)
+	// Call repo to retrieve the user
+	user, err := u.Repo.UserRepo.GetUserByExternalID(id)
 
 	if err != nil {
 		//Transform to DB error
@@ -253,6 +253,19 @@ func (u *UsersAPI) RemoveUserById(id string) error {
 				Code:    UNKNOWN_API_ERROR,
 				Message: dbError.Message,
 			}
+		}
+	}
+
+	// Remove user with given id
+	err = u.Repo.UserRepo.RemoveUser(user.ID)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
 		}
 	}
 
