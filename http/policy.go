@@ -4,10 +4,8 @@ import (
 	"net/http"
 
 	"encoding/json"
-	"strings"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/satori/go.uuid"
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/authorizr"
 )
@@ -84,38 +82,23 @@ func (p *PolicyHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Check parameters
-	if len(strings.TrimSpace(request.Name)) == 0 ||
-		len(strings.TrimSpace(request.Path)) == 0 ||
-		len(request.Statements) == 0 {
-		p.core.Logger.Errorf("There are mising parameters: Name %v, Path %v, Statements number %v", request.Name, request.Path, len(request.Statements))
-		RespondBadRequest(w)
-		return
-	}
-
-	// Validate policy
-	policy, err := validatePolicy(createPolicy(request.Name, request.Path, org, &request.Statements))
-
-	// Check errors
-	if err != nil {
-		p.core.Logger.Errorln(err)
-		// Transform to API errors
-		apiError := err.(*api.Error)
-		if apiError.Code == api.POLICY_ALREADY_EXIST {
-			RespondConflict(w)
-			return
-		} else { // Unexpected API error
-			RespondInternalServerError(w)
-			return
-		}
-	}
-
 	// Store this policy
-	storedPolicy, err := p.core.PolicyApi.AddPolicy(policy)
+	storedPolicy, err := p.core.PolicyApi.AddPolicy(request.Name, request.Path, org, &request.Statements)
 
 	// Error handling
 	if err != nil {
 		p.core.Logger.Errorln(err)
+		switch err.(*api.Error).Code {
+		case api.POLICY_ALREADY_EXIST:
+			RespondConflict(w)
+			return
+		case api.INVALID_PARAMETER_ERROR:
+			RespondBadRequest(w)
+			return
+		default:
+			RespondInternalServerError(w)
+			return
+		}
 		RespondInternalServerError(w)
 		return
 	}
@@ -138,15 +121,6 @@ func (p *PolicyHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Reques
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		p.core.Logger.Errorln(err)
-		RespondBadRequest(w)
-		return
-	}
-
-	// Check parameters
-	if len(strings.TrimSpace(request.Name)) == 0 ||
-		len(strings.TrimSpace(request.Path)) == 0 ||
-		len(request.Statements) == 0 {
-		p.core.Logger.Errorf("There are mising parameters: Name %v, Path %v, Statements number %v", request.Name, request.Path, len(request.Statements))
 		RespondBadRequest(w)
 		return
 	}
@@ -217,27 +191,4 @@ func (p *PolicyHandler) handleListAllPolicies(w http.ResponseWriter, r *http.Req
 
 	// Return data
 	RespondOk(w, response)
-}
-
-// This method validates policies created
-func validatePolicy(policy api.Policy) (api.Policy, error) {
-	// TODO rsoleto: Crear validador
-	return policy, nil
-}
-
-// It returns a policy with its parameters setted according to method parameters
-func createPolicy(name string, path string, org string, statements *[]api.Statement) api.Policy {
-	// TODO rsoleto: Hay que validar la entrada acorde a una expresion regular
-	// y quitar los elementos repetidos o no validos
-	urn := api.CreateUrn(org, api.RESOURCE_POLICY, path, name)
-	policy := api.Policy{
-		ID:         uuid.NewV4().String(),
-		Name:       name,
-		Path:       path,
-		Org:        org,
-		Urn:        urn,
-		Statements: statements,
-	}
-
-	return policy
 }
