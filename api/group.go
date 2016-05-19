@@ -50,15 +50,14 @@ func (g *GroupsAPI) AddGroup(org string, name string, path string) (*Group, erro
 	}
 
 	// Check if group already exist
-	groupDB, err := g.Repo.GroupRepo.GetGroupByName(org, name)
+	_, err := g.Repo.GroupRepo.GetGroupByName(org, name)
 
 	// Check if group could be retrieved
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
-		// User doesn't exist in DB
 		switch dbError.Code {
-		// Create group
+		// Group doesn't exist in DB
 		case database.GROUP_NOT_FOUND:
 			// Create group
 			groupCreated, err := g.Repo.GroupRepo.AddGroup(createGroup(org, name, path))
@@ -84,7 +83,7 @@ func (g *GroupsAPI) AddGroup(org string, name string, path string) (*Group, erro
 	} else {
 		return nil, &Error{
 			Code:    GROUP_ALREADY_EXIST,
-			Message: fmt.Sprintf("Unable to create group, group with org %v and name %v already exist", groupDB.Org, groupDB.Name),
+			Message: fmt.Sprintf("Unable to create group, group with org %v and name %v already exist", org, name),
 		}
 	}
 
@@ -334,6 +333,7 @@ func (g *GroupsAPI) GetListGroups(org string, pathPrefix string) ([]Group, error
 	return groups, nil
 }
 
+// Update Group to database if exist
 func (g *GroupsAPI) UpdateGroup(org string, groupName string, newName string, newPath string) (*Group, error) {
 	// Validate name
 	if !IsValidName(newName) {
@@ -365,7 +365,7 @@ func (g *GroupsAPI) UpdateGroup(org string, groupName string, newName string, ne
 		// Group already exists
 		return nil, &Error{
 			Code:    GROUP_ALREADY_EXIST,
-			Message: fmt.Sprintf("Name: %v is already exist", newName),
+			Message: fmt.Sprintf("Group name: %v already exists", newName),
 		}
 	}
 

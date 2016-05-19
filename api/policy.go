@@ -71,31 +71,42 @@ func (p *PoliciesAPI) AddPolicy(name string, path string, org string, statements
 	}
 
 	// Check if policy already exist
-	policyDB, err := p.Repo.PolicyRepo.GetPolicyByName(org, name)
+	_, err := p.Repo.PolicyRepo.GetPolicyByName(org, name)
 
-	// If policy exist it can't create it
-	if policyDB != nil {
+	// Check if policy could be retrieved
+	if err != nil {
+		// Transform to DB error
+		dbError := err.(*database.Error)
+		switch dbError.Code {
+		// Policy doesn't exist in DB
+		case database.POLICY_NOT_FOUND:
+			// Create policy
+			policyCreated, err := p.Repo.PolicyRepo.AddPolicy(createPolicy(name, path, org, statements))
+
+			// Check if there is an unexpected error in DB
+			if err != nil {
+				//Transform to DB error
+				dbError := err.(*database.Error)
+				return nil, &Error{
+					Code:    UNKNOWN_API_ERROR,
+					Message: dbError.Message,
+				}
+			}
+
+			// Return policy created
+			return policyCreated, nil
+		default: // Unexpected error
+			return nil, &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	} else { // If policy exist it can't create it
 		return nil, &Error{
 			Code:    POLICY_ALREADY_EXIST,
 			Message: fmt.Sprintf("Unable to create policy, policy with org %v and name %v already exist", org, name),
 		}
 	}
-
-	// Create policy
-	policyCreated, err := p.Repo.PolicyRepo.AddPolicy(createPolicy(name, path, org, statements))
-
-	// Check if there is an unexpected error in DB
-	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		return nil, &Error{
-			Code:    UNKNOWN_API_ERROR,
-			Message: dbError.Message,
-		}
-	}
-
-	// Return policy created
-	return policyCreated, nil
 }
 
 func (p *PoliciesAPI) UpdatePolicy(org string, policyName string, newName string, newPath string, newStatements []Statement) (*Policy, error) {
@@ -140,6 +151,16 @@ func (p *PoliciesAPI) UpdatePolicy(org string, policyName string, newName string
 			Message: fmt.Sprintf("Invalid statement definition"),
 		}
 
+	}
+	// Check if policy with newName exist
+	_, err = p.Repo.PolicyRepo.GetPolicyByName(org, newName)
+
+	if err == nil {
+		// Policy already exists
+		return nil, &Error{
+			Code:    POLICY_ALREADY_EXIST,
+			Message: fmt.Sprintf("Policy name: %v already exists", newName),
+		}
 	}
 
 	// Get Urn
