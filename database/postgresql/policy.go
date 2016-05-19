@@ -248,6 +248,42 @@ func (p PostgresRepo) UpdatePolicy(policy api.Policy, name string, path string, 
 	return policyApi, nil
 }
 
+func (p PostgresRepo) DeletePolicy(id string) error {
+
+	transaction := p.Dbmap.Begin()
+
+	// Delete policy relations (group)
+	transaction.Where("policy_id like ?", id).Delete(&GroupPolicyRelation{})
+	if err := transaction.Error; err != nil {
+		transaction.Rollback()
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+	// Delete policy statements
+	transaction.Where("policy_id like ?", id).Delete(&Statement{})
+	if err := transaction.Error; err != nil {
+		transaction.Rollback()
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+	//  Delete policy
+	transaction.Where("id like ?", id).Delete(&Policy{})
+	if err := transaction.Error; err != nil {
+		transaction.Rollback()
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	transaction.Commit()
+	return nil
+}
+
 // Private helper methods
 
 // Transform a policy retrieved from db into a policy for API

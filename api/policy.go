@@ -182,6 +182,40 @@ func (p *PoliciesAPI) UpdatePolicy(org string, policyName string, newName string
 	return policy, nil
 }
 
+func (p *PoliciesAPI) DeletePolicy(org string, name string) error {
+	// Call repo to retrieve the policy
+	policy, err := p.Repo.PolicyRepo.GetPolicyByName(org, name)
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		if dbError.Code == database.POLICY_NOT_FOUND {
+			return &Error{
+				Code:    POLICY_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		} else {
+			return &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+
+	}
+
+	err = p.Repo.PolicyRepo.DeletePolicy(policy.ID)
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	// Return no error
+	return nil
+}
+
 func createPolicy(name string, path string, org string, statements *[]Statement) Policy {
 	urn := CreateUrn(org, RESOURCE_POLICY, path, name)
 	policy := Policy{

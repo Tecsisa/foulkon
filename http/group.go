@@ -64,7 +64,7 @@ func (g *GroupHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	org := ps.ByName(ORG_ID)
+	org := ps.ByName(ORG_NAME)
 	// Call group API to create an group
 	result, err := g.core.GroupApi.AddGroup(org, request.Name, request.Path)
 
@@ -94,8 +94,8 @@ func (g *GroupHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request,
 
 func (g *GroupHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve group org and name from path
-	org := ps.ByName(ORG_ID)
-	name := ps.ByName(GROUP_ID)
+	org := ps.ByName(ORG_NAME)
+	name := ps.ByName(GROUP_NAME)
 
 	// Call user API to delete group
 	err := g.core.GroupApi.RemoveGroup(org, name)
@@ -118,8 +118,8 @@ func (g *GroupHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request,
 
 func (g *GroupHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve group org and name from path
-	org := ps.ByName(ORG_ID)
-	name := ps.ByName(GROUP_ID)
+	org := ps.ByName(ORG_NAME)
+	name := ps.ByName(GROUP_NAME)
 
 	// Call group API to retrieve group
 	result, err := g.core.GroupApi.GetGroupByName(org, name)
@@ -148,7 +148,7 @@ func (g *GroupHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, ps
 
 func (g *GroupHandler) handleListGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve group org from path
-	org := ps.ByName(ORG_ID)
+	org := ps.ByName(ORG_NAME)
 
 	// Retrieve query param if exist
 	pathPrefix := r.URL.Query().Get("PathPrefix")
@@ -190,8 +190,8 @@ func (g *GroupHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request,
 	}
 
 	// Retrieve group, org from path
-	org := ps.ByName(ORG_ID)
-	groupName := ps.ByName(GROUP_ID)
+	org := ps.ByName(ORG_NAME)
+	groupName := ps.ByName(GROUP_NAME)
 
 	// Call group API to update group
 	result, err := g.core.GroupApi.UpdateGroup(org, groupName, request.Name, request.Path)
@@ -225,8 +225,8 @@ func (g *GroupHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request,
 
 func (g *GroupHandler) handleListMembers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve group, org
-	org := ps.ByName(ORG_ID)
-	group := ps.ByName(GROUP_ID)
+	org := ps.ByName(ORG_NAME)
+	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to list members
 	result, err := g.core.GroupApi.ListMembers(org, group)
@@ -257,9 +257,9 @@ func (g *GroupHandler) handleListMembers(w http.ResponseWriter, r *http.Request,
 
 func (g *GroupHandler) handleAddMember(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve group, org and user from path
-	org := ps.ByName(ORG_ID)
+	org := ps.ByName(ORG_NAME)
 	user := ps.ByName(USER_ID)
-	group := ps.ByName(GROUP_ID)
+	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to create an group
 	err := g.core.GroupApi.AddMember(user, group, org)
@@ -284,9 +284,9 @@ func (g *GroupHandler) handleAddMember(w http.ResponseWriter, r *http.Request, p
 
 func (g *GroupHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve group, org and user from path
-	org := ps.ByName(ORG_ID)
+	org := ps.ByName(ORG_NAME)
 	user := ps.ByName(USER_ID)
-	group := ps.ByName(GROUP_ID)
+	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to create an group
 	err := g.core.GroupApi.RemoveMember(user, group, org)
@@ -312,9 +312,9 @@ func (g *GroupHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request
 
 func (g *GroupHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve group, org and policy from path
-	org := ps.ByName(ORG_ID)
-	groupName := ps.ByName(GROUP_ID)
-	policyName := ps.ByName(POLICY_ID)
+	org := ps.ByName(ORG_NAME)
+	groupName := ps.ByName(GROUP_NAME)
+	policyName := ps.ByName(POLICY_NAME)
 
 	// Call group API to attach policy to group
 	err := g.core.GroupApi.AttachPolicyToGroup(org, groupName, policyName)
