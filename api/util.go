@@ -73,7 +73,7 @@ func IsValidName(name string) bool {
 }
 
 func IsValidPath(path string) bool {
-	r, _ := regexp.Compile(`^/$|^/[\w+/\-]+\w+/$`)
+	r, _ := regexp.Compile(`^\*$|^/$|^/[\w+/\-]+\w+/$`)
 	r2, _ := regexp.Compile(`[/:]{2,}`)
 	return r.MatchString(path) && !r2.MatchString(path) && len(path) < MAX_PATH_LENGTH
 }
@@ -86,7 +86,7 @@ func IsValidEffect(effect string) bool {
 }
 
 func IsValidAction(actions []string) bool {
-	r, _ := regexp.Compile(`^[\w\-:]+\*?$`)
+	r, _ := regexp.Compile(`^[\w\-:]+[\w-*]+$`)
 	r2, _ := regexp.Compile(`[*:]{2,}`)
 	for _, action := range actions {
 		if !r.MatchString(action) || r2.MatchString(action) || len(action) > MAX_NAME_LENGTH {
@@ -97,7 +97,7 @@ func IsValidAction(actions []string) bool {
 }
 
 func IsValidResource(resources []string) bool {
-	r, _ := regexp.Compile(`^[\w+.@\-/:]+\*?$`)
+	r, _ := regexp.Compile(`^[\w+.@\-/:]+[\w+.@\-*]+$`)
 	r2, _ := regexp.Compile(`[/*:]{2,}`)
 	for _, resource := range resources {
 		if !r.MatchString(resource) || r2.MatchString(resource) || len(resource) > MAX_PATH_LENGTH {
