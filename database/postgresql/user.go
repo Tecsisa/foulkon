@@ -153,39 +153,32 @@ func (u PostgresRepo) GetGroupsByUserID(id string) ([]api.Group, error) {
 	return nil, nil
 }
 
-func (u PostgresRepo) RemoveUserRelations(userID string) error {
-	//  delete all user relations
-	err := u.Dbmap.Where("user_id like ?", userID).Delete(&GroupUserRelation{}).Error
-
-	// Error handling
-	if err != nil {
-		return &database.Error{
-			Code:    database.INTERNAL_ERROR,
-			Message: err.Error(),
-		}
-	}
-
-	return nil
-}
-
 func (u PostgresRepo) RemoveUser(id string) error {
-	//  Go to delete user
-	err := u.Dbmap.Where("id like ?", id).Delete(&User{}).Error
+	transaction := u.Dbmap.Begin()
+	// Go to delete user
+	transaction.Where("id like ?", id).Delete(&User{})
 
 	// Error handling
-	if err != nil {
+	if err := transaction.Error; err != nil {
+		transaction.Rollback()
 		return &database.Error{
 			Code:    database.INTERNAL_ERROR,
 			Message: err.Error(),
 		}
 	}
 
-	// Remove all relations
-	err = u.RemoveUserRelations(id)
+	//  delete all user relations
+	transaction.Where("user_id like ?", id).Delete(&GroupUserRelation{})
 
 	// Error handling
-	if err != nil {
-		return err
+	if err := transaction.Error; err != nil {
+		transaction.Rollback()
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	} else {
+		transaction.Commit()
 	}
 
 	return nil
