@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"strings"
-
 	"github.com/satori/go.uuid"
 	"github.com/tecsisa/authorizr/database"
 )
@@ -100,15 +98,6 @@ func (u *UsersAPI) GetListUsers(pathPrefix string) ([]User, error) {
 
 // Add an User to database if not exist
 func (u *UsersAPI) AddUser(externalID string, path string) (*User, error) {
-	// Check parameters
-	if len(strings.TrimSpace(externalID)) == 0 ||
-		len(strings.TrimSpace(path)) == 0 {
-		return nil, &Error{
-			Code:    MISSING_PARAMETER_ERROR,
-			Message: fmt.Sprintf("There are mising parameters: ExternalID %v, Path %v", externalID, path),
-		}
-	}
-
 	// Validate external ID
 	if !IsValidUserExternalID(externalID) {
 		return nil, &Error{
@@ -126,57 +115,48 @@ func (u *UsersAPI) AddUser(externalID string, path string) (*User, error) {
 	}
 
 	// Check if user already exist
-	userDB, err := u.Repo.UserRepo.GetUserByExternalID(externalID)
+	_, err := u.Repo.UserRepo.GetUserByExternalID(externalID)
 
-	// If user exist it can't create it
-	if userDB != nil {
+	// Check if user could be retrieved
+	if err != nil {
+		// Transform to DB error
+		dbError := err.(*database.Error)
+		// User doesn't exist in DB
+		switch dbError.Code {
+		case database.USER_NOT_FOUND:
+			// Create user
+			user := createUser(externalID, path)
+			userCreated, err := u.Repo.UserRepo.AddUser(user)
+
+			// Check if there is an unexpected error in DB
+			if err != nil {
+				//Transform to DB error
+				dbError := err.(*database.Error)
+				return nil, &Error{
+					Code:    UNKNOWN_API_ERROR,
+					Message: dbError.Message,
+				}
+			}
+
+			// Return user created
+			return userCreated, nil
+		default: // Unexpected error
+			return nil, &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	} else {
 		return nil, &Error{
 			Code:    USER_ALREADY_EXIST,
 			Message: fmt.Sprintf("Unable to create user, user with ExternalID %v already exist", externalID),
 		}
 	}
 
-	// Check if there is an unexpected error in DB
-	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		if dbError.Code != database.USER_NOT_FOUND {
-			return nil, &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
-		}
-	}
-
-	// Create user
-	user := createUser(externalID, path)
-	userCreated, err := u.Repo.UserRepo.AddUser(user)
-
-	// Check if there is an unexpected error in DB
-	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		return nil, &Error{
-			Code:    UNKNOWN_API_ERROR,
-			Message: dbError.Message,
-		}
-	}
-
-	// Return user created
-	return userCreated, nil
 }
 
 // Update an User to database if exist
 func (u *UsersAPI) UpdateUser(externalID string, newPath string) (*User, error) {
-	// Check parameters
-	if len(strings.TrimSpace(externalID)) == 0 ||
-		len(strings.TrimSpace(newPath)) == 0 {
-		return nil, &Error{
-			Code:    MISSING_PARAMETER_ERROR,
-			Message: fmt.Sprintf("There are mising parameters: ExternalID %v, Path %v", externalID, newPath),
-		}
-	}
-
 	// Validate external ID
 	if !IsValidUserExternalID(externalID) {
 		return nil, &Error{
