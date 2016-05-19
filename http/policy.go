@@ -46,7 +46,7 @@ type ListAllPoliciesResponse struct {
 
 func (p *PolicyHandler) handleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve org from path
-	org := ps.ByName(ORG_ID)
+	org := ps.ByName(ORG_NAME)
 
 	// Retrieve query param if exist
 	pathPrefix := r.URL.Query().Get("PathPrefix")
@@ -71,7 +71,7 @@ func (p *PolicyHandler) handleListPolicies(w http.ResponseWriter, r *http.Reques
 func (p *PolicyHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// Retrieve Organization
-	org := ps.ByName(ORG_ID)
+	org := ps.ByName(ORG_NAME)
 
 	// Decode request
 	request := CreatePolicyRequest{}
@@ -112,7 +112,27 @@ func (p *PolicyHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Reques
 }
 
 func (p *PolicyHandler) handleDeletePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Retrieve org and policy name from request path
+	orgId := ps.ByName(ORG_NAME)
+	policyName := ps.ByName(POLICY_NAME)
 
+	// Call API to delete policy
+	err := p.core.PolicyApi.DeletePolicy(orgId, policyName)
+
+	if err != nil {
+		p.core.Logger.Errorln(err)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
+		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
+			RespondNotFound(w)
+		default: // Unexpected API error
+			RespondInternalServerError(w)
+		}
+		return
+	}
+
+	RespondNoContent(w)
 }
 
 func (p *PolicyHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -126,8 +146,8 @@ func (p *PolicyHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Retrieve policy, org from path
-	org := ps.ByName(ORG_ID)
-	policyName := ps.ByName(POLICY_ID)
+	org := ps.ByName(ORG_NAME)
+	policyName := ps.ByName(POLICY_NAME)
 
 	// Check errors
 	if err != nil {

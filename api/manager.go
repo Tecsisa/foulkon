@@ -51,5 +51,6 @@ type PolicyRepo interface {
 	GetPolicyByName(org string, name string) (*Policy, error)
 	AddPolicy(policy Policy) (*Policy, error)
 	UpdatePolicy(policy Policy, newName string, newPath string, newUrn string, newStatements []Statement) (*Policy, error)
+	DeletePolicy(id string) error
 	GetPoliciesFiltered(org string, pathPrefix string) ([]Policy, error)
 }
