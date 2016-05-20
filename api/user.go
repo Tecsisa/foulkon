@@ -44,9 +44,8 @@ func (u *UsersAPI) GetUserByExternalId(id string) (*User, error) {
 			}
 		}
 	}
-
-	// Return user
 	return user, nil
+
 }
 
 // Retrieve user by id
