@@ -443,6 +443,96 @@ func (g *GroupsAPI) AttachPolicyToGroup(org string, groupName string, policyName
 	return nil
 }
 
+func (g *GroupsAPI) DetachPolicyToGroup(org string, groupName string, policyName string) error {
+	// Check if group exist
+	group, err := g.getGroupByName(org, groupName)
+
+	// Error handling
+	if err != nil {
+		return err
+	}
+
+	// Check if policy exist
+	policy, err := g.Repo.PolicyRepo.GetPolicyByName(org, policyName)
+
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		switch dbError.Code {
+		case database.POLICY_NOT_FOUND:
+			return &Error{
+				Code:    POLICY_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		default: // Unexpected error
+			return &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+
+	// Check if exist this relation
+	_, err = g.Repo.GroupRepo.GetGroupPolicyRelation(group.ID, policy.ID)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		// Relation doesn't exist in DB
+		switch dbError.Code {
+		case database.GROUP_POLICY_RELATION_NOT_FOUND:
+			return &Error{
+				Code:    POLICY_IS_NOT_ATTACHED_TO_GROUP,
+				Message: dbError.Message,
+			}
+		default: // Unexpected error
+			return &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+	// Detach Policy to Group
+	err = g.Repo.GroupRepo.DetachPolicy(group.ID, policy.ID)
+
+	if err != nil {
+		dbError := err.(*database.Error)
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	return nil
+}
+
+func (g *GroupsAPI) ListAttachedGroupPolicies(org string, groupName string) (*GroupPolicies, error) {
+	// Check if group exist
+	group, err := g.getGroupByName(org, groupName)
+
+	// Error handling
+	if err != nil {
+		return nil, err
+	}
+
+	// Call repo to retrieve the GroupPolicyRelations
+	groupPolicies, err := g.Repo.GroupRepo.GetAllGroupPolicyRelation(group.ID)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return nil, &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	// Return policies
+	return groupPolicies, nil
+}
+
 // Private helper methods
 
 func createGroup(org string, name string, path string) Group {

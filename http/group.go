@@ -335,14 +335,75 @@ func (a *AuthHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.Req
 
 }
 
-func (a *AuthHandler) handleDetachGroupPolicy(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (a *AuthHandler) handleDetachGroupPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Retrieve group, org and policy from path
+	org := ps.ByName(ORG_NAME)
+	groupName := ps.ByName(GROUP_NAME)
+	policyName := ps.ByName(POLICY_NAME)
+
+	// Call group API to detach policy to group
+	err := a.core.GroupApi.DetachPolicyToGroup(org, groupName, policyName)
+
+	// Error handling
+	if err != nil {
+		a.core.Logger.Errorln(err)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
+		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
+			RespondNotFound(w)
+		default: // Unexpected API error
+			RespondInternalServerError(w)
+		}
+		return
+
+	} else { // Respond without content
+		RespondNoContent(w)
+	}
+}
+
+func (a *AuthHandler) handleListAttachedGroupPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Retrieve group, org from path
+	org := ps.ByName(ORG_NAME)
+	groupName := ps.ByName(GROUP_NAME)
+
+	result, err := a.core.GroupApi.ListAttachedGroupPolicies(org, groupName)
+	if err != nil {
+		a.core.Logger.Errorln(err)
+		RespondInternalServerError(w)
+		return
+	}
+
+	// Create response
+	response := &GetGroupPolicies{
+		Group:    result.Group,
+		Policies: result.Policies,
+	}
+
+	// Return data
+	RespondOk(w, response)
 
 }
 
-func (a *AuthHandler) handleListAttachedGroupPolicies(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (a *AuthHandler) handleListAllGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// get Org and PathPrefix from request, so the query can be filtered
+	org := r.URL.Query().Get("Org")
+	pathPrefix := r.URL.Query().Get("PathPrefix")
 
-}
+	// Call group API to retrieve groups
+	result, err := a.core.GroupApi.GetListGroups(org, pathPrefix)
+	if err != nil {
+		a.core.Logger.Errorln(err)
+		RespondInternalServerError(w)
+		return
+	}
 
-func (a *AuthHandler) handleListAllGroups(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	// Create response
+	response := &GetGroupsResponse{
+		Groups: result,
+	}
+
+	// Return data
+	RespondOk(w, response)
 
 }

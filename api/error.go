@@ -25,6 +25,7 @@ const (
 
 	// GroupPolicies error codes
 	POLICY_IS_ALREADY_ATTACHED_TO_GROUP = "PolicyIsAlreadyAttachedToGroup"
+	POLICY_IS_NOT_ATTACHED_TO_GROUP     = "PolicyIsNotAttachedToGroup"
 
 	// Policy API error codes
 	POLICY_ALREADY_EXIST             = "PolicyAlreadyExist"

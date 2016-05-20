@@ -50,6 +50,7 @@ type GroupRepo interface {
 	RemoveMember(userID string, groupID string) error
 	UpdateGroup(group Group, newName string, newPath string, newUrn string) (*Group, error)
 	AttachPolicy(groupID string, policyID string) error
+	DetachPolicy(groupID string, policyID string) error
 }
 
 // Policy repository that contains all user operations for this domain
