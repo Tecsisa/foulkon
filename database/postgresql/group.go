@@ -366,6 +366,21 @@ func (g PostgresRepo) AttachPolicy(groupID string, policyID string) error {
 	return nil
 }
 
+func (g PostgresRepo) DetachPolicy(groupID string, policyID string) error {
+	// Remove relation
+	err := g.Dbmap.Where("group_id like ? AND policy_id like ?", groupID, policyID).Delete(&GroupPolicyRelation{}).Error
+
+	// Error handling
+	if err != nil {
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	return nil
+}
+
 func (g PostgresRepo) GetAllGroupPolicyRelation(groupID string) (*api.GroupPolicies, error) {
 	relations := []GroupPolicyRelation{}
 	query := g.Dbmap.Where("group_id like ?", groupID).Find(&relations)
