@@ -18,6 +18,10 @@ type Group struct {
 	Org      string    `json:"Org, omitempty"`
 }
 
+func (g Group) GetUrn() string {
+	return g.Urn
+}
+
 type GroupMembers struct {
 	Group Group  `json:"Group, omitempty"`
 	Users []User `json:"Users, omitempty"`
@@ -29,7 +33,7 @@ type GroupPolicies struct {
 }
 
 // Add an Group to database if not exist
-func (api *AuthAPI) AddGroup(org string, name string, path string) (*Group, error) {
+func (api *AuthAPI) AddGroup(authenticatedUser AuthenticatedUser, org string, name string, path string) (*Group, error) {
 	// Validate name
 	if !IsValidName(name) {
 		return nil, &Error{
@@ -44,9 +48,26 @@ func (api *AuthAPI) AddGroup(org string, name string, path string) (*Group, erro
 			Message: fmt.Sprintf("Invalid parameter: Path %v", path),
 		}
 	}
+	// Create group
+	group := createGroup(org, name, path)
+
+	// Check restrictions
+	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, group.Urn, GROUP_ACTION_CREATE_GROUP, []Group{group})
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if we have our user authorized
+	if len(groupsFiltered) < 1 {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, group.Urn),
+		}
+	}
 
 	// Check if group already exist
-	_, err := api.GroupRepo.GetGroupByName(org, name)
+	_, err = api.GroupRepo.GetGroupByName(org, name)
 
 	// Check if group could be retrieved
 	if err != nil {
@@ -56,7 +77,7 @@ func (api *AuthAPI) AddGroup(org string, name string, path string) (*Group, erro
 		// Group doesn't exist in DB
 		case database.GROUP_NOT_FOUND:
 			// Create group
-			groupCreated, err := api.GroupRepo.AddGroup(createGroup(org, name, path))
+			groupCreated, err := api.GroupRepo.AddGroup(group)
 
 			// Check if there is an unexpected error in DB
 			if err != nil {
@@ -86,36 +107,32 @@ func (api *AuthAPI) AddGroup(org string, name string, path string) (*Group, erro
 }
 
 //  Add a new member into an existing group
-func (api *AuthAPI) AddMember(userID string, groupName string, org string) error {
+func (api *AuthAPI) AddMember(authenticatedUser AuthenticatedUser, userID string, groupName string, org string) error {
 	// Call repo to retrieve the group
-	groupDB, err := api.getGroupByName(org, groupName)
-
-	// Error handling
+	groupDB, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {
 		return err
 	}
 
-	// Call repo to retrieve the user
-	userDB, err := api.UserRepo.GetUserByExternalID(userID)
-
-	// Error handling
+	// Check restrictions
+	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, groupDB.Urn, GROUP_ACTION_ADD_MEMBER, []Group{*groupDB})
 	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		// User doesn't exist in DB
-		switch dbError.Code {
-		case database.USER_NOT_FOUND:
-			return &Error{
-				Code:    USER_BY_EXTERNAL_ID_NOT_FOUND,
-				Message: dbError.Message,
-			}
-		default: // Unexpected error
-			return &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
+		return err
+	}
 
+	// Check if we have our user authorized
+	if len(groupsFiltered) < 1 {
+		return &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, groupDB.Urn),
 		}
+	}
+
+	// Call repo to retrieve the user
+	userDB, err := api.GetUserByExternalId(authenticatedUser, userID)
+	if err != nil {
+		return err
 	}
 
 	// Call repo to retrieve the GroupUserRelation
@@ -146,35 +163,32 @@ func (api *AuthAPI) AddMember(userID string, groupName string, org string) error
 }
 
 //  Remove a member from a group
-func (api *AuthAPI) RemoveMember(userID string, groupName string, org string) error {
+func (api *AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, userID string, groupName string, org string) error {
 	// Call repo to retrieve the group
-	groupDB, err := api.getGroupByName(org, groupName)
-
-	// Error handling
+	groupDB, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {
 		return err
 	}
 
-	// Call repo to retrieve the user
-	userDB, err := api.UserRepo.GetUserByExternalID(userID)
-
-	// Error handling
+	// Check restrictions
+	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, groupDB.Urn, GROUP_ACTION_REMOVE_MEMBER, []Group{*groupDB})
 	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		// User doesn't exist in DB
-		switch dbError.Code {
-		case database.USER_NOT_FOUND:
-			return &Error{
-				Code:    USER_BY_EXTERNAL_ID_NOT_FOUND,
-				Message: dbError.Message,
-			}
-		default: // Unexpected error
-			return &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
+		return err
+	}
+
+	// Check if we have our user authorized
+	if len(groupsFiltered) < 1 {
+		return &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, groupDB.Urn),
 		}
+	}
+
+	// Call repo to retrieve the user
+	userDB, err := api.GetUserByExternalId(authenticatedUser, userID)
+	if err != nil {
+		return err
 	}
 
 	// Call repo to retrieve the GroupUserRelation
@@ -216,13 +230,26 @@ func (api *AuthAPI) RemoveMember(userID string, groupName string, org string) er
 }
 
 // List members of a group
-func (api *AuthAPI) ListMembers(org string, groupName string) (*GroupMembers, error) {
+func (api *AuthAPI) ListMembers(authenticatedUser AuthenticatedUser, org string, groupName string) (*GroupMembers, error) {
 	// Call repo to retrieve the group
-	group, err := api.getGroupByName(org, groupName)
-
-	// Error handling
+	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {
 		return nil, err
+	}
+
+	// Check restrictions
+	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, group.Urn, GROUP_ACTION_LIST_MEMBERS, []Group{*group})
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if we have our user authorized
+	if len(groupsFiltered) < 1 {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, group.Urn),
+		}
 	}
 
 	// Get Members
@@ -243,13 +270,26 @@ func (api *AuthAPI) ListMembers(org string, groupName string) (*GroupMembers, er
 }
 
 // Remove group
-func (api *AuthAPI) RemoveGroup(org string, name string) error {
+func (api *AuthAPI) RemoveGroup(authenticatedUser AuthenticatedUser, org string, name string) error {
 	// Call repo to retrieve the group
-	group, err := api.getGroupByName(org, name)
-
-	// Error handling
+	group, err := api.GetGroupByName(authenticatedUser, org, name)
 	if err != nil {
 		return err
+	}
+
+	// Check restrictions
+	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, group.Urn, GROUP_ACTION_DELETE_GROUP, []Group{*group})
+	if err != nil {
+		return err
+	}
+
+	// Check if we have our user authorized
+	if len(groupsFiltered) < 1 {
+		return &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, group.Urn),
+		}
 	}
 
 	// Remove group with given org and name
@@ -268,23 +308,9 @@ func (api *AuthAPI) RemoveGroup(org string, name string) error {
 	return nil
 }
 
-func (api *AuthAPI) GetGroupByName(org string, name string) (*Group, error) {
+func (api *AuthAPI) GetGroupByName(authenticatedUser AuthenticatedUser, org string, name string) (*Group, error) {
 	// Call repo to retrieve the group
-	group, err := api.getGroupByName(org, name)
-
-	// Error handling
-	if err != nil {
-		return nil, err
-	}
-
-	// Return group
-	return group, nil
-
-}
-
-func (api *AuthAPI) GetGroupById(id string) (*Group, error) {
-	// Call repo to retrieve the group
-	group, err := api.GroupRepo.GetGroupById(id)
+	group, err := api.GroupRepo.GetGroupByName(org, name)
 
 	// Error handling
 	if err != nil {
@@ -294,7 +320,7 @@ func (api *AuthAPI) GetGroupById(id string) (*Group, error) {
 		switch dbError.Code {
 		case database.GROUP_NOT_FOUND:
 			return nil, &Error{
-				Code:    GROUP_BY_ID_NOT_FOUND,
+				Code:    GROUP_BY_ORG_AND_NAME_NOT_FOUND,
 				Message: dbError.Message,
 			}
 		default: // Unexpected error
@@ -302,16 +328,30 @@ func (api *AuthAPI) GetGroupById(id string) (*Group, error) {
 				Code:    UNKNOWN_API_ERROR,
 				Message: dbError.Message,
 			}
-
 		}
 	}
 
-	// Return group
-	return group, nil
+	// Check restrictions
+	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, group.Urn, GROUP_ACTION_GET_GROUP, []Group{*group})
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if we have our user authorized
+	if len(groupsFiltered) > 0 {
+		groupsFiltered := groupsFiltered[0]
+		return &groupsFiltered, nil
+	} else {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, group.Urn),
+		}
+	}
 
 }
 
-func (api *AuthAPI) GetListGroups(org string, pathPrefix string) ([]Group, error) {
+func (api *AuthAPI) GetListGroups(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]Group, error) {
 	// Call repo to retrieve the groups
 	groups, err := api.GroupRepo.GetGroupsFiltered(org, pathPrefix)
 
@@ -325,12 +365,19 @@ func (api *AuthAPI) GetListGroups(org string, pathPrefix string) ([]Group, error
 		}
 	}
 
+	// Check restrictions to list
+	urnPrefix := GetUrnPrefix(org, RESOURCE_GROUP, pathPrefix)
+	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, urnPrefix, GROUP_ACTION_LIST_GROUPS, groups)
+	if err != nil {
+		return nil, err
+	}
+
 	// Return groups
-	return groups, nil
+	return groupsFiltered, nil
 }
 
 // Update Group to database if exist
-func (api *AuthAPI) UpdateGroup(org string, groupName string, newName string, newPath string) (*Group, error) {
+func (api *AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, groupName string, newName string, newPath string) (*Group, error) {
 	// Validate name
 	if !IsValidName(newName) {
 		return nil, &Error{
@@ -347,15 +394,28 @@ func (api *AuthAPI) UpdateGroup(org string, groupName string, newName string, ne
 	}
 
 	// Call repo to retrieve the group
-	groupDB, err := api.getGroupByName(org, groupName)
-
-	// Error handling
+	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {
 		return nil, err
 	}
 
+	// Check restrictions
+	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, group.Urn, GROUP_ACTION_UPDATE_GROUP, []Group{*group})
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if we have our user authorized
+	if len(groupsFiltered) < 1 {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, group.Urn),
+		}
+	}
+
 	// Check if group with newName exist
-	_, err = api.getGroupByName(org, newName)
+	_, err = api.GetGroupByName(authenticatedUser, org, newName)
 
 	if err == nil {
 		// Group already exists
@@ -365,11 +425,35 @@ func (api *AuthAPI) UpdateGroup(org string, groupName string, newName string, ne
 		}
 	}
 
-	// Get Urn
-	urn := CreateUrn(org, RESOURCE_GROUP, newPath, newName)
+	if err != nil {
+		apiError := err.(*Error)
+		switch apiError.Code {
+		case UNAUTHORIZED_RESOURCES_ERROR, UNKNOWN_API_ERROR:
+			return nil, err
+		default: //Do nothing
+		}
+	}
+
+	// Get Group updated
+	groupToUpdate := createGroup(org, newName, newPath)
+
+	// Check restrictions
+	groupsFiltered, err = api.GetGroupsAuthorized(authenticatedUser, groupToUpdate.Urn, GROUP_ACTION_UPDATE_GROUP, []Group{groupToUpdate})
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if we have our user authorized
+	if len(groupsFiltered) < 1 {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, groupToUpdate.Urn),
+		}
+	}
 
 	// Update group
-	group, err := api.GroupRepo.UpdateGroup(*groupDB, newName, newPath, urn)
+	group, err = api.GroupRepo.UpdateGroup(*group, newName, newPath, groupToUpdate.Urn)
 
 	// Check if there is an unexpected error in DB
 	if err != nil {
@@ -385,33 +469,32 @@ func (api *AuthAPI) UpdateGroup(org string, groupName string, newName string, ne
 
 }
 
-func (api *AuthAPI) AttachPolicyToGroup(org string, groupName string, policyName string) error {
+func (api *AuthAPI) AttachPolicyToGroup(authenticatedUser AuthenticatedUser, org string, groupName string, policyName string) error {
 	// Check if group exist
-	group, err := api.getGroupByName(org, groupName)
-
-	// Error handling
+	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {
 		return err
 	}
 
-	// Check if policy exist
-	policy, err := api.PolicyRepo.GetPolicyByName(org, policyName)
-
+	// Check restrictions
+	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, group.Urn, GROUP_ACTION_ATTACH_GROUP_POLICY, []Group{*group})
 	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		switch dbError.Code {
-		case database.POLICY_NOT_FOUND:
-			return &Error{
-				Code:    POLICY_BY_ORG_AND_NAME_NOT_FOUND,
-				Message: dbError.Message,
-			}
-		default: // Unexpected error
-			return &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
+		return err
+	}
+
+	// Check if we have our user authorized
+	if len(groupsFiltered) < 1 {
+		return &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, group.Urn),
 		}
+	}
+
+	// Check if policy exist
+	policy, err := api.GetPolicy(authenticatedUser, org, policyName)
+	if err != nil {
+		return err
 	}
 
 	// Check if exist this relation
@@ -439,33 +522,32 @@ func (api *AuthAPI) AttachPolicyToGroup(org string, groupName string, policyName
 	return nil
 }
 
-func (api *AuthAPI) DetachPolicyToGroup(org string, groupName string, policyName string) error {
+func (api *AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org string, groupName string, policyName string) error {
 	// Check if group exist
-	group, err := api.getGroupByName(org, groupName)
-
-	// Error handling
+	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {
 		return err
 	}
 
-	// Check if policy exist
-	policy, err := api.PolicyRepo.GetPolicyByName(org, policyName)
-
+	// Check restrictions
+	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, group.Urn, GROUP_ACTION_DETACH_GROUP_POLICY, []Group{*group})
 	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		switch dbError.Code {
-		case database.POLICY_NOT_FOUND:
-			return &Error{
-				Code:    POLICY_BY_ORG_AND_NAME_NOT_FOUND,
-				Message: dbError.Message,
-			}
-		default: // Unexpected error
-			return &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
+		return err
+	}
+
+	// Check if we have our user authorized
+	if len(groupsFiltered) < 1 {
+		return &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, group.Urn),
 		}
+	}
+
+	// Check if policy exist
+	policy, err := api.GetPolicy(authenticatedUser, org, policyName)
+	if err != nil {
+		return err
 	}
 
 	// Check if exist this relation
@@ -489,6 +571,7 @@ func (api *AuthAPI) DetachPolicyToGroup(org string, groupName string, policyName
 			}
 		}
 	}
+
 	// Detach Policy to Group
 	err = api.GroupRepo.DetachPolicy(group.ID, policy.ID)
 
@@ -503,13 +586,26 @@ func (api *AuthAPI) DetachPolicyToGroup(org string, groupName string, policyName
 	return nil
 }
 
-func (api *AuthAPI) ListAttachedGroupPolicies(org string, groupName string) (*GroupPolicies, error) {
+func (api *AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser, org string, groupName string) (*GroupPolicies, error) {
 	// Check if group exist
-	group, err := api.getGroupByName(org, groupName)
-
-	// Error handling
+	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {
 		return nil, err
+	}
+
+	// Check restrictions
+	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, group.Urn, GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES, []Group{*group})
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if we have our user authorized
+	if len(groupsFiltered) < 1 {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, group.Urn),
+		}
 	}
 
 	// Call repo to retrieve the GroupPolicyRelations
@@ -542,33 +638,4 @@ func createGroup(org string, name string, path string) Group {
 	}
 
 	return group
-}
-
-// This method gets the group by name and organization
-func (api *AuthAPI) getGroupByName(org string, name string) (*Group, error) {
-	// Call repo to retrieve the group
-	group, err := api.GroupRepo.GetGroupByName(org, name)
-
-	// Error handling
-	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		// Group doesn't exist in DB
-		switch dbError.Code {
-		case database.GROUP_NOT_FOUND:
-			return nil, &Error{
-				Code:    GROUP_BY_ORG_AND_NAME_NOT_FOUND,
-				Message: dbError.Message,
-			}
-		default: // Unexpected error
-			return nil, &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
-		}
-	}
-
-	// Return group
-	return group, nil
-
 }

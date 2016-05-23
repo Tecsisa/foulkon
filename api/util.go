@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"regexp"
-	"strings"
 )
 
 const (
@@ -61,6 +60,15 @@ func CreateUrn(org string, resource string, path string, name string) string {
 	}
 }
 
+func GetUrnPrefix(org string, resource string, path string) string {
+	switch resource {
+	case RESOURCE_USER:
+		return fmt.Sprintf("urn:iws:iam:user%v*", path)
+	default:
+		return fmt.Sprintf("urn:iws:iam:%v:%v%v*", org, resource, path)
+	}
+}
+
 func IsValidUserExternalID(externalID string) bool {
 	r, _ := regexp.Compile(`^[\w+.@\-]+$`)
 	return r.MatchString(externalID) && len(externalID) < MAX_EXTERNAL_ID_LENGTH
@@ -79,7 +87,7 @@ func IsValidPath(path string) bool {
 }
 
 func IsValidEffect(effect string) error {
-	if strings.ToLower(effect) == "allow" || strings.ToLower(effect) == "deny" {
+	if effect == "allow" || effect == "deny" {
 		return &Error{
 			Code:    REGEX_NO_MATCH,
 			Message: fmt.Sprintf("No regex match in effect: %v", effect),

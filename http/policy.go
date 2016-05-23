@@ -55,10 +55,17 @@ func (a *AuthHandler) handleListPolicies(w http.ResponseWriter, r *http.Request,
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call group API to retrieve groups
-	result, err := a.core.AuthApi.GetPolicies(org, pathPrefix)
+	result, err := a.core.AuthApi.GetPolicies(a.core.Authenticator.RetrieveUserID(*r), org, pathPrefix)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		RespondInternalServerError(w)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
+		default: // Unexpected API error
+			RespondInternalServerError(w)
+		}
 		return
 	}
 
@@ -86,7 +93,7 @@ func (a *AuthHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Request,
 	}
 
 	// Store this policy
-	storedPolicy, err := a.core.AuthApi.AddPolicy(request.Name, request.Path, org, &request.Statements)
+	storedPolicy, err := a.core.AuthApi.AddPolicy(a.core.Authenticator.RetrieveUserID(*r), request.Name, request.Path, org, &request.Statements)
 
 	// Error handling
 	if err != nil {
@@ -94,15 +101,13 @@ func (a *AuthHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Request,
 		switch err.(*api.Error).Code {
 		case api.POLICY_ALREADY_EXIST:
 			RespondConflict(w)
-			return
 		case api.INVALID_PARAMETER_ERROR:
 			RespondBadRequest(w)
-			return
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
 		default:
 			RespondInternalServerError(w)
-			return
 		}
-		RespondInternalServerError(w)
 		return
 	}
 
@@ -120,7 +125,7 @@ func (a *AuthHandler) handleDeletePolicy(w http.ResponseWriter, r *http.Request,
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call API to delete policy
-	err := a.core.AuthApi.DeletePolicy(orgId, policyName)
+	err := a.core.AuthApi.DeletePolicy(a.core.Authenticator.RetrieveUserID(*r), orgId, policyName)
 
 	if err != nil {
 		a.core.Logger.Errorln(err)
@@ -129,6 +134,8 @@ func (a *AuthHandler) handleDeletePolicy(w http.ResponseWriter, r *http.Request,
 		switch apiError.Code {
 		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
 			RespondNotFound(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
 		default: // Unexpected API error
 			RespondInternalServerError(w)
 		}
@@ -152,28 +159,23 @@ func (a *AuthHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Request,
 	org := ps.ByName(ORG_NAME)
 	policyName := ps.ByName(POLICY_NAME)
 
-	// Check errors
-	if err != nil {
-		a.core.Logger.Errorln(err)
-		RespondBadRequest(w)
-		return
-	}
-
 	// Call policy API to update policy
-	result, err := a.core.AuthApi.UpdatePolicy(org, policyName, request.Name, request.Path, request.Statements)
+	result, err := a.core.AuthApi.UpdatePolicy(a.core.Authenticator.RetrieveUserID(*r), org, policyName, request.Name, request.Path, request.Statements)
 
 	// Check errors
 	if err != nil {
 		a.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
-		if apiError.Code == api.POLICY_BY_ORG_AND_NAME_NOT_FOUND {
+		switch apiError.Code {
+		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
 			RespondNotFound(w)
-			return
-		} else { // Unexpected API error
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
+		default: // Unexpected API error
 			RespondInternalServerError(w)
-			return
 		}
+		return
 	}
 
 	// Create response
@@ -191,7 +193,7 @@ func (a *AuthHandler) handleGetPolicy(w http.ResponseWriter, r *http.Request, ps
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call policies API to retrieve policy
-	result, err := a.core.AuthApi.GetPolicy(orgId, policyName)
+	result, err := a.core.AuthApi.GetPolicy(a.core.Authenticator.RetrieveUserID(*r), orgId, policyName)
 
 	// Check errors
 	if err != nil {
@@ -201,6 +203,8 @@ func (a *AuthHandler) handleGetPolicy(w http.ResponseWriter, r *http.Request, ps
 		switch apiError.Code {
 		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
 			RespondNotFound(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
 		default: // Unexpected API error
 			RespondInternalServerError(w)
 		}
@@ -222,10 +226,19 @@ func (a *AuthHandler) handleGetPolicyAttachedGroups(w http.ResponseWriter, r *ht
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call policies API to retrieve attached groups
-	result, err := a.core.AuthApi.GetPolicyAttachedGroups(orgId, policyName)
+	result, err := a.core.AuthApi.GetPolicyAttachedGroups(a.core.Authenticator.RetrieveUserID(*r), orgId, policyName)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		RespondInternalServerError(w)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
+		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
+			RespondNotFound(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
+		default: // Unexpected API error
+			RespondInternalServerError(w)
+		}
 		return
 	}
 
@@ -244,10 +257,17 @@ func (a *AuthHandler) handleListAllPolicies(w http.ResponseWriter, r *http.Reque
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call policies API to retrieve policies
-	result, err := a.core.AuthApi.GetPolicies(org, pathPrefix)
+	result, err := a.core.AuthApi.GetPolicies(a.core.Authenticator.RetrieveUserID(*r), org, pathPrefix)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		RespondInternalServerError(w)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
+		default: // Unexpected API error
+			RespondInternalServerError(w)
+		}
 		return
 	}
 
