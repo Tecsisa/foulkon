@@ -78,40 +78,58 @@ func IsValidPath(path string) bool {
 	return r.MatchString(path) && !r2.MatchString(path) && len(path) < MAX_PATH_LENGTH
 }
 
-func IsValidEffect(effect string) bool {
+func IsValidEffect(effect string) error {
 	if strings.ToLower(effect) == "allow" || strings.ToLower(effect) == "deny" {
-		return true
+		return &Error{
+			Code:    REGEX_NO_MATCH,
+			Message: fmt.Sprintf("No regex match in effect: %v", effect),
+		}
 	}
 	return false
 }
 
-func IsValidAction(actions []string) bool {
+func IsValidAction(actions []string) error {
 	r, _ := regexp.Compile(`^[\w\-:]+[\w-*]+$`)
 	r2, _ := regexp.Compile(`[*]{2,}|[:]{2,}`)
 	for _, action := range actions {
 		if !r.MatchString(action) || r2.MatchString(action) || len(action) > MAX_NAME_LENGTH {
-			return false
+			return &Error{
+				Code:    REGEX_NO_MATCH,
+				Message: fmt.Sprintf("No regex match in action: %v", action),
+			}
 		}
 	}
-	return true
+	return nil
 }
 
-func IsValidResource(resources []string) bool {
+func IsValidResource(resources []string) error {
 	r, _ := regexp.Compile(`^[\w+.@\-/:]+[\w+.@\-*]+$`)
 	r2, _ := regexp.Compile(`[/]{2,}|[*]{2,}|[:]{2,}`)
 	for _, resource := range resources {
 		if !r.MatchString(resource) || r2.MatchString(resource) || len(resource) > MAX_PATH_LENGTH {
-			return false
+			return &Error{
+				Code:    REGEX_NO_MATCH,
+				Message: fmt.Sprintf("No regex match in resource: %v", resource),
+			}
 		}
 	}
-	return true
+	return nil
 }
 
-func IsValidStatement(statements *[]Statement) bool {
+func IsValidStatement(statements *[]Statement) error {
 	for _, statement := range *statements {
-		if !IsValidEffect(statement.Effect) || !IsValidAction(statement.Action) || !IsValidResource(statement.Resources) {
-			return false
+		err := IsValidEffect(statement.Effect)
+		if err != nil {
+			return err
+		}
+		err = IsValidAction(statement.Action)
+		if err != nil {
+			return err
+		}
+		err = IsValidResource(statement.Resources)
+		if err != nil {
+			return err
 		}
 	}
-	return true
+	return nil
 }
