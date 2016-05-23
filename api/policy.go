@@ -25,8 +25,34 @@ type Statement struct {
 	Resources []string `json:"Resources, omitempty"`
 }
 
+func (api *AuthAPI) GetPolicy(org string, policyName string) (*Policy, error) {
+	// Call repo to retrieve the policy
+	policy, err := api.PolicyRepo.GetPolicyByName(org, policyName)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		// Policy doesn't exist in DB
+		if dbError.Code == database.POLICY_NOT_FOUND {
+			return nil, &Error{
+				Code:    POLICY_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		} else { // Unexpected error
+			return nil, &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+
+	// Return policy
+	return policy, nil
+}
+
 func (api *AuthAPI) GetPolicies(org string, pathPrefix string) ([]Policy, error) {
-	// Call repo to retrieve the groups
+	// Call repo to retrieve the policies
 	policies, err := api.PolicyRepo.GetPoliciesFiltered(org, pathPrefix)
 
 	// Error handling
@@ -210,6 +236,43 @@ func (api *AuthAPI) DeletePolicy(org string, name string) error {
 
 	// Return no error
 	return nil
+}
+
+func (api *AuthAPI) GetPolicyAttachedGroups(org string, policyName string) ([]Group, error) {
+	// Call repo to retrieve the policy
+	policy, err := api.PolicyRepo.GetPolicyByName(org, policyName)
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		if dbError.Code == database.POLICY_NOT_FOUND {
+			return nil, &Error{
+				Code:    POLICY_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		} else {
+			return nil, &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+
+	}
+
+	// Call repo to retrieve the attached groups
+	groups, err := api.PolicyRepo.GetAllPolicyGroupRelation(policy.ID)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return nil, &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	// Return groups
+	return groups, nil
 }
 
 func createPolicy(name string, path string, org string, statements *[]Statement) Policy {

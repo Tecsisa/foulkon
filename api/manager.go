@@ -61,6 +61,7 @@ type PolicyRepo interface {
 	UpdatePolicy(policy Policy, newName string, newPath string, newUrn string, newStatements []Statement) (*Policy, error)
 	DeletePolicy(id string) error
 	GetPoliciesFiltered(org string, pathPrefix string) ([]Policy, error)
+	GetAllPolicyGroupRelation(policyID string) ([]Group, error)
 }
 
 type AuthResources struct {

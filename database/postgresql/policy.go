@@ -284,6 +284,40 @@ func (p PostgresRepo) DeletePolicy(id string) error {
 	return nil
 }
 
+func (p PostgresRepo) GetAllPolicyGroupRelation(policyID string) ([]api.Group, error) {
+	relations := []GroupPolicyRelation{}
+	query := p.Dbmap.Where("policy_id like ?", policyID).Find(&relations)
+
+	// Error Handling
+	if err := query.Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	// Transform relations to API domain
+	if relations != nil {
+		groups := make([]api.Group, len(relations), cap(relations))
+		for i, r := range relations {
+			group, err := p.GetGroupById(r.GroupID)
+			// Error handling
+			if err != nil {
+				return nil, &database.Error{
+					Code:    database.INTERNAL_ERROR,
+					Message: err.Error(),
+				}
+			}
+
+			groups[i] = *group
+		}
+
+		return groups, nil
+	}
+
+	return nil, nil
+}
+
 // Private helper methods
 
 // Transform a policy retrieved from db into a policy for API
