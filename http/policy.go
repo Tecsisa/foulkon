@@ -31,12 +31,20 @@ type UpdatePolicyResponse struct {
 	Policy *api.Policy
 }
 
+type GetPolicyResponse struct {
+	Policy *api.Policy
+}
+
 type ListPoliciesResponse struct {
 	Policies []api.Policy
 }
 
 type ListAllPoliciesResponse struct {
 	Policies []api.Policy
+}
+
+type GetPolicyGroupsResponse struct {
+	Groups []api.Group
 }
 
 func (a *AuthHandler) handleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -178,15 +186,59 @@ func (a *AuthHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Request,
 }
 
 func (a *AuthHandler) handleGetPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Retrieve org and policy name from request path
+	orgId := ps.ByName(ORG_NAME)
+	policyName := ps.ByName(POLICY_NAME)
 
+	// Call policies API to retrieve policy
+	result, err := a.core.AuthApi.GetPolicy(orgId, policyName)
+
+	// Check errors
+	if err != nil {
+		a.core.Logger.Errorln(err)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
+		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
+			RespondNotFound(w)
+		default: // Unexpected API error
+			RespondInternalServerError(w)
+		}
+		return
+	}
+
+	// Create response
+	response := &GetPolicyResponse{
+		Policy: result,
+	}
+
+	// Return data
+	RespondOk(w, response)
 }
 
 func (a *AuthHandler) handleGetPolicyAttachedGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Retrieve org and policy name from request path
+	orgId := ps.ByName(ORG_NAME)
+	policyName := ps.ByName(POLICY_NAME)
 
+	// Call policies API to retrieve attached groups
+	result, err := a.core.AuthApi.GetPolicyAttachedGroups(orgId, policyName)
+	if err != nil {
+		a.core.Logger.Errorln(err)
+		RespondInternalServerError(w)
+		return
+	}
+
+	// Create response
+	response := &GetPolicyGroupsResponse{
+		Groups: result,
+	}
+
+	// Return data
+	RespondOk(w, response)
 }
 
 func (a *AuthHandler) handleListAllPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-
 	// get Org and PathPrefix from request, so the query can be filtered
 	org := r.URL.Query().Get("Org")
 	pathPrefix := r.URL.Query().Get("PathPrefix")

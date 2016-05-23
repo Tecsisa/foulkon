@@ -367,6 +367,7 @@ func (a *AuthHandler) handleListAttachedGroupPolicies(w http.ResponseWriter, r *
 	org := ps.ByName(ORG_NAME)
 	groupName := ps.ByName(GROUP_NAME)
 
+	// Call group API to retrieve attached policies
 	result, err := a.core.AuthApi.ListAttachedGroupPolicies(org, groupName)
 	if err != nil {
 		a.core.Logger.Errorln(err)
