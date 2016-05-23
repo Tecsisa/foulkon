@@ -8,7 +8,6 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/tecsisa/authorizr/api"
-	"github.com/tecsisa/authorizr/authorizr"
 )
 
 // Requests
@@ -50,27 +49,23 @@ type GetGroupPolicies struct {
 	Policies []api.Policy
 }
 
-type GroupHandler struct {
-	core *authorizr.Core
-}
-
-func (g *GroupHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *AuthHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Decode request
 	request := CreateGroupRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		g.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		RespondBadRequest(w)
 		return
 	}
 
 	org := ps.ByName(ORG_NAME)
 	// Call group API to create an group
-	result, err := g.core.GroupApi.AddGroup(org, request.Name, request.Path)
+	result, err := a.core.GroupApi.AddGroup(org, request.Name, request.Path)
 
 	// Error handling
 	if err != nil {
-		g.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		switch apiError.Code {
@@ -92,17 +87,17 @@ func (g *GroupHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request,
 	RespondOk(w, response)
 }
 
-func (g *GroupHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *AuthHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve group org and name from path
 	org := ps.ByName(ORG_NAME)
 	name := ps.ByName(GROUP_NAME)
 
 	// Call user API to delete group
-	err := g.core.GroupApi.RemoveGroup(org, name)
+	err := a.core.GroupApi.RemoveGroup(org, name)
 
 	// Check if there were errors
 	if err != nil {
-		g.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		// If group doesn't exist
@@ -116,17 +111,17 @@ func (g *GroupHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request,
 	}
 }
 
-func (g *GroupHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *AuthHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve group org and name from path
 	org := ps.ByName(ORG_NAME)
 	name := ps.ByName(GROUP_NAME)
 
 	// Call group API to retrieve group
-	result, err := g.core.GroupApi.GetGroupByName(org, name)
+	result, err := a.core.GroupApi.GetGroupByName(org, name)
 
 	// Error handling
 	if err != nil {
-		g.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		if apiError.Code == api.GROUP_BY_ORG_AND_NAME_NOT_FOUND {
@@ -146,7 +141,7 @@ func (g *GroupHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, ps
 	RespondOk(w, response)
 }
 
-func (g *GroupHandler) handleListGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *AuthHandler) handleListGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve group org from path
 	org := ps.ByName(ORG_NAME)
 
@@ -154,9 +149,9 @@ func (g *GroupHandler) handleListGroups(w http.ResponseWriter, r *http.Request, 
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call group API to retrieve groups
-	result, err := g.core.GroupApi.GetListGroups(org, pathPrefix)
+	result, err := a.core.GroupApi.GetListGroups(org, pathPrefix)
 	if err != nil {
-		g.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		RespondInternalServerError(w)
 		return
 	}
@@ -171,12 +166,12 @@ func (g *GroupHandler) handleListGroups(w http.ResponseWriter, r *http.Request, 
 
 }
 
-func (g *GroupHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *AuthHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Decode request
 	request := UpdateGroupRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		g.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		RespondBadRequest(w)
 		return
 	}
@@ -184,7 +179,7 @@ func (g *GroupHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request,
 	// Check parameters
 	if len(strings.TrimSpace(request.Name)) == 0 ||
 		len(strings.TrimSpace(request.Path)) == 0 {
-		g.core.Logger.Errorf("There are mising parameters: Name %v, Path %v", request.Name, request.Path)
+		a.core.Logger.Errorf("There are mising parameters: Name %v, Path %v", request.Name, request.Path)
 		RespondBadRequest(w)
 		return
 	}
@@ -194,11 +189,11 @@ func (g *GroupHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request,
 	groupName := ps.ByName(GROUP_NAME)
 
 	// Call group API to update group
-	result, err := g.core.GroupApi.UpdateGroup(org, groupName, request.Name, request.Path)
+	result, err := a.core.GroupApi.UpdateGroup(org, groupName, request.Name, request.Path)
 
 	// Check errors
 	if err != nil {
-		g.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		switch apiError.Code {
@@ -223,17 +218,17 @@ func (g *GroupHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request,
 	RespondOk(w, response)
 }
 
-func (g *GroupHandler) handleListMembers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *AuthHandler) handleListMembers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve group, org
 	org := ps.ByName(ORG_NAME)
 	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to list members
-	result, err := g.core.GroupApi.ListMembers(org, group)
+	result, err := a.core.GroupApi.ListMembers(org, group)
 
 	// Check errors
 	if err != nil {
-		g.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		switch apiError.Code {
@@ -255,17 +250,17 @@ func (g *GroupHandler) handleListMembers(w http.ResponseWriter, r *http.Request,
 
 }
 
-func (g *GroupHandler) handleAddMember(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *AuthHandler) handleAddMember(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve group, org and user from path
 	org := ps.ByName(ORG_NAME)
 	user := ps.ByName(USER_ID)
 	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to create an group
-	err := g.core.GroupApi.AddMember(user, group, org)
+	err := a.core.GroupApi.AddMember(user, group, org)
 	// Error handling
 	if err != nil {
-		g.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		switch apiError.Code {
@@ -282,17 +277,17 @@ func (g *GroupHandler) handleAddMember(w http.ResponseWriter, r *http.Request, p
 	}
 }
 
-func (g *GroupHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *AuthHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve group, org and user from path
 	org := ps.ByName(ORG_NAME)
 	user := ps.ByName(USER_ID)
 	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to create an group
-	err := g.core.GroupApi.RemoveMember(user, group, org)
+	err := a.core.GroupApi.RemoveMember(user, group, org)
 	// Error handling
 	if err != nil {
-		g.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		switch apiError.Code {
@@ -310,18 +305,18 @@ func (g *GroupHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request
 
 }
 
-func (g *GroupHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *AuthHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve group, org and policy from path
 	org := ps.ByName(ORG_NAME)
 	groupName := ps.ByName(GROUP_NAME)
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call group API to attach policy to group
-	err := g.core.GroupApi.AttachPolicyToGroup(org, groupName, policyName)
+	err := a.core.GroupApi.AttachPolicyToGroup(org, groupName, policyName)
 
 	// Error handling
 	if err != nil {
-		g.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		switch apiError.Code {
@@ -340,14 +335,14 @@ func (g *GroupHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.Re
 
 }
 
-func (g *GroupHandler) handleDetachGroupPolicy(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (a *AuthHandler) handleDetachGroupPolicy(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 }
 
-func (g *GroupHandler) handleListAttachedGroupPolicies(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (a *AuthHandler) handleListAttachedGroupPolicies(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 }
 
-func (g *GroupHandler) handleListAllGroups(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (a *AuthHandler) handleListAllGroups(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 }

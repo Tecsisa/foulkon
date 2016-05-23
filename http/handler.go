@@ -44,60 +44,63 @@ const (
 	POLICY_ID_GROUPS_URL = POLICY_ROOT_URL + URI_PATH_PREFIX + POLICY_NAME + "/groups"
 )
 
+type AuthHandler struct {
+	core *authorizr.Core
+}
+
 // Handler returns an http.Handler for the APIs.
 func Handler(core *authorizr.Core) http.Handler {
 	// Create the muxer to handle the actual endpoints
 	router := httprouter.New()
 
+	authHandler := AuthHandler{core: core}
+
 	// User api
-	userHandler := UserHandler{core: core}
-	router.GET(USER_ROOT_URL, userHandler.handleGetUsers)
-	router.POST(USER_ROOT_URL, userHandler.handlePostUsers)
+	router.GET(USER_ROOT_URL, authHandler.handleGetUsers)
+	router.POST(USER_ROOT_URL, authHandler.handlePostUsers)
 
-	router.GET(USER_ID_URL, userHandler.handleGetUserId)
-	router.PUT(USER_ID_URL, userHandler.handlePutUser)
-	router.DELETE(USER_ID_URL, userHandler.handleDeleteUserId)
+	router.GET(USER_ID_URL, authHandler.handleGetUserId)
+	router.PUT(USER_ID_URL, authHandler.handlePutUser)
+	router.DELETE(USER_ID_URL, authHandler.handleDeleteUserId)
 
-	router.GET(USER_ID_GROUPS_URL, userHandler.handleUserIdGroups)
+	router.GET(USER_ID_GROUPS_URL, authHandler.handleUserIdGroups)
 
 	// Special endpoint with organization URI for users
-	router.GET(API_VERSION_1+ORG_ROOT+"/users", userHandler.handleOrgListUsers)
+	router.GET(API_VERSION_1+ORG_ROOT+"/users", authHandler.handleOrgListUsers)
 
 	// Group api
-	groupHandler := GroupHandler{core: core}
-	router.POST(GROUP_ORG_ROOT_URL, groupHandler.handleCreateGroup)
-	router.GET(GROUP_ORG_ROOT_URL, groupHandler.handleListGroups)
+	router.POST(GROUP_ORG_ROOT_URL, authHandler.handleCreateGroup)
+	router.GET(GROUP_ORG_ROOT_URL, authHandler.handleListGroups)
 
-	router.DELETE(GROUP_ID_URL, groupHandler.handleDeleteGroup)
-	router.GET(GROUP_ID_URL, groupHandler.handleGetGroup)
-	router.PUT(GROUP_ID_URL, groupHandler.handleUpdateGroup)
+	router.DELETE(GROUP_ID_URL, authHandler.handleDeleteGroup)
+	router.GET(GROUP_ID_URL, authHandler.handleGetGroup)
+	router.PUT(GROUP_ID_URL, authHandler.handleUpdateGroup)
 
-	router.GET(GROUP_ID_USERS_URL, groupHandler.handleListMembers)
+	router.GET(GROUP_ID_USERS_URL, authHandler.handleListMembers)
 
-	router.POST(GROUP_ID_USERS_ID_URL, groupHandler.handleAddMember)
-	router.DELETE(GROUP_ID_USERS_ID_URL, groupHandler.handleRemoveMember)
+	router.POST(GROUP_ID_USERS_ID_URL, authHandler.handleAddMember)
+	router.DELETE(GROUP_ID_USERS_ID_URL, authHandler.handleRemoveMember)
 
-	router.GET(GROUP_ID_POLICIES_URL, groupHandler.handleListAttachedGroupPolicies)
+	router.GET(GROUP_ID_POLICIES_URL, authHandler.handleListAttachedGroupPolicies)
 
-	router.POST(GROUP_ID_POLICIES_ID_URL, groupHandler.handleAttachGroupPolicy)
-	router.DELETE(GROUP_ID_POLICIES_ID_URL, groupHandler.handleDetachGroupPolicy)
+	router.POST(GROUP_ID_POLICIES_ID_URL, authHandler.handleAttachGroupPolicy)
+	router.DELETE(GROUP_ID_POLICIES_ID_URL, authHandler.handleDetachGroupPolicy)
 
 	// Special endpoint without organization URI for groups
-	router.GET(API_VERSION_1+"/groups", groupHandler.handleListAllGroups)
+	router.GET(API_VERSION_1+"/groups", authHandler.handleListAllGroups)
 
 	// Policy api
-	policyHandler := PolicyHandler{core: core}
-	router.GET(POLICY_ROOT_URL, policyHandler.handleListPolicies)
-	router.POST(POLICY_ROOT_URL, policyHandler.handleCreatePolicy)
+	router.GET(POLICY_ROOT_URL, authHandler.handleListPolicies)
+	router.POST(POLICY_ROOT_URL, authHandler.handleCreatePolicy)
 
-	router.DELETE(POLICY_ID_URL, policyHandler.handleDeletePolicy)
-	router.GET(POLICY_ID_URL, policyHandler.handleGetPolicy)
-	router.PUT(POLICY_ID_URL, policyHandler.handleUpdatePolicy)
+	router.DELETE(POLICY_ID_URL, authHandler.handleDeletePolicy)
+	router.GET(POLICY_ID_URL, authHandler.handleGetPolicy)
+	router.PUT(POLICY_ID_URL, authHandler.handleUpdatePolicy)
 
-	router.GET(POLICY_ID_GROUPS_URL, policyHandler.handleGetPolicyAttachedGroups)
+	router.GET(POLICY_ID_GROUPS_URL, authHandler.handleGetPolicyAttachedGroups)
 
 	// Special endpoint without organization URI for policies
-	router.GET(API_VERSION_1+"/policies", policyHandler.handleListAllPolicies)
+	router.GET(API_VERSION_1+"/policies", authHandler.handleListAllPolicies)
 
 	// Return handler
 	return core.Authenticator.Authenticate(router)

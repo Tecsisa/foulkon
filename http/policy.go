@@ -7,12 +7,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/tecsisa/authorizr/api"
-	"github.com/tecsisa/authorizr/authorizr"
 )
-
-type PolicyHandler struct {
-	core *authorizr.Core
-}
 
 // Requests
 type CreatePolicyRequest struct {
@@ -44,7 +39,7 @@ type ListAllPoliciesResponse struct {
 	Policies []api.Policy
 }
 
-func (p *PolicyHandler) handleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *AuthHandler) handleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve org from path
 	org := ps.ByName(ORG_NAME)
 
@@ -52,9 +47,9 @@ func (p *PolicyHandler) handleListPolicies(w http.ResponseWriter, r *http.Reques
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call group API to retrieve groups
-	result, err := p.core.PolicyApi.GetPolicies(org, pathPrefix)
+	result, err := a.core.PolicyApi.GetPolicies(org, pathPrefix)
 	if err != nil {
-		p.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		RespondInternalServerError(w)
 		return
 	}
@@ -68,7 +63,7 @@ func (p *PolicyHandler) handleListPolicies(w http.ResponseWriter, r *http.Reques
 	RespondOk(w, response)
 }
 
-func (p *PolicyHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *AuthHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// Retrieve Organization
 	org := ps.ByName(ORG_NAME)
@@ -77,17 +72,17 @@ func (p *PolicyHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Reques
 	request := CreatePolicyRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		p.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		RespondBadRequest(w)
 		return
 	}
 
 	// Store this policy
-	storedPolicy, err := p.core.PolicyApi.AddPolicy(request.Name, request.Path, org, &request.Statements)
+	storedPolicy, err := a.core.PolicyApi.AddPolicy(request.Name, request.Path, org, &request.Statements)
 
 	// Error handling
 	if err != nil {
-		p.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		switch err.(*api.Error).Code {
 		case api.POLICY_ALREADY_EXIST:
 			RespondConflict(w)
@@ -111,16 +106,16 @@ func (p *PolicyHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Reques
 	RespondOk(w, response)
 }
 
-func (p *PolicyHandler) handleDeletePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *AuthHandler) handleDeletePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Retrieve org and policy name from request path
 	orgId := ps.ByName(ORG_NAME)
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call API to delete policy
-	err := p.core.PolicyApi.DeletePolicy(orgId, policyName)
+	err := a.core.PolicyApi.DeletePolicy(orgId, policyName)
 
 	if err != nil {
-		p.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		switch apiError.Code {
@@ -135,12 +130,12 @@ func (p *PolicyHandler) handleDeletePolicy(w http.ResponseWriter, r *http.Reques
 	RespondNoContent(w)
 }
 
-func (p *PolicyHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *AuthHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Decode request
 	request := UpdatePolicyRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		p.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		RespondBadRequest(w)
 		return
 	}
@@ -151,17 +146,17 @@ func (p *PolicyHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Reques
 
 	// Check errors
 	if err != nil {
-		p.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		RespondBadRequest(w)
 		return
 	}
 
 	// Call policy API to update policy
-	result, err := p.core.PolicyApi.UpdatePolicy(org, policyName, request.Name, request.Path, request.Statements)
+	result, err := a.core.PolicyApi.UpdatePolicy(org, policyName, request.Name, request.Path, request.Statements)
 
 	// Check errors
 	if err != nil {
-		p.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		if apiError.Code == api.POLICY_BY_ORG_AND_NAME_NOT_FOUND {
@@ -182,24 +177,24 @@ func (p *PolicyHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Reques
 	RespondOk(w, response)
 }
 
-func (p *PolicyHandler) handleGetPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *AuthHandler) handleGetPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 }
 
-func (p *PolicyHandler) handleGetPolicyAttachedGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *AuthHandler) handleGetPolicyAttachedGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 }
 
-func (p *PolicyHandler) handleListAllPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *AuthHandler) handleListAllPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// get Org and PathPrefix from request, so the query can be filtered
 	org := r.URL.Query().Get("Org")
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call policies API to retrieve policies
-	result, err := p.core.PolicyApi.GetPolicies(org, pathPrefix)
+	result, err := a.core.PolicyApi.GetPolicies(org, pathPrefix)
 	if err != nil {
-		p.core.Logger.Errorln(err)
+		a.core.Logger.Errorln(err)
 		RespondInternalServerError(w)
 		return
 	}
