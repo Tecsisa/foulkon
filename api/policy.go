@@ -25,13 +25,9 @@ type Statement struct {
 	Resources []string `json:"Resources, omitempty"`
 }
 
-type PoliciesAPI struct {
-	Repo Repo
-}
-
-func (p *PoliciesAPI) GetPolicies(org string, pathPrefix string) ([]Policy, error) {
+func (api *AuthAPI) GetPolicies(org string, pathPrefix string) ([]Policy, error) {
 	// Call repo to retrieve the groups
-	policies, err := p.Repo.PolicyRepo.GetPoliciesFiltered(org, pathPrefix)
+	policies, err := api.PolicyRepo.GetPoliciesFiltered(org, pathPrefix)
 
 	// Error handling
 	if err != nil {
@@ -47,7 +43,7 @@ func (p *PoliciesAPI) GetPolicies(org string, pathPrefix string) ([]Policy, erro
 	return policies, nil
 }
 
-func (p *PoliciesAPI) AddPolicy(name string, path string, org string, statements *[]Statement) (*Policy, error) {
+func (api *AuthAPI) AddPolicy(name string, path string, org string, statements *[]Statement) (*Policy, error) {
 	// Validate fields
 	if !IsValidName(name) {
 		return nil, &Error{
@@ -71,7 +67,7 @@ func (p *PoliciesAPI) AddPolicy(name string, path string, org string, statements
 	}
 
 	// Check if policy already exist
-	_, err := p.Repo.PolicyRepo.GetPolicyByName(org, name)
+	_, err := api.PolicyRepo.GetPolicyByName(org, name)
 
 	// Check if policy could be retrieved
 	if err != nil {
@@ -81,7 +77,7 @@ func (p *PoliciesAPI) AddPolicy(name string, path string, org string, statements
 		// Policy doesn't exist in DB
 		case database.POLICY_NOT_FOUND:
 			// Create policy
-			policyCreated, err := p.Repo.PolicyRepo.AddPolicy(createPolicy(name, path, org, statements))
+			policyCreated, err := api.PolicyRepo.AddPolicy(createPolicy(name, path, org, statements))
 
 			// Check if there is an unexpected error in DB
 			if err != nil {
@@ -109,9 +105,9 @@ func (p *PoliciesAPI) AddPolicy(name string, path string, org string, statements
 	}
 }
 
-func (p *PoliciesAPI) UpdatePolicy(org string, policyName string, newName string, newPath string, newStatements []Statement) (*Policy, error) {
+func (api *AuthAPI) UpdatePolicy(org string, policyName string, newName string, newPath string, newStatements []Statement) (*Policy, error) {
 	// Call repo to retrieve the policy
-	policyDB, err := p.Repo.PolicyRepo.GetPolicyByName(org, policyName)
+	policyDB, err := api.PolicyRepo.GetPolicyByName(org, policyName)
 
 	// Error handling
 	if err != nil {
@@ -153,7 +149,7 @@ func (p *PoliciesAPI) UpdatePolicy(org string, policyName string, newName string
 
 	}
 	// Check if policy with newName exist
-	_, err = p.Repo.PolicyRepo.GetPolicyByName(org, newName)
+	_, err = api.PolicyRepo.GetPolicyByName(org, newName)
 
 	if err == nil {
 		// Policy already exists
@@ -167,7 +163,7 @@ func (p *PoliciesAPI) UpdatePolicy(org string, policyName string, newName string
 	urn := CreateUrn(org, RESOURCE_POLICY, newPath, newName)
 
 	// Update policy
-	policy, err := p.Repo.PolicyRepo.UpdatePolicy(*policyDB, newName, newPath, urn, newStatements)
+	policy, err := api.PolicyRepo.UpdatePolicy(*policyDB, newName, newPath, urn, newStatements)
 
 	// Check if there is an unexpected error in DB
 	if err != nil {
@@ -182,9 +178,9 @@ func (p *PoliciesAPI) UpdatePolicy(org string, policyName string, newName string
 	return policy, nil
 }
 
-func (p *PoliciesAPI) DeletePolicy(org string, name string) error {
+func (api *AuthAPI) DeletePolicy(org string, name string) error {
 	// Call repo to retrieve the policy
-	policy, err := p.Repo.PolicyRepo.GetPolicyByName(org, name)
+	policy, err := api.PolicyRepo.GetPolicyByName(org, name)
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
@@ -202,7 +198,7 @@ func (p *PoliciesAPI) DeletePolicy(org string, name string) error {
 
 	}
 
-	err = p.Repo.PolicyRepo.DeletePolicy(policy.ID)
+	err = api.PolicyRepo.DeletePolicy(policy.ID)
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
