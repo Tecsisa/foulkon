@@ -28,12 +28,8 @@ type GroupPolicies struct {
 	Policies []Policy `json:"Policies, omitempty"`
 }
 
-type GroupsAPI struct {
-	Repo Repo
-}
-
 // Add an Group to database if not exist
-func (g *GroupsAPI) AddGroup(org string, name string, path string) (*Group, error) {
+func (api *AuthAPI) AddGroup(org string, name string, path string) (*Group, error) {
 	// Validate name
 	if !IsValidName(name) {
 		return nil, &Error{
@@ -50,7 +46,7 @@ func (g *GroupsAPI) AddGroup(org string, name string, path string) (*Group, erro
 	}
 
 	// Check if group already exist
-	_, err := g.Repo.GroupRepo.GetGroupByName(org, name)
+	_, err := api.GroupRepo.GetGroupByName(org, name)
 
 	// Check if group could be retrieved
 	if err != nil {
@@ -60,7 +56,7 @@ func (g *GroupsAPI) AddGroup(org string, name string, path string) (*Group, erro
 		// Group doesn't exist in DB
 		case database.GROUP_NOT_FOUND:
 			// Create group
-			groupCreated, err := g.Repo.GroupRepo.AddGroup(createGroup(org, name, path))
+			groupCreated, err := api.GroupRepo.AddGroup(createGroup(org, name, path))
 
 			// Check if there is an unexpected error in DB
 			if err != nil {
@@ -90,9 +86,9 @@ func (g *GroupsAPI) AddGroup(org string, name string, path string) (*Group, erro
 }
 
 //  Add a new member into an existing group
-func (g *GroupsAPI) AddMember(userID string, groupName string, org string) error {
+func (api *AuthAPI) AddMember(userID string, groupName string, org string) error {
 	// Call repo to retrieve the group
-	groupDB, err := g.getGroupByName(org, groupName)
+	groupDB, err := api.getGroupByName(org, groupName)
 
 	// Error handling
 	if err != nil {
@@ -100,7 +96,7 @@ func (g *GroupsAPI) AddMember(userID string, groupName string, org string) error
 	}
 
 	// Call repo to retrieve the user
-	userDB, err := g.Repo.UserRepo.GetUserByExternalID(userID)
+	userDB, err := api.UserRepo.GetUserByExternalID(userID)
 
 	// Error handling
 	if err != nil {
@@ -123,7 +119,7 @@ func (g *GroupsAPI) AddMember(userID string, groupName string, org string) error
 	}
 
 	// Call repo to retrieve the GroupUserRelation
-	groupMembers, err := g.Repo.GroupRepo.GetGroupUserRelation(userDB.ID, groupDB.ID)
+	groupMembers, err := api.GroupRepo.GetGroupUserRelation(userDB.ID, groupDB.ID)
 
 	// Error handling
 	if groupMembers != nil {
@@ -134,7 +130,7 @@ func (g *GroupsAPI) AddMember(userID string, groupName string, org string) error
 	}
 
 	// Add Member
-	err = g.Repo.GroupRepo.AddMember(userDB.ID, groupDB.ID)
+	err = api.GroupRepo.AddMember(userDB.ID, groupDB.ID)
 
 	// Check if there is an unexpected error in DB
 	if err != nil {
@@ -150,9 +146,9 @@ func (g *GroupsAPI) AddMember(userID string, groupName string, org string) error
 }
 
 //  Remove a member from a group
-func (g *GroupsAPI) RemoveMember(userID string, groupName string, org string) error {
+func (api *AuthAPI) RemoveMember(userID string, groupName string, org string) error {
 	// Call repo to retrieve the group
-	groupDB, err := g.getGroupByName(org, groupName)
+	groupDB, err := api.getGroupByName(org, groupName)
 
 	// Error handling
 	if err != nil {
@@ -160,7 +156,7 @@ func (g *GroupsAPI) RemoveMember(userID string, groupName string, org string) er
 	}
 
 	// Call repo to retrieve the user
-	userDB, err := g.Repo.UserRepo.GetUserByExternalID(userID)
+	userDB, err := api.UserRepo.GetUserByExternalID(userID)
 
 	// Error handling
 	if err != nil {
@@ -182,7 +178,7 @@ func (g *GroupsAPI) RemoveMember(userID string, groupName string, org string) er
 	}
 
 	// Call repo to retrieve the GroupUserRelation
-	_, err = g.Repo.GroupRepo.GetGroupUserRelation(userDB.ID, groupDB.ID)
+	_, err = api.GroupRepo.GetGroupUserRelation(userDB.ID, groupDB.ID)
 
 	// Error handling
 	if err != nil {
@@ -204,7 +200,7 @@ func (g *GroupsAPI) RemoveMember(userID string, groupName string, org string) er
 	}
 
 	// Remove Member
-	err = g.Repo.GroupRepo.RemoveMember(userDB.ID, groupDB.ID)
+	err = api.GroupRepo.RemoveMember(userDB.ID, groupDB.ID)
 
 	// Check if there is an unexpected error in DB
 	if err != nil {
@@ -220,9 +216,9 @@ func (g *GroupsAPI) RemoveMember(userID string, groupName string, org string) er
 }
 
 // List members of a group
-func (g *GroupsAPI) ListMembers(org string, groupName string) (*GroupMembers, error) {
+func (api *AuthAPI) ListMembers(org string, groupName string) (*GroupMembers, error) {
 	// Call repo to retrieve the group
-	group, err := g.getGroupByName(org, groupName)
+	group, err := api.getGroupByName(org, groupName)
 
 	// Error handling
 	if err != nil {
@@ -230,7 +226,7 @@ func (g *GroupsAPI) ListMembers(org string, groupName string) (*GroupMembers, er
 	}
 
 	// Get Members
-	members, err := g.Repo.GroupRepo.GetAllGroupUserRelation(group.ID)
+	members, err := api.GroupRepo.GetAllGroupUserRelation(group.ID)
 
 	// Error handling
 	if err != nil {
@@ -247,9 +243,9 @@ func (g *GroupsAPI) ListMembers(org string, groupName string) (*GroupMembers, er
 }
 
 // Remove group
-func (g *GroupsAPI) RemoveGroup(org string, name string) error {
+func (api *AuthAPI) RemoveGroup(org string, name string) error {
 	// Call repo to retrieve the group
-	group, err := g.getGroupByName(org, name)
+	group, err := api.getGroupByName(org, name)
 
 	// Error handling
 	if err != nil {
@@ -257,7 +253,7 @@ func (g *GroupsAPI) RemoveGroup(org string, name string) error {
 	}
 
 	// Remove group with given org and name
-	err = g.Repo.GroupRepo.RemoveGroup(group.ID)
+	err = api.GroupRepo.RemoveGroup(group.ID)
 
 	// Error handling
 	if err != nil {
@@ -272,9 +268,9 @@ func (g *GroupsAPI) RemoveGroup(org string, name string) error {
 	return nil
 }
 
-func (g *GroupsAPI) GetGroupByName(org string, name string) (*Group, error) {
+func (api *AuthAPI) GetGroupByName(org string, name string) (*Group, error) {
 	// Call repo to retrieve the group
-	group, err := g.getGroupByName(org, name)
+	group, err := api.getGroupByName(org, name)
 
 	// Error handling
 	if err != nil {
@@ -286,9 +282,9 @@ func (g *GroupsAPI) GetGroupByName(org string, name string) (*Group, error) {
 
 }
 
-func (g *GroupsAPI) GetGroupById(id string) (*Group, error) {
+func (api *AuthAPI) GetGroupById(id string) (*Group, error) {
 	// Call repo to retrieve the group
-	group, err := g.Repo.GroupRepo.GetGroupById(id)
+	group, err := api.GroupRepo.GetGroupById(id)
 
 	// Error handling
 	if err != nil {
@@ -315,9 +311,9 @@ func (g *GroupsAPI) GetGroupById(id string) (*Group, error) {
 
 }
 
-func (g *GroupsAPI) GetListGroups(org string, pathPrefix string) ([]Group, error) {
+func (api *AuthAPI) GetListGroups(org string, pathPrefix string) ([]Group, error) {
 	// Call repo to retrieve the groups
-	groups, err := g.Repo.GroupRepo.GetGroupsFiltered(org, pathPrefix)
+	groups, err := api.GroupRepo.GetGroupsFiltered(org, pathPrefix)
 
 	// Error handling
 	if err != nil {
@@ -334,7 +330,7 @@ func (g *GroupsAPI) GetListGroups(org string, pathPrefix string) ([]Group, error
 }
 
 // Update Group to database if exist
-func (g *GroupsAPI) UpdateGroup(org string, groupName string, newName string, newPath string) (*Group, error) {
+func (api *AuthAPI) UpdateGroup(org string, groupName string, newName string, newPath string) (*Group, error) {
 	// Validate name
 	if !IsValidName(newName) {
 		return nil, &Error{
@@ -351,7 +347,7 @@ func (g *GroupsAPI) UpdateGroup(org string, groupName string, newName string, ne
 	}
 
 	// Call repo to retrieve the group
-	groupDB, err := g.getGroupByName(org, groupName)
+	groupDB, err := api.getGroupByName(org, groupName)
 
 	// Error handling
 	if err != nil {
@@ -359,7 +355,7 @@ func (g *GroupsAPI) UpdateGroup(org string, groupName string, newName string, ne
 	}
 
 	// Check if group with newName exist
-	_, err = g.getGroupByName(org, newName)
+	_, err = api.getGroupByName(org, newName)
 
 	if err == nil {
 		// Group already exists
@@ -373,7 +369,7 @@ func (g *GroupsAPI) UpdateGroup(org string, groupName string, newName string, ne
 	urn := CreateUrn(org, RESOURCE_GROUP, newPath, newName)
 
 	// Update group
-	group, err := g.Repo.GroupRepo.UpdateGroup(*groupDB, newName, newPath, urn)
+	group, err := api.GroupRepo.UpdateGroup(*groupDB, newName, newPath, urn)
 
 	// Check if there is an unexpected error in DB
 	if err != nil {
@@ -389,9 +385,9 @@ func (g *GroupsAPI) UpdateGroup(org string, groupName string, newName string, ne
 
 }
 
-func (g *GroupsAPI) AttachPolicyToGroup(org string, groupName string, policyName string) error {
+func (api *AuthAPI) AttachPolicyToGroup(org string, groupName string, policyName string) error {
 	// Check if group exist
-	group, err := g.getGroupByName(org, groupName)
+	group, err := api.getGroupByName(org, groupName)
 
 	// Error handling
 	if err != nil {
@@ -399,7 +395,7 @@ func (g *GroupsAPI) AttachPolicyToGroup(org string, groupName string, policyName
 	}
 
 	// Check if policy exist
-	policy, err := g.Repo.PolicyRepo.GetPolicyByName(org, policyName)
+	policy, err := api.PolicyRepo.GetPolicyByName(org, policyName)
 
 	if err != nil {
 		//Transform to DB error
@@ -419,7 +415,7 @@ func (g *GroupsAPI) AttachPolicyToGroup(org string, groupName string, policyName
 	}
 
 	// Check if exist this relation
-	groupPolicies, err := g.Repo.GroupRepo.GetGroupPolicyRelation(group.ID, policy.ID)
+	groupPolicies, err := api.GroupRepo.GetGroupPolicyRelation(group.ID, policy.ID)
 
 	if groupPolicies != nil {
 		// Unexpected error
@@ -430,7 +426,7 @@ func (g *GroupsAPI) AttachPolicyToGroup(org string, groupName string, policyName
 	}
 
 	// Attach Policy to Group
-	err = g.Repo.GroupRepo.AttachPolicy(group.ID, policy.ID)
+	err = api.GroupRepo.AttachPolicy(group.ID, policy.ID)
 
 	if err != nil {
 		dbError := err.(*database.Error)
@@ -443,9 +439,9 @@ func (g *GroupsAPI) AttachPolicyToGroup(org string, groupName string, policyName
 	return nil
 }
 
-func (g *GroupsAPI) DetachPolicyToGroup(org string, groupName string, policyName string) error {
+func (api *AuthAPI) DetachPolicyToGroup(org string, groupName string, policyName string) error {
 	// Check if group exist
-	group, err := g.getGroupByName(org, groupName)
+	group, err := api.getGroupByName(org, groupName)
 
 	// Error handling
 	if err != nil {
@@ -453,7 +449,7 @@ func (g *GroupsAPI) DetachPolicyToGroup(org string, groupName string, policyName
 	}
 
 	// Check if policy exist
-	policy, err := g.Repo.PolicyRepo.GetPolicyByName(org, policyName)
+	policy, err := api.PolicyRepo.GetPolicyByName(org, policyName)
 
 	if err != nil {
 		//Transform to DB error
@@ -473,7 +469,7 @@ func (g *GroupsAPI) DetachPolicyToGroup(org string, groupName string, policyName
 	}
 
 	// Check if exist this relation
-	_, err = g.Repo.GroupRepo.GetGroupPolicyRelation(group.ID, policy.ID)
+	_, err = api.GroupRepo.GetGroupPolicyRelation(group.ID, policy.ID)
 
 	// Error handling
 	if err != nil {
@@ -494,7 +490,7 @@ func (g *GroupsAPI) DetachPolicyToGroup(org string, groupName string, policyName
 		}
 	}
 	// Detach Policy to Group
-	err = g.Repo.GroupRepo.DetachPolicy(group.ID, policy.ID)
+	err = api.GroupRepo.DetachPolicy(group.ID, policy.ID)
 
 	if err != nil {
 		dbError := err.(*database.Error)
@@ -507,9 +503,9 @@ func (g *GroupsAPI) DetachPolicyToGroup(org string, groupName string, policyName
 	return nil
 }
 
-func (g *GroupsAPI) ListAttachedGroupPolicies(org string, groupName string) (*GroupPolicies, error) {
+func (api *AuthAPI) ListAttachedGroupPolicies(org string, groupName string) (*GroupPolicies, error) {
 	// Check if group exist
-	group, err := g.getGroupByName(org, groupName)
+	group, err := api.getGroupByName(org, groupName)
 
 	// Error handling
 	if err != nil {
@@ -517,7 +513,7 @@ func (g *GroupsAPI) ListAttachedGroupPolicies(org string, groupName string) (*Gr
 	}
 
 	// Call repo to retrieve the GroupPolicyRelations
-	groupPolicies, err := g.Repo.GroupRepo.GetAllGroupPolicyRelation(group.ID)
+	groupPolicies, err := api.GroupRepo.GetAllGroupPolicyRelation(group.ID)
 
 	// Error handling
 	if err != nil {
@@ -549,9 +545,9 @@ func createGroup(org string, name string, path string) Group {
 }
 
 // This method gets the group by name and organization
-func (g *GroupsAPI) getGroupByName(org string, name string) (*Group, error) {
+func (api *AuthAPI) getGroupByName(org string, name string) (*Group, error) {
 	// Call repo to retrieve the group
-	group, err := g.Repo.GroupRepo.GetGroupByName(org, name)
+	group, err := api.GroupRepo.GetGroupByName(org, name)
 
 	// Error handling
 	if err != nil {

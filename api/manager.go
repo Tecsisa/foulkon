@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-// This Repo contains all Repositories that manages the domain
-type Repo struct {
+// Authorizr API struct with repositories
+type AuthAPI struct {
 	UserRepo   UserRepo
 	GroupRepo  GroupRepo
 	PolicyRepo PolicyRepo
@@ -70,9 +70,9 @@ type AuthResources struct {
 	DeniedFullUrns     []string
 }
 
-func (repo *Repo) Authorize(externalID string, action string, resource string) (*AuthResources, error) {
+func (api *AuthAPI) Authorize(externalID string, action string, resource string) (*AuthResources, error) {
 	// Get user if exist
-	user, err := repo.UserRepo.GetUserByExternalID(externalID)
+	user, err := api.UserRepo.GetUserByExternalID(externalID)
 
 	// Error handling
 	if err != nil {
@@ -85,7 +85,7 @@ func (repo *Repo) Authorize(externalID string, action string, resource string) (
 	}
 
 	// Get groups for this user
-	groups, err := repo.getGroupsByUser(user.ID)
+	groups, err := api.getGroupsByUser(user.ID)
 
 	// Error handling
 	if err != nil {
@@ -93,7 +93,7 @@ func (repo *Repo) Authorize(externalID string, action string, resource string) (
 	}
 
 	// Get policies by groups
-	policies, err := repo.getPoliciesByGroups(groups)
+	policies, err := api.getPoliciesByGroups(groups)
 
 	// Error handling
 	if err != nil {
@@ -101,7 +101,7 @@ func (repo *Repo) Authorize(externalID string, action string, resource string) (
 	}
 
 	// Retrieve statements for action requested for these policies
-	statements, err := repo.getStatementsByRequestedAction(policies, action)
+	statements, err := api.getStatementsByRequestedAction(policies, action)
 
 	// Error handling
 	if err != nil {
@@ -125,9 +125,9 @@ func (repo *Repo) Authorize(externalID string, action string, resource string) (
 	return cleanRepeatedRestrictions(authResources)
 }
 
-func (repo *Repo) getGroupsByUser(userID string) ([]Group, error) {
+func (api *AuthAPI) getGroupsByUser(userID string) ([]Group, error) {
 	// Get group relations by user
-	groups, err := repo.UserRepo.GetGroupsByUserID(userID)
+	groups, err := api.UserRepo.GetGroupsByUserID(userID)
 
 	// Error handling
 	if err != nil {
@@ -143,7 +143,7 @@ func (repo *Repo) getGroupsByUser(userID string) ([]Group, error) {
 	return groups, nil
 }
 
-func (repo *Repo) getPoliciesByGroups(groups []Group) ([]Policy, error) {
+func (api *AuthAPI) getPoliciesByGroups(groups []Group) ([]Policy, error) {
 	// Retrieve per each group its attached policies
 	if groups == nil || len(groups) < 1 {
 		return nil, nil
@@ -154,7 +154,7 @@ func (repo *Repo) getPoliciesByGroups(groups []Group) ([]Policy, error) {
 
 	for _, group := range groups {
 		// Retrieve policies for this group
-		policyRelations, err := repo.GroupRepo.GetAllGroupPolicyRelation(group.ID)
+		policyRelations, err := api.GroupRepo.GetAllGroupPolicyRelation(group.ID)
 
 		// Error handling
 		if err != nil {
@@ -175,7 +175,7 @@ func (repo *Repo) getPoliciesByGroups(groups []Group) ([]Policy, error) {
 	return policies, nil
 }
 
-func (repo *Repo) getStatementsByRequestedAction(policies []Policy, actionRequested string) ([]Statement, error) {
+func (api *AuthAPI) getStatementsByRequestedAction(policies []Policy, actionRequested string) ([]Statement, error) {
 	// Check received policies
 	if policies == nil || len(policies) < 1 {
 		return nil, nil

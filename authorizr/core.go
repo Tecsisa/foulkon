@@ -24,10 +24,8 @@ type Core struct {
 	Host string
 	Port string
 
-	// APIs
-	UserApi   *api.UsersAPI
-	GroupApi  *api.GroupsAPI
-	PolicyApi *api.PoliciesAPI
+	// API
+	AuthApi *api.AuthAPI
 
 	// Logger
 	Logger *log.Logger
@@ -65,10 +63,8 @@ func NewCore(config *toml.TomlTree) (*Core, error) {
 	}
 	logger.Infof("Logger type: %v, LogLevel: %v", loggerType, log.GetLevel().String())
 
-	// Start DB with APIs
-	var userApi *api.UsersAPI
-	var groupApi *api.GroupsAPI
-	var policyApi *api.PoliciesAPI
+	// Start DB with API
+	var authApi *api.AuthAPI
 
 	switch getMandatoryValue(config, "database.type") {
 	case "postgres": // Postgres DB
@@ -84,22 +80,12 @@ func NewCore(config *toml.TomlTree) (*Core, error) {
 		repoDB := postgresql.PostgresRepo{
 			Dbmap: db,
 		}
-		repo := api.Repo{
+		authApi = &api.AuthAPI{
 			GroupRepo:  repoDB,
 			UserRepo:   repoDB,
 			PolicyRepo: repoDB,
 		}
 
-		// Instantiate APIs
-		userApi = &api.UsersAPI{
-			Repo: repo,
-		}
-		groupApi = &api.GroupsAPI{
-			Repo: repo,
-		}
-		policyApi = &api.PoliciesAPI{
-			Repo: repo,
-		}
 	default:
 		err := errors.New("Unexpected db_type value in configuration file (Maybe it is empty)")
 		logger.Error(err)
@@ -143,9 +129,7 @@ func NewCore(config *toml.TomlTree) (*Core, error) {
 		Port:          getMandatoryValue(config, "server.port"),
 		Logger:        logger,
 		Authenticator: authenticator,
-		UserApi:       userApi,
-		GroupApi:      groupApi,
-		PolicyApi:     policyApi,
+		AuthApi:       authApi,
 	}, nil
 }
 

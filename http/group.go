@@ -61,7 +61,7 @@ func (a *AuthHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request, 
 
 	org := ps.ByName(ORG_NAME)
 	// Call group API to create an group
-	result, err := a.core.GroupApi.AddGroup(org, request.Name, request.Path)
+	result, err := a.core.AuthApi.AddGroup(org, request.Name, request.Path)
 
 	// Error handling
 	if err != nil {
@@ -93,7 +93,7 @@ func (a *AuthHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request, 
 	name := ps.ByName(GROUP_NAME)
 
 	// Call user API to delete group
-	err := a.core.GroupApi.RemoveGroup(org, name)
+	err := a.core.AuthApi.RemoveGroup(org, name)
 
 	// Check if there were errors
 	if err != nil {
@@ -117,7 +117,7 @@ func (a *AuthHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, ps 
 	name := ps.ByName(GROUP_NAME)
 
 	// Call group API to retrieve group
-	result, err := a.core.GroupApi.GetGroupByName(org, name)
+	result, err := a.core.AuthApi.GetGroupByName(org, name)
 
 	// Error handling
 	if err != nil {
@@ -149,7 +149,7 @@ func (a *AuthHandler) handleListGroups(w http.ResponseWriter, r *http.Request, p
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call group API to retrieve groups
-	result, err := a.core.GroupApi.GetListGroups(org, pathPrefix)
+	result, err := a.core.AuthApi.GetListGroups(org, pathPrefix)
 	if err != nil {
 		a.core.Logger.Errorln(err)
 		RespondInternalServerError(w)
@@ -189,7 +189,7 @@ func (a *AuthHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request, 
 	groupName := ps.ByName(GROUP_NAME)
 
 	// Call group API to update group
-	result, err := a.core.GroupApi.UpdateGroup(org, groupName, request.Name, request.Path)
+	result, err := a.core.AuthApi.UpdateGroup(org, groupName, request.Name, request.Path)
 
 	// Check errors
 	if err != nil {
@@ -224,7 +224,7 @@ func (a *AuthHandler) handleListMembers(w http.ResponseWriter, r *http.Request, 
 	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to list members
-	result, err := a.core.GroupApi.ListMembers(org, group)
+	result, err := a.core.AuthApi.ListMembers(org, group)
 
 	// Check errors
 	if err != nil {
@@ -257,7 +257,7 @@ func (a *AuthHandler) handleAddMember(w http.ResponseWriter, r *http.Request, ps
 	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to create an group
-	err := a.core.GroupApi.AddMember(user, group, org)
+	err := a.core.AuthApi.AddMember(user, group, org)
 	// Error handling
 	if err != nil {
 		a.core.Logger.Errorln(err)
@@ -284,7 +284,7 @@ func (a *AuthHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request,
 	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to create an group
-	err := a.core.GroupApi.RemoveMember(user, group, org)
+	err := a.core.AuthApi.RemoveMember(user, group, org)
 	// Error handling
 	if err != nil {
 		a.core.Logger.Errorln(err)
@@ -312,7 +312,7 @@ func (a *AuthHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.Req
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call group API to attach policy to group
-	err := a.core.GroupApi.AttachPolicyToGroup(org, groupName, policyName)
+	err := a.core.AuthApi.AttachPolicyToGroup(org, groupName, policyName)
 
 	// Error handling
 	if err != nil {
@@ -342,7 +342,7 @@ func (a *AuthHandler) handleDetachGroupPolicy(w http.ResponseWriter, r *http.Req
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call group API to detach policy to group
-	err := a.core.GroupApi.DetachPolicyToGroup(org, groupName, policyName)
+	err := a.core.AuthApi.DetachPolicyToGroup(org, groupName, policyName)
 
 	// Error handling
 	if err != nil {
@@ -367,7 +367,7 @@ func (a *AuthHandler) handleListAttachedGroupPolicies(w http.ResponseWriter, r *
 	org := ps.ByName(ORG_NAME)
 	groupName := ps.ByName(GROUP_NAME)
 
-	result, err := a.core.GroupApi.ListAttachedGroupPolicies(org, groupName)
+	result, err := a.core.AuthApi.ListAttachedGroupPolicies(org, groupName)
 	if err != nil {
 		a.core.Logger.Errorln(err)
 		RespondInternalServerError(w)
@@ -391,7 +391,7 @@ func (a *AuthHandler) handleListAllGroups(w http.ResponseWriter, r *http.Request
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call group API to retrieve groups
-	result, err := a.core.GroupApi.GetListGroups(org, pathPrefix)
+	result, err := a.core.AuthApi.GetListGroups(org, pathPrefix)
 	if err != nil {
 		a.core.Logger.Errorln(err)
 		RespondInternalServerError(w)

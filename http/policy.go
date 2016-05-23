@@ -47,7 +47,7 @@ func (a *AuthHandler) handleListPolicies(w http.ResponseWriter, r *http.Request,
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call group API to retrieve groups
-	result, err := a.core.PolicyApi.GetPolicies(org, pathPrefix)
+	result, err := a.core.AuthApi.GetPolicies(org, pathPrefix)
 	if err != nil {
 		a.core.Logger.Errorln(err)
 		RespondInternalServerError(w)
@@ -78,7 +78,7 @@ func (a *AuthHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Request,
 	}
 
 	// Store this policy
-	storedPolicy, err := a.core.PolicyApi.AddPolicy(request.Name, request.Path, org, &request.Statements)
+	storedPolicy, err := a.core.AuthApi.AddPolicy(request.Name, request.Path, org, &request.Statements)
 
 	// Error handling
 	if err != nil {
@@ -112,7 +112,7 @@ func (a *AuthHandler) handleDeletePolicy(w http.ResponseWriter, r *http.Request,
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call API to delete policy
-	err := a.core.PolicyApi.DeletePolicy(orgId, policyName)
+	err := a.core.AuthApi.DeletePolicy(orgId, policyName)
 
 	if err != nil {
 		a.core.Logger.Errorln(err)
@@ -152,7 +152,7 @@ func (a *AuthHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Request,
 	}
 
 	// Call policy API to update policy
-	result, err := a.core.PolicyApi.UpdatePolicy(org, policyName, request.Name, request.Path, request.Statements)
+	result, err := a.core.AuthApi.UpdatePolicy(org, policyName, request.Name, request.Path, request.Statements)
 
 	// Check errors
 	if err != nil {
@@ -192,7 +192,7 @@ func (a *AuthHandler) handleListAllPolicies(w http.ResponseWriter, r *http.Reque
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call policies API to retrieve policies
-	result, err := a.core.PolicyApi.GetPolicies(org, pathPrefix)
+	result, err := a.core.AuthApi.GetPolicies(org, pathPrefix)
 	if err != nil {
 		a.core.Logger.Errorln(err)
 		RespondInternalServerError(w)
