@@ -150,6 +150,37 @@ func (u PostgresRepo) GetUsersFiltered(pathPrefix string) ([]api.User, error) {
 }
 
 func (u PostgresRepo) GetGroupsByUserID(id string) ([]api.Group, error) {
+	relations := []GroupUserRelation{}
+	query := u.Dbmap.Where("user_id like ?", id).Find(&relations)
+
+	// Error Handling
+	if err := query.Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	// Transform relations to API domain
+	if relations != nil {
+		apiGroups := make([]api.Group, len(relations), cap(relations))
+		for i, r := range relations {
+			group, err := u.GetGroupById(r.GroupID)
+			// Error handling
+			if err != nil {
+				return nil, &database.Error{
+					Code:    database.INTERNAL_ERROR,
+					Message: err.Error(),
+				}
+			}
+
+			apiGroups[i] = *group
+		}
+
+		// Return GroupMembers
+		return apiGroups, nil
+	}
+
 	return nil, nil
 }
 

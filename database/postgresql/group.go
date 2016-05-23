@@ -366,6 +366,51 @@ func (g PostgresRepo) AttachPolicy(groupID string, policyID string) error {
 	return nil
 }
 
+func (g PostgresRepo) GetAllGroupPolicyRelation(groupID string) (*api.GroupPolicies, error) {
+	relations := []GroupPolicyRelation{}
+	query := g.Dbmap.Where("group_id like ?", groupID).Find(&relations)
+
+	// Error Handling
+	if err := query.Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	// Retrieve group
+	group, err := g.GetGroupById(groupID)
+	// Error Handling
+	if err != nil {
+		return nil, err
+	}
+
+	// Transform relations to API domain
+	if relations != nil {
+		apiPolicies := make([]api.Policy, len(relations), cap(relations))
+		for i, r := range relations {
+			policy, err := g.GetPolicyById(r.PolicyID)
+			// Error handling
+			if err != nil {
+				return nil, &database.Error{
+					Code:    database.INTERNAL_ERROR,
+					Message: err.Error(),
+				}
+			}
+
+			apiPolicies[i] = *policy
+		}
+
+		// Return GroupMembers
+		return &api.GroupPolicies{
+			Group:    *group,
+			Policies: apiPolicies,
+		}, nil
+	}
+
+	return nil, nil
+}
+
 // Transform a Group retrieved from db into a group for API
 func groupDBToGroupAPI(groupdb *Group) *api.Group {
 	return &api.Group{

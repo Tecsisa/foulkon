@@ -139,6 +139,10 @@ func RespondConflict(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusConflict)
 }
 
+func RespondForbidden(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusForbidden)
+}
+
 // 5xx RESPONSES
 
 func RespondInternalServerError(w http.ResponseWriter) {
