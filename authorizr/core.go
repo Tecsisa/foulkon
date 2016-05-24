@@ -50,7 +50,7 @@ func NewCore(config *toml.TomlTree) (*Core, error) {
 		logOut = file
 	}
 	// Logger level
-	loglevel, err := log.ParseLevel(getDefaultValue(config, "logger.level", ""))
+	loglevel, err := log.ParseLevel(getDefaultValue(config, "logger.level", "info"))
 	if err != nil {
 		loglevel = log.InfoLevel
 	}
@@ -61,7 +61,7 @@ func NewCore(config *toml.TomlTree) (*Core, error) {
 		Hooks:     make(log.LevelHooks),
 		Level:     loglevel,
 	}
-	logger.Infof("Logger type: %v, LogLevel: %v", loggerType, log.GetLevel().String())
+	logger.Infof("Logger type: %v, LogLevel: %v", loggerType, logger.Level.String())
 
 	// Start DB with API
 	var authApi *api.AuthAPI
