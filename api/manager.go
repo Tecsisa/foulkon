@@ -2,8 +2,9 @@ package api
 
 import (
 	"fmt"
-	"github.com/tecsisa/authorizr/database"
 	"strings"
+
+	"github.com/tecsisa/authorizr/database"
 )
 
 // Authorizr API struct with repositories

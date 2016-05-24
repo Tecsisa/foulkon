@@ -84,16 +84,15 @@ func (api *AuthAPI) AddPolicy(name string, path string, org string, statements *
 		}
 
 	}
-	if !IsValidStatement(statements) {
-		return nil, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid statement definition"),
-		}
+
+	err := IsValidStatement(statements)
+	if err != nil {
+		return nil, err
 
 	}
 
 	// Check if policy already exist
-	_, err := api.PolicyRepo.GetPolicyByName(org, name)
+	_, err = api.PolicyRepo.GetPolicyByName(org, name)
 
 	// Check if policy could be retrieved
 	if err != nil {
@@ -167,7 +166,8 @@ func (api *AuthAPI) UpdatePolicy(org string, policyName string, newName string, 
 		}
 
 	}
-	if !IsValidStatement(&newStatements) {
+	err = IsValidStatement(&newStatements)
+	if err != nil {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid statement definition"),

@@ -30,6 +30,9 @@ const (
 	// Policy API error codes
 	POLICY_ALREADY_EXIST             = "PolicyAlreadyExist"
 	POLICY_BY_ORG_AND_NAME_NOT_FOUND = "PolicyWithOrgAndNameNotFound"
+
+	// Regex error
+	REGEX_NO_MATCH = "RegexNoMatch"
 )
 
 type Error struct {
