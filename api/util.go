@@ -85,7 +85,7 @@ func IsValidEffect(effect string) error {
 			Message: fmt.Sprintf("No regex match in effect: %v", effect),
 		}
 	}
-	return false
+	return nil
 }
 
 func IsValidAction(actions []string) error {
