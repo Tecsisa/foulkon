@@ -19,13 +19,17 @@ type Policy struct {
 	Statements *[]Statement `json:"Statements, omitempty"`
 }
 
+func (p Policy) GetUrn() string {
+	return p.Urn
+}
+
 type Statement struct {
 	Effect    string   `json:"Effect, omitempty"`
 	Action    []string `json:"Action, omitempty"`
 	Resources []string `json:"Resources, omitempty"`
 }
 
-func (api *AuthAPI) GetPolicy(org string, policyName string) (*Policy, error) {
+func (api *AuthAPI) GetPolicy(authenticatedUser AuthenticatedUser, org string, policyName string) (*Policy, error) {
 	// Call repo to retrieve the policy
 	policy, err := api.PolicyRepo.GetPolicyByName(org, policyName)
 
@@ -47,11 +51,26 @@ func (api *AuthAPI) GetPolicy(org string, policyName string) (*Policy, error) {
 		}
 	}
 
-	// Return policy
-	return policy, nil
+	// Check restrictions
+	policiesFiltered, err := api.GetPoliciesAuthorized(authenticatedUser, policy.Urn, POLICY_ACTION_GET_POLICY, []Policy{*policy})
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if we have our user authorized
+	if len(policiesFiltered) > 0 {
+		policyFiltered := policiesFiltered[0]
+		return &policyFiltered, nil
+	} else {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, policy.Urn),
+		}
+	}
 }
 
-func (api *AuthAPI) GetPolicies(org string, pathPrefix string) ([]Policy, error) {
+func (api *AuthAPI) GetPolicies(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]Policy, error) {
 	// Call repo to retrieve the policies
 	policies, err := api.PolicyRepo.GetPoliciesFiltered(org, pathPrefix)
 
@@ -65,11 +84,18 @@ func (api *AuthAPI) GetPolicies(org string, pathPrefix string) ([]Policy, error)
 		}
 	}
 
-	// Return groups
-	return policies, nil
+	// Check restrictions to list
+	urnPrefix := GetUrnPrefix(org, RESOURCE_POLICY, pathPrefix)
+	policiesFiltered, err := api.GetPoliciesAuthorized(authenticatedUser, urnPrefix, POLICY_ACTION_LIST_POLICIES, policies)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return policies
+	return policiesFiltered, nil
 }
 
-func (api *AuthAPI) AddPolicy(name string, path string, org string, statements *[]Statement) (*Policy, error) {
+func (api *AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, path string, org string, statements *[]Statement) (*Policy, error) {
 	// Validate fields
 	if !IsValidName(name) {
 		return nil, &Error{
@@ -91,6 +117,23 @@ func (api *AuthAPI) AddPolicy(name string, path string, org string, statements *
 
 	}
 
+	policy := createPolicy(name, path, org, statements)
+
+	// Check restrictions
+	policiesFiltered, err := api.GetPoliciesAuthorized(authenticatedUser, policy.Urn, USER_ACTION_CREATE_USER, []Policy{policy})
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if we have our user authorized
+	if len(policiesFiltered) < 1 {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, policy.Urn),
+		}
+	}
+
 	// Check if policy already exist
 	_, err = api.PolicyRepo.GetPolicyByName(org, name)
 
@@ -102,7 +145,7 @@ func (api *AuthAPI) AddPolicy(name string, path string, org string, statements *
 		// Policy doesn't exist in DB
 		case database.POLICY_NOT_FOUND:
 			// Create policy
-			policyCreated, err := api.PolicyRepo.AddPolicy(createPolicy(name, path, org, statements))
+			policyCreated, err := api.PolicyRepo.AddPolicy(policy)
 
 			// Check if there is an unexpected error in DB
 			if err != nil {
@@ -130,28 +173,8 @@ func (api *AuthAPI) AddPolicy(name string, path string, org string, statements *
 	}
 }
 
-func (api *AuthAPI) UpdatePolicy(org string, policyName string, newName string, newPath string, newStatements []Statement) (*Policy, error) {
-	// Call repo to retrieve the policy
-	policyDB, err := api.PolicyRepo.GetPolicyByName(org, policyName)
-
-	// Error handling
-	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		// Group doesn't exist in DB
-		if dbError.Code == database.POLICY_NOT_FOUND {
-			return nil, &Error{
-				Code:    POLICY_BY_ORG_AND_NAME_NOT_FOUND,
-				Message: dbError.Message,
-			}
-		} else { // Unexpected error
-			return nil, &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
-		}
-	}
-
+func (api *AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string, policyName string, newName string, newPath string,
+	newStatements []Statement) (*Policy, error) {
 	// Validate fields
 	if !IsValidName(policyName) {
 		return nil, &Error{
@@ -166,7 +189,7 @@ func (api *AuthAPI) UpdatePolicy(org string, policyName string, newName string, 
 		}
 
 	}
-	err = IsValidStatement(&newStatements)
+	err := IsValidStatement(&newStatements)
 	if err != nil {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -174,8 +197,30 @@ func (api *AuthAPI) UpdatePolicy(org string, policyName string, newName string, 
 		}
 
 	}
+
+	// Call repo to retrieve the policy
+	policyDB, err := api.PolicyRepo.GetPolicyByName(org, policyName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check restrictions
+	policiesFiltered, err := api.GetPoliciesAuthorized(authenticatedUser, policyDB.Urn, POLICY_ACTION_UPDATE_POLICY, []Policy{*policyDB})
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if we have our user authorized
+	if len(policiesFiltered) < 1 {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, policyDB.Urn),
+		}
+	}
+
 	// Check if policy with newName exist
-	_, err = api.PolicyRepo.GetPolicyByName(org, newName)
+	_, err = api.GetPolicy(authenticatedUser, org, newName)
 
 	if err == nil {
 		// Policy already exists
@@ -185,11 +230,35 @@ func (api *AuthAPI) UpdatePolicy(org string, policyName string, newName string, 
 		}
 	}
 
-	// Get Urn
-	urn := CreateUrn(org, RESOURCE_POLICY, newPath, newName)
+	if err != nil {
+		apiError := err.(*Error)
+		switch apiError.Code {
+		case UNAUTHORIZED_RESOURCES_ERROR, UNKNOWN_API_ERROR:
+			return nil, err
+		default: //Do nothing
+		}
+	}
+
+	// Get Policy Updated
+	policyToUpdate := createPolicy(org, newName, newPath, &newStatements)
+
+	// Check restrictions
+	policiesFiltered, err = api.GetPoliciesAuthorized(authenticatedUser, policyToUpdate.Urn, POLICY_ACTION_UPDATE_POLICY, []Policy{policyToUpdate})
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if we have our user authorized
+	if len(policiesFiltered) < 1 {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, policyToUpdate.Urn),
+		}
+	}
 
 	// Update policy
-	policy, err := api.PolicyRepo.UpdatePolicy(*policyDB, newName, newPath, urn, newStatements)
+	policy, err := api.PolicyRepo.UpdatePolicy(*policyDB, newName, newPath, policyToUpdate.Urn, newStatements)
 
 	// Check if there is an unexpected error in DB
 	if err != nil {
@@ -204,24 +273,26 @@ func (api *AuthAPI) UpdatePolicy(org string, policyName string, newName string, 
 	return policy, nil
 }
 
-func (api *AuthAPI) DeletePolicy(org string, name string) error {
+func (api *AuthAPI) DeletePolicy(authenticatedUser AuthenticatedUser, org string, name string) error {
 	// Call repo to retrieve the policy
-	policy, err := api.PolicyRepo.GetPolicyByName(org, name)
+	policy, err := api.GetPolicy(authenticatedUser, org, name)
 	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		if dbError.Code == database.POLICY_NOT_FOUND {
-			return &Error{
-				Code:    POLICY_BY_ORG_AND_NAME_NOT_FOUND,
-				Message: dbError.Message,
-			}
-		} else {
-			return &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
-		}
+		return err
+	}
 
+	// Check restrictions
+	policiesFiltered, err := api.GetPoliciesAuthorized(authenticatedUser, policy.Urn, POLICY_ACTION_DELETE_POLICY, []Policy{*policy})
+	if err != nil {
+		return err
+	}
+
+	// Check if we have our user authorized
+	if len(policiesFiltered) < 1 {
+		return &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, policy.Urn),
+		}
 	}
 
 	err = api.PolicyRepo.DeletePolicy(policy.ID)
@@ -238,24 +309,26 @@ func (api *AuthAPI) DeletePolicy(org string, name string) error {
 	return nil
 }
 
-func (api *AuthAPI) GetPolicyAttachedGroups(org string, policyName string) ([]Group, error) {
+func (api *AuthAPI) GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser, org string, policyName string) ([]Group, error) {
 	// Call repo to retrieve the policy
-	policy, err := api.PolicyRepo.GetPolicyByName(org, policyName)
+	policy, err := api.GetPolicy(authenticatedUser, org, policyName)
 	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		if dbError.Code == database.POLICY_NOT_FOUND {
-			return nil, &Error{
-				Code:    POLICY_BY_ORG_AND_NAME_NOT_FOUND,
-				Message: dbError.Message,
-			}
-		} else {
-			return nil, &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
-		}
+		return nil, err
+	}
 
+	// Check restrictions
+	policiesFiltered, err := api.GetPoliciesAuthorized(authenticatedUser, policy.Urn, POLICY_ACTION_LIST_ATTACHED_GROUPS, []Policy{*policy})
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if we have our user authorized
+	if len(policiesFiltered) < 1 {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, policy.Urn),
+		}
 	}
 
 	// Call repo to retrieve the attached groups

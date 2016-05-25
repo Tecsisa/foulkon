@@ -39,16 +39,27 @@ type GetUserByIdResponse struct {
 	User *api.User
 }
 
+type GetGroupsByUserIdResponse struct {
+	Groups []api.Group
+}
+
 // This method returns a list of users that belongs to Org param and have PathPrefix
 func (a *AuthHandler) handleGetUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Retrieve PathPrefix
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call user API
-	result, err := a.core.AuthApi.GetListUsers(pathPrefix)
+	result, err := a.core.AuthApi.GetListUsers(a.core.Authenticator.RetrieveUserID(*r), pathPrefix)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		RespondInternalServerError(w)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
+		default: // Unexpected API error
+			RespondInternalServerError(w)
+		}
 		return
 	}
 
@@ -73,7 +84,7 @@ func (a *AuthHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	// Call user API to create an user
-	result, err := a.core.AuthApi.AddUser(request.ExternalID, request.Path)
+	result, err := a.core.AuthApi.AddUser(a.core.Authenticator.RetrieveUserID(*r), request.ExternalID, request.Path)
 
 	// Error handling
 	if err != nil {
@@ -85,6 +96,8 @@ func (a *AuthHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ 
 			RespondConflict(w)
 		case api.INVALID_PARAMETER_ERROR:
 			RespondBadRequest(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
 		default: // Unexpected API error
 			RespondInternalServerError(w)
 		}
@@ -120,7 +133,7 @@ func (a *AuthHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps h
 	id := ps.ByName(USER_ID)
 
 	// Call user API to update user
-	result, err := a.core.AuthApi.UpdateUser(id, request.Path)
+	result, err := a.core.AuthApi.UpdateUser(a.core.Authenticator.RetrieveUserID(*r), id, request.Path)
 
 	// Error handling
 	if err != nil {
@@ -130,6 +143,8 @@ func (a *AuthHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps h
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
 			RespondNotFound(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
 		case api.INVALID_PARAMETER_ERROR:
 			RespondBadRequest(w)
 		default: // Unexpected API error
@@ -152,7 +167,7 @@ func (a *AuthHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, ps
 	id := ps.ByName(USER_ID)
 
 	// Call user API to retrieve user
-	result, err := a.core.AuthApi.GetUserByExternalId(id)
+	result, err := a.core.AuthApi.GetUserByExternalId(a.core.Authenticator.RetrieveUserID(*r), id)
 
 	// Error handling
 	if err != nil {
@@ -162,6 +177,8 @@ func (a *AuthHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, ps
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
 			RespondNotFound(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
 		default: // Unexpected API error
 			RespondInternalServerError(w)
 		}
@@ -181,7 +198,7 @@ func (a *AuthHandler) handleDeleteUserId(w http.ResponseWriter, r *http.Request,
 	id := ps.ByName(USER_ID)
 
 	// Call user API to delete user
-	err := a.core.AuthApi.RemoveUserById(id)
+	err := a.core.AuthApi.RemoveUserById(a.core.Authenticator.RetrieveUserID(*r), id)
 
 	if err != nil {
 		a.core.Logger.Errorln(err)
@@ -190,6 +207,8 @@ func (a *AuthHandler) handleDeleteUserId(w http.ResponseWriter, r *http.Request,
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
 			RespondNotFound(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
 		default: // Unexpected API error
 			RespondInternalServerError(w)
 		}
@@ -203,16 +222,29 @@ func (a *AuthHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Request,
 	// Retrieve users using path
 	id := ps.ByName(USER_ID)
 
-	result, err := a.core.AuthApi.GetGroupsByUserId(id)
+	result, err := a.core.AuthApi.GetGroupsByUserId(a.core.Authenticator.RetrieveUserID(*r), id)
+
 	if err != nil {
-		RespondInternalServerError(w)
-	}
-	b, err := json.Marshal(result)
-	if err != nil {
-		RespondInternalServerError(w)
+		a.core.Logger.Errorln(err)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
+		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
+			RespondNotFound(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
+		default: // Unexpected API error
+			RespondInternalServerError(w)
+		}
+		return
 	}
 
-	w.Write(b)
+	response := GetGroupsByUserIdResponse{
+		Groups: result,
+	}
+
+	// Write user to response
+	RespondOk(w, response)
 }
 
 func (a *AuthHandler) handleOrgListUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

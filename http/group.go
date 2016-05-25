@@ -61,7 +61,7 @@ func (a *AuthHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request, 
 
 	org := ps.ByName(ORG_NAME)
 	// Call group API to create an group
-	result, err := a.core.AuthApi.AddGroup(org, request.Name, request.Path)
+	result, err := a.core.AuthApi.AddGroup(a.core.Authenticator.RetrieveUserID(*r), org, request.Name, request.Path)
 
 	// Error handling
 	if err != nil {
@@ -73,6 +73,8 @@ func (a *AuthHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request, 
 			RespondConflict(w)
 		case api.INVALID_PARAMETER_ERROR:
 			RespondBadRequest(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
 		default: // Unexpected API error
 			RespondInternalServerError(w)
 		}
@@ -93,19 +95,22 @@ func (a *AuthHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request, 
 	name := ps.ByName(GROUP_NAME)
 
 	// Call user API to delete group
-	err := a.core.AuthApi.RemoveGroup(org, name)
+	err := a.core.AuthApi.RemoveGroup(a.core.Authenticator.RetrieveUserID(*r), org, name)
 
 	// Check if there were errors
 	if err != nil {
 		a.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
-		// If group doesn't exist
-		if apiError.Code == api.GROUP_BY_ORG_AND_NAME_NOT_FOUND {
-			RespondNotFound(w)
-		} else { // Unexpected error
+		switch apiError.Code {
+		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
+			RespondConflict(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
+		default: // Unexpected API error
 			RespondInternalServerError(w)
 		}
+		return
 	} else { // Respond without content
 		RespondNoContent(w)
 	}
@@ -117,20 +122,22 @@ func (a *AuthHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, ps 
 	name := ps.ByName(GROUP_NAME)
 
 	// Call group API to retrieve group
-	result, err := a.core.AuthApi.GetGroupByName(org, name)
+	result, err := a.core.AuthApi.GetGroupByName(a.core.Authenticator.RetrieveUserID(*r), org, name)
 
 	// Error handling
 	if err != nil {
 		a.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
-		if apiError.Code == api.GROUP_BY_ORG_AND_NAME_NOT_FOUND {
-			RespondNotFound(w)
-			return
-		} else { // Unexpected API error
+		switch apiError.Code {
+		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
+			RespondConflict(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
+		default: // Unexpected API error
 			RespondInternalServerError(w)
-			return
 		}
+		return
 	}
 
 	response := GetGroupNameResponse{
@@ -149,10 +156,17 @@ func (a *AuthHandler) handleListGroups(w http.ResponseWriter, r *http.Request, p
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call group API to retrieve groups
-	result, err := a.core.AuthApi.GetListGroups(org, pathPrefix)
+	result, err := a.core.AuthApi.GetListGroups(a.core.Authenticator.RetrieveUserID(*r), org, pathPrefix)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		RespondInternalServerError(w)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
+		default: // Unexpected API error
+			RespondInternalServerError(w)
+		}
 		return
 	}
 
@@ -189,7 +203,7 @@ func (a *AuthHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request, 
 	groupName := ps.ByName(GROUP_NAME)
 
 	// Call group API to update group
-	result, err := a.core.AuthApi.UpdateGroup(org, groupName, request.Name, request.Path)
+	result, err := a.core.AuthApi.UpdateGroup(a.core.Authenticator.RetrieveUserID(*r), org, groupName, request.Name, request.Path)
 
 	// Check errors
 	if err != nil {
@@ -201,6 +215,8 @@ func (a *AuthHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request, 
 			RespondNotFound(w)
 		case api.GROUP_ALREADY_EXIST:
 			RespondConflict(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
 		case api.INVALID_PARAMETER_ERROR:
 			RespondBadRequest(w)
 		default:
@@ -224,7 +240,7 @@ func (a *AuthHandler) handleListMembers(w http.ResponseWriter, r *http.Request, 
 	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to list members
-	result, err := a.core.AuthApi.ListMembers(org, group)
+	result, err := a.core.AuthApi.ListMembers(a.core.Authenticator.RetrieveUserID(*r), org, group)
 
 	// Check errors
 	if err != nil {
@@ -234,6 +250,8 @@ func (a *AuthHandler) handleListMembers(w http.ResponseWriter, r *http.Request, 
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
 			RespondNotFound(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
 		default:
 			RespondInternalServerError(w)
 		}
@@ -257,7 +275,7 @@ func (a *AuthHandler) handleAddMember(w http.ResponseWriter, r *http.Request, ps
 	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to create an group
-	err := a.core.AuthApi.AddMember(user, group, org)
+	err := a.core.AuthApi.AddMember(a.core.Authenticator.RetrieveUserID(*r), user, group, org)
 	// Error handling
 	if err != nil {
 		a.core.Logger.Errorln(err)
@@ -266,6 +284,8 @@ func (a *AuthHandler) handleAddMember(w http.ResponseWriter, r *http.Request, ps
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.USER_BY_EXTERNAL_ID_NOT_FOUND:
 			RespondNotFound(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
 		case api.USER_IS_ALREADY_A_MEMBER_OF_GROUP:
 			RespondConflict(w)
 		default:
@@ -284,7 +304,7 @@ func (a *AuthHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request,
 	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to create an group
-	err := a.core.AuthApi.RemoveMember(user, group, org)
+	err := a.core.AuthApi.RemoveMember(a.core.Authenticator.RetrieveUserID(*r), user, group, org)
 	// Error handling
 	if err != nil {
 		a.core.Logger.Errorln(err)
@@ -293,6 +313,8 @@ func (a *AuthHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request,
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.USER_BY_EXTERNAL_ID_NOT_FOUND:
 			RespondNotFound(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
 		case api.USER_IS_NOT_A_MEMBER_OF_GROUP:
 			RespondConflict(w)
 		default:
@@ -312,7 +334,7 @@ func (a *AuthHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.Req
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call group API to attach policy to group
-	err := a.core.AuthApi.AttachPolicyToGroup(org, groupName, policyName)
+	err := a.core.AuthApi.AttachPolicyToGroup(a.core.Authenticator.RetrieveUserID(*r), org, groupName, policyName)
 
 	// Error handling
 	if err != nil {
@@ -322,6 +344,8 @@ func (a *AuthHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.Req
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
 			RespondNotFound(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
 		case api.POLICY_IS_ALREADY_ATTACHED_TO_GROUP:
 			RespondConflict(w)
 		default: // Unexpected API error
@@ -342,7 +366,7 @@ func (a *AuthHandler) handleDetachGroupPolicy(w http.ResponseWriter, r *http.Req
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call group API to detach policy to group
-	err := a.core.AuthApi.DetachPolicyToGroup(org, groupName, policyName)
+	err := a.core.AuthApi.DetachPolicyToGroup(a.core.Authenticator.RetrieveUserID(*r), org, groupName, policyName)
 
 	// Error handling
 	if err != nil {
@@ -352,6 +376,8 @@ func (a *AuthHandler) handleDetachGroupPolicy(w http.ResponseWriter, r *http.Req
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
 			RespondNotFound(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
 		default: // Unexpected API error
 			RespondInternalServerError(w)
 		}
@@ -368,10 +394,19 @@ func (a *AuthHandler) handleListAttachedGroupPolicies(w http.ResponseWriter, r *
 	groupName := ps.ByName(GROUP_NAME)
 
 	// Call group API to retrieve attached policies
-	result, err := a.core.AuthApi.ListAttachedGroupPolicies(org, groupName)
+	result, err := a.core.AuthApi.ListAttachedGroupPolicies(a.core.Authenticator.RetrieveUserID(*r), org, groupName)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		RespondInternalServerError(w)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
+		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
+			RespondNotFound(w)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
+		default:
+			RespondInternalServerError(w)
+		}
 		return
 	}
 
@@ -392,10 +427,17 @@ func (a *AuthHandler) handleListAllGroups(w http.ResponseWriter, r *http.Request
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call group API to retrieve groups
-	result, err := a.core.AuthApi.GetListGroups(org, pathPrefix)
+	result, err := a.core.AuthApi.GetListGroups(a.core.Authenticator.RetrieveUserID(*r), org, pathPrefix)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		RespondInternalServerError(w)
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			RespondForbidden(w)
+		default:
+			RespondInternalServerError(w)
+		}
 		return
 	}
 

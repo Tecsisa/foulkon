@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/tecsisa/authorizr/api"
 	"net/http"
 )
 
@@ -44,11 +45,17 @@ func (a *Authenticator) Authenticate(h http.Handler) http.Handler {
 }
 
 // Retrieve user from request. This method never fail because Authentication deal with all problems related to this
-func (a *Authenticator) RetrieveUserID(r http.Request) (userID string, admin bool) {
+func (a *Authenticator) RetrieveUserID(r http.Request) api.AuthenticatedUser {
 	if checkAdmin(r, a.adminUser, a.adminPassword) {
-		return a.adminUser, true
+		return api.AuthenticatedUser{
+			Identifier: a.adminUser,
+			Admin:      true,
+		}
 	} else {
-		return a.Connector.RetrieveUserID(r), false
+		return api.AuthenticatedUser{
+			Identifier: a.Connector.RetrieveUserID(r),
+			Admin:      false,
+		}
 	}
 }
 
