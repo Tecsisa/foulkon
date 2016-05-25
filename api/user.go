@@ -215,7 +215,7 @@ func (api *AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalID s
 	}
 
 	// Get User to update
-	userToUpdate := createUser(newPath, externalID)
+	userToUpdate := createUser(externalID, newPath)
 
 	// Check restrictions
 	usersFiltered, err = api.GetUsersAuthorized(authenticatedUser, userToUpdate.Urn, USER_ACTION_GET_USER, []User{userToUpdate})
