@@ -48,6 +48,7 @@ type GetPolicyGroupsResponse struct {
 }
 
 func (a *AuthHandler) handleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve org from path
 	org := ps.ByName(ORG_NAME)
 
@@ -62,9 +63,9 @@ func (a *AuthHandler) handleListPolicies(w http.ResponseWriter, r *http.Request,
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -75,11 +76,11 @@ func (a *AuthHandler) handleListPolicies(w http.ResponseWriter, r *http.Request,
 	}
 
 	// Return data
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 }
 
 func (a *AuthHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve Organization
 	org := ps.ByName(ORG_NAME)
 
@@ -88,7 +89,8 @@ func (a *AuthHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Request,
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		RespondBadRequest(w)
+		a.RespondBadRequest(r, &userID, w)
+
 		return
 	}
 
@@ -100,13 +102,13 @@ func (a *AuthHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Request,
 		a.core.Logger.Errorln(err)
 		switch err.(*api.Error).Code {
 		case api.POLICY_ALREADY_EXIST:
-			RespondConflict(w)
+			a.RespondConflict(r, &userID, w)
 		case api.INVALID_PARAMETER_ERROR:
-			RespondBadRequest(w)
+			a.RespondBadRequest(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default:
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -116,10 +118,11 @@ func (a *AuthHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Request,
 	}
 
 	// Write group to response
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 }
 
 func (a *AuthHandler) handleDeletePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve org and policy name from request path
 	orgId := ps.ByName(ORG_NAME)
 	policyName := ps.ByName(POLICY_NAME)
@@ -133,25 +136,26 @@ func (a *AuthHandler) handleDeletePolicy(w http.ResponseWriter, r *http.Request,
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			RespondNotFound(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
 
-	RespondNoContent(w)
+	a.RespondNoContent(r, &userID, w)
 }
 
 func (a *AuthHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Decode request
 	request := UpdatePolicyRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		RespondBadRequest(w)
+		a.RespondBadRequest(r, &userID, w)
 		return
 	}
 
@@ -169,11 +173,11 @@ func (a *AuthHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Request,
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			RespondNotFound(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -184,10 +188,11 @@ func (a *AuthHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Request,
 	}
 
 	// Write policy to response
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 }
 
 func (a *AuthHandler) handleGetPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve org and policy name from request path
 	orgId := ps.ByName(ORG_NAME)
 	policyName := ps.ByName(POLICY_NAME)
@@ -202,11 +207,11 @@ func (a *AuthHandler) handleGetPolicy(w http.ResponseWriter, r *http.Request, ps
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			RespondNotFound(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -217,10 +222,11 @@ func (a *AuthHandler) handleGetPolicy(w http.ResponseWriter, r *http.Request, ps
 	}
 
 	// Return data
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 }
 
 func (a *AuthHandler) handleGetPolicyAttachedGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve org and policy name from request path
 	orgId := ps.ByName(ORG_NAME)
 	policyName := ps.ByName(POLICY_NAME)
@@ -233,11 +239,11 @@ func (a *AuthHandler) handleGetPolicyAttachedGroups(w http.ResponseWriter, r *ht
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			RespondNotFound(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -248,10 +254,11 @@ func (a *AuthHandler) handleGetPolicyAttachedGroups(w http.ResponseWriter, r *ht
 	}
 
 	// Return data
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 }
 
 func (a *AuthHandler) handleListAllPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// get Org and PathPrefix from request, so the query can be filtered
 	org := r.URL.Query().Get("Org")
 	pathPrefix := r.URL.Query().Get("PathPrefix")
@@ -264,9 +271,9 @@ func (a *AuthHandler) handleListAllPolicies(w http.ResponseWriter, r *http.Reque
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -277,5 +284,5 @@ func (a *AuthHandler) handleListAllPolicies(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Return data
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 }

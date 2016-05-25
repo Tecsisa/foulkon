@@ -49,16 +49,17 @@ func (a *AuthHandler) handleGetUsers(w http.ResponseWriter, r *http.Request, _ h
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call user API
-	result, err := a.core.AuthApi.GetListUsers(a.core.Authenticator.RetrieveUserID(*r), pathPrefix)
+	userID := a.core.Authenticator.RetrieveUserID(*r)
+	result, err := a.core.AuthApi.GetListUsers(userID, pathPrefix)
 	if err != nil {
 		a.core.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -69,17 +70,18 @@ func (a *AuthHandler) handleGetUsers(w http.ResponseWriter, r *http.Request, _ h
 	}
 
 	// Return data
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 }
 
 // This method creates the user passed by form request and return the user created
 func (a *AuthHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Decode request
 	request := CreateUserRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		RespondBadRequest(w)
+		a.RespondBadRequest(r, &userID, w)
 		return
 	}
 
@@ -93,13 +95,13 @@ func (a *AuthHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ 
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.USER_ALREADY_EXIST:
-			RespondConflict(w)
+			a.RespondConflict(r, &userID, w)
 		case api.INVALID_PARAMETER_ERROR:
-			RespondBadRequest(w)
+			a.RespondBadRequest(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -109,23 +111,24 @@ func (a *AuthHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	// Write user to response
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 }
 
 func (a *AuthHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Decode request
 	request := UpdateUserRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		RespondBadRequest(w)
+		a.RespondBadRequest(r, &userID, w)
 		return
 	}
 
 	// Check parameters
 	if len(strings.TrimSpace(request.Path)) == 0 {
 		a.core.Logger.Errorf("There are mising parameters: Path %v", request.Path)
-		RespondBadRequest(w)
+		a.RespondBadRequest(r, &userID, w)
 		return
 	}
 
@@ -142,13 +145,13 @@ func (a *AuthHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps h
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
-			RespondNotFound(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		case api.INVALID_PARAMETER_ERROR:
-			RespondBadRequest(w)
+			a.RespondBadRequest(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -159,10 +162,11 @@ func (a *AuthHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	// Write user to response
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 }
 
 func (a *AuthHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve user id from path
 	id := ps.ByName(USER_ID)
 
@@ -176,11 +180,11 @@ func (a *AuthHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, ps
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
-			RespondNotFound(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -190,10 +194,11 @@ func (a *AuthHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, ps
 	}
 
 	// Write user to response
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 }
 
 func (a *AuthHandler) handleDeleteUserId(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve user id from path
 	id := ps.ByName(USER_ID)
 
@@ -206,19 +211,20 @@ func (a *AuthHandler) handleDeleteUserId(w http.ResponseWriter, r *http.Request,
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
-			RespondNotFound(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
 
-	RespondNoContent(w)
+	a.RespondNoContent(r, &userID, w)
 }
 
 func (a *AuthHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve users using path
 	id := ps.ByName(USER_ID)
 
@@ -230,11 +236,11 @@ func (a *AuthHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Request,
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
-			RespondNotFound(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -244,7 +250,7 @@ func (a *AuthHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Request,
 	}
 
 	// Write user to response
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 }
 
 func (a *AuthHandler) handleOrgListUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
