@@ -7,7 +7,7 @@ port = "8000"
 [logger]
 type = "default" #If not specified default is StdOut
 #type = "file" #If not specified default is StdOut
-level = "INFO"
+level = "debug"
 	# Directory for file configuration
 	[logger.file]
 	dir = "/tmp/authorizr/authorizr.log"

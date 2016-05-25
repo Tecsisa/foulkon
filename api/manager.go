@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/tecsisa/authorizr/database"
 )
 
@@ -12,6 +13,7 @@ type AuthAPI struct {
 	UserRepo   UserRepo
 	GroupRepo  GroupRepo
 	PolicyRepo PolicyRepo
+	logger     log.Logger
 }
 
 // User repository that contains all user operations for this domain
