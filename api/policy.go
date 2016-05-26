@@ -23,13 +23,27 @@ func (p Policy) GetUrn() string {
 	return p.Urn
 }
 
+// Identifier for policy that allow you to retrieve from Database
+type PolicyReferenceId struct {
+	Org  string `json:"Org, omitempty"`
+	Name string `json:"Name, omitempty"`
+}
+
 type Statement struct {
 	Effect    string   `json:"Effect, omitempty"`
 	Action    []string `json:"Action, omitempty"`
 	Resources []string `json:"Resources, omitempty"`
 }
 
-func (api *AuthAPI) GetPolicy(authenticatedUser AuthenticatedUser, org string, policyName string) (*Policy, error) {
+func (api *AuthAPI) GetPolicyByName(authenticatedUser AuthenticatedUser, org string, policyName string) (*Policy, error) {
+	// Validate fields
+	if !IsValidName(policyName) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid policy name"),
+		}
+	}
+
 	// Call repo to retrieve the policy
 	policy, err := api.PolicyRepo.GetPolicyByName(org, policyName)
 
@@ -70,7 +84,7 @@ func (api *AuthAPI) GetPolicy(authenticatedUser AuthenticatedUser, org string, p
 	}
 }
 
-func (api *AuthAPI) GetPolicies(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]Policy, error) {
+func (api *AuthAPI) GetListPolicies(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]PolicyReferenceId, error) {
 	// Call repo to retrieve the policies
 	policies, err := api.PolicyRepo.GetPoliciesFiltered(org, pathPrefix)
 
@@ -91,8 +105,15 @@ func (api *AuthAPI) GetPolicies(authenticatedUser AuthenticatedUser, org string,
 		return nil, err
 	}
 
-	// Return policies
-	return policiesFiltered, nil
+	policyReferenceIds := []PolicyReferenceId{}
+	for _, p := range policiesFiltered {
+		policyReferenceIds = append(policyReferenceIds, PolicyReferenceId{
+			Org:  p.Org,
+			Name: p.Name,
+		})
+	}
+
+	return policyReferenceIds, nil
 }
 
 func (api *AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, path string, org string, statements *[]Statement) (*Policy, error) {
@@ -182,10 +203,16 @@ func (api *AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string
 			Message: fmt.Sprintf("Invalid policy name"),
 		}
 	}
+	if !IsValidName(newName) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid policy new name"),
+		}
+	}
 	if !IsValidPath(newPath) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid path"),
+			Message: fmt.Sprintf("Invalid new path"),
 		}
 
 	}
@@ -220,7 +247,7 @@ func (api *AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string
 	}
 
 	// Check if policy with newName exist
-	_, err = api.GetPolicy(authenticatedUser, org, newName)
+	_, err = api.GetPolicyByName(authenticatedUser, org, newName)
 
 	if err == nil {
 		// Policy already exists
@@ -274,8 +301,16 @@ func (api *AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string
 }
 
 func (api *AuthAPI) DeletePolicy(authenticatedUser AuthenticatedUser, org string, name string) error {
+	// Validate fields
+	if !IsValidName(name) {
+		return &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid policy name"),
+		}
+	}
+
 	// Call repo to retrieve the policy
-	policy, err := api.GetPolicy(authenticatedUser, org, name)
+	policy, err := api.GetPolicyByName(authenticatedUser, org, name)
 	if err != nil {
 		return err
 	}
@@ -295,7 +330,7 @@ func (api *AuthAPI) DeletePolicy(authenticatedUser AuthenticatedUser, org string
 		}
 	}
 
-	err = api.PolicyRepo.DeletePolicy(policy.ID)
+	err = api.PolicyRepo.RemovePolicy(policy.ID)
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
@@ -309,9 +344,17 @@ func (api *AuthAPI) DeletePolicy(authenticatedUser AuthenticatedUser, org string
 	return nil
 }
 
-func (api *AuthAPI) GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser, org string, policyName string) ([]Group, error) {
+func (api *AuthAPI) GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser, org string, policyName string) ([]GroupReferenceId, error) {
+	// Validate fields
+	if !IsValidName(policyName) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid policy name"),
+		}
+	}
+
 	// Call repo to retrieve the policy
-	policy, err := api.GetPolicy(authenticatedUser, org, policyName)
+	policy, err := api.GetPolicyByName(authenticatedUser, org, policyName)
 	if err != nil {
 		return nil, err
 	}
@@ -344,8 +387,15 @@ func (api *AuthAPI) GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser,
 		}
 	}
 
-	// Return groups
-	return groups, nil
+	groupReferenceIDs := []GroupReferenceId{}
+	for _, g := range groups {
+		groupReferenceIDs = append(groupReferenceIDs, GroupReferenceId{
+			Org:  g.Org,
+			Name: g.Name,
+		})
+	}
+
+	return groupReferenceIDs, nil
 }
 
 func createPolicy(name string, path string, org string, statements *[]Statement) Policy {

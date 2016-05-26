@@ -22,14 +22,18 @@ func (g Group) GetUrn() string {
 	return g.Urn
 }
 
+// Identifier for group that allow you to retrieve from Database
+type GroupReferenceId struct {
+	Org  string `json:"Org, omitempty"`
+	Name string `json:"Name, omitempty"`
+}
+
 type GroupMembers struct {
-	Group Group  `json:"Group, omitempty"`
 	Users []User `json:"Users, omitempty"`
 }
 
 type GroupPolicies struct {
-	Group    Group    `json:"Group, omitempty"`
-	Policies []Policy `json:"Policies, omitempty"`
+	PolicyReferenceIDs []PolicyReferenceId `json:"PolicyReferenceIDs, omitempty"`
 }
 
 // Add an Group to database if not exist
@@ -136,10 +140,18 @@ func (api *AuthAPI) AddMember(authenticatedUser AuthenticatedUser, userID string
 	}
 
 	// Call repo to retrieve the GroupUserRelation
-	groupMembers, err := api.GroupRepo.GetGroupUserRelation(userDB.ID, groupDB.ID)
+	isMember, err := api.GroupRepo.IsMemberOfGroup(userDB.ID, groupDB.ID)
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
 
 	// Error handling
-	if groupMembers != nil {
+	if isMember {
 		return &Error{
 			Code:    USER_IS_ALREADY_A_MEMBER_OF_GROUP,
 			Message: fmt.Sprintf("User: %v is already a member of Group: %v", userID, groupName),
@@ -191,25 +203,22 @@ func (api *AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, userID str
 		return err
 	}
 
-	// Call repo to retrieve the GroupUserRelation
-	_, err = api.GroupRepo.GetGroupUserRelation(userDB.ID, groupDB.ID)
-
-	// Error handling
+	// Call repo to check if user is a member of group
+	isMember, err := api.GroupRepo.IsMemberOfGroup(userDB.ID, groupDB.ID)
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
-		// Relation doesn't exist in DB
-		switch dbError.Code {
-		case database.GROUP_USER_RELATION_NOT_FOUND:
-			return &Error{
-				Code:    USER_IS_NOT_A_MEMBER_OF_GROUP,
-				Message: dbError.Message,
-			}
-		default: // Unexpected error
-			return &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	if !isMember {
+		return &Error{
+			Code: USER_IS_NOT_A_MEMBER_OF_GROUP,
+			Message: fmt.Sprintf("User with external ID %v is not a member of group with org %v and name %v",
+				userDB.ExternalID, groupDB.Org, groupDB.Name),
 		}
 	}
 
@@ -230,7 +239,7 @@ func (api *AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, userID str
 }
 
 // List members of a group
-func (api *AuthAPI) ListMembers(authenticatedUser AuthenticatedUser, org string, groupName string) (*GroupMembers, error) {
+func (api *AuthAPI) ListMembers(authenticatedUser AuthenticatedUser, org string, groupName string) ([]string, error) {
 	// Call repo to retrieve the group
 	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {
@@ -253,7 +262,7 @@ func (api *AuthAPI) ListMembers(authenticatedUser AuthenticatedUser, org string,
 	}
 
 	// Get Members
-	members, err := api.GroupRepo.GetAllGroupUserRelation(group.ID)
+	members, err := api.GroupRepo.GetGroupMembers(group.ID)
 
 	// Error handling
 	if err != nil {
@@ -265,8 +274,12 @@ func (api *AuthAPI) ListMembers(authenticatedUser AuthenticatedUser, org string,
 		}
 	}
 
-	// Return members
-	return members, nil
+	externalIDs := []string{}
+	for _, m := range members {
+		externalIDs = append(externalIDs, m.ExternalID)
+	}
+
+	return externalIDs, nil
 }
 
 // Remove group
@@ -351,7 +364,7 @@ func (api *AuthAPI) GetGroupByName(authenticatedUser AuthenticatedUser, org stri
 
 }
 
-func (api *AuthAPI) GetListGroups(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]Group, error) {
+func (api *AuthAPI) GetListGroups(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]GroupReferenceId, error) {
 	// Call repo to retrieve the groups
 	groups, err := api.GroupRepo.GetGroupsFiltered(org, pathPrefix)
 
@@ -372,8 +385,16 @@ func (api *AuthAPI) GetListGroups(authenticatedUser AuthenticatedUser, org strin
 		return nil, err
 	}
 
-	// Return groups
-	return groupsFiltered, nil
+	// Transform to identifiers
+	groupReferenceIds := []GroupReferenceId{}
+	for _, g := range groupsFiltered {
+		groupReferenceIds = append(groupReferenceIds, GroupReferenceId{
+			Org:  g.Org,
+			Name: g.Name,
+		})
+	}
+
+	return groupReferenceIds, nil
 }
 
 // Update Group to database if exist
@@ -492,15 +513,22 @@ func (api *AuthAPI) AttachPolicyToGroup(authenticatedUser AuthenticatedUser, org
 	}
 
 	// Check if policy exist
-	policy, err := api.GetPolicy(authenticatedUser, org, policyName)
+	policy, err := api.GetPolicyByName(authenticatedUser, org, policyName)
 	if err != nil {
 		return err
 	}
 
 	// Check if exist this relation
-	groupPolicies, err := api.GroupRepo.GetGroupPolicyRelation(group.ID, policy.ID)
+	isAttached, err := api.GroupRepo.IsAttachedToGroup(group.ID, policy.ID)
+	if err != nil {
+		dbError := err.(*database.Error)
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
 
-	if groupPolicies != nil {
+	if isAttached {
 		// Unexpected error
 		return &Error{
 			Code:    POLICY_IS_ALREADY_ATTACHED_TO_GROUP,
@@ -545,31 +573,28 @@ func (api *AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org
 	}
 
 	// Check if policy exist
-	policy, err := api.GetPolicy(authenticatedUser, org, policyName)
+	policy, err := api.GetPolicyByName(authenticatedUser, org, policyName)
 	if err != nil {
 		return err
 	}
 
 	// Check if exist this relation
-	_, err = api.GroupRepo.GetGroupPolicyRelation(group.ID, policy.ID)
-
-	// Error handling
+	isAttached, err := api.GroupRepo.IsAttachedToGroup(group.ID, policy.ID)
 	if err != nil {
-		//Transform to DB error
 		dbError := err.(*database.Error)
-		// Relation doesn't exist in DB
-		switch dbError.Code {
-		case database.GROUP_POLICY_RELATION_NOT_FOUND:
-			return &Error{
-				Code:    POLICY_IS_NOT_ATTACHED_TO_GROUP,
-				Message: dbError.Message,
-			}
-		default: // Unexpected error
-			return &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
 		}
+	}
+
+	if !isAttached {
+		return &Error{
+			Code: POLICY_IS_NOT_ATTACHED_TO_GROUP,
+			Message: fmt.Sprintf("Policy with Org %v and name %v is not attached to group with org %v and name %v",
+				policy.Org, policy.Name, group.Org, group.Name),
+		}
+
 	}
 
 	// Detach Policy to Group
@@ -586,7 +611,7 @@ func (api *AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org
 	return nil
 }
 
-func (api *AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser, org string, groupName string) (*GroupPolicies, error) {
+func (api *AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser, org string, groupName string) ([]PolicyReferenceId, error) {
 	// Check if group exist
 	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {
@@ -609,7 +634,7 @@ func (api *AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUse
 	}
 
 	// Call repo to retrieve the GroupPolicyRelations
-	groupPolicies, err := api.GroupRepo.GetAllGroupPolicyRelation(group.ID)
+	attachedPolicies, err := api.GroupRepo.GetPoliciesAttached(group.ID)
 
 	// Error handling
 	if err != nil {
@@ -621,8 +646,14 @@ func (api *AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUse
 		}
 	}
 
-	// Return policies
-	return groupPolicies, nil
+	policyReferenceId := []PolicyReferenceId{}
+	for _, p := range attachedPolicies {
+		policyReferenceId = append(policyReferenceId, PolicyReferenceId{
+			Org:  p.Org,
+			Name: p.Name,
+		})
+	}
+	return policyReferenceId, nil
 }
 
 // Private helper methods

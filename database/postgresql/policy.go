@@ -248,7 +248,7 @@ func (p PostgresRepo) UpdatePolicy(policy api.Policy, name string, path string, 
 	return policyApi, nil
 }
 
-func (p PostgresRepo) DeletePolicy(id string) error {
+func (p PostgresRepo) RemovePolicy(id string) error {
 
 	transaction := p.Dbmap.Begin()
 

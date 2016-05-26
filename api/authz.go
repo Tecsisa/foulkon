@@ -193,7 +193,7 @@ func (api *AuthAPI) getPoliciesByGroups(groups []Group) ([]Policy, error) {
 
 	for _, group := range groups {
 		// Retrieve policies for this group
-		policyRelations, err := api.GroupRepo.GetAllGroupPolicyRelation(group.ID)
+		policiesAttached, err := api.GroupRepo.GetPoliciesAttached(group.ID)
 
 		// Error handling
 		if err != nil {
@@ -205,7 +205,7 @@ func (api *AuthAPI) getPoliciesByGroups(groups []Group) ([]Policy, error) {
 			}
 		}
 
-		for _, policy := range policyRelations.Policies {
+		for _, policy := range policiesAttached {
 			policies = append(policies, policy)
 		}
 	}

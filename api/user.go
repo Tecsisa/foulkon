@@ -65,7 +65,7 @@ func (api *AuthAPI) GetUserByExternalId(authenticatedUser AuthenticatedUser, id 
 }
 
 // Retrieve users that has path
-func (api *AuthAPI) GetListUsers(authenticatedUser AuthenticatedUser, pathPrefix string) ([]User, error) {
+func (api *AuthAPI) GetListUsers(authenticatedUser AuthenticatedUser, pathPrefix string) ([]string, error) {
 
 	// Check parameters
 	if len(pathPrefix) > 0 && !IsValidPath(pathPrefix) {
@@ -95,8 +95,13 @@ func (api *AuthAPI) GetListUsers(authenticatedUser AuthenticatedUser, pathPrefix
 		return nil, err
 	}
 
-	// Return users
-	return usersFiltered, nil
+	// Return only identifiers
+	externalIDs := []string{}
+	for _, u := range usersFiltered {
+		externalIDs = append(externalIDs, u.ExternalID)
+	}
+
+	return externalIDs, nil
 }
 
 // Add an User to database if not exist
@@ -289,7 +294,7 @@ func (api *AuthAPI) RemoveUserById(authenticatedUser AuthenticatedUser, id strin
 }
 
 // Get groups for an user
-func (api *AuthAPI) GetGroupsByUserId(authenticatedUser AuthenticatedUser, id string) ([]Group, error) {
+func (api *AuthAPI) GetGroupsByUserId(authenticatedUser AuthenticatedUser, id string) ([]GroupReferenceId, error) {
 	// Call repo to retrieve the user
 	user, err := api.GetUserByExternalId(authenticatedUser, id)
 	if err != nil {
@@ -324,7 +329,16 @@ func (api *AuthAPI) GetGroupsByUserId(authenticatedUser AuthenticatedUser, id st
 		}
 	}
 
-	return groups, nil
+	// Transform to identifiers
+	groupReferenceIds := []GroupReferenceId{}
+	for _, g := range groups {
+		groupReferenceIds = append(groupReferenceIds, GroupReferenceId{
+			Org:  g.Org,
+			Name: g.Name,
+		})
+	}
+
+	return groupReferenceIds, nil
 }
 
 // Private helper methods

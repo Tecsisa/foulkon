@@ -37,16 +37,15 @@ type GetGroupNameResponse struct {
 }
 
 type GetGroupsResponse struct {
-	Groups []api.Group
+	GroupReferenceIDs []api.GroupReferenceId
 }
 
 type GetGroupMembersResponse struct {
-	Members *api.GroupMembers
+	Members []string
 }
 
 type GetGroupPolicies struct {
-	Group    api.Group
-	Policies []api.Policy
+	AttachedPolicies []api.PolicyReferenceId
 }
 
 func (a *AuthHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -176,7 +175,7 @@ func (a *AuthHandler) handleListGroups(w http.ResponseWriter, r *http.Request, p
 
 	// Create response
 	response := &GetGroupsResponse{
-		Groups: result,
+		GroupReferenceIDs: result,
 	}
 
 	// Return data
@@ -319,12 +318,10 @@ func (a *AuthHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request,
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		switch apiError.Code {
-		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.USER_BY_EXTERNAL_ID_NOT_FOUND:
+		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.USER_BY_EXTERNAL_ID_NOT_FOUND, api.USER_IS_NOT_A_MEMBER_OF_GROUP:
 			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
 			a.RespondForbidden(r, &userID, w)
-		case api.USER_IS_NOT_A_MEMBER_OF_GROUP:
-			a.RespondConflict(r, &userID, w)
 		default:
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -384,7 +381,7 @@ func (a *AuthHandler) handleDetachGroupPolicy(w http.ResponseWriter, r *http.Req
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		switch apiError.Code {
-		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
+		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.POLICY_BY_ORG_AND_NAME_NOT_FOUND, api.POLICY_IS_NOT_ATTACHED_TO_GROUP:
 			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
 			a.RespondForbidden(r, &userID, w)
@@ -423,8 +420,7 @@ func (a *AuthHandler) handleListAttachedGroupPolicies(w http.ResponseWriter, r *
 
 	// Create response
 	response := &GetGroupPolicies{
-		Group:    result.Group,
-		Policies: result.Policies,
+		AttachedPolicies: result,
 	}
 
 	// Return data
@@ -455,7 +451,7 @@ func (a *AuthHandler) handleListAllGroups(w http.ResponseWriter, r *http.Request
 
 	// Create response
 	response := &GetGroupsResponse{
-		Groups: result,
+		GroupReferenceIDs: result,
 	}
 
 	// Return data
