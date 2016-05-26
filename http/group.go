@@ -50,12 +50,13 @@ type GetGroupPolicies struct {
 }
 
 func (a *AuthHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Decode request
 	request := CreateGroupRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		RespondBadRequest(w)
+		a.RespondBadRequest(r, &userID, w)
 		return
 	}
 
@@ -70,13 +71,13 @@ func (a *AuthHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request, 
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_ALREADY_EXIST:
-			RespondConflict(w)
+			a.RespondConflict(r, &userID, w)
 		case api.INVALID_PARAMETER_ERROR:
-			RespondBadRequest(w)
+			a.RespondBadRequest(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -86,10 +87,11 @@ func (a *AuthHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request, 
 	}
 
 	// Write group to response
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 }
 
 func (a *AuthHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve group org and name from path
 	org := ps.ByName(ORG_NAME)
 	name := ps.ByName(GROUP_NAME)
@@ -104,19 +106,20 @@ func (a *AuthHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request, 
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
-			RespondConflict(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
-	} else { // Respond without content
-		RespondNoContent(w)
+	} else { // a.Respond without content
+		a.RespondNoContent(r, &userID, w)
 	}
 }
 
 func (a *AuthHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve group org and name from path
 	org := ps.ByName(ORG_NAME)
 	name := ps.ByName(GROUP_NAME)
@@ -131,11 +134,11 @@ func (a *AuthHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, ps 
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
-			RespondConflict(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -145,10 +148,11 @@ func (a *AuthHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, ps 
 	}
 
 	// Write group to response
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 }
 
 func (a *AuthHandler) handleListGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve group org from path
 	org := ps.ByName(ORG_NAME)
 
@@ -163,9 +167,9 @@ func (a *AuthHandler) handleListGroups(w http.ResponseWriter, r *http.Request, p
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -176,17 +180,18 @@ func (a *AuthHandler) handleListGroups(w http.ResponseWriter, r *http.Request, p
 	}
 
 	// Return data
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 
 }
 
 func (a *AuthHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Decode request
 	request := UpdateGroupRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		RespondBadRequest(w)
+		a.RespondBadRequest(r, &userID, w)
 		return
 	}
 
@@ -194,7 +199,7 @@ func (a *AuthHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request, 
 	if len(strings.TrimSpace(request.Name)) == 0 ||
 		len(strings.TrimSpace(request.Path)) == 0 {
 		a.core.Logger.Errorf("There are mising parameters: Name %v, Path %v", request.Name, request.Path)
-		RespondBadRequest(w)
+		a.RespondBadRequest(r, &userID, w)
 		return
 	}
 
@@ -212,15 +217,15 @@ func (a *AuthHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request, 
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
-			RespondNotFound(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.GROUP_ALREADY_EXIST:
-			RespondConflict(w)
+			a.RespondConflict(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		case api.INVALID_PARAMETER_ERROR:
-			RespondBadRequest(w)
+			a.RespondBadRequest(r, &userID, w)
 		default:
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -231,10 +236,11 @@ func (a *AuthHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request, 
 	}
 
 	// Write group to response
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 }
 
 func (a *AuthHandler) handleListMembers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve group, org
 	org := ps.ByName(ORG_NAME)
 	group := ps.ByName(GROUP_NAME)
@@ -249,11 +255,11 @@ func (a *AuthHandler) handleListMembers(w http.ResponseWriter, r *http.Request, 
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
-			RespondNotFound(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default:
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -264,11 +270,12 @@ func (a *AuthHandler) handleListMembers(w http.ResponseWriter, r *http.Request, 
 	}
 
 	// Write GroupMembers to response
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 
 }
 
 func (a *AuthHandler) handleAddMember(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve group, org and user from path
 	org := ps.ByName(ORG_NAME)
 	user := ps.ByName(USER_ID)
@@ -283,21 +290,22 @@ func (a *AuthHandler) handleAddMember(w http.ResponseWriter, r *http.Request, ps
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.USER_BY_EXTERNAL_ID_NOT_FOUND:
-			RespondNotFound(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		case api.USER_IS_ALREADY_A_MEMBER_OF_GROUP:
-			RespondConflict(w)
+			a.RespondConflict(r, &userID, w)
 		default:
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
-	} else { // Respond without content
-		RespondNoContent(w)
+	} else { // a.Respond without content
+		a.RespondNoContent(r, &userID, w)
 	}
 }
 
 func (a *AuthHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve group, org and user from path
 	org := ps.ByName(ORG_NAME)
 	user := ps.ByName(USER_ID)
@@ -312,22 +320,23 @@ func (a *AuthHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request,
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.USER_BY_EXTERNAL_ID_NOT_FOUND:
-			RespondNotFound(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		case api.USER_IS_NOT_A_MEMBER_OF_GROUP:
-			RespondConflict(w)
+			a.RespondConflict(r, &userID, w)
 		default:
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
-	} else { // Respond without content
-		RespondNoContent(w)
+	} else { // a.Respond without content
+		a.RespondNoContent(r, &userID, w)
 	}
 
 }
 
 func (a *AuthHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve group, org and policy from path
 	org := ps.ByName(ORG_NAME)
 	groupName := ps.ByName(GROUP_NAME)
@@ -343,23 +352,24 @@ func (a *AuthHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.Req
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			RespondNotFound(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		case api.POLICY_IS_ALREADY_ATTACHED_TO_GROUP:
-			RespondConflict(w)
+			a.RespondConflict(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 
-	} else { // Respond without content
-		RespondNoContent(w)
+	} else { // a.Respond without content
+		a.RespondNoContent(r, &userID, w)
 	}
 
 }
 
 func (a *AuthHandler) handleDetachGroupPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve group, org and policy from path
 	org := ps.ByName(ORG_NAME)
 	groupName := ps.ByName(GROUP_NAME)
@@ -375,20 +385,21 @@ func (a *AuthHandler) handleDetachGroupPolicy(w http.ResponseWriter, r *http.Req
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			RespondNotFound(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default: // Unexpected API error
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 
-	} else { // Respond without content
-		RespondNoContent(w)
+	} else { // a.Respond without content
+		a.RespondNoContent(r, &userID, w)
 	}
 }
 
 func (a *AuthHandler) handleListAttachedGroupPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// Retrieve group, org from path
 	org := ps.ByName(ORG_NAME)
 	groupName := ps.ByName(GROUP_NAME)
@@ -401,11 +412,11 @@ func (a *AuthHandler) handleListAttachedGroupPolicies(w http.ResponseWriter, r *
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
-			RespondNotFound(w)
+			a.RespondNotFound(r, &userID, w)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default:
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -417,11 +428,12 @@ func (a *AuthHandler) handleListAttachedGroupPolicies(w http.ResponseWriter, r *
 	}
 
 	// Return data
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 
 }
 
 func (a *AuthHandler) handleListAllGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.core.Authenticator.RetrieveUserID(*r)
 	// get Org and PathPrefix from request, so the query can be filtered
 	org := r.URL.Query().Get("Org")
 	pathPrefix := r.URL.Query().Get("PathPrefix")
@@ -434,9 +446,9 @@ func (a *AuthHandler) handleListAllGroups(w http.ResponseWriter, r *http.Request
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			RespondForbidden(w)
+			a.RespondForbidden(r, &userID, w)
 		default:
-			RespondInternalServerError(w)
+			a.RespondInternalServerError(r, &userID, w)
 		}
 		return
 	}
@@ -447,6 +459,6 @@ func (a *AuthHandler) handleListAllGroups(w http.ResponseWriter, r *http.Request
 	}
 
 	// Return data
-	RespondOk(w, response)
+	a.RespondOk(r, &userID, w, response)
 
 }

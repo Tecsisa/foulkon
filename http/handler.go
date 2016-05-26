@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/julienschmidt/httprouter"
+	"github.com/satori/go.uuid"
+	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/authorizr"
 )
 
@@ -46,6 +49,23 @@ const (
 
 type AuthHandler struct {
 	core *authorizr.Core
+}
+
+func (a *AuthHandler) TransactionLog(r *http.Request, authenticatedUser *api.AuthenticatedUser, status int, msg string) {
+
+	// TODO: X-Forwarded headers
+	//for header, _ := range r.Header {
+	//	println(header, ": ", r.Header.Get(header))
+	//}
+
+	a.core.Logger.WithFields(logrus.Fields{
+		"RequestID": uuid.NewV4().String(),
+		"Method":    r.Method,
+		"URI":       r.RequestURI,
+		"Address":   r.RemoteAddr,
+		"User":      authenticatedUser.Identifier,
+		"Status":    status,
+	}).Info(msg)
 }
 
 // Handler returns an http.Handler for the APIs.
@@ -110,41 +130,48 @@ func Handler(core *authorizr.Core) http.Handler {
 
 // 2xx RESPONSES
 
-func RespondOk(w http.ResponseWriter, value interface{}) {
+func (a *AuthHandler) RespondOk(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, value interface{}) {
 	b, err := json.Marshal(value)
 	if err != nil {
-		RespondInternalServerError(w)
+		a.RespondInternalServerError(r, authenticatedUser, w)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(b)
+	a.TransactionLog(r, authenticatedUser, http.StatusOK, "Request processed")
 
 }
 
-func RespondNoContent(w http.ResponseWriter) {
+func (a *AuthHandler) RespondNoContent(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNoContent)
+	a.TransactionLog(r, authenticatedUser, http.StatusNoContent, "Request processed")
 }
 
 // 4xx RESPONSES
-func RespondNotFound(w http.ResponseWriter) {
+func (a *AuthHandler) RespondNotFound(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNotFound)
+	a.TransactionLog(r, authenticatedUser, http.StatusNotFound, "Request processed")
 }
 
-func RespondBadRequest(w http.ResponseWriter) {
+func (a *AuthHandler) RespondBadRequest(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusBadRequest)
+	a.TransactionLog(r, authenticatedUser, http.StatusBadRequest, "Bad Request")
 }
 
-func RespondConflict(w http.ResponseWriter) {
+func (a *AuthHandler) RespondConflict(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusConflict)
+	a.TransactionLog(r, authenticatedUser, http.StatusConflict, "Resource conflict")
 }
 
-func RespondForbidden(w http.ResponseWriter) {
+func (a *AuthHandler) RespondForbidden(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusForbidden)
+	a.TransactionLog(r, authenticatedUser, http.StatusForbidden, "Forbidden")
 }
 
 // 5xx RESPONSES
 
-func RespondInternalServerError(w http.ResponseWriter) {
+func (a *AuthHandler) RespondInternalServerError(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusInternalServerError)
+	a.TransactionLog(r, authenticatedUser, http.StatusInternalServerError, "Server error")
 }
