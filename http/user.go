@@ -31,8 +31,8 @@ type UpdateUserResponse struct {
 	User *api.User
 }
 
-type GetUsersResponse struct {
-	Users []api.User
+type GetUserExternalIDsResponse struct {
+	ExternalIDs []string
 }
 
 type GetUserByIdResponse struct {
@@ -40,7 +40,7 @@ type GetUserByIdResponse struct {
 }
 
 type GetGroupsByUserIdResponse struct {
-	Groups []api.Group
+	GroupReferenceIDs []api.GroupReferenceId
 }
 
 // This method returns a list of users that belongs to Org param and have PathPrefix
@@ -65,8 +65,8 @@ func (a *AuthHandler) handleGetUsers(w http.ResponseWriter, r *http.Request, _ h
 	}
 
 	// Create response
-	response := &GetUsersResponse{
-		Users: result,
+	response := &GetUserExternalIDsResponse{
+		ExternalIDs: result,
 	}
 
 	// Return data
@@ -246,7 +246,7 @@ func (a *AuthHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Request,
 	}
 
 	response := GetGroupsByUserIdResponse{
-		Groups: result,
+		GroupReferenceIDs: result,
 	}
 
 	// Write user to response
