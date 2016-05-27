@@ -87,7 +87,7 @@ func IsValidPath(path string) bool {
 }
 
 func IsValidEffect(effect string) error {
-	if effect == "allow" || effect == "deny" {
+	if effect != "allow" && effect != "deny" {
 		return &Error{
 			Code:    REGEX_NO_MATCH,
 			Message: fmt.Sprintf("No regex match in effect: %v", effect),
@@ -111,7 +111,7 @@ func IsValidAction(actions []string) error {
 }
 
 func IsValidResource(resources []string) error {
-	r, _ := regexp.Compile(`^[\w+.@\-/:]+[\w+.@\-*]+$`)
+	r, _ := regexp.Compile(`^[*]$|^[\w+.@\-/:]+[\w+.@\-]+\*?$`)
 	r2, _ := regexp.Compile(`[/]{2,}|[*]{2,}|[:]{2,}`)
 	for _, resource := range resources {
 		if !r.MatchString(resource) || r2.MatchString(resource) || len(resource) > MAX_PATH_LENGTH {

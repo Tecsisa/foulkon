@@ -45,6 +45,9 @@ const (
 	POLICY_ROOT_URL      = API_VERSION_1 + ORG_ROOT + "/policies"
 	POLICY_ID_URL        = POLICY_ROOT_URL + URI_PATH_PREFIX + POLICY_NAME
 	POLICY_ID_GROUPS_URL = POLICY_ROOT_URL + URI_PATH_PREFIX + POLICY_NAME + "/groups"
+
+	// Authorization URLs
+	EFFECT_URL = API_VERSION_1 + "/resources"
 )
 
 type AuthHandler struct {
@@ -121,6 +124,9 @@ func Handler(core *authorizr.Core) http.Handler {
 
 	// Special endpoint without organization URI for policies
 	router.GET(API_VERSION_1+"/policies", authHandler.handleListAllPolicies)
+
+	// Get effect endpoint
+	router.GET(EFFECT_URL, authHandler.handleGetEffectByUserActionResource)
 
 	// Return handler
 	return core.Authenticator.Authenticate(router)
