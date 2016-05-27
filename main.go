@@ -37,5 +37,9 @@ func main() {
 	}
 
 	core.Logger.Printf("Server running in %v:%v", core.Host, core.Port)
-	core.Logger.Fatal(http.ListenAndServe(core.Host+":"+core.Port, internalhttp.Handler(core)).Error())
+	if core.CertFile != "" && core.KeyFile != "" {
+		core.Logger.Fatal(http.ListenAndServeTLS(core.Host+":"+core.Port, core.CertFile, core.KeyFile, internalhttp.Handler(core)).Error())
+	} else {
+		core.Logger.Fatal(http.ListenAndServe(core.Host+":"+core.Port, internalhttp.Handler(core)).Error())
+	}
 }
