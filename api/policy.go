@@ -134,6 +134,7 @@ func (api *AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, 
 
 	err := IsValidStatement(statements)
 	if err != nil {
+		// TODO rsoleto: Esto devuelve un 500 puesto que el error es REGEX_NO_MATCH, cambiar para invalid parameter
 		return nil, err
 
 	}

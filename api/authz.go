@@ -19,6 +19,11 @@ type AuthenticatedUser struct {
 	Admin      bool
 }
 
+type EffectRestriction struct {
+	Effect       string        `json:"Effect, omitempty"`
+	Restrictions *Restrictions `json:"Restrictions, omitempty"`
+}
+
 type Restrictions struct {
 	AllowedUrnPrefixes []string
 	AllowedFullUrns    []string
@@ -26,7 +31,16 @@ type Restrictions struct {
 	DeniedFullUrns     []string
 }
 
-// Return authorized users according to
+// Struct that represent a external resource, with only URN attribute
+type ExternalResource struct {
+	Urn string
+}
+
+func (e ExternalResource) GetUrn() string {
+	return e.Urn
+}
+
+// Return authorized users according to restrictions associated to authenticated user
 func (api *AuthAPI) GetUsersAuthorized(user AuthenticatedUser, resourceUrn string, action string, users []User) ([]User, error) {
 	resourcesToAuthorize := []Resource{}
 	for _, usr := range users {
@@ -43,6 +57,7 @@ func (api *AuthAPI) GetUsersAuthorized(user AuthenticatedUser, resourceUrn strin
 	return usersFiltered, nil
 }
 
+// Return authorized groups according to restrictions associated to authenticated user
 func (api *AuthAPI) GetGroupsAuthorized(user AuthenticatedUser, resourceUrn string, action string, groups []Group) ([]Group, error) {
 	resourcesToAuthorize := []Resource{}
 	for _, group := range groups {
@@ -59,6 +74,7 @@ func (api *AuthAPI) GetGroupsAuthorized(user AuthenticatedUser, resourceUrn stri
 	return groupsFiltered, nil
 }
 
+// Return authorized policies according to restrictions associated to authenticated user
 func (api *AuthAPI) GetPoliciesAuthorized(user AuthenticatedUser, resourceUrn string, action string, policies []Policy) ([]Policy, error) {
 	resourcesToAuthorize := []Resource{}
 	for _, policy := range policies {
@@ -75,9 +91,50 @@ func (api *AuthAPI) GetPoliciesAuthorized(user AuthenticatedUser, resourceUrn st
 	return policiesFiltered, nil
 }
 
+// Get user effect to do the action over the resource
+func (api *AuthAPI) GetEffectByUserActionResource(user AuthenticatedUser, action string, resourceUrn string) (*EffectRestriction, error) {
+	// Validate parameters
+	if err := IsValidAction([]string{action}); err != nil {
+		// Transform to API error
+		apiError := err.(*Error)
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: apiError.Message,
+		}
+	}
+	if err := IsValidResource([]string{resourceUrn}); err != nil {
+		// Transform to API error
+		apiError := err.(*Error)
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: apiError.Message,
+		}
+	}
+
+	// Retrieve restrictions
+	effectRestriction := &EffectRestriction{}
+	restrictions, err := api.getRestrictions(user.Identifier, action, resourceUrn)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return depending on if resource is a prefix or not
+	if isFullUrn(resourceUrn) {
+		if (isAllowedResource(ExternalResource{Urn: resourceUrn}, *restrictions)) {
+			effectRestriction.Effect = "allow"
+		} else {
+			effectRestriction.Effect = "deny"
+		}
+	} else {
+		effectRestriction.Restrictions = restrictions
+	}
+
+	return effectRestriction, nil
+}
+
 // Private Helper Methods
 
-// This method use authenticated user to retrieve its restrictions and apply it to a resource URN (could be a prefix)
+// This method use authenticated user to retrieve its restrictions, apply it to a resource URN (could be a prefix)
 // and retrieve filtered resources
 func (api *AuthAPI) getAuthorizedResources(user AuthenticatedUser, resourceUrn string, action string, resources []Resource) ([]Resource, error) {
 
@@ -91,6 +148,8 @@ func (api *AuthAPI) getAuthorizedResources(user AuthenticatedUser, resourceUrn s
 	if err != nil {
 		return nil, err
 	}
+
+	api.Logger.Debugf("Restrictions: %v", *restrictions)
 
 	// Check if there are some restrictions for this urn resource
 	if len(restrictions.AllowedFullUrns) < 1 && len(restrictions.AllowedUrnPrefixes) < 1 {
@@ -106,6 +165,7 @@ func (api *AuthAPI) getAuthorizedResources(user AuthenticatedUser, resourceUrn s
 	return resourcesFiltered, nil
 }
 
+// Get restrictions for this action and full resource or prefix resource, attached to this authenticated user
 func (api *AuthAPI) getRestrictions(externalID string, action string, resource string) (*Restrictions, error) {
 	// Get user if exist
 	user, err := api.UserRepo.GetUserByExternalID(externalID)
@@ -164,6 +224,7 @@ func (api *AuthAPI) getRestrictions(externalID string, action string, resource s
 	return cleanRepeatedRestrictions(authResources), nil
 }
 
+// Retrieve groups that user is member
 func (api *AuthAPI) getGroupsByUser(userID string) ([]Group, error) {
 	// Get group relations by user
 	groups, err := api.UserRepo.GetGroupsByUserID(userID)
@@ -182,6 +243,7 @@ func (api *AuthAPI) getGroupsByUser(userID string) ([]Group, error) {
 	return groups, nil
 }
 
+// Retrieve policies attached to a slice of groups
 func (api *AuthAPI) getPoliciesByGroups(groups []Group) ([]Policy, error) {
 	// Retrieve per each group its attached policies
 	if groups == nil || len(groups) < 1 {
@@ -214,6 +276,7 @@ func (api *AuthAPI) getPoliciesByGroups(groups []Group) ([]Policy, error) {
 	return policies, nil
 }
 
+// Filter a slice of statements for a specified action
 func (api *AuthAPI) getStatementsByRequestedAction(policies []Policy, actionRequested string) ([]Statement, error) {
 	// Check received policies
 	if policies == nil || len(policies) < 1 {
@@ -236,11 +299,13 @@ func (api *AuthAPI) getStatementsByRequestedAction(policies []Policy, actionRequ
 	return statements, nil
 }
 
+// Clean restrictions that are repeated or contained by others (Deny is prior than Allow)
 func cleanRepeatedRestrictions(authResources *Restrictions) *Restrictions {
 	// TODO rsoleto: Falta implementar
 	return authResources
 }
 
+// Return if an action is contained inside a slice of statement's actions
 func isActionContained(actionRequested string, statementActions []string) bool {
 	match := false
 	for _, statementAction := range statementActions {
@@ -260,6 +325,7 @@ func isActionContained(actionRequested string, statementActions []string) bool {
 	return match
 }
 
+// Return if a resource is contained by the prefix
 func isResourceContained(resource string, resourcePrefix string) bool {
 	prefix := strings.Trim(resourcePrefix, "*")
 	if len(prefix) < 1 {
@@ -277,6 +343,7 @@ func isFullUrn(resource string) bool {
 	}
 }
 
+// Retrieve restrictions for a specified resource prefix according to the statements
 func getRestrictionsWhenResourceRequestedIsPrefix(statements []Statement, resource string) *Restrictions {
 	authResources := &Restrictions{
 		AllowedUrnPrefixes: []string{},
@@ -331,6 +398,7 @@ func getRestrictionsWhenResourceRequestedIsPrefix(statements []Statement, resour
 	return authResources
 }
 
+// Retrieve restrictions for a specified resource according to the statements
 func getRestrictionsWhenResourceRequestedIsFullUrn(statements []Statement, resource string) *Restrictions {
 	authResources := &Restrictions{
 		AllowedUrnPrefixes: []string{},
@@ -363,6 +431,7 @@ func getRestrictionsWhenResourceRequestedIsFullUrn(statements []Statement, resou
 	return authResources
 }
 
+// Remove resources that are not allowed by the restrictions
 func filterResources(resources []Resource, restrictions *Restrictions) []Resource {
 	filteredResource := []Resource{}
 	for _, r := range resources {

@@ -92,6 +92,8 @@ func NewCore(config *toml.TomlTree) (*Core, error) {
 		return nil, err
 	}
 
+	authApi.Logger = *logger
+
 	// Instantiate Auth Connector
 	var authConnector auth.AuthConnector
 	switch getMandatoryValue(config, "authenticator.type") {
@@ -121,7 +123,7 @@ func NewCore(config *toml.TomlTree) (*Core, error) {
 
 	// Create authenticator
 	authenticator := auth.NewAuthenticator(authConnector, adminUser, adminPassword)
-	logger.Infof("Created authenticator with admin user name %v", adminUser)
+	logger.Infof("Created authenticator with admin username %v", adminUser)
 
 	// Return created core
 	return &Core{

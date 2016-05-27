@@ -7,7 +7,7 @@ type AuthAPI struct {
 	UserRepo   UserRepo
 	GroupRepo  GroupRepo
 	PolicyRepo PolicyRepo
-	logger     log.Logger
+	Logger     log.Logger
 }
 
 // User repository that contains all user operations for this domain
