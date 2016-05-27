@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 const (
@@ -111,13 +112,74 @@ func IsValidAction(actions []string) error {
 }
 
 func IsValidResource(resources []string) error {
-	r, _ := regexp.Compile(`^[*]$|^[\w+.@\-/:]+[\w+.@\-]+\*?$`)
-	r2, _ := regexp.Compile(`[/]{2,}|[*]{2,}|[:]{2,}`)
+	//err generator helper
+	errFunc := func(resource string) error {
+		return &Error{
+			Code:    REGEX_NO_MATCH,
+			Message: fmt.Sprintf("No regex match in resource: %v", resource),
+		}
+	}
+
+	wordRegex, _ := regexp.Compile(`^[\w+\-.@]+$`)
+	wordPrefixRegex, _ := regexp.Compile(`^[\w+\-.@]+\*$`)
+
+	r, _ := regexp.Compile(`^\*$|^[\w+\-@.]+\*?$|^[\w+\-@.]+\*?$|^[\w+\-@.]+(/?([\w+\-@.]+/)*([\w+\-@.]|[*])+)?$`)
+	r2, _ := regexp.Compile(`[/]{2,}|[:]{2,}|[*]{2,}`)
+
 	for _, resource := range resources {
-		if !r.MatchString(resource) || r2.MatchString(resource) || len(resource) > MAX_PATH_LENGTH {
-			return &Error{
-				Code:    REGEX_NO_MATCH,
-				Message: fmt.Sprintf("No regex match in resource: %v", resource),
+		blocks := strings.Split(resource, ":")
+		for n, block := range blocks {
+			switch n {
+			case 0:
+				if len(blocks) < 2 { // This is the last block
+					if block != "*" {
+						return errFunc(resource)
+					}
+				} else {
+					if block != "urn" {
+						return errFunc(resource)
+					}
+				}
+			case 1:
+				if len(blocks) < 3 { // This is the last block
+					if block != "*" && !wordPrefixRegex.MatchString(block) {
+						return errFunc(resource)
+					}
+				} else {
+					if !wordRegex.MatchString(block) {
+						return errFunc(resource)
+					}
+				}
+			case 2:
+				if len(blocks) < 4 { // This is the last block
+					if block != "*" && !wordPrefixRegex.MatchString(block) {
+						return errFunc(resource)
+					}
+				} else {
+					if !wordRegex.MatchString(block) {
+						return errFunc(resource)
+					}
+				}
+			case 3:
+				if len(blocks) < 5 { // This is the last block
+					if block != "*" && !wordPrefixRegex.MatchString(block) {
+						return errFunc(resource)
+					}
+				} else {
+					if block != "" && !wordRegex.MatchString(block) {
+						return errFunc(resource)
+					}
+				}
+			case 4:
+				if !r.MatchString(block) || r2.MatchString(block) {
+					return errFunc(resource)
+				}
+			default:
+				return &Error{
+					Code:    INVALID_PARAMETER_ERROR,
+					Message: fmt.Sprintf("Invalid resource definition: %v", resource),
+				}
+
 			}
 		}
 	}
