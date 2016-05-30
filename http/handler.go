@@ -155,23 +155,39 @@ func (a *AuthHandler) RespondNoContent(r *http.Request, authenticatedUser *api.A
 }
 
 // 4xx RESPONSES
-func (a *AuthHandler) RespondNotFound(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter) {
-	w.WriteHeader(http.StatusNotFound)
+func (a *AuthHandler) RespondNotFound(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, apiError *api.Error) {
+	w, err := writeErrorWithStatus(w, apiError, http.StatusNotFound)
+	if err != nil {
+		a.RespondInternalServerError(r, authenticatedUser, w)
+		return
+	}
 	a.TransactionLog(r, authenticatedUser, http.StatusNotFound, "Request processed")
 }
 
-func (a *AuthHandler) RespondBadRequest(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter) {
-	w.WriteHeader(http.StatusBadRequest)
+func (a *AuthHandler) RespondBadRequest(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, apiError *api.Error) {
+	w, err := writeErrorWithStatus(w, apiError, http.StatusBadRequest)
+	if err != nil {
+		a.RespondInternalServerError(r, authenticatedUser, w)
+		return
+	}
 	a.TransactionLog(r, authenticatedUser, http.StatusBadRequest, "Bad Request")
 }
 
-func (a *AuthHandler) RespondConflict(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter) {
-	w.WriteHeader(http.StatusConflict)
+func (a *AuthHandler) RespondConflict(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, apiError *api.Error) {
+	w, err := writeErrorWithStatus(w, apiError, http.StatusConflict)
+	if err != nil {
+		a.RespondInternalServerError(r, authenticatedUser, w)
+		return
+	}
 	a.TransactionLog(r, authenticatedUser, http.StatusConflict, "Resource conflict")
 }
 
-func (a *AuthHandler) RespondForbidden(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter) {
-	w.WriteHeader(http.StatusForbidden)
+func (a *AuthHandler) RespondForbidden(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, apiError *api.Error) {
+	w, err := writeErrorWithStatus(w, apiError, http.StatusForbidden)
+	if err != nil {
+		a.RespondInternalServerError(r, authenticatedUser, w)
+		return
+	}
 	a.TransactionLog(r, authenticatedUser, http.StatusForbidden, "Forbidden")
 }
 
@@ -180,4 +196,17 @@ func (a *AuthHandler) RespondForbidden(r *http.Request, authenticatedUser *api.A
 func (a *AuthHandler) RespondInternalServerError(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusInternalServerError)
 	a.TransactionLog(r, authenticatedUser, http.StatusInternalServerError, "Server error")
+}
+
+// Private Helper Methods
+func writeErrorWithStatus(w http.ResponseWriter, apiError *api.Error, statusCode int) (http.ResponseWriter, error) {
+	b, err := json.Marshal(apiError)
+	if err != nil {
+		return nil, err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	w.Write(b)
+	return w, nil
 }

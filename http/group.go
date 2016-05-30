@@ -55,7 +55,7 @@ func (a *AuthHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request, 
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		a.RespondBadRequest(r, &userID, w)
+		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
 		return
 	}
 
@@ -70,11 +70,11 @@ func (a *AuthHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request, 
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_ALREADY_EXIST:
-			a.RespondConflict(r, &userID, w)
+			a.RespondConflict(r, &userID, w, apiError)
 		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &userID, w)
+			a.RespondBadRequest(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -105,9 +105,9 @@ func (a *AuthHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request, 
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -133,9 +133,9 @@ func (a *AuthHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, ps 
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -166,7 +166,7 @@ func (a *AuthHandler) handleListGroups(w http.ResponseWriter, r *http.Request, p
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -190,7 +190,7 @@ func (a *AuthHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request, 
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		a.RespondBadRequest(r, &userID, w)
+		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
 		return
 	}
 
@@ -198,7 +198,7 @@ func (a *AuthHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request, 
 	if len(strings.TrimSpace(request.Name)) == 0 ||
 		len(strings.TrimSpace(request.Path)) == 0 {
 		a.core.Logger.Errorf("There are mising parameters: Name %v, Path %v", request.Name, request.Path)
-		a.RespondBadRequest(r, &userID, w)
+		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: "Missing parameters"})
 		return
 	}
 
@@ -216,13 +216,13 @@ func (a *AuthHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request, 
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.GROUP_ALREADY_EXIST:
-			a.RespondConflict(r, &userID, w)
+			a.RespondConflict(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &userID, w)
+			a.RespondBadRequest(r, &userID, w, apiError)
 		default:
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -254,9 +254,9 @@ func (a *AuthHandler) handleListMembers(w http.ResponseWriter, r *http.Request, 
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default:
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -289,11 +289,11 @@ func (a *AuthHandler) handleAddMember(w http.ResponseWriter, r *http.Request, ps
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.USER_BY_EXTERNAL_ID_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		case api.USER_IS_ALREADY_A_MEMBER_OF_GROUP:
-			a.RespondConflict(r, &userID, w)
+			a.RespondConflict(r, &userID, w, apiError)
 		default:
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -319,9 +319,9 @@ func (a *AuthHandler) handleRemoveMember(w http.ResponseWriter, r *http.Request,
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.USER_BY_EXTERNAL_ID_NOT_FOUND, api.USER_IS_NOT_A_MEMBER_OF_GROUP:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default:
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -349,11 +349,11 @@ func (a *AuthHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.Req
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		case api.POLICY_IS_ALREADY_ATTACHED_TO_GROUP:
-			a.RespondConflict(r, &userID, w)
+			a.RespondConflict(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -382,9 +382,9 @@ func (a *AuthHandler) handleDetachGroupPolicy(w http.ResponseWriter, r *http.Req
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.POLICY_BY_ORG_AND_NAME_NOT_FOUND, api.POLICY_IS_NOT_ATTACHED_TO_GROUP:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -409,9 +409,9 @@ func (a *AuthHandler) handleListAttachedGroupPolicies(w http.ResponseWriter, r *
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default:
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -442,7 +442,7 @@ func (a *AuthHandler) handleListAllGroups(w http.ResponseWriter, r *http.Request
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default:
 			a.RespondInternalServerError(r, &userID, w)
 		}

@@ -27,9 +27,9 @@ func (a *AuthHandler) handleGetEffectByUserActionResource(w http.ResponseWriter,
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &userID, w)
+			a.RespondBadRequest(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
