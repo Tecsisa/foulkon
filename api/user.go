@@ -294,7 +294,7 @@ func (api *AuthAPI) RemoveUserById(authenticatedUser AuthenticatedUser, id strin
 }
 
 // Get groups for an user
-func (api *AuthAPI) GetGroupsByUserId(authenticatedUser AuthenticatedUser, id string) ([]GroupReferenceId, error) {
+func (api *AuthAPI) GetGroupsByUserId(authenticatedUser AuthenticatedUser, id string) ([]GroupIdentity, error) {
 	// Call repo to retrieve the user
 	user, err := api.GetUserByExternalId(authenticatedUser, id)
 	if err != nil {
@@ -330,9 +330,9 @@ func (api *AuthAPI) GetGroupsByUserId(authenticatedUser AuthenticatedUser, id st
 	}
 
 	// Transform to identifiers
-	groupReferenceIds := []GroupReferenceId{}
+	groupReferenceIds := []GroupIdentity{}
 	for _, g := range groups {
-		groupReferenceIds = append(groupReferenceIds, GroupReferenceId{
+		groupReferenceIds = append(groupReferenceIds, GroupIdentity{
 			Org:  g.Org,
 			Name: g.Name,
 		})
