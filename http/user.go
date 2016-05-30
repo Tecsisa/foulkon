@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"strings"
-
 	"github.com/julienschmidt/httprouter"
 	"github.com/tecsisa/authorizr/api"
 )
@@ -122,13 +120,6 @@ func (a *AuthHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps h
 	if err != nil {
 		a.core.Logger.Errorln(err)
 		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
-		return
-	}
-
-	// Check parameters
-	if len(strings.TrimSpace(request.Path)) == 0 {
-		a.core.Logger.Errorf("There are mising parameters: Path %v", request.Path)
-		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.MISSING_PARAMETER_ERROR, Message: "There are mising parameters"})
 		return
 	}
 

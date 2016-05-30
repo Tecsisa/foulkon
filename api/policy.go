@@ -40,7 +40,7 @@ func (api *AuthAPI) GetPolicyByName(authenticatedUser AuthenticatedUser, org str
 	if !IsValidName(policyName) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid policy name"),
+			Message: fmt.Sprintf("Invalid parameter: Policy name %v", policyName),
 		}
 	}
 
@@ -85,6 +85,13 @@ func (api *AuthAPI) GetPolicyByName(authenticatedUser AuthenticatedUser, org str
 }
 
 func (api *AuthAPI) GetListPolicies(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]PolicyIdentity, error) {
+	// Validate path prefix
+	if !IsValidPath(pathPrefix) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", pathPrefix),
+		}
+	}
 	// Call repo to retrieve the policies
 	policies, err := api.PolicyRepo.GetPoliciesFiltered(org, pathPrefix)
 
@@ -121,21 +128,24 @@ func (api *AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, 
 	if !IsValidName(name) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid policy name"),
+			Message: fmt.Sprintf("Invalid parameter: Policy name %v", name),
 		}
 	}
 	if !IsValidPath(path) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid path"),
+			Message: fmt.Sprintf("Invalid parameter: Path %v", path),
 		}
 
 	}
 
 	err := IsValidStatement(statements)
 	if err != nil {
-		// TODO rsoleto: Esto devuelve un 500 puesto que el error es REGEX_NO_MATCH, cambiar para invalid parameter
-		return nil, err
+		apiError := err.(*Error)
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: apiError.Message,
+		}
 
 	}
 
@@ -201,27 +211,28 @@ func (api *AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string
 	if !IsValidName(policyName) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid policy name"),
+			Message: fmt.Sprintf("Invalid parameter: Policy name %v", policyName),
 		}
 	}
 	if !IsValidName(newName) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid policy new name"),
+			Message: fmt.Sprintf("Invalid parameter: Policy new name %v", newName),
 		}
 	}
 	if !IsValidPath(newPath) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid new path"),
+			Message: fmt.Sprintf("Invalid parameter: Policy new path %v", newPath),
 		}
 
 	}
 	err := IsValidStatement(&newStatements)
 	if err != nil {
+		apiError := err.(*Error)
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid statement definition"),
+			Message: apiError.Message,
 		}
 
 	}
@@ -306,7 +317,7 @@ func (api *AuthAPI) DeletePolicy(authenticatedUser AuthenticatedUser, org string
 	if !IsValidName(name) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid policy name"),
+			Message: fmt.Sprintf("Invalid parameter: Policy name %v", name),
 		}
 	}
 
@@ -350,7 +361,7 @@ func (api *AuthAPI) GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser,
 	if !IsValidName(policyName) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid policy name"),
+			Message: fmt.Sprintf("Invalid parameter: Policy name %v", policyName),
 		}
 	}
 
