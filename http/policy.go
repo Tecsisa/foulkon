@@ -63,9 +63,9 @@ func (a *AuthHandler) handleListPolicies(w http.ResponseWriter, r *http.Request,
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &userID, w)
+			a.RespondBadRequest(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -91,8 +91,7 @@ func (a *AuthHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Request,
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		a.RespondBadRequest(r, &userID, w)
-
+		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
 		return
 	}
 
@@ -102,13 +101,15 @@ func (a *AuthHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Request,
 	// Error handling
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		switch err.(*api.Error).Code {
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		switch apiError.Code {
 		case api.POLICY_ALREADY_EXIST:
-			a.RespondConflict(r, &userID, w)
+			a.RespondConflict(r, &userID, w, apiError)
 		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &userID, w)
+			a.RespondBadRequest(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default:
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -138,11 +139,11 @@ func (a *AuthHandler) handleDeletePolicy(w http.ResponseWriter, r *http.Request,
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &userID, w)
+			a.RespondBadRequest(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -159,7 +160,7 @@ func (a *AuthHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Request,
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		a.RespondBadRequest(r, &userID, w)
+		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
 		return
 	}
 
@@ -177,11 +178,11 @@ func (a *AuthHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Request,
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &userID, w)
+			a.RespondBadRequest(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -213,9 +214,9 @@ func (a *AuthHandler) handleGetPolicy(w http.ResponseWriter, r *http.Request, ps
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -245,9 +246,9 @@ func (a *AuthHandler) handleGetPolicyAttachedGroups(w http.ResponseWriter, r *ht
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -277,7 +278,7 @@ func (a *AuthHandler) handleListAllPolicies(w http.ResponseWriter, r *http.Reque
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}

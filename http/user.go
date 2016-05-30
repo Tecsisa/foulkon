@@ -57,7 +57,7 @@ func (a *AuthHandler) handleGetUsers(w http.ResponseWriter, r *http.Request, _ h
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -81,7 +81,7 @@ func (a *AuthHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ 
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		a.RespondBadRequest(r, &userID, w)
+		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
 		return
 	}
 
@@ -95,11 +95,11 @@ func (a *AuthHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ 
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.USER_ALREADY_EXIST:
-			a.RespondConflict(r, &userID, w)
+			a.RespondConflict(r, &userID, w, apiError)
 		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &userID, w)
+			a.RespondBadRequest(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -121,14 +121,14 @@ func (a *AuthHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps h
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		a.core.Logger.Errorln(err)
-		a.RespondBadRequest(r, &userID, w)
+		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
 		return
 	}
 
 	// Check parameters
 	if len(strings.TrimSpace(request.Path)) == 0 {
 		a.core.Logger.Errorf("There are mising parameters: Path %v", request.Path)
-		a.RespondBadRequest(r, &userID, w)
+		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.MISSING_PARAMETER_ERROR, Message: "There are mising parameters"})
 		return
 	}
 
@@ -145,11 +145,11 @@ func (a *AuthHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps h
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &userID, w)
+			a.RespondBadRequest(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -180,9 +180,9 @@ func (a *AuthHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, ps
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -211,9 +211,9 @@ func (a *AuthHandler) handleDeleteUserId(w http.ResponseWriter, r *http.Request,
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
@@ -236,9 +236,9 @@ func (a *AuthHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Request,
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w)
+			a.RespondNotFound(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w)
+			a.RespondForbidden(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
