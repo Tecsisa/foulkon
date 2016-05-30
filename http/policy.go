@@ -74,7 +74,7 @@ func (a *AuthHandler) handleListPolicies(w http.ResponseWriter, r *http.Request,
 
 	// Create response
 	response := &ListPoliciesResponse{
-		PolicyReferenceIDs: result,
+		Policies: result,
 	}
 
 	// Return data
@@ -256,7 +256,7 @@ func (a *AuthHandler) handleGetPolicyAttachedGroups(w http.ResponseWriter, r *ht
 
 	// Create response
 	response := &GetPolicyGroupsResponse{
-		GroupReferenceIDs: result,
+		Groups: result,
 	}
 
 	// Return data
@@ -286,7 +286,7 @@ func (a *AuthHandler) handleListAllPolicies(w http.ResponseWriter, r *http.Reque
 
 	// Create response
 	response := &ListAllPoliciesResponse{
-		PolicyReferenceIDs: result,
+		Policies: result,
 	}
 
 	// Return data

@@ -419,7 +419,7 @@ func (a *AuthHandler) handleListAttachedGroupPolicies(w http.ResponseWriter, r *
 	}
 
 	// Create response
-	response := &GetGroupPolicies{
+	response := &GetGroupPoliciesResponse{
 		AttachedPolicies: result,
 	}
 
