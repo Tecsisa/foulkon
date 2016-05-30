@@ -2,6 +2,8 @@
 [server]
 host = "localhost"
 port = "8000"
+#certfile = "${AUTHORIZR_CERT_FILE_PATH}"
+#keyfile = "${AUTHORIZR_KEY_FILE_PATH}"
 
 # Logger
 [logger]

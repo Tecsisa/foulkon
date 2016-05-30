@@ -9,8 +9,10 @@ You have to specify configuration file using flag -config-file (authorizr -confi
 
 
 #### [server]:
-    - host = "localhost"
-    - port = "8000"
+    - host : "localhost"
+    - port : "8000"
+    - certfile : "/public.pem" (PEM file with certificate chain)
+    - keyfile : "/private.pem" (PEM file with decrypted private key)
 #### [logger]:
     - type : file | default (If it isn't specified it uses stdout)
     - level: "debug" (Only log the debug or above)
@@ -29,13 +31,15 @@ You have to specify configuration file using flag -config-file (authorizr -confi
     - username : admin (Admin username)
     - password: password (Admin password)
 
-This is a config file example:
+You can use environment vars, using syntax ${VAR_ENV}. This is a config file example:
 
 ```
 # Server config
 [server]
 host = "localhost"
 port = "8000"
+certfile = "${AUTHORIZR_CERT_FILE_PATH}"
+keyfile = "${AUTHORIZR_KEY_FILE_PATH}"
 
 # Logger
 [logger]

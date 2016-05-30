@@ -24,6 +24,10 @@ type Core struct {
 	Host string
 	Port string
 
+	// TLS configuration
+	CertFile string
+	KeyFile  string
+
 	// API
 	AuthApi *api.AuthAPI
 
@@ -129,6 +133,8 @@ func NewCore(config *toml.TomlTree) (*Core, error) {
 	return &Core{
 		Host:          getMandatoryValue(config, "server.host"),
 		Port:          getMandatoryValue(config, "server.port"),
+		CertFile:      getDefaultValue(config, "server.certfile", ""),
+		KeyFile:       getDefaultValue(config, "server.keyfile", ""),
 		Logger:        logger,
 		Authenticator: authenticator,
 		AuthApi:       authApi,
