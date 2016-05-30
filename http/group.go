@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"strings"
-
 	"github.com/julienschmidt/httprouter"
 	"github.com/tecsisa/authorizr/api"
 )
@@ -191,14 +189,6 @@ func (a *AuthHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request, 
 	if err != nil {
 		a.core.Logger.Errorln(err)
 		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
-		return
-	}
-
-	// Check parameters
-	if len(strings.TrimSpace(request.Name)) == 0 ||
-		len(strings.TrimSpace(request.Path)) == 0 {
-		a.core.Logger.Errorf("There are mising parameters: Name %v, Path %v", request.Name, request.Path)
-		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: "Missing parameters"})
 		return
 	}
 
