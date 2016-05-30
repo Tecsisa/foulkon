@@ -40,7 +40,7 @@ type GetUserByIdResponse struct {
 }
 
 type GetGroupsByUserIdResponse struct {
-	GroupReferenceIDs []api.GroupReferenceId
+	Groups []api.GroupIdentity
 }
 
 // This method returns a list of users that belongs to Org param and have PathPrefix
@@ -246,7 +246,7 @@ func (a *AuthHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Request,
 	}
 
 	response := GetGroupsByUserIdResponse{
-		GroupReferenceIDs: result,
+		Groups: result,
 	}
 
 	// Write user to response

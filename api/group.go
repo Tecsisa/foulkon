@@ -23,7 +23,7 @@ func (g Group) GetUrn() string {
 }
 
 // Identifier for group that allow you to retrieve from Database
-type GroupReferenceId struct {
+type GroupIdentity struct {
 	Org  string `json:"Org, omitempty"`
 	Name string `json:"Name, omitempty"`
 }
@@ -33,7 +33,7 @@ type GroupMembers struct {
 }
 
 type GroupPolicies struct {
-	PolicyReferenceIDs []PolicyReferenceId `json:"PolicyReferenceIDs, omitempty"`
+	Policies []PolicyIdentity `json:"Policies, omitempty"`
 }
 
 // Add an Group to database if not exist
@@ -364,7 +364,7 @@ func (api *AuthAPI) GetGroupByName(authenticatedUser AuthenticatedUser, org stri
 
 }
 
-func (api *AuthAPI) GetListGroups(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]GroupReferenceId, error) {
+func (api *AuthAPI) GetListGroups(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]GroupIdentity, error) {
 	// Call repo to retrieve the groups
 	groups, err := api.GroupRepo.GetGroupsFiltered(org, pathPrefix)
 
@@ -386,9 +386,9 @@ func (api *AuthAPI) GetListGroups(authenticatedUser AuthenticatedUser, org strin
 	}
 
 	// Transform to identifiers
-	groupReferenceIds := []GroupReferenceId{}
+	groupReferenceIds := []GroupIdentity{}
 	for _, g := range groupsFiltered {
-		groupReferenceIds = append(groupReferenceIds, GroupReferenceId{
+		groupReferenceIds = append(groupReferenceIds, GroupIdentity{
 			Org:  g.Org,
 			Name: g.Name,
 		})
@@ -611,7 +611,7 @@ func (api *AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org
 	return nil
 }
 
-func (api *AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser, org string, groupName string) ([]PolicyReferenceId, error) {
+func (api *AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser, org string, groupName string) ([]PolicyIdentity, error) {
 	// Check if group exist
 	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {
@@ -646,9 +646,9 @@ func (api *AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUse
 		}
 	}
 
-	policyReferenceId := []PolicyReferenceId{}
+	policyReferenceId := []PolicyIdentity{}
 	for _, p := range attachedPolicies {
-		policyReferenceId = append(policyReferenceId, PolicyReferenceId{
+		policyReferenceId = append(policyReferenceId, PolicyIdentity{
 			Org:  p.Org,
 			Name: p.Name,
 		})

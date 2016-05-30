@@ -37,15 +37,15 @@ type GetGroupNameResponse struct {
 }
 
 type GetGroupsResponse struct {
-	GroupReferenceIDs []api.GroupReferenceId
+	Groups []api.GroupIdentity
 }
 
 type GetGroupMembersResponse struct {
 	Members []string
 }
 
-type GetGroupPolicies struct {
-	AttachedPolicies []api.PolicyReferenceId
+type GetGroupPoliciesResponse struct {
+	AttachedPolicies []api.PolicyIdentity
 }
 
 func (a *AuthHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -175,7 +175,7 @@ func (a *AuthHandler) handleListGroups(w http.ResponseWriter, r *http.Request, p
 
 	// Create response
 	response := &GetGroupsResponse{
-		GroupReferenceIDs: result,
+		Groups: result,
 	}
 
 	// Return data
@@ -451,7 +451,7 @@ func (a *AuthHandler) handleListAllGroups(w http.ResponseWriter, r *http.Request
 
 	// Create response
 	response := &GetGroupsResponse{
-		GroupReferenceIDs: result,
+		Groups: result,
 	}
 
 	// Return data

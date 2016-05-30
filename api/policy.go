@@ -24,7 +24,7 @@ func (p Policy) GetUrn() string {
 }
 
 // Identifier for policy that allow you to retrieve from Database
-type PolicyReferenceId struct {
+type PolicyIdentity struct {
 	Org  string `json:"Org, omitempty"`
 	Name string `json:"Name, omitempty"`
 }
@@ -84,7 +84,7 @@ func (api *AuthAPI) GetPolicyByName(authenticatedUser AuthenticatedUser, org str
 	}
 }
 
-func (api *AuthAPI) GetListPolicies(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]PolicyReferenceId, error) {
+func (api *AuthAPI) GetListPolicies(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]PolicyIdentity, error) {
 	// Call repo to retrieve the policies
 	policies, err := api.PolicyRepo.GetPoliciesFiltered(org, pathPrefix)
 
@@ -105,9 +105,9 @@ func (api *AuthAPI) GetListPolicies(authenticatedUser AuthenticatedUser, org str
 		return nil, err
 	}
 
-	policyReferenceIds := []PolicyReferenceId{}
+	policyReferenceIds := []PolicyIdentity{}
 	for _, p := range policiesFiltered {
-		policyReferenceIds = append(policyReferenceIds, PolicyReferenceId{
+		policyReferenceIds = append(policyReferenceIds, PolicyIdentity{
 			Org:  p.Org,
 			Name: p.Name,
 		})
@@ -345,7 +345,7 @@ func (api *AuthAPI) DeletePolicy(authenticatedUser AuthenticatedUser, org string
 	return nil
 }
 
-func (api *AuthAPI) GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser, org string, policyName string) ([]GroupReferenceId, error) {
+func (api *AuthAPI) GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser, org string, policyName string) ([]GroupIdentity, error) {
 	// Validate fields
 	if !IsValidName(policyName) {
 		return nil, &Error{
@@ -388,9 +388,9 @@ func (api *AuthAPI) GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser,
 		}
 	}
 
-	groupReferenceIDs := []GroupReferenceId{}
+	groupReferenceIDs := []GroupIdentity{}
 	for _, g := range groups {
-		groupReferenceIDs = append(groupReferenceIDs, GroupReferenceId{
+		groupReferenceIDs = append(groupReferenceIDs, GroupIdentity{
 			Org:  g.Org,
 			Name: g.Name,
 		})

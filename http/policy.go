@@ -36,15 +36,15 @@ type GetPolicyResponse struct {
 }
 
 type ListPoliciesResponse struct {
-	PolicyReferenceIDs []api.PolicyReferenceId
+	Policies []api.PolicyIdentity
 }
 
 type ListAllPoliciesResponse struct {
-	PolicyReferenceIDs []api.PolicyReferenceId
+	Policies []api.PolicyIdentity
 }
 
 type GetPolicyGroupsResponse struct {
-	GroupReferenceIDs []api.GroupReferenceId
+	Groups []api.GroupIdentity
 }
 
 func (a *AuthHandler) handleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
