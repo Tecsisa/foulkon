@@ -4,6 +4,17 @@ authorizr is an authorization server that allows or denies the access to web res
 
 ## Installation / usage
 
+### Docker
+
+In order to build the docker image, run:
+```
+sh build.sh
+```
+Then, you can run the docker image, mounting (-v) a config.toml inside the container (you could also make a custom Dockerfile with "ADD my-custom-conf.toml /my-custom-conf.toml")
+```
+docker run -v /home/myuser/authorizr/config.toml:/config.toml tecsisa/authorizr -config-file=/config.toml
+```
+
 ## Configuration
 You have to specify configuration file using flag -config-file (authorizr -config-file=/path/config.toml). This config file is a TOML file that has five parts:
 
