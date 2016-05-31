@@ -30,15 +30,20 @@ const (
 
 // Test repo that implements all manager interfaces
 type TestRepo struct {
-	funcMap map[string]interface{}
+	ArgsIn  map[string][]interface{}
+	ArgsOut map[string][]interface{}
 }
 
 //////////////////
 // User repo
 //////////////////
 func (t TestRepo) GetUserByExternalID(id string) (*User, error) {
-	thisFunc := t.funcMap[GetUserByExternalIDMethod].(func(id string) (*User, error))
-	return thisFunc(id)
+	t.ArgsIn[GetUserByExternalIDMethod][0] = id
+	var err error
+	if t.ArgsOut[GetUserByExternalIDMethod][1] != nil {
+		err = t.ArgsOut[GetUserByExternalIDMethod][1].(error)
+	}
+	return t.ArgsOut[GetUserByExternalIDMethod][0].(*User), err
 }
 
 func (t TestRepo) AddUser(user User) (*User, error) {

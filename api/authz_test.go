@@ -1,7 +1,6 @@
 package api
 
 import (
-	"github.com/tecsisa/authorizr/database"
 	"reflect"
 	"testing"
 	"time"
@@ -21,7 +20,7 @@ func TestGetUsersAuthorized(t *testing.T) {
 		"OKtestCaseAdmin": {
 			user: AuthenticatedUser{
 				Identifier: "123456",
-				Admin:      false,
+				Admin:      true,
 			},
 			resourceUrn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
 			action:      USER_ACTION_GET_USER,
@@ -37,7 +36,8 @@ func TestGetUsersAuthorized(t *testing.T) {
 		},
 	}
 	testRepo := TestRepo{
-		funcMap: make(map[string]interface{}),
+		ArgsIn:  make(map[string][]interface{}),
+		ArgsOut: make(map[string][]interface{}),
 	}
 	api := AuthAPI{
 		UserRepo:   testRepo,
@@ -46,16 +46,15 @@ func TestGetUsersAuthorized(t *testing.T) {
 	}
 	for n, test := range testcases {
 		t.Logf("Running test case %v", n)
-		// Set test value
-		testRepo.funcMap[GetUserByExternalIDMethod] = func(id string) (*User, error) {
-			return nil, &database.Error{
-				Code:    database.INTERNAL_ERROR,
-				Message: "Error",
-			}
-		}
+		testRepo.ArgsOut[GetUserByExternalIDMethod] = make([]interface{}, 2)
+		testRepo.ArgsIn[GetUserByExternalIDMethod] = make([]interface{}, 2)
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = &User{}
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = nil
+
 		// Run test
 		authorizedUsers, err := api.GetUsersAuthorized(test.user, test.resourceUrn, test.action, test.users)
 		if err != nil {
+			t.Errorf("Userid: %v", testRepo.ArgsIn[GetUserByExternalIDMethod][0].(string))
 			t.Errorf("Unexpected error in test case %v, error: %v", n, err)
 		}
 
