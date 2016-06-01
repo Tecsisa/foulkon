@@ -24,6 +24,12 @@ func (u User) GetUrn() string {
 // Retrieve user by external id
 func (api *AuthAPI) GetUserByExternalId(authenticatedUser AuthenticatedUser, id string) (*User, error) {
 	// Call repo to retrieve the user if exist
+	if !IsValidUserExternalID(id) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", id),
+		}
+	}
 	user, err := api.UserRepo.GetUserByExternalID(id)
 
 	// Error handling

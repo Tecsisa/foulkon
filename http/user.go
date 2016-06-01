@@ -174,6 +174,8 @@ func (a *AuthHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, ps
 			a.RespondNotFound(r, &userID, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
 			a.RespondForbidden(r, &userID, w, apiError)
+		case api.INVALID_PARAMETER_ERROR:
+			a.RespondBadRequest(r, &userID, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
