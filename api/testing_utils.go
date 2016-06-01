@@ -34,6 +34,28 @@ type TestRepo struct {
 	ArgsOut map[string][]interface{}
 }
 
+// func that initializates the TestRepo
+func makeTestRepo() *TestRepo {
+	testRepo := &TestRepo{
+		ArgsIn:  make(map[string][]interface{}),
+		ArgsOut: make(map[string][]interface{}),
+	}
+	return testRepo
+}
+
+func makeTestAPI(testRepo *TestRepo) *AuthAPI {
+	api := &AuthAPI{
+		UserRepo:   testRepo,
+		GroupRepo:  testRepo,
+		PolicyRepo: testRepo,
+
+	}
+	return api
+}
+
+//TODO: hacer resetTestRepo // añadir a makeTestRepo las inicializaciones
+
+
 //////////////////
 // User repo
 //////////////////
