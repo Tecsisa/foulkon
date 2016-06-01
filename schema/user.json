@@ -1,0 +1,205 @@
+{
+  "$schema": "",
+  "type": "object",
+  "definitions": {
+    "order1_user": {
+      "$schema": "",
+      "title": "User",
+      "description": "User API",
+      "strictProperties": true,
+      "type": "object",
+      "definitions": {
+        "ID": {
+          "description": "Unique identifier of user",
+          "readOnly": true,
+          "format": "uuid",
+          "type": [
+            "string"
+          ]
+        },
+        "ExternalID": {
+          "description": "Identifier of user",
+          "example": "user1",
+          "type": "string"
+        },
+        "Path": {
+          "description": "User's location",
+          "example": "/example/admin/",
+          "type": "string"
+        },
+        "CreatedAt": {
+          "description": "When user was created",
+          "format": "date-time",
+          "type": "string"
+        },
+        "Urn": {
+          "description": "Uniform Resource Name of user",
+          "example": "urn:iws:iam::user/example/admin/user1",
+          "type": "string"
+        }
+      },
+      "links": [
+        {
+          "description": "Create a new user.",
+          "href": "/api/v1/users",
+          "method": "POST",
+          "rel": "create",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "schema": {
+            "properties": {
+              "ExternalID": {
+                "$ref": "#/definitions/order1_user/definitions/ExternalID"
+              },
+              "Path": {
+                "$ref": "#/definitions/order1_user/definitions/Path"
+              }
+            },
+            "required": [
+              "ExternalID",
+              "Path"
+            ],
+            "type": "object"
+          },
+          "title": "Create"
+        },
+        {
+          "description": "Update an existing user.",
+          "href": "/api/v1/users/{user_externalID}",
+          "method": "PUT",
+          "rel": "update",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "schema": {
+            "properties": {
+              "ExternalID": {
+                "$ref": "#/definitions/order1_user/definitions/ExternalID"
+              },
+              "Path": {
+                "$ref": "#/definitions/order1_user/definitions/Path"
+              }
+            },
+            "required": [
+              "ExternalID",
+              "Path"
+            ],
+            "type": [
+              "object"
+            ]
+          },
+          "title": "Update"
+        },
+        {
+          "description": "Delete an existing user.",
+          "href": "/api/v1/users/{user_externalID}",
+          "method": "DELETE",
+          "rel": "empty",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Delete"
+        },
+        {
+          "description": "Get an existing user.",
+          "href": "/api/v1/users/{user_externalID}",
+          "method": "GET",
+          "rel": "self",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Get"
+        }
+      ],
+      "properties": {
+        "ID": {
+          "$ref": "#/definitions/order1_user/definitions/ID"
+        },
+        "ExternalID": {
+          "$ref": "#/definitions/order1_user/definitions/ExternalID"
+        },
+        "Path": {
+          "$ref": "#/definitions/order1_user/definitions/Path"
+        },
+        "CreatedAt": {
+          "$ref": "#/definitions/order1_user/definitions/CreatedAt"
+        },
+        "Urn": {
+          "$ref": "#/definitions/order1_user/definitions/Urn"
+        }
+      }
+    },
+    "order2_userReference": {
+      "$schema": "",
+      "title": "",
+      "description": "",
+      "strictProperties": true,
+      "type": "object",
+      "links": [
+        {
+          "description": "List all users filtered by PathPrefix and Organization.",
+          "href": "/api/v1/users",
+          "method": "GET",
+          "rel": "self",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "User List All"
+        }
+      ],
+      "properties": {
+        "ExternalID": {
+          "description": "Identifier of user",
+          "example": ["User1"],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "order3_groupIdentity": {
+      "$schema": "",
+      "title": "",
+      "description": "",
+      "strictProperties": true,
+      "type": "object",
+      "links": [
+        {
+          "description": "List all groups that a user is a member.",
+          "href": "/api/v1/users/{user_externalID}/groups",
+          "method": "GET",
+          "rel": "instances",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "List user groups"
+        }
+      ],
+      "properties": {
+        "Org": {
+          "description": "Organization of group",
+          "example": "tecsisa",
+          "type": "string"
+        },
+        "Name": {
+          "description": "Name of group",
+          "example": "group1",
+          "type": "string"
+        }
+      }
+    }
+  },
+  "properties": {
+    "order1_user": {
+      "$ref": "#/definitions/order1_user"
+    },
+    "order2_userReference": {
+      "$ref": "#/definitions/order2_userReference"
+    },
+    "order3_groupIdentity": {
+      "$ref": "#/definitions/order3_groupIdentity"
+    }
+  }
+}

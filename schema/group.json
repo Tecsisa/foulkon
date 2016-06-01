@@ -1,0 +1,281 @@
+{
+  "$schema": "",
+  "type": "object",
+  "definitions": {
+    "order1_group": {
+      "$schema": "",
+      "title": "Group",
+      "description": "Group API",
+      "strictProperties": true,
+      "type": "object",
+      "definitions": {
+        "ID": {
+          "description": "Unique identifier of group",
+          "readOnly": true,
+          "format": "uuid",
+          "type": "string"
+        },
+        "Name": {
+          "description": "Name of group",
+          "example": "group1",
+          "type": "string"
+        },
+        "Path": {
+          "description": "Group's location",
+          "example": "/example/admin/",
+          "type": "string"
+        },
+        "CreatedAt": {
+          "description": "When group was created",
+          "format": "date-time",
+          "type": "string"
+        },
+        "Urn": {
+          "description": "Uniform Resource Name of group",
+          "example": "urn:iws:iam:tecsisa:group/example/admin/group1",
+          "type": "string"
+        },
+        "Org": {
+          "description": "Organization of group",
+          "example": "tecsisa",
+          "type": "string"
+        }
+      },
+      "links": [
+        {
+          "description": "Create a new group.",
+          "href": "/api/v1/organizations/{organization_id}/groups",
+          "method": "POST",
+          "rel": "create",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "schema": {
+            "properties": {
+              "Name": {
+                "$ref": "#/definitions/order1_group/definitions/Name"
+              },
+              "Path": {
+                "$ref": "#/definitions/order1_group/definitions/Path"
+              }
+            },
+            "required": [
+              "Name",
+              "Path"
+            ],
+            "type": "object"
+          },
+          "title": "Create"
+        },
+        {
+          "description": "Update an existing group.",
+          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}",
+          "method": "PUT",
+          "rel": "update",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "schema": {
+            "properties": {
+              "Name": {
+                "$ref": "#/definitions/order1_group/definitions/Name"
+              },
+              "Path": {
+                "$ref": "#/definitions/order1_group/definitions/Path"
+              }
+            },
+            "required": [
+              "Name",
+              "Path"
+            ],
+            "type": "object"
+          },
+          "title": "Update"
+        },
+        {
+          "description": "Delete an existing group.",
+          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}",
+          "method": "DELETE",
+          "rel": "empty",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Delete"
+        },
+        {
+          "description": "Get an existing group.",
+          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}",
+          "method": "GET",
+          "rel": "self",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Get"
+        }
+      ],
+      "properties": {
+        "ID": {
+          "$ref": "#/definitions/order1_group/definitions/ID"
+        },
+        "Name": {
+          "$ref": "#/definitions/order1_group/definitions/Name"
+        },
+        "Path": {
+          "$ref": "#/definitions/order1_group/definitions/Path"
+        },
+        "CreatedAt": {
+          "$ref": "#/definitions/order1_group/definitions/CreatedAt"
+        },
+        "Urn": {
+          "$ref": "#/definitions/order1_group/definitions/Urn"
+        },
+        "Org": {
+          "$ref": "#/definitions/order1_group/definitions/Org"
+        }
+      }
+    },
+    "order2_groupReference": {
+      "$schema": "",
+      "title": "",
+      "description": "",
+      "strictProperties": true,
+      "type": [
+        "object"
+      ],
+      "links": [
+        {
+          "description": "List all groups by organization.",
+          "href": "/api/v1/organizations/{organization_id}/groups",
+          "method": "GET",
+          "rel": "instances",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Group List All"
+        }
+      ],
+      "properties": {
+        "Org": {
+          "$ref": "#/definitions/order1_group/definitions/Org"
+        },
+        "Name": {
+          "$ref": "#/definitions/order1_group/definitions/Name"
+        }
+      }
+    },
+    "order3_members": {
+      "$schema": "",
+      "title": "Member",
+      "description": "Members of a group.",
+      "strictProperties": true,
+      "type": "object",
+      "links": [
+        {
+          "description": "Add member to a group",
+          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/users/{user_id}",
+          "method": "POST",
+          "rel": "empty",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Add"
+        },
+        {
+          "description": "Remove member from a group",
+          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/users/{user_id}",
+          "method": "DELETE",
+          "rel": "empty",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Remove"
+        },
+        {
+          "description": "List members of a group",
+          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/users",
+          "method": "GET",
+          "rel": "self",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "List"
+        }
+      ],
+      "properties": {
+        "ExternalID": {
+          "description": "Identifier of user",
+          "example": ["member1"],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "order4_attachedPolicies": {
+      "$schema": "",
+      "title": "Group Policies",
+      "description": "Attached Policies",
+      "strictProperties": true,
+      "type": "object",
+      "links": [
+        {
+          "description": "Attach policy to group",
+          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/policies/{policy_id}",
+          "method": "POST",
+          "rel": "empty",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Attach"
+        },
+        {
+          "description": "Detach policy to group",
+          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/policies/{policy_id}",
+          "method": "DELETE",
+          "rel": "empty",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Detach"
+        },
+        {
+          "description": "List attach policies",
+          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/policies",
+          "method": "GET",
+          "rel": "instances",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "List"
+        }
+      ],
+      "properties": {
+        "Org": {
+          "description": "Organization of policy",
+          "example": "tecsisa",
+          "type": "string"
+        },
+        "Name": {
+          "description": "Name of policy",
+          "example": "policy1",
+          "type": "string"
+        }
+      }
+    }
+  },
+  "properties": {
+    "order1_group": {
+      "$ref": "#/definitions/order1_group"
+    },
+    "order2_groupReference": {
+      "$ref": "#/definitions/order2_groupReference"
+    },
+    "order3_members": {
+      "$ref": "#/definitions/order3_members"
+    },
+    "order4_attachedPolicies": {
+      "$ref": "#/definitions/order4_attachedPolicies"
+    }
+  }
+}
