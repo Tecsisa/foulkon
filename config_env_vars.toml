@@ -1,0 +1,36 @@
+# Server config
+[server]
+host = "${AUTHORIZR_HOST}"
+port = "${AUTHORIZR_PORT}"
+certfile = "${AUTHORIZR_CERT_FILE_PATH}"
+keyfile = "${AUTHORIZR_KEY_FILE_PATH}"
+
+# Admin user config
+[admin]
+username = "${AUTHORIZR_ADMIN_USER}"
+password = "${AUTHORIZR_ADMIN_PASS}"
+
+# Logger
+[logger]
+type = "${AUTHORIZR_LOG_TYPE}" #(default, file)
+level = "${AUTHORIZR_LOG_LEVEL}" #(debug,info,warn,error)
+	# Directory for file configuration
+	[logger.file]
+	dir = "${AUTHORIZR_LOG_PATH}"
+
+# Database config
+[database]
+type = "${AUTHORIZR_DB}" #(postgres)
+	# Postgres database config
+	[database.postgres]
+	datasourcename = "${AUTHORIZR_DB_POSTGRES_DS}"
+
+# Authenticator config
+[authenticator]
+type = "${AUTHORIZR_AUTH_TYPE}"
+
+	# OIDC connector config
+	[authenticator.oidc]
+	issuer = "${AUTHORIZR_AUTH_ISSUER}"
+	clientids = "${AUTHORIZR_AUTH_CLIENTID}"
+
