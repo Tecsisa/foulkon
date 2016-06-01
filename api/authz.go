@@ -205,12 +205,7 @@ func (api *AuthAPI) getRestrictions(externalID string, action string, resource s
 	}
 
 	// Retrieve statements for action requested for these policies
-	statements, err := api.getStatementsByRequestedAction(policies, action)
-
-	// Error handling
-	if err != nil {
-		return nil, err
-	}
+	statements := api.getStatementsByRequestedAction(policies, action)
 
 	// Retrieve restrictions restrictions
 	var authResources *Restrictions
@@ -277,10 +272,10 @@ func (api *AuthAPI) getPoliciesByGroups(groups []Group) ([]Policy, error) {
 }
 
 // Filter a slice of statements for a specified action
-func (api *AuthAPI) getStatementsByRequestedAction(policies []Policy, actionRequested string) ([]Statement, error) {
+func (api *AuthAPI) getStatementsByRequestedAction(policies []Policy, actionRequested string) []Statement {
 	// Check received policies
 	if policies == nil || len(policies) < 1 {
-		return nil, nil
+		return nil
 	}
 
 	// Retrieve statements related to action requested
@@ -296,7 +291,7 @@ func (api *AuthAPI) getStatementsByRequestedAction(policies []Policy, actionRequ
 	}
 
 	// Return statements
-	return statements, nil
+	return statements
 }
 
 // Clean restrictions that are repeated or contained by others (Deny is prior than Allow)
