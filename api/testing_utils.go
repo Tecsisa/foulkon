@@ -39,11 +39,15 @@ type TestRepo struct {
 //////////////////
 func (t TestRepo) GetUserByExternalID(id string) (*User, error) {
 	t.ArgsIn[GetUserByExternalIDMethod][0] = id
+	var user *User
+	if t.ArgsOut[GetUserByExternalIDMethod][0] != nil {
+		user = t.ArgsOut[GetUserByExternalIDMethod][0].(*User)
+	}
 	var err error
 	if t.ArgsOut[GetUserByExternalIDMethod][1] != nil {
 		err = t.ArgsOut[GetUserByExternalIDMethod][1].(error)
 	}
-	return t.ArgsOut[GetUserByExternalIDMethod][0].(*User), err
+	return user, err
 }
 
 func (t TestRepo) AddUser(user User) (*User, error) {
