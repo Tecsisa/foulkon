@@ -1,0 +1,269 @@
+{
+  "$schema": "",
+  "type": "object",
+  "definitions": {
+    "order1_statement": {
+      "$schema": "",
+      "title": "Statement",
+      "description": "Policy statement",
+      "strictProperties": true,
+      "type": "object",
+      "definitions": {
+        "effect": {
+          "description": "allow/deny resources",
+          "example": "allow",
+          "type": "string"
+        },
+        "action": {
+          "description": "CRUD functions",
+          "example": ["iam:*"],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "resources": {
+          "description": "resources",
+          "example": ["everything"],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "properties": {
+        "effect": {
+          "$ref": "#/definitions/order1_statement/definitions/effect"
+        },
+        "action": {
+          "$ref": "#/definitions/order1_statement/definitions/action"
+        },
+        "resources": {
+          "$ref": "#/definitions/order1_statement/definitions/resources"
+        }
+      }
+    },
+    "order2_policy": {
+      "$schema": "",
+      "title": "Policy",
+      "description": "Policy API",
+      "strictProperties": true,
+      "type": "object",
+      "definitions": {
+        "ID": {
+          "description": "Unique identifier of policy",
+          "readOnly": true,
+          "format": "uuid",
+          "type": "string"
+        },
+        "Name": {
+          "description": "Name of policy",
+          "example": "policy1",
+          "type": "string"
+        },
+        "Path": {
+          "description": "Policy's location",
+          "example": "/example/admin/",
+          "type": "string"
+        },
+        "CreatedAt": {
+          "description": "when policy was created",
+          "format": "date-time",
+          "type": "string"
+        },
+        "Urn": {
+          "description": "Uniform Resource Name of policy",
+          "example": "urn:iws:iam:org1:policy/example/admin/policy1",
+          "type": "string"
+        },
+        "Org": {
+          "description": "Organization of policy",
+          "example": "tecsisa",
+          "type": "string"
+        },
+        "Statements": {
+          "description": "Policy statements",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/order1_statement"
+          }
+        }
+      },
+      "links": [
+        {
+          "description": "Create a new policy.",
+          "href": "/api/v1/organizations/{organization_id}/policies",
+          "method": "POST",
+          "rel": "create",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "schema": {
+            "properties": {
+              "Name": {
+                "$ref": "#/definitions/order2_policy/definitions/Name"
+              },
+              "Path": {
+                "$ref": "#/definitions/order2_policy/definitions/Path"
+              },
+              "Statements": {
+                "$ref": "#/definitions/order2_policy/definitions/Statements"
+              }
+            },
+            "required": [
+              "Name",
+              "Path",
+              "Statements"
+            ],
+            "type": "object"
+          },
+          "title": "Create"
+        },
+        {
+          "description": "Update an existing policy.",
+          "href": "/api/v1/organizations/{organization_id}/policies/{policy_name}",
+          "method": "PUT",
+          "rel": "update",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "schema": {
+            "properties": {
+              "Name": {
+                "$ref": "#/definitions/order2_policy/definitions/Name"
+              },
+              "Path": {
+                "$ref": "#/definitions/order2_policy/definitions/Path"
+              },
+              "Statements": {
+                "$ref": "#/definitions/order2_policy/definitions/Statements"
+              }
+            },
+            "required": [
+              "Name",
+              "Path",
+              "Statements"
+            ],
+            "type": "object"
+          },
+          "title": "Update"
+        },
+        {
+          "description": "Delete an existing policy.",
+          "href": "/api/v1/organizations/{organization_id}/policies/{policy_name}",
+          "method": "DELETE",
+          "rel": "empty",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Delete"
+        },
+        {
+          "description": "Get an existing policy.",
+          "href": "/api/v1/organizations/{organization_id}/policies/{policy_name}",
+          "method": "GET",
+          "rel": "self",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Get"
+        }
+      ],
+      "properties": {
+        "ID": {
+          "$ref": "#/definitions/order2_policy/definitions/ID"
+        },
+        "Name": {
+          "$ref": "#/definitions/order2_policy/definitions/Name"
+        },
+        "Path": {
+          "$ref": "#/definitions/order2_policy/definitions/Path"
+        },
+        "CreatedAt": {
+          "$ref": "#/definitions/order2_policy/definitions/CreatedAt"
+        },
+        "Urn": {
+          "$ref": "#/definitions/order2_policy/definitions/Urn"
+        },
+        "Org": {
+          "$ref": "#/definitions/order2_policy/definitions/Org"
+        },
+        "Statements": {
+          "$ref": "#/definitions/order2_policy/definitions/Statements"
+        }
+      }
+    },
+    "order3_policyReference": {
+      "$schema": "",
+      "title": "",
+      "description": "",
+      "strictProperties": true,
+      "type": "object",
+      "links": [
+        {
+          "description": "List all policies by organization.",
+          "href": "/api/v1/organizations/{organization_id}/policies",
+          "method": "GET",
+          "rel": "instances",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Policy List"
+        }
+      ],
+      "properties": {
+        "Org": {
+          "$ref": "#/definitions/order2_policy/definitions/Org"
+        },
+        "Name": {
+          "$ref": "#/definitions/order2_policy/definitions/Name"
+        }
+      }
+    },
+    "order4_attachedGroups": {
+      "$schema": "",
+      "title": "",
+      "description": "List attached groups",
+      "strictProperties": true,
+      "type": "object",
+      "links": [
+        {
+          "description": "List attached groups",
+          "href": "/api/v1/organizations/{organization_id}/policies/{policy_name}/groups",
+          "method": "GET",
+          "rel": "instances",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Policy Groups List"
+        }
+      ],
+      "properties": {
+        "Org": {
+          "description": "Organization of group",
+          "example": "tecsisa",
+          "type": "string"
+        },
+        "Name": {
+          "description": "Name of group",
+          "example": "group1",
+          "type": "string"
+        }
+      }
+    }
+  },
+  "properties": {
+    "order1_statement": {
+      "$ref": "#/definitions/order1_statement"
+    },
+    "order2_policy": {
+      "$ref": "#/definitions/order2_policy"
+    },
+    "order3_policyReference": {
+      "$ref": "#/definitions/order3_policyReference"
+    },
+    "order4_attachedGroups": {
+      "$ref": "#/definitions/order4_attachedGroups"
+    }
+  }
+}

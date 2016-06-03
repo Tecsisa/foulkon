@@ -82,6 +82,14 @@ username = "admin"
 password = "admin"
 ```
 
+## Documentation
+
+[User API](doc/api/user.md)
+
+[Group API](doc/api/group.md)
+
+[Policy API](doc/api/policy.md)
+
 ## Testing
 
 
