@@ -63,7 +63,16 @@ func (t TestRepo) GetUsersFiltered(pathPrefix string) ([]User, error) {
 }
 
 func (t TestRepo) GetGroupsByUserID(id string) ([]Group, error) {
-	return nil, nil
+	t.ArgsIn[GetGroupsByUserIDMethod][0] = id
+	var groups []Group
+	if t.ArgsOut[GetGroupsByUserIDMethod][0] != nil {
+		groups = t.ArgsOut[GetGroupsByUserIDMethod][0].([]Group)
+	}
+	var err error
+	if t.ArgsOut[GetGroupsByUserIDMethod][1] != nil {
+		err = t.ArgsOut[GetGroupsByUserIDMethod][1].(error)
+	}
+	return groups, err
 }
 
 func (t TestRepo) RemoveUser(id string) error {
@@ -86,7 +95,16 @@ func (t TestRepo) IsAttachedToGroup(groupID string, policyID string) (bool, erro
 	return false, nil
 }
 func (t TestRepo) GetPoliciesAttached(groupID string) ([]Policy, error) {
-	return nil, nil
+	t.ArgsIn[GetPoliciesAttachedMethod][0] = groupID
+	var policies []Policy
+	if t.ArgsOut[GetPoliciesAttachedMethod][0] != nil {
+		policies = t.ArgsOut[GetPoliciesAttachedMethod][0].([]Policy)
+	}
+	var err error
+	if t.ArgsOut[GetPoliciesAttachedMethod][1] != nil {
+		err = t.ArgsOut[GetPoliciesAttachedMethod][1].(error)
+	}
+	return policies, err
 }
 func (t TestRepo) GetGroupsFiltered(org string, pathPrefix string) ([]Group, error) {
 	return nil, nil
