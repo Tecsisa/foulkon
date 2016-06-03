@@ -1,35 +1,32 @@
 package api
 
 import (
-	"testing"
-
 	"reflect"
+	"testing"
 
 	"github.com/tecsisa/authorizr/database"
 )
 
 func TestGetUserByExternalId(t *testing.T) {
 	testcases := map[string]struct {
-		// User authenticated
-		authUser AuthenticatedUser
-		// Resource urn that user wants to access
-		id string
-		// Error to compare when we expect an error
-		expectedUser              *User
-		wantError                 *Error
+		authUser   AuthenticatedUser
+		externalID string
+
 		getGroupsByUserIDResult   []Group
 		getPoliciesAttachedResult []Policy
 		getUserByExternalIDResult *User
 
-		// GetUserByExternalID Method Out Arguments
-		err error
+		expectedUser *User
+		wantError    *Error
+
+		getUserByExternalIDMethodErr error
 	}{
 		"OKCase": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
 			},
-			id: "123",
+			externalID: "123",
 			expectedUser: &User{
 				ID:         "543210",
 				ExternalID: "123",
@@ -41,7 +38,7 @@ func TestGetUserByExternalId(t *testing.T) {
 				Identifier: "notAdminUser",
 				Admin:      false,
 			},
-			id: "123",
+			externalID: "123",
 			expectedUser: &User{
 				ID:         "543210",
 				ExternalID: "123",
@@ -98,7 +95,7 @@ func TestGetUserByExternalId(t *testing.T) {
 					},
 				},
 			},
-			id: "000",
+			externalID: "000",
 			expectedUser: &User{
 				ID:         "000",
 				ExternalID: "000",
@@ -114,11 +111,11 @@ func TestGetUserByExternalId(t *testing.T) {
 				Identifier: "notAdminUser",
 				Admin:      true,
 			},
-			id: "111",
+			externalID: "111",
 			wantError: &Error{
 				Code: USER_BY_EXTERNAL_ID_NOT_FOUND,
 			},
-			err: &database.Error{
+			getUserByExternalIDMethodErr: &database.Error{
 				Code:    database.USER_NOT_FOUND,
 				Message: "Error",
 			},
@@ -129,8 +126,8 @@ func TestGetUserByExternalId(t *testing.T) {
 			},
 		},
 		"InternalError": {
-			id: "1234",
-			err: &database.Error{
+			externalID: "1234",
+			getUserByExternalIDMethodErr: &database.Error{
 				Code: database.INTERNAL_ERROR,
 			},
 			wantError: &Error{
@@ -144,10 +141,10 @@ func TestGetUserByExternalId(t *testing.T) {
 
 	for x, testcase := range testcases {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.expectedUser
-		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.err
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
-		user, err := testAPI.GetUserByExternalId(testcase.authUser, testcase.id)
+		user, err := testAPI.GetUserByExternalId(testcase.authUser, testcase.externalID)
 		if testcase.wantError != nil {
 			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
 				t.Fatalf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
@@ -167,21 +164,19 @@ func TestGetUserByExternalId(t *testing.T) {
 
 func TestAddUser(t *testing.T) {
 	testcases := map[string]struct {
-		// User authenticated
-		authUser AuthenticatedUser
-		// Resource urn that user wants to access
-		externalID                string
-		path                      string
+		authUser   AuthenticatedUser
+		externalID string
+		path       string
+
 		getUserByExternalIDResult *User
 		getGroupsByUserIDResult   []Group
 		getPoliciesAttachedResult []Policy
 
-		// Error to compare when we expect an error
 		expectedUser *User
 		wantError    *Error
-		// GetUserByExternalID Method Out Arguments
-		err    error
-		errGet error
+
+		addUserMethodErr             error
+		getUserByExternalIDMethodErr error
 	}{
 		"OKCase": {
 			authUser: AuthenticatedUser{
@@ -195,7 +190,7 @@ func TestAddUser(t *testing.T) {
 				ExternalID: "1234",
 				Path:       "/example/",
 			},
-			errGet: &database.Error{
+			getUserByExternalIDMethodErr: &database.Error{
 				Code:    database.USER_NOT_FOUND,
 				Message: "User not found",
 			},
@@ -234,7 +229,7 @@ func TestAddUser(t *testing.T) {
 			wantError: &Error{
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
 			},
-			errGet: &database.Error{
+			getUserByExternalIDMethodErr: &database.Error{
 				Code:    database.USER_NOT_FOUND,
 				Message: "User not found",
 			},
@@ -335,13 +330,13 @@ func TestAddUser(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
 			},
-			errGet: &database.Error{
+			getUserByExternalIDMethodErr: &database.Error{
 				Code:    database.USER_NOT_FOUND,
 				Message: "User not found",
 			},
 			externalID: "12",
 			path:       "/example/",
-			err: &database.Error{
+			addUserMethodErr: &database.Error{
 				Code: database.INTERNAL_ERROR,
 			},
 			wantError: &Error{
@@ -359,13 +354,13 @@ func TestAddUser(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
 			},
-			errGet: &database.Error{
+			getUserByExternalIDMethodErr: &database.Error{
 				Code:    database.INTERNAL_ERROR,
 				Message: "User not found",
 			},
 			externalID: "12",
 			path:       "/example/",
-			err: &database.Error{
+			addUserMethodErr: &database.Error{
 				Code: database.INTERNAL_ERROR,
 			},
 			wantError: &Error{
@@ -379,11 +374,11 @@ func TestAddUser(t *testing.T) {
 
 	for x, testcase := range testcases {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
-		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.errGet
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
 		testRepo.ArgsOut[AddUserMethod][0] = testcase.expectedUser
-		testRepo.ArgsOut[AddUserMethod][1] = testcase.err
+		testRepo.ArgsOut[AddUserMethod][1] = testcase.addUserMethodErr
 		user, err := testAPI.AddUser(testcase.authUser, testcase.externalID, testcase.path)
 		if testcase.wantError != nil {
 			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
@@ -402,100 +397,379 @@ func TestAddUser(t *testing.T) {
 
 }
 
-//func TestUpdateUser(t *testing.T) {
-//	testcases := map[string]struct {
-//		// User authenticated
-//		authUser AuthenticatedUser
-//		// Resource urn that user wants to access
-//		externalID string
-//		path       string
-//		// Error to compare when we expect an error
-//		expectedUser *User
-//		wantError    *Error
-//		// GetUserByExternalID Method Out Arguments
-//		err    error
-//		errGet error
-//	}{
-//		"OKCase": {
-//			authUser: AuthenticatedUser{
-//				Identifier: "123456",
-//				Admin:      true,
-//			},
-//			externalID: "1234",
-//			path:       "/example/",
-//			expectedUser: &User{
-//				ID:         "543210",
-//				ExternalID: "1234",
-//				Path:       "/example/",
-//			},
-//			errGet: &database.Error{
-//				Code:    database.USER_NOT_FOUND,
-//				Message: "User not found",
-//			},
-//		},
-//		"AlreadyExists": {
-//			authUser: AuthenticatedUser{
-//				Identifier: "123456",
-//				Admin:      true,
-//			},
-//			externalID: "1234",
-//			path:       "/example/",
-//			wantError: &Error{
-//				Code:    USER_ALREADY_EXIST,
-//				Message: "User already exists",
-//			},
-//		},
-//		"Nopath": {
-//			wantError: &Error{
-//				Code: INVALID_PARAMETER_ERROR,
-//			},
-//			externalID: "1234",
-//		},
-//		"NoID": {
-//			wantError: &Error{
-//				Code: INVALID_PARAMETER_ERROR,
-//			},
-//			path: "/example/",
-//		},
-//		"NoAuth": {
-//			authUser: AuthenticatedUser{
-//				Identifier: "123456",
-//				Admin:      false,
-//			},
-//			externalID: "1234",
-//			path:       "/example/",
-//			wantError: &Error{
-//				Code: UNAUTHORIZED_RESOURCES_ERROR,
-//			},
-//			errGet: &database.Error{
-//				Code:    database.USER_NOT_FOUND,
-//				Message: "User not found",
-//			},
-//		},
-//	}
-//
-//	testRepo := makeTestRepo()
-//	testAPI := makeTestAPI(testRepo)
-//
-//	for x, testcase := range testcases {
-//
-//		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.errGet
-//		testRepo.ArgsOut[AddUserMethod][0] = testcase.expectedUser
-//		testRepo.ArgsOut[AddUserMethod][1] = testcase.err
-//		user, err := testAPI.AddUser(testcase.authUser, testcase.externalID, testcase.path)
-//		if testcase.wantError != nil {
-//			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-//				t.Fatalf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
-//			}
-//		} else {
-//			if err != nil {
-//				t.Fatalf("Test %v failed: %v", x, err)
-//			} else {
-//				if !reflect.DeepEqual(testcase.expectedUser.ExternalID, user.ExternalID) {
-//					t.Fatalf("Test %v failed. Received different users (wanted:%v / received:%v)", x)
-//				}
-//			}
-//		}
-//	}
-//
-//}
+func TestUpdateUser(t *testing.T) {
+	testcases := map[string]struct {
+		authUser   AuthenticatedUser
+		externalID string
+		newPath    string
+
+		expectedUser *User
+
+		getGroupsByUserIDResult   []Group
+		getPoliciesAttachedResult []Policy
+
+		wantError *Error
+
+		updateUserMethodErr          error
+		getUserByExternalIDMethodErr error
+	}{
+		"OKCase": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			externalID: "1234",
+			newPath:    "/example/",
+			expectedUser: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/example/",
+			},
+		},
+		"DBErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			externalID: "123456",
+			newPath:    "/example/",
+			expectedUser: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/example/",
+			},
+			updateUserMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+		},
+		"InvalidExtID": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			externalID: "*%~#@|",
+			newPath:    "/example/",
+			expectedUser: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/example/",
+			},
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"InvalidPath": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			externalID: "012",
+			newPath:    "/**%%/*123",
+			expectedUser: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/example/",
+			},
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"Nopath": {
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+			externalID: "1234",
+		},
+		"NoID": {
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+			newPath: "/example/",
+		},
+		"NoAuth": {
+			authUser: AuthenticatedUser{
+				Identifier: "1234",
+				Admin:      false,
+			},
+			externalID: "1234",
+			expectedUser: &User{
+				ID:         "543210",
+				ExternalID: "12345",
+				Path:       "/example/",
+			},
+			newPath: "/example/",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+		},
+		"UpdateNotAllowed": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			newPath: "/newpath/",
+			expectedUser: &User{
+				ID:         "000",
+				ExternalID: "000",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "000"),
+			},
+			getGroupsByUserIDResult: []Group{
+				Group{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getPoliciesAttachedResult: []Policy{
+				Policy{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/path/"),
+							},
+						},
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_UPDATE_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/path/"),
+							},
+						},
+						Statement{
+							Effect: "deny",
+							Action: []string{
+								USER_ACTION_UPDATE_USER,
+							},
+							Resources: []string{
+								CreateUrn("", RESOURCE_USER, "/path/", "000"),
+							},
+						},
+					},
+				},
+			},
+			externalID: "000",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+		},
+		"ZeroPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			newPath: "/newpath/",
+			expectedUser: &User{
+				ID:         "000",
+				ExternalID: "000",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "000"),
+			},
+			getGroupsByUserIDResult: []Group{
+				Group{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getPoliciesAttachedResult: []Policy{
+				Policy{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/path/"),
+							},
+						},
+					},
+				},
+			},
+			externalID: "000",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+		},
+		"GetNewPathNotAllowed": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			newPath: "/newpath/",
+			expectedUser: &User{
+				ID:         "000",
+				ExternalID: "000",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "000"),
+			},
+			getGroupsByUserIDResult: []Group{
+				Group{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getPoliciesAttachedResult: []Policy{
+				Policy{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/path/"),
+							},
+						},
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_UPDATE_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/path/"),
+							},
+						},
+						Statement{
+							Effect: "deny",
+							Action: []string{
+								USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								CreateUrn("", RESOURCE_USER, "/newpath/", "000"),
+							},
+						},
+					},
+				},
+			},
+			externalID: "000",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+		},
+		"NewPathNotAllowed": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			newPath: "/newpath/",
+			expectedUser: &User{
+				ID:         "000",
+				ExternalID: "000",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "000"),
+			},
+			getGroupsByUserIDResult: []Group{
+				Group{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getPoliciesAttachedResult: []Policy{
+				Policy{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/path/"),
+							},
+						},
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_UPDATE_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/path/"),
+							},
+						},
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/newpath/"),
+							},
+						},
+						Statement{
+							Effect: "deny",
+							Action: []string{
+								USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								CreateUrn("", RESOURCE_USER, "/newpath/", "000"),
+							},
+						},
+					},
+				},
+			},
+			externalID: "000",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+		},
+	}
+
+	testRepo := makeTestRepo()
+	testAPI := makeTestAPI(testRepo)
+
+	for x, testcase := range testcases {
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.expectedUser
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
+		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
+		testRepo.ArgsOut[UpdateUserMethod][0] = testcase.expectedUser
+		testRepo.ArgsOut[UpdateUserMethod][1] = testcase.updateUserMethodErr
+		user, err := testAPI.UpdateUser(testcase.authUser, testcase.externalID, testcase.newPath)
+		if testcase.wantError != nil {
+			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
+				t.Fatalf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
+			}
+		} else {
+			if err != nil {
+				t.Fatalf("Test %v failed: %v", x, err)
+			} else {
+				if testcase.expectedUser.ExternalID != user.ExternalID {
+					t.Fatalf("Test %v failed. Received different users (wanted:%v / received:%v)", x, testcase.expectedUser.ExternalID, user.ExternalID)
+				}
+			}
+		}
+	}
+
+}

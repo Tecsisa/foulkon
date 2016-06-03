@@ -43,7 +43,7 @@ func makeTestRepo() *TestRepo {
 	}
 	testRepo.ArgsIn[GetUserByExternalIDMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[AddUserMethod] = make([]interface{}, 1)
-	testRepo.ArgsIn[UpdateUserMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[UpdateUserMethod] = make([]interface{}, 3)
 	testRepo.ArgsIn[GetUsersFilteredMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetGroupsByUserIDMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[RemoveUserMethod] = make([]interface{}, 1)
@@ -137,7 +137,18 @@ func (t TestRepo) AddUser(user User) (*User, error) {
 }
 
 func (t TestRepo) UpdateUser(user User, newPath string, newUrn string) (*User, error) {
-	return nil, nil
+	t.ArgsIn[UpdateUserMethod][0] = user
+	t.ArgsIn[UpdateUserMethod][1] = newPath
+	t.ArgsIn[UpdateUserMethod][2] = newUrn
+	var updated *User
+	if t.ArgsOut[UpdateUserMethod][0] != nil {
+		updated = t.ArgsOut[UpdateUserMethod][0].(*User)
+	}
+	var err error
+	if t.ArgsOut[UpdateUserMethod][1] != nil {
+		err = t.ArgsOut[UpdateUserMethod][1].(error)
+	}
+	return updated, err
 }
 
 func (t TestRepo) GetUsersFiltered(pathPrefix string) ([]User, error) {
