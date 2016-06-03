@@ -74,20 +74,14 @@
           },
           "schema": {
             "properties": {
-              "ExternalID": {
-                "$ref": "#/definitions/order1_user/definitions/ExternalID"
-              },
               "Path": {
                 "$ref": "#/definitions/order1_user/definitions/Path"
               }
             },
             "required": [
-              "ExternalID",
               "Path"
             ],
-            "type": [
-              "object"
-            ]
+            "type": "object"
           },
           "title": "Update"
         },
@@ -138,8 +132,8 @@
       "type": "object",
       "links": [
         {
-          "description": "List all users filtered by PathPrefix and Organization.",
-          "href": "/api/v1/users",
+          "description": "List all users filtered by PathPrefix.",
+          "href": "/api/v1/users?PathPrefix={OptionalPath}",
           "method": "GET",
           "rel": "self",
           "http_header": {

@@ -9,7 +9,7 @@ Policy statement
 | ------- | ------- | ------- | ------- |
 | **action** | *array* | CRUD functions | `["iam:*"]` |
 | **effect** | *string* | allow/deny resources | `"allow"` |
-| **resources** | *array* | resources | `["everything"]` |
+| **resources** | *array* | resources | `["urn:everything:*"]` |
 
 
 ## <a name="resource-order2_policy">Policy</a>
@@ -26,7 +26,7 @@ Policy API
 | **Name** | *string* | Name of policy | `"policy1"` |
 | **Org** | *string* | Organization of policy | `"tecsisa"` |
 | **Path** | *string* | Policy's location | `"/example/admin/"` |
-| **Statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:*"],"resources":["everything"]}]` |
+| **Statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:*"],"resources":["urn:everything:*"]}]` |
 | **Urn** | *string* | Uniform Resource Name of policy | `"urn:iws:iam:org1:policy/example/admin/policy1"` |
 
 ### Policy Create
@@ -43,7 +43,7 @@ POST /api/v1/organizations/{organization_id}/policies
 | ------- | ------- | ------- | ------- |
 | **Name** | *string* | Name of policy | `"policy1"` |
 | **Path** | *string* | Policy's location | `"/example/admin/"` |
-| **Statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:*"],"resources":["everything"]}]` |
+| **Statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:*"],"resources":["urn:everything:*"]}]` |
 
 
 
@@ -61,7 +61,7 @@ $ curl -n -X POST /api/v1/organizations/$ORGANIZATION_ID/policies \
         "iam:*"
       ],
       "resources": [
-        "everything"
+        "urn:everything:*"
       ]
     }
   ]
@@ -92,7 +92,7 @@ HTTP/1.1 201 Created
         "iam:*"
       ],
       "resources": [
-        "everything"
+        "urn:everything:*"
       ]
     }
   ]
@@ -113,7 +113,7 @@ PUT /api/v1/organizations/{organization_id}/policies/{policy_name}
 | ------- | ------- | ------- | ------- |
 | **Name** | *string* | Name of policy | `"policy1"` |
 | **Path** | *string* | Policy's location | `"/example/admin/"` |
-| **Statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:*"],"resources":["everything"]}]` |
+| **Statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:*"],"resources":["urn:everything:*"]}]` |
 
 
 
@@ -131,7 +131,7 @@ $ curl -n -X PUT /api/v1/organizations/$ORGANIZATION_ID/policies/$POLICY_NAME \
         "iam:*"
       ],
       "resources": [
-        "everything"
+        "urn:everything:*"
       ]
     }
   ]
@@ -162,7 +162,7 @@ HTTP/1.1 200 OK
         "iam:*"
       ],
       "resources": [
-        "everything"
+        "urn:everything:*"
       ]
     }
   ]
@@ -232,7 +232,7 @@ HTTP/1.1 200 OK
         "iam:*"
       ],
       "resources": [
-        "everything"
+        "urn:everything:*"
       ]
     }
   ]

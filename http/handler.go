@@ -146,7 +146,19 @@ func (a *AuthHandler) RespondOk(r *http.Request, authenticatedUser *api.Authenti
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(b)
 	a.TransactionLog(r, authenticatedUser, http.StatusOK, "Request processed")
+}
 
+func (a *AuthHandler) RespondCreated(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, value interface{}) {
+	b, err := json.Marshal(value)
+	if err != nil {
+		a.RespondInternalServerError(r, authenticatedUser, w)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	w.Write(b)
+	a.TransactionLog(r, authenticatedUser, http.StatusCreated, "Request processed")
 }
 
 func (a *AuthHandler) RespondNoContent(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter) {

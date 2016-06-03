@@ -109,7 +109,7 @@ func (a *AuthHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	// Write user to response
-	a.RespondOk(r, &userID, w, response)
+	a.RespondCreated(r, &userID, w, response)
 }
 
 func (a *AuthHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

@@ -84,7 +84,7 @@ func (a *AuthHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request, 
 	}
 
 	// Write group to response
-	a.RespondOk(r, &userID, w, response)
+	a.RespondCreated(r, &userID, w, response)
 }
 
 func (a *AuthHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

@@ -90,6 +90,8 @@ password = "admin"
 
 [Policy API](doc/api/policy.md)
 
+You can import a [Postman collection](schema/postman.json) file with all API methods.
+
 ## Testing
 
 
