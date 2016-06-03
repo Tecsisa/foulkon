@@ -1067,7 +1067,78 @@ func TestGetRestrictions(t *testing.T) {
 }
 
 func TestGetGroupsByUser(t *testing.T) {
+	testcases := map[string]struct {
+		// User ID to retrieve its groups
+		userID string
+		// Expected Groups
+		expectedGroups []Group
+		// Error to compare when we expect an error
+		wantError *Error
+		// GetGroupsByUserID Method Out Arguments
+		getGroupsByUserIDResult []Group
+		getGroupsByUserIDError  error
+	}{
+		"OktestCase": {
+			userID: "UserID",
+			expectedGroups: []Group{
+				Group{
+					ID: "GROUP-USER-ID1",
+				},
+				Group{
+					ID: "GROUP-USER-ID2",
+				},
+			},
+			getGroupsByUserIDResult: []Group{
+				Group{
+					ID: "GROUP-USER-ID1",
+				},
+				Group{
+					ID: "GROUP-USER-ID2",
+				},
+			},
+		},
+		"ErrortestCase": {
+			userID: "UserID",
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+			getGroupsByUserIDError: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+		},
+	}
 
+	testRepo := makeTestRepo()
+	testAPI := makeTestAPI(testRepo)
+
+	for n, test := range testcases {
+
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = test.getGroupsByUserIDResult
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = test.getGroupsByUserIDError
+
+		groups, err := testAPI.getGroupsByUser(test.userID)
+		if test.wantError != nil {
+			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
+				t.Fatalf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
+					test.wantError.Code, apiError.Code)
+			}
+		} else {
+			if err != nil {
+				t.Fatalf("Test %v failed. Error: %v", n, err)
+			}
+
+			if param := testRepo.ArgsIn[GetGroupsByUserIDMethod][0]; param != test.userID {
+				t.Fatalf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+					n, test.userID, testRepo.ArgsIn[GetGroupsByUserIDMethod][0])
+			}
+
+			// Check result
+			if !reflect.DeepEqual(test.expectedGroups, groups) {
+				t.Fatalf("Test %v failed. Received different restrictions (wanted:%v / received:%v)",
+					n, test.expectedGroups, groups)
+			}
+		}
+	}
 }
 
 func TestGetPoliciesByGroups(t *testing.T) {
