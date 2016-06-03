@@ -170,8 +170,12 @@ func TestAddUser(t *testing.T) {
 		// User authenticated
 		authUser AuthenticatedUser
 		// Resource urn that user wants to access
-		externalID string
-		path       string
+		externalID                string
+		path                      string
+		getUserByExternalIDResult *User
+		getGroupsByUserIDResult   []Group
+		getPoliciesAttachedResult []Policy
+
 		// Error to compare when we expect an error
 		expectedUser *User
 		wantError    *Error
@@ -185,11 +189,11 @@ func TestAddUser(t *testing.T) {
 				Admin:      true,
 			},
 			externalID: "1234",
-			path:       "/tecsisa/",
+			path:       "/example/",
 			expectedUser: &User{
 				ID:         "543210",
 				ExternalID: "1234",
-				Path:       "/tecsisa/",
+				Path:       "/example/",
 			},
 			errGet: &database.Error{
 				Code:    database.USER_NOT_FOUND,
@@ -202,7 +206,7 @@ func TestAddUser(t *testing.T) {
 				Admin:      true,
 			},
 			externalID: "1234",
-			path:       "/tecsisa/",
+			path:       "/example/",
 			wantError: &Error{
 				Code:    USER_ALREADY_EXIST,
 				Message: "User already exists",
@@ -218,7 +222,7 @@ func TestAddUser(t *testing.T) {
 			wantError: &Error{
 				Code: INVALID_PARAMETER_ERROR,
 			},
-			path: "/tecsisa/",
+			path: "/example/",
 		},
 		"NoAuth": {
 			authUser: AuthenticatedUser{
@@ -226,7 +230,7 @@ func TestAddUser(t *testing.T) {
 				Admin:      false,
 			},
 			externalID: "1234",
-			path:       "/tecsisa/",
+			path:       "/example/",
 			wantError: &Error{
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
 			},
@@ -235,14 +239,149 @@ func TestAddUser(t *testing.T) {
 				Message: "User not found",
 			},
 		},
+		"ErrorUnauthorizedResource": {
+			authUser: AuthenticatedUser{
+				Identifier: "000",
+				Admin:      false,
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "000",
+				ExternalID: "000",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "000"),
+			},
+			getGroupsByUserIDResult: []Group{
+				Group{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getPoliciesAttachedResult: []Policy{
+				Policy{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_CREATE_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/test/"),
+							},
+						},
+						Statement{
+							Effect: "deny",
+							Action: []string{
+								USER_ACTION_CREATE_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/test/asd"),
+							},
+						},
+					},
+				},
+			},
+			externalID: "1234",
+			path:       "/test/asd/",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+		},
+		"InvalidExtID": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			externalID: "*%~#@|",
+			path:       "/example/",
+			expectedUser: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/example/",
+			},
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"InvalidPath": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			externalID: "012",
+			path:       "/**%%/*123",
+			expectedUser: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/example/",
+			},
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"DBErr1": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
+			},
+			errGet: &database.Error{
+				Code:    database.USER_NOT_FOUND,
+				Message: "User not found",
+			},
+			externalID: "12",
+			path:       "/example/",
+			err: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+		},
+		"DBErr2": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
+			},
+			errGet: &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: "User not found",
+			},
+			externalID: "12",
+			path:       "/example/",
+			err: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+		},
 	}
 
 	testRepo := makeTestRepo()
 	testAPI := makeTestAPI(testRepo)
 
 	for x, testcase := range testcases {
-
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.errGet
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
+		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
 		testRepo.ArgsOut[AddUserMethod][0] = testcase.expectedUser
 		testRepo.ArgsOut[AddUserMethod][1] = testcase.err
 		user, err := testAPI.AddUser(testcase.authUser, testcase.externalID, testcase.path)
@@ -263,100 +402,100 @@ func TestAddUser(t *testing.T) {
 
 }
 
-func TestUpdateUser(t *testing.T) {
-	testcases := map[string]struct {
-		// User authenticated
-		authUser AuthenticatedUser
-		// Resource urn that user wants to access
-		externalID string
-		path       string
-		// Error to compare when we expect an error
-		expectedUser *User
-		wantError    *Error
-		// GetUserByExternalID Method Out Arguments
-		err    error
-		errGet error
-	}{
-		"OKCase": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			externalID: "1234",
-			path:       "/tecsisa/",
-			expectedUser: &User{
-				ID:         "543210",
-				ExternalID: "1234",
-				Path:       "/tecsisa/",
-			},
-			errGet: &database.Error{
-				Code:    database.USER_NOT_FOUND,
-				Message: "User not found",
-			},
-		},
-		"AlreadyExists": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			externalID: "1234",
-			path:       "/tecsisa/",
-			wantError: &Error{
-				Code:    USER_ALREADY_EXIST,
-				Message: "User already exists",
-			},
-		},
-		"Nopath": {
-			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
-			},
-			externalID: "1234",
-		},
-		"NoID": {
-			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
-			},
-			path: "/tecsisa/",
-		},
-		"NoAuth": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      false,
-			},
-			externalID: "1234",
-			path:       "/tecsisa/",
-			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
-			},
-			errGet: &database.Error{
-				Code:    database.USER_NOT_FOUND,
-				Message: "User not found",
-			},
-		},
-	}
-
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
-	for x, testcase := range testcases {
-
-		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.errGet
-		testRepo.ArgsOut[AddUserMethod][0] = testcase.expectedUser
-		testRepo.ArgsOut[AddUserMethod][1] = testcase.err
-		user, err := testAPI.AddUser(testcase.authUser, testcase.externalID, testcase.path)
-		if testcase.wantError != nil {
-			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
-			}
-		} else {
-			if err != nil {
-				t.Fatalf("Test %v failed: %v", x, err)
-			} else {
-				if !reflect.DeepEqual(testcase.expectedUser.ExternalID, user.ExternalID) {
-					t.Fatalf("Test %v failed. Received different users (wanted:%v / received:%v)", x)
-				}
-			}
-		}
-	}
-
-}
+//func TestUpdateUser(t *testing.T) {
+//	testcases := map[string]struct {
+//		// User authenticated
+//		authUser AuthenticatedUser
+//		// Resource urn that user wants to access
+//		externalID string
+//		path       string
+//		// Error to compare when we expect an error
+//		expectedUser *User
+//		wantError    *Error
+//		// GetUserByExternalID Method Out Arguments
+//		err    error
+//		errGet error
+//	}{
+//		"OKCase": {
+//			authUser: AuthenticatedUser{
+//				Identifier: "123456",
+//				Admin:      true,
+//			},
+//			externalID: "1234",
+//			path:       "/example/",
+//			expectedUser: &User{
+//				ID:         "543210",
+//				ExternalID: "1234",
+//				Path:       "/example/",
+//			},
+//			errGet: &database.Error{
+//				Code:    database.USER_NOT_FOUND,
+//				Message: "User not found",
+//			},
+//		},
+//		"AlreadyExists": {
+//			authUser: AuthenticatedUser{
+//				Identifier: "123456",
+//				Admin:      true,
+//			},
+//			externalID: "1234",
+//			path:       "/example/",
+//			wantError: &Error{
+//				Code:    USER_ALREADY_EXIST,
+//				Message: "User already exists",
+//			},
+//		},
+//		"Nopath": {
+//			wantError: &Error{
+//				Code: INVALID_PARAMETER_ERROR,
+//			},
+//			externalID: "1234",
+//		},
+//		"NoID": {
+//			wantError: &Error{
+//				Code: INVALID_PARAMETER_ERROR,
+//			},
+//			path: "/example/",
+//		},
+//		"NoAuth": {
+//			authUser: AuthenticatedUser{
+//				Identifier: "123456",
+//				Admin:      false,
+//			},
+//			externalID: "1234",
+//			path:       "/example/",
+//			wantError: &Error{
+//				Code: UNAUTHORIZED_RESOURCES_ERROR,
+//			},
+//			errGet: &database.Error{
+//				Code:    database.USER_NOT_FOUND,
+//				Message: "User not found",
+//			},
+//		},
+//	}
+//
+//	testRepo := makeTestRepo()
+//	testAPI := makeTestAPI(testRepo)
+//
+//	for x, testcase := range testcases {
+//
+//		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.errGet
+//		testRepo.ArgsOut[AddUserMethod][0] = testcase.expectedUser
+//		testRepo.ArgsOut[AddUserMethod][1] = testcase.err
+//		user, err := testAPI.AddUser(testcase.authUser, testcase.externalID, testcase.path)
+//		if testcase.wantError != nil {
+//			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
+//				t.Fatalf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
+//			}
+//		} else {
+//			if err != nil {
+//				t.Fatalf("Test %v failed: %v", x, err)
+//			} else {
+//				if !reflect.DeepEqual(testcase.expectedUser.ExternalID, user.ExternalID) {
+//					t.Fatalf("Test %v failed. Received different users (wanted:%v / received:%v)", x)
+//				}
+//			}
+//		}
+//	}
+//
+//}
