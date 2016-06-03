@@ -24,7 +24,7 @@
         },
         "resources": {
           "description": "resources",
-          "example": ["everything"],
+          "example": ["urn:everything:*"],
           "type": "array",
           "items": {
             "type": "string"

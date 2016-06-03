@@ -71,7 +71,6 @@ PUT /api/v1/users/{user_externalID}
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **ExternalID** | *string* | Identifier of user | `"user1"` |
 | **Path** | *string* | User's location | `"/example/admin/"` |
 
 
@@ -81,7 +80,6 @@ PUT /api/v1/users/{user_externalID}
 ```bash
 $ curl -n -X PUT /api/v1/users/$USER_EXTERNALID \
   -d '{
-  "ExternalID": "user1",
   "Path": "/example/admin/"
 }' \
   -H "Content-Type: application/json" \
@@ -177,17 +175,17 @@ HTTP/1.1 200 OK
 
 ###  User List All
 
-List all users filtered by PathPrefix and Organization.
+List all users filtered by PathPrefix.
 
 ```
-GET /api/v1/users
+GET /api/v1/users?PathPrefix={OptionalPath}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/users \
+$ curl -n /api/v1/users?PathPrefix=$OPTIONALPATH \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
