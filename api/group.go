@@ -401,7 +401,7 @@ func (api *AuthAPI) GetGroupByName(authenticatedUser AuthenticatedUser, org stri
 
 func (api *AuthAPI) GetListGroups(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]GroupIdentity, error) {
 	// Validate path
-	if !IsValidPath(pathPrefix) {
+	if len(pathPrefix) > 0 && !IsValidPath(pathPrefix) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", pathPrefix),

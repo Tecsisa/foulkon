@@ -86,7 +86,7 @@ func (api *AuthAPI) GetPolicyByName(authenticatedUser AuthenticatedUser, org str
 
 func (api *AuthAPI) GetListPolicies(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]PolicyIdentity, error) {
 	// Validate path prefix
-	if !IsValidPath(pathPrefix) {
+	if len(pathPrefix) > 0 && !IsValidPath(pathPrefix) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", pathPrefix),
