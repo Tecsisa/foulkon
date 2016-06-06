@@ -25,7 +25,8 @@
 		"ab05aa38-d32f-f2f5-f356-fa981d535229",
 		"ef9226b6-68dc-9190-506b-0c102d87aed5",
 		"4b55c47c-4455-05af-ad12-df7304373d13",
-		"156156f9-471a-8944-62aa-f303f067d3e6"
+		"156156f9-471a-8944-62aa-f303f067d3e6",
+		"0233f899-32e0-39ce-c56d-c2c57a9e6fee"
 	],
 	"folders": [],
 	"timestamp": 1461914057147,
@@ -33,6 +34,26 @@
 	"remoteLink": "",
 	"public": false,
 	"requests": [
+		{
+			"id": "0233f899-32e0-39ce-c56d-c2c57a9e6fee",
+			"headers": "Authorization: Bearer $TOKEN\n",
+			"url": "http://localhost:8000/api/v1/resources?Action=example:Read&Urn=urn:iws:iam::user/example/admin/user1",
+			"pathVariables": {},
+			"preRequestScript": null,
+			"method": "GET",
+			"collectionId": "7b4d8974-06c3-a6e1-dd77-a25820cd01e3",
+			"data": null,
+			"dataMode": "params",
+			"name": "Resource",
+			"description": "Get user effect to do the action over the resource.",
+			"descriptionFormat": "html",
+			"time": 1465205806946,
+			"version": 2,
+			"responses": [],
+			"tests": null,
+			"currentHelper": "normal",
+			"helperAttributes": {}
+		},
 		{
 			"id": "146636ca-65f2-661d-11bd-b7137257c348",
 			"headers": "Authorization: Basic YWRtaW46YWRtaW4=\n",

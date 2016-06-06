@@ -1,0 +1,84 @@
+{
+  "$schema": "",
+  "type": "object",
+  "definitions": {
+    "order1_restriction": {
+      "$schema": "",
+      "title": "Restriction",
+      "description": "",
+      "strictProperties": true,
+      "type": "object",
+      "properties": {
+        "AllowedUrnPrefixes": {
+          "description": "Locations where prefixes are allowed",
+          "example": ["urn:ews:product:instance2:*"],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "AllowedFullUrns": {
+          "description": "Locations where urn's are allowed",
+          "example": ["urn:ews:product:instance1:example/resource_path"],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "DeniedUrnPrefixes": {
+          "description": "Locations where prefixes are denied",
+          "example": ["urn:ews:product2:*"],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "DeniedFullUrns": {
+          "description": "Locations where urn's are denied",
+          "example": ["urn:ews:product:instance2:example2/resource_path"],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "order2_resource": {
+      "$schema": "",
+      "title": "Resource",
+      "description": "Resource API",
+      "strictProperties": true,
+      "type": "object",
+      "links": [
+        {
+          "description": "Get user effect to do the action over the resource. If urn is full only return effect else if is a prefix return restrictions",
+          "href": "/api/v1/resources?Action={Action_example}&Urn={Urn_example}",
+          "method": "GET",
+          "rel": "self",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Get Effect"
+        }
+      ],
+      "properties": {
+        "Effect": {
+          "description": "allow/deny resources",
+          "example": "allow/deny",
+          "type": "string"
+        },
+        "Restrictions": {
+          "$ref": "#/definitions/order1_restriction"
+        }
+      }
+    }
+  },
+  "properties": {
+    "order1_restriction": {
+      "$ref": "#/definitions/order1_restriction"
+    },
+    "order2_resource": {
+      "$ref": "#/definitions/order2_resource"
+    }
+  }
+}
