@@ -359,6 +359,13 @@ func TestGetEffectByUserActionResource(t *testing.T) {
 				Code: database.USER_NOT_FOUND,
 			},
 		},
+		"ErrortestCaseActionPrefix": {
+			action:      "product:DoPrefix*",
+			resourceUrn: "urn:ews:*",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
 		"OktestCaseFullUrnAllow": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -1357,7 +1364,68 @@ func TestCleanRepeatedRestrictions(t *testing.T) {
 }
 
 func TestIsActionContained(t *testing.T) {
+	testcases := map[string]struct {
+		actionRequested  string
+		statementActions []string
+		expectedResponse bool
+	}{
+		"OktestCaseActionContainedWithPrefix": {
+			actionRequested: "action",
+			statementActions: []string{
+				"*",
+				"noAction",
+				"noAction2",
+			},
+			expectedResponse: true,
+		},
+		"OktestCaseActionContainedWithPrefix2": {
+			actionRequested: "action",
+			statementActions: []string{
+				"noac*",
+				"action*",
+				"noaction",
+			},
+			expectedResponse: true,
+		},
+		"OktestCaseActionContainedWithoutPrefix": {
+			actionRequested: "action",
+			statementActions: []string{
+				"example1",
+				"example2",
+				"action",
+			},
+			expectedResponse: true,
+		},
+		"OktestCaseNoActionContainedWithPrefix": {
+			actionRequested: "action",
+			statementActions: []string{
+				"actn*",
+				"actions*",
+				"noaction*",
+			},
+			expectedResponse: false,
+		},
+		"OktestCaseNoActionContainedWithoutPrefix": {
+			actionRequested: "action",
+			statementActions: []string{
+				"actions",
+				"actio",
+				"acti",
+			},
+			expectedResponse: false,
+		},
+	}
 
+	for n, test := range testcases {
+
+		isContained := isActionContained(test.actionRequested, test.statementActions)
+
+		// Check result
+		if test.expectedResponse != isContained {
+			t.Fatalf("Test %v failed. Received different values (wanted:%v / received:%v)",
+				n, test.expectedResponse, isContained)
+		}
+	}
 }
 
 func TestIsResourceContained(t *testing.T) {
