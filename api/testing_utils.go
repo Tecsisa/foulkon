@@ -2,7 +2,6 @@ package api
 
 const (
 	GetUserByExternalIDMethod       = "GetUserByExternalID"
-	GetListUsersMethod              = "GetListUsers"
 	AddUserMethod                   = "AddUser"
 	UpdateUserMethod                = "UpdateUser"
 	GetUsersFilteredMethod          = "GetUsersFiltered"

@@ -1142,7 +1142,104 @@ func TestGetGroupsByUser(t *testing.T) {
 }
 
 func TestGetPoliciesByGroups(t *testing.T) {
+	testcases := map[string]struct {
+		groups           []Group
+		expectedPolicies []Policy
+		// Error to compare when we expect an error
+		wantError *Error
+		// GetPoliciesAttached Method Out Arguments
+		getPoliciesAttachedResult []Policy
+		getPoliciesAttachedError  error
+	}{
+		"OktestCaseEmptyGroups": {
+			groups: []Group{},
+		},
+		"OktestCaseNilGroups": {},
+		"OktestCaseNoPoliciesForGroups": {
+			groups: []Group{
+				Group{
+					ID: "GroupID1",
+				},
+				Group{
+					ID: "GroupID2",
+				},
+			},
+			expectedPolicies:          []Policy{},
+			getPoliciesAttachedResult: nil,
+		},
+		"OktestCase": {
+			groups: []Group{
+				Group{
+					ID: "GroupID1",
+				},
+				Group{
+					ID: "GroupID2",
+				},
+			},
+			expectedPolicies: []Policy{
+				Policy{
+					ID: "PolicyID",
+				},
+				Policy{
+					ID: "PolicyID",
+				},
+			},
+			getPoliciesAttachedResult: []Policy{
+				Policy{
+					ID: "PolicyID",
+				},
+			},
+		},
+		"ErrortestCase": {
+			groups: []Group{
+				Group{
+					ID: "GroupID1",
+				},
+				Group{
+					ID: "GroupID2",
+				},
+			},
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+			getPoliciesAttachedError: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+		},
+	}
 
+	testRepo := makeTestRepo()
+	testAPI := makeTestAPI(testRepo)
+
+	for n, test := range testcases {
+
+		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = test.getPoliciesAttachedResult
+		testRepo.ArgsOut[GetPoliciesAttachedMethod][1] = test.getPoliciesAttachedError
+
+		policies, err := testAPI.getPoliciesByGroups(test.groups)
+		if test.wantError != nil {
+			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
+				t.Fatalf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
+					test.wantError.Code, apiError.Code)
+			}
+		} else {
+			if err != nil {
+				t.Fatalf("Test %v failed. Error: %v", n, err)
+			}
+
+			if param := testRepo.ArgsIn[GetPoliciesAttachedMethod][0]; len(test.groups) > 0 &&
+				param != test.groups[len(test.groups)-1].ID {
+				t.Fatalf("Test %v failed. Received different group identifiers (wanted:%v / received:%v)",
+					n, test.groups[len(test.groups)-1].ID, testRepo.ArgsIn[GetPoliciesAttachedMethod][0])
+			}
+
+			// Check result
+			if !reflect.DeepEqual(test.expectedPolicies, policies) {
+				t.Fatalf("Test %v failed. Received different policies (wanted:%v / received:%v)",
+					n, test.expectedPolicies, policies)
+			}
+		}
+	}
 }
 
 func TestGetStatementsByRequestedAction(t *testing.T) {

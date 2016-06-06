@@ -245,7 +245,7 @@ func (api *AuthAPI) getPoliciesByGroups(groups []Group) ([]Policy, error) {
 		return nil, nil
 	}
 
-	// Create a empty slice
+	// Create an empty slice
 	policies := []Policy{}
 
 	for _, group := range groups {
