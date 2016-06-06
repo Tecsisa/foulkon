@@ -1429,11 +1429,65 @@ func TestIsActionContained(t *testing.T) {
 }
 
 func TestIsResourceContained(t *testing.T) {
+	testcases := map[string]struct {
+		resource         string
+		resourcePrefix   string
+		expectedResponse bool
+	}{
+		"OktestCaseContainedWithRoot": {
+			resource:         "resource",
+			resourcePrefix:   "*",
+			expectedResponse: true,
+		},
+		"OktestCaseContainedWithPrefix": {
+			resource:         "resource",
+			resourcePrefix:   "res*",
+			expectedResponse: true,
+		},
+		"OktestCaseNoContainedWithPrefix": {
+			resource:         "resource",
+			resourcePrefix:   "nores*",
+			expectedResponse: false,
+		},
+	}
 
+	for n, test := range testcases {
+
+		isContained := isResourceContained(test.resource, test.resourcePrefix)
+
+		// Check result
+		if test.expectedResponse != isContained {
+			t.Fatalf("Test %v failed. Received different values (wanted:%v / received:%v)",
+				n, test.expectedResponse, isContained)
+		}
+	}
 }
 
 func TestIsFullUrn(t *testing.T) {
+	testcases := map[string]struct {
+		resource         string
+		expectedResponse bool
+	}{
+		"OktestCaseIsFullUrn": {
+			resource:         "resource",
+			expectedResponse: true,
+		},
+		"OktestCaseIsNotFullUrn": {
+			resource:         "resource*",
+			expectedResponse: false,
+		},
+	}
 
+	for n, test := range testcases {
+
+		isContained := isFullUrn(test.resource)
+
+		// Check result
+		if test.expectedResponse != isContained {
+			t.Fatalf("Test %v failed. Received different values (wanted:%v / received:%v)",
+				n, test.expectedResponse, isContained)
+		}
+	}
 }
 
 func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
