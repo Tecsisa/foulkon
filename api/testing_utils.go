@@ -151,7 +151,16 @@ func (t TestRepo) UpdateUser(user User, newPath string, newUrn string) (*User, e
 }
 
 func (t TestRepo) GetUsersFiltered(pathPrefix string) ([]User, error) {
-	return nil, nil
+	t.ArgsIn[GetUsersFilteredMethod][0] = pathPrefix
+	var users []User
+	if t.ArgsOut[GetUsersFilteredMethod][0] != nil {
+		users = t.ArgsOut[GetUsersFilteredMethod][0].([]User)
+	}
+	var err error
+	if t.ArgsOut[GetUsersFilteredMethod][1] != nil {
+		err = t.ArgsOut[GetUsersFilteredMethod][1].(error)
+	}
+	return users, err
 }
 
 func (t TestRepo) GetGroupsByUserID(id string) ([]Group, error) {
