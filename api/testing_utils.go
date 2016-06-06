@@ -70,7 +70,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[UpdateUserMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[GetUsersFilteredMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[GetGroupsByUserIDMethod] = make([]interface{}, 2)
-	testRepo.ArgsOut[RemoveUserMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[RemoveUserMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[GetGroupByNameMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[IsMemberOfGroupMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[GetGroupMembersMethod] = make([]interface{}, 2)
@@ -168,7 +168,12 @@ func (t TestRepo) GetGroupsByUserID(id string) ([]Group, error) {
 }
 
 func (t TestRepo) RemoveUser(id string) error {
-	return nil
+	t.ArgsIn[RemoveUserMethod][0] = id
+	var err error
+	if t.ArgsOut[RemoveUserMethod][0] != nil {
+		err = t.ArgsOut[RemoveUserMethod][0].(error)
+	}
+	return err
 }
 
 //////////////////
