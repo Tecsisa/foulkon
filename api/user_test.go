@@ -979,3 +979,99 @@ func TestRemoveUser(t *testing.T) {
 		}
 	}
 }
+
+func TestGetListUsers(t *testing.T) {
+	testcases := map[string]struct {
+		authUser   AuthenticatedUser
+		pathPrefix string
+
+		GetUsersFilteredMethodResult []User
+		getGroupsByUserIDResult      []Group
+		getPoliciesAttachedResult    []Policy
+		getUserByExternalIDResult    *User
+
+		wantError *Error
+
+		GetUsersFilteredMethodErr    error
+		getUserByExternalIDMethodErr error
+	}{
+		"OKCase": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			pathPrefix: "/example/",
+			GetUsersFilteredMethodResult: []User{
+				User{
+					ID:         "123",
+					ExternalID: "123",
+					Path:       "/example/test/",
+				},
+				User{
+					ID:         "321",
+					ExternalID: "321",
+					Path:       "/example/test2/",
+				},
+			},
+		},
+		"GetUserExtDBErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			pathPrefix: "/example/",
+			getUserByExternalIDMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+		},
+		"InvalidPath": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			pathPrefix: "/^*$**~#!/",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"FilterUsersDBErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			pathPrefix: "/example/",
+			GetUsersFilteredMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+		},
+	}
+
+	testRepo := makeTestRepo()
+	testAPI := makeTestAPI(testRepo)
+
+	for x, testcase := range testcases {
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
+		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
+		testRepo.ArgsOut[GetUsersFilteredMethod][0] = testcase.GetUsersFilteredMethodResult
+		testRepo.ArgsOut[GetUsersFilteredMethod][1] = testcase.GetUsersFilteredMethodErr
+		users, err := testAPI.GetListUsers(testcase.authUser, testcase.pathPrefix)
+		if testcase.wantError != nil {
+			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
+				t.Fatalf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
+			}
+		} else {
+			if reflect.DeepEqual(testcase.GetUsersFilteredMethodResult, users) {
+				t.Fatalf("Test %v failed. Received different users (wanted:%v / received:%v)", x, testcase.GetUsersFilteredMethodResult, users)
+			}
+		}
+	}
+
+}
