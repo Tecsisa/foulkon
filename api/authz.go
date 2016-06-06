@@ -110,6 +110,12 @@ func (api *AuthAPI) GetEffectByUserActionResource(user AuthenticatedUser, action
 			Message: apiError.Message,
 		}
 	}
+	if strings.Contains(action, "*") {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter action %v. Action parameter can't be a prefix", action),
+		}
+	}
 
 	// Retrieve restrictions
 	effectRestriction := &EffectRestriction{}
