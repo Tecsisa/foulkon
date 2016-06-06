@@ -1498,7 +1498,7 @@ func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
 	}{
 		"OktestCaseEmptyStatement": {
 			statements: []Statement{},
-			resource:   "resource",
+			resource:   "resource*",
 			expectedRestrictions: &Restrictions{
 				AllowedUrnPrefixes: []string{},
 				AllowedFullUrns:    []string{},
@@ -1608,7 +1608,114 @@ func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
 }
 
 func TestGetRestrictionsWhenResourceRequestedIsFullUrn(t *testing.T) {
+	testcases := map[string]struct {
+		statements           []Statement
+		resource             string
+		expectedRestrictions *Restrictions
+	}{
+		"OktestCaseEmptyStatement": {
+			statements: []Statement{},
+			resource:   "resource",
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{},
+			},
+		},
+		"OktestCaseIsNotFullUrn": {
+			resource: "resource",
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{},
+			},
+		},
+		"OktestCaseStatementResourcePrefix": {
+			statements: []Statement{
+				Statement{
+					Effect: "allow",
+					Action: []string{
+						USER_ACTION_GET_USER, USER_ACTION_CREATE_USER,
+					},
+					Resources: []string{
+						GetUrnPrefix("", RESOURCE_USER, "/path/"),
+						GetUrnPrefix("", RESOURCE_USER, "/"),
+					},
+				},
+				Statement{
+					Effect: "deny",
+					Action: []string{
+						USER_ACTION_DELETE_USER,
+					},
+					Resources: []string{
+						GetUrnPrefix("", RESOURCE_USER, "/path/"),
+						GetUrnPrefix("", RESOURCE_USER, "/"),
+					},
+				},
+			},
+			resource: CreateUrn("", RESOURCE_USER, "/path/", "user"),
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{
+					GetUrnPrefix("", RESOURCE_USER, "/path/"),
+					GetUrnPrefix("", RESOURCE_USER, "/"),
+				},
+				AllowedFullUrns: []string{},
+				DeniedUrnPrefixes: []string{
+					GetUrnPrefix("", RESOURCE_USER, "/path/"),
+					GetUrnPrefix("", RESOURCE_USER, "/"),
+				},
+				DeniedFullUrns: []string{},
+			},
+		},
+		"OktestCaseStatementResourceIsFull": {
+			statements: []Statement{
+				Statement{
+					Effect: "allow",
+					Action: []string{
+						USER_ACTION_GET_USER, USER_ACTION_CREATE_USER,
+					},
+					Resources: []string{
+						CreateUrn("", RESOURCE_USER, "/path/", "user"),
+						CreateUrn("", RESOURCE_USER, "/path/", "user2"),
+					},
+				},
+				Statement{
+					Effect: "deny",
+					Action: []string{
+						USER_ACTION_DELETE_USER,
+					},
+					Resources: []string{
+						CreateUrn("", RESOURCE_USER, "/path/", "user"),
+						CreateUrn("", RESOURCE_USER, "/path/", "user2"),
+					},
+				},
+			},
+			resource: CreateUrn("", RESOURCE_USER, "/path/", "user"),
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns: []string{
+					CreateUrn("", RESOURCE_USER, "/path/", "user"),
+				},
+				DeniedUrnPrefixes: []string{},
+				DeniedFullUrns: []string{
+					CreateUrn("", RESOURCE_USER, "/path/", "user"),
+				},
+			},
+		},
+	}
 
+	for n, test := range testcases {
+
+		restrictions := getRestrictionsWhenResourceRequestedIsFullUrn(test.statements, test.resource)
+
+		// Check result
+		if !reflect.DeepEqual(test.expectedRestrictions, restrictions) {
+			t.Fatalf("Test %v failed. Received different restrictions (wanted:%v / received:%v)",
+				n, test.expectedRestrictions, restrictions)
+		}
+	}
 }
 
 func TestFilterResources(t *testing.T) {
