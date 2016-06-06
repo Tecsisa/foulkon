@@ -382,13 +382,14 @@ func getRestrictionsWhenResourceRequestedIsPrefix(statements []Statement, resour
 								authResources.DeniedUrnPrefixes = append(authResources.DeniedUrnPrefixes, statementResource)
 							}
 						}
-					case resource == statementResource:
-						if statement.Effect == "allow" {
-							authResources.AllowedUrnPrefixes = append(authResources.AllowedUrnPrefixes, statementResource)
-						} else {
-							authResources.DeniedUrnPrefixes = append(authResources.DeniedUrnPrefixes, statementResource)
+					default:
+						if resource == statementResource {
+							if statement.Effect == "allow" {
+								authResources.AllowedUrnPrefixes = append(authResources.AllowedUrnPrefixes, statementResource)
+							} else {
+								authResources.DeniedUrnPrefixes = append(authResources.DeniedUrnPrefixes, statementResource)
+							}
 						}
-					default: //Do nothing
 					}
 				}
 
