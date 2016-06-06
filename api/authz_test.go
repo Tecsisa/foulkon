@@ -1243,7 +1243,113 @@ func TestGetPoliciesByGroups(t *testing.T) {
 }
 
 func TestGetStatementsByRequestedAction(t *testing.T) {
+	testcases := map[string]struct {
+		// Policies to retrieve its statements according to an action
+		policies []Policy
+		action   string
+		// Expected data
+		expectedStatements []Statement
+	}{
+		"OktestCaseEmptyPolicies": {
+			policies: []Policy{},
+			action:   "action",
+		},
+		"OktestCaseNilPolicies": {
+			action: "action",
+		},
+		"OktestCaseFilteredStatements": {
+			policies: []Policy{
+				Policy{
+					ID: "PolicyID1Contained",
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								"act*", "noaction",
+							},
+							Resources: []string{
+								CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupAllow"),
+								CreateUrn("example", RESOURCE_GROUP, "/path2/", "groupAllow"),
+								GetUrnPrefix("example", RESOURCE_GROUP, "/path1/"),
+								GetUrnPrefix("example", RESOURCE_GROUP, "/path2/"),
+							},
+						},
+						Statement{
+							Effect: "deny",
+							Action: []string{
+								"noaction", "action",
+							},
+							Resources: []string{
+								CreateUrn("example", RESOURCE_POLICY, "/pathdeny/", "policydeny"),
+							},
+						},
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								"noaction",
+							},
+							Resources: []string{
+								CreateUrn("example", RESOURCE_POLICY, "/nocontained/", "policy"),
+							},
+						},
+					},
+				},
+				Policy{
+					ID: "PolicyID2NoContained",
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								"noact*",
+							},
+							Resources: []string{
+								CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupAllow"),
+								CreateUrn("example", RESOURCE_GROUP, "/path2/", "groupAllow"),
+								GetUrnPrefix("example", RESOURCE_GROUP, "/path1/"),
+								GetUrnPrefix("example", RESOURCE_GROUP, "/path2/"),
+							},
+						},
+					},
+				},
+			},
+			action: "action",
+			expectedStatements: []Statement{
+				Statement{
+					Effect: "allow",
+					Action: []string{
+						"act*", "noaction",
+					},
+					Resources: []string{
+						CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupAllow"),
+						CreateUrn("example", RESOURCE_GROUP, "/path2/", "groupAllow"),
+						GetUrnPrefix("example", RESOURCE_GROUP, "/path1/"),
+						GetUrnPrefix("example", RESOURCE_GROUP, "/path2/"),
+					},
+				},
+				Statement{
+					Effect: "deny",
+					Action: []string{
+						"noaction", "action",
+					},
+					Resources: []string{
+						CreateUrn("example", RESOURCE_POLICY, "/pathdeny/", "policydeny"),
+					},
+				},
+			},
+		},
+	}
 
+	for n, test := range testcases {
+
+		statements := getStatementsByRequestedAction(test.policies, test.action)
+
+		// Check result
+		if !reflect.DeepEqual(test.expectedStatements, statements) {
+			t.Fatalf("Test %v failed. Received different statements (wanted:%v / received:%v)",
+				n, test.expectedStatements, statements)
+		}
+
+	}
 }
 
 func TestCleanRepeatedRestrictions(t *testing.T) {
