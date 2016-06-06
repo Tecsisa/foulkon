@@ -1075,3 +1075,232 @@ func TestGetListUsers(t *testing.T) {
 	}
 
 }
+
+func TestGetGroupsByUserID(t *testing.T) {
+	testcases := map[string]struct {
+		authUser   AuthenticatedUser
+		externalID string
+
+		expectedUser   *User
+		expectedGroups []Group
+
+		getGroupsByUserIDResult   []Group
+		getPoliciesAttachedResult []Policy
+
+		wantError *Error
+
+		getGroupsByUserIDErr         error
+		getUserByExternalIDMethodErr error
+	}{
+		"OKCase": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			externalID: "1234",
+			expectedUser: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/example/",
+			},
+			getGroupsByUserIDResult: []Group{
+				Group{
+					ID:   "GROUP1",
+					Name: "groupUser1",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser1"),
+				},
+				Group{
+					ID:   "GROUP2",
+					Name: "groupUser2",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser1"),
+				},
+			},
+		},
+		"AuthUserWithoutPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			externalID: "1234",
+			expectedUser: &User{
+				ID:         "543210",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+		},
+		"getGroupsDBErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			externalID: "1234",
+			expectedUser: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/example/",
+			},
+			getGroupsByUserIDErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+		},
+		"GetUserExtIDDBErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			externalID: "1234",
+			getUserByExternalIDMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+			getGroupsByUserIDResult: []Group{
+				Group{
+					ID:   "GROUP1",
+					Name: "groupUser1",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser1"),
+				},
+				Group{
+					ID:   "GROUP2",
+					Name: "groupUser2",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser1"),
+				},
+			},
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+		},
+		"DenyResourceErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "1234",
+				Admin:      false,
+			},
+			externalID: "1234",
+			expectedUser: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			getGroupsByUserIDResult: []Group{
+				Group{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/1/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getPoliciesAttachedResult: []Policy{
+				Policy{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+							},
+						},
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_LIST_GROUPS_FOR_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/path/"),
+							},
+						},
+						Statement{
+							Effect: "deny",
+							Action: []string{
+								USER_ACTION_LIST_GROUPS_FOR_USER,
+							},
+							Resources: []string{
+								CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+							},
+						},
+					},
+				},
+			},
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+		},
+		"UnauthorizedListGroupsErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "1234",
+				Admin:      false,
+			},
+			externalID: "12345",
+			expectedUser: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			getGroupsByUserIDResult: []Group{
+				Group{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/1/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getPoliciesAttachedResult: []Policy{
+				Policy{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/path/"),
+							},
+						},
+					},
+				},
+			},
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+		},
+	}
+
+	testRepo := makeTestRepo()
+	testAPI := makeTestAPI(testRepo)
+
+	for x, testcase := range testcases {
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.expectedUser
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = testcase.getGroupsByUserIDErr
+		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
+		groups, err := testAPI.GetGroupsByUserId(testcase.authUser, testcase.externalID)
+		if testcase.wantError != nil {
+			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
+				t.Fatalf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
+			}
+		} else {
+			if reflect.DeepEqual(groups, testcase.expectedGroups) {
+				t.Fatalf("Test %v failed. Received different groups", x)
+			}
+		}
+	}
+
+}
