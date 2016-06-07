@@ -123,7 +123,7 @@ func (api *AuthAPI) GetListPolicies(authenticatedUser AuthenticatedUser, org str
 	return policyReferenceIds, nil
 }
 
-func (api *AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, path string, org string, statements *[]Statement) (*Policy, error) {
+func (api *AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, path string, org string, statements []Statement) (*Policy, error) {
 	// Validate fields
 	if !IsValidName(name) {
 		return nil, &Error{
@@ -139,7 +139,7 @@ func (api *AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, 
 
 	}
 
-	err := IsValidStatement(statements)
+	err := IsValidStatement(&statements)
 	if err != nil {
 		apiError := err.(*Error)
 		return nil, &Error{
@@ -149,7 +149,7 @@ func (api *AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, 
 
 	}
 
-	policy := createPolicy(name, path, org, statements)
+	policy := createPolicy(name, path, org, &statements)
 
 	// Check restrictions
 	policiesFiltered, err := api.GetPoliciesAuthorized(authenticatedUser, policy.Urn, POLICY_ACTION_CREATE_POLICY, []Policy{policy})
@@ -238,7 +238,7 @@ func (api *AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string
 	}
 
 	// Call repo to retrieve the policy
-	policyDB, err := api.PolicyRepo.GetPolicyByName(org, policyName)
+	policyDB, err := api.GetPolicyByName(authenticatedUser, org, policyName)
 	if err != nil {
 		return nil, err
 	}
@@ -259,9 +259,9 @@ func (api *AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string
 	}
 
 	// Check if policy with newName exist
-	_, err = api.GetPolicyByName(authenticatedUser, org, newName)
+	targetPolicy, err := api.GetPolicyByName(authenticatedUser, org, newName)
 
-	if err == nil {
+	if err == nil && targetPolicy.ID != policyDB.ID {
 		// Policy already exists
 		return nil, &Error{
 			Code:    POLICY_ALREADY_EXIST,
@@ -270,16 +270,13 @@ func (api *AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string
 	}
 
 	if err != nil {
-		apiError := err.(*Error)
-		switch apiError.Code {
-		case UNAUTHORIZED_RESOURCES_ERROR, UNKNOWN_API_ERROR:
+		if apiError := err.(*Error); apiError.Code == UNAUTHORIZED_RESOURCES_ERROR || apiError.Code == UNKNOWN_API_ERROR {
 			return nil, err
-		default: //Do nothing
 		}
 	}
 
 	// Get Policy Updated
-	policyToUpdate := createPolicy(org, newName, newPath, &newStatements)
+	policyToUpdate := createPolicy(newName, newPath, org, &newStatements)
 
 	// Check restrictions
 	policiesFiltered, err = api.GetPoliciesAuthorized(authenticatedUser, policyToUpdate.Urn, POLICY_ACTION_UPDATE_POLICY, []Policy{policyToUpdate})

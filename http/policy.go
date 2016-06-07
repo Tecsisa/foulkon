@@ -96,7 +96,7 @@ func (a *AuthHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Request,
 	}
 
 	// Store this policy
-	storedPolicy, err := a.core.AuthApi.AddPolicy(a.core.Authenticator.RetrieveUserID(*r), request.Name, request.Path, org, &request.Statements)
+	storedPolicy, err := a.core.AuthApi.AddPolicy(a.core.Authenticator.RetrieveUserID(*r), request.Name, request.Path, org, request.Statements)
 
 	// Error handling
 	if err != nil {
