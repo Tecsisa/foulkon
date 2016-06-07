@@ -104,7 +104,7 @@ func NewCore(config *toml.TomlTree) (*Core, error) {
 	case "oidc":
 		issuer := getMandatoryValue(config, "authenticator.oidc.issuer")
 		clientsids := getMandatoryValue(config, "authenticator.oidc.clientids")
-		authOidcConnector, err := auth.InitOIDCConnector(issuer, strings.Split(clientsids, ";"))
+		authOidcConnector, err := auth.InitOIDCConnector(logger, issuer, strings.Split(clientsids, ";"))
 		if err != nil {
 			logger.Error(err)
 			return nil, err
