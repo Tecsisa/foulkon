@@ -1787,5 +1787,121 @@ func TestFilterResources(t *testing.T) {
 }
 
 func TestIsAllowedResource(t *testing.T) {
+	testcases := map[string]struct {
+		resource     Resource
+		restrictions Restrictions
+		expectedData bool
+	}{
+		"OktestCaseNoRestrictions": {
+			resource: User{
+				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user"),
+			},
+			restrictions: Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{},
+			},
+			expectedData: false,
+		},
+		"OktestCaseDeniedByUrnPrefix": {
+			resource: User{
+				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user"),
+			},
+			restrictions: Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes: []string{
+					GetUrnPrefix("", RESOURCE_USER, "/path"),
+				},
+				DeniedFullUrns: []string{},
+			},
+			expectedData: false,
+		},
+		"OktestCaseDeniedByFullUrn": {
+			resource: User{
+				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user"),
+			},
+			restrictions: Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns: []string{
+					CreateUrn("", RESOURCE_USER, "/path/", "user"),
+				},
+			},
+			expectedData: false,
+		},
+		"OktestCaseAllowedByUrnPrefix": {
+			resource: User{
+				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user"),
+			},
+			restrictions: Restrictions{
+				AllowedUrnPrefixes: []string{
+					GetUrnPrefix("", RESOURCE_USER, "/path"),
+				},
+				AllowedFullUrns:   []string{},
+				DeniedUrnPrefixes: []string{},
+				DeniedFullUrns:    []string{},
+			},
+			expectedData: true,
+		},
+		"OktestCaseAllowedByFullUrn": {
+			resource: User{
+				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user"),
+			},
+			restrictions: Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns: []string{
+					CreateUrn("", RESOURCE_USER, "/path/", "user"),
+				},
+				DeniedUrnPrefixes: []string{},
+				DeniedFullUrns:    []string{},
+			},
+			expectedData: true,
+		},
+		"OktestCaseConflictDenyAndAllow": {
+			resource: User{
+				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user"),
+			},
+			restrictions: Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns: []string{
+					CreateUrn("", RESOURCE_USER, "/path/", "user"),
+				},
+				DeniedUrnPrefixes: []string{
+					GetUrnPrefix("", RESOURCE_USER, "/path"),
+				},
+				DeniedFullUrns: []string{},
+			},
+			expectedData: false,
+		},
+		"OktestCaseAllowedWithPrefixAndFull": {
+			resource: User{
+				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user"),
+			},
+			restrictions: Restrictions{
+				AllowedUrnPrefixes: []string{
+					GetUrnPrefix("", RESOURCE_USER, "/path"),
+				},
+				AllowedFullUrns: []string{
+					CreateUrn("", RESOURCE_USER, "/path/", "user"),
+				},
+				DeniedUrnPrefixes: []string{},
+				DeniedFullUrns:    []string{},
+			},
+			expectedData: true,
+		},
+	}
 
+	for n, test := range testcases {
+
+		response := isAllowedResource(test.resource, test.restrictions)
+
+		// Check result
+		if !reflect.DeepEqual(test.expectedData, response) {
+			t.Fatalf("Test %v failed. Received different responses (wanted:%v / received:%v)",
+				n, test.expectedData, response)
+		}
+	}
 }
