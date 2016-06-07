@@ -258,7 +258,16 @@ func (t TestRepo) GetPolicyByName(org string, name string) (*Policy, error) {
 }
 
 func (t TestRepo) AddPolicy(policy Policy) (*Policy, error) {
-	return nil, nil
+	t.ArgsIn[AddPolicyMethod][0] = policy
+	var created *Policy
+	if t.ArgsOut[AddPolicyMethod][0] != nil {
+		created = t.ArgsOut[AddPolicyMethod][0].(*Policy)
+	}
+	var err error
+	if t.ArgsOut[AddPolicyMethod][1] != nil {
+		err = t.ArgsOut[AddPolicyMethod][1].(error)
+	}
+	return created, err
 }
 
 func (t TestRepo) UpdatePolicy(policy Policy, newName string, newPath string, newUrn string, newStatements []Statement) (*Policy, error) {
