@@ -152,7 +152,7 @@ func (api *AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, 
 	policy := createPolicy(name, path, org, statements)
 
 	// Check restrictions
-	policiesFiltered, err := api.GetPoliciesAuthorized(authenticatedUser, policy.Urn, USER_ACTION_CREATE_USER, []Policy{policy})
+	policiesFiltered, err := api.GetPoliciesAuthorized(authenticatedUser, policy.Urn, POLICY_ACTION_CREATE_POLICY, []Policy{policy})
 	if err != nil {
 		return nil, err
 	}
