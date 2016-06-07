@@ -59,12 +59,13 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[UpdateGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[AttachPolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[DetachPolicyMethod] = make([]interface{}, 1)
-	testRepo.ArgsIn[GetPolicyByNameMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[GetPolicyByNameMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[AddPolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[UpdatePolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[RemovePolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetPoliciesFilteredMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetAllPolicyGroupRelationMethod] = make([]interface{}, 1)
+
 	testRepo.ArgsOut[GetUserByExternalIDMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AddUserMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[UpdateUserMethod] = make([]interface{}, 2)
@@ -243,7 +244,17 @@ func (t TestRepo) DetachPolicy(groupID string, policyID string) error {
 //////////////////
 
 func (t TestRepo) GetPolicyByName(org string, name string) (*Policy, error) {
-	return nil, nil
+	t.ArgsIn[GetPolicyByNameMethod][0] = org
+	t.ArgsIn[GetPolicyByNameMethod][1] = name
+	var policy *Policy
+	if t.ArgsOut[GetPolicyByNameMethod][0] != nil {
+		policy = t.ArgsOut[GetPolicyByNameMethod][0].(*Policy)
+	}
+	var err error
+	if t.ArgsOut[GetPolicyByNameMethod][1] != nil {
+		err = t.ArgsOut[GetPolicyByNameMethod][1].(error)
+	}
+	return policy, err
 }
 
 func (t TestRepo) AddPolicy(policy Policy) (*Policy, error) {
