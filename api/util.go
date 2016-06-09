@@ -111,7 +111,7 @@ func IsValidAction(actions []string) error {
 	return nil
 }
 
-func IsValidResource(resources []string) error {
+func IsValidResources(resources []string) error {
 	//err generator helper
 	errFunc := func(resource string) error {
 		return &Error{
@@ -196,7 +196,7 @@ func IsValidStatement(statements *[]Statement) error {
 		if err != nil {
 			return err
 		}
-		err = IsValidResource(statement.Resources)
+		err = IsValidResources(statement.Resources)
 		if err != nil {
 			return err
 		}

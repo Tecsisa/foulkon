@@ -92,7 +92,7 @@ func (api *AuthAPI) GetPoliciesAuthorized(user AuthenticatedUser, resourceUrn st
 }
 
 // Get user effect to do the action over the resource
-func (api *AuthAPI) GetEffectByUserActionResource(user AuthenticatedUser, action string, resourceUrn string) (*EffectRestriction, error) {
+func (api *AuthAPI) GetAuthorizedExternalResources(user AuthenticatedUser, action string, resources []string) ([]string, error) {
 	// Validate parameters
 	if err := IsValidAction([]string{action}); err != nil {
 		// Transform to API error
@@ -102,13 +102,29 @@ func (api *AuthAPI) GetEffectByUserActionResource(user AuthenticatedUser, action
 			Message: apiError.Message,
 		}
 	}
-	if err := IsValidResource([]string{resourceUrn}); err != nil {
-		// Transform to API error
-		apiError := err.(*Error)
+	if len(resources) < 1 {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: apiError.Message,
+			Message: "Invalid parameter Resources %v. Resources can't be empty",
 		}
+	}
+	externalResources := []Resource{}
+	for _, res := range resources {
+		if !isFullUrn(res) {
+			return nil, &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: fmt.Sprintf("Invalid parameter resource %v. Urn prefixes are not allowed here", res),
+			}
+		}
+		if err := IsValidResources([]string{res}); err != nil {
+			// Transform to API error
+			apiError := err.(*Error)
+			return nil, &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: apiError.Message,
+			}
+		}
+		externalResources = append(externalResources, ExternalResource{Urn: res})
 	}
 	if strings.Contains(action, "*") {
 		return nil, &Error{
@@ -117,25 +133,17 @@ func (api *AuthAPI) GetEffectByUserActionResource(user AuthenticatedUser, action
 		}
 	}
 
-	// Retrieve restrictions
-	effectRestriction := &EffectRestriction{}
-	restrictions, err := api.getRestrictions(user.Identifier, action, resourceUrn)
+	allowedUrns, err := api.getAuthorizedResources(user, "urn:*", action, externalResources)
 	if err != nil {
 		return nil, err
 	}
 
-	// Return depending on if resource is a prefix or not
-	if isFullUrn(resourceUrn) {
-		if (isAllowedResource(ExternalResource{Urn: resourceUrn}, *restrictions)) {
-			effectRestriction.Effect = "allow"
-		} else {
-			effectRestriction.Effect = "deny"
-		}
-	} else {
-		effectRestriction.Restrictions = restrictions
+	response := []string{}
+	for _, res := range allowedUrns {
+		response = append(response, res.GetUrn())
 	}
 
-	return effectRestriction, nil
+	return response, nil
 }
 
 // Private Helper Methods
