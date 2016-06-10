@@ -314,16 +314,16 @@ func TestGetPoliciesAuthorized(t *testing.T) {
 	}
 }
 
-func TestGetEffectByUserActionResource(t *testing.T) {
+func TestGetAuthorizedExternalResources(t *testing.T) {
 	testcases := map[string]struct {
 		// Authenticated user
 		authUser AuthenticatedUser
-		// Resource urn that user wants to access
-		resourceUrn string
+		// Resource urns that user wants to access
+		resourceUrns []string
 		// Action to do
 		action string
-		// Expected restrictions for the resource and action requested
-		expectedEffectRestriction *EffectRestriction
+		// Expected allowed resources
+		expectedResources []string
 		// Error to compare when we expect an error
 		wantError *Error
 		// GetUserByExternalID Method Out Arguments
@@ -343,15 +343,34 @@ func TestGetEffectByUserActionResource(t *testing.T) {
 			},
 		},
 		"ErrortestCaseInvalidResource": {
-			action:      "product:DoSomething",
-			resourceUrn: "urn:invalid/resource:resource",
+			action: "product:DoSomething",
+			resourceUrns: []string{
+				"urn:invalid/resource:resource",
+			},
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrortestCaseInvalidResourceWithPrefix": {
+			action: "product:DoSomething",
+			resourceUrns: []string{
+				"urn:*",
+			},
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrortestCaseEmptyResources": {
+			action: "product:DoSomething",
 			wantError: &Error{
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
 		"ErrortestCaseGetRestrictions": {
-			action:      "product:DoSomething",
-			resourceUrn: "urn:ews:*",
+			action: "product:DoSomething",
+			resourceUrns: []string{
+				CreateUrn("example", RESOURCE_POLICY, "/path/", "policy1"),
+			},
 			wantError: &Error{
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
 			},
@@ -360,8 +379,10 @@ func TestGetEffectByUserActionResource(t *testing.T) {
 			},
 		},
 		"ErrortestCaseActionPrefix": {
-			action:      "product:DoPrefix*",
-			resourceUrn: "urn:ews:*",
+			action: "product:DoPrefix*",
+			resourceUrns: []string{
+				CreateUrn("example", RESOURCE_POLICY, "/path/", "policy1"),
+			},
 			wantError: &Error{
 				Code: INVALID_PARAMETER_ERROR,
 			},
@@ -371,10 +392,15 @@ func TestGetEffectByUserActionResource(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			resourceUrn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policy1"),
-			action:      POLICY_ACTION_GET_POLICY,
-			expectedEffectRestriction: &EffectRestriction{
-				Effect: "allow",
+			resourceUrns: []string{
+				CreateUrn("example", RESOURCE_POLICY, "/path/", "policy1"),
+				CreateUrn("example", RESOURCE_POLICY, "/path/", "policy2"),
+				CreateUrn("example1", RESOURCE_POLICY, "/path/", "policy3"),
+			},
+			action: POLICY_ACTION_GET_POLICY,
+			expectedResources: []string{
+				CreateUrn("example", RESOURCE_POLICY, "/path/", "policy1"),
+				CreateUrn("example", RESOURCE_POLICY, "/path/", "policy2"),
 			},
 			getUserByExternalIDResult: &User{
 				ID:  "123456",
@@ -409,11 +435,13 @@ func TestGetEffectByUserActionResource(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			resourceUrn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policy1"),
-			action:      POLICY_ACTION_GET_POLICY,
-			expectedEffectRestriction: &EffectRestriction{
-				Effect: "deny",
+			action: POLICY_ACTION_GET_POLICY,
+			resourceUrns: []string{
+				CreateUrn("example", RESOURCE_POLICY, "/path/", "policy1"),
+				CreateUrn("example", RESOURCE_POLICY, "/path/", "policy2"),
+				CreateUrn("example1", RESOURCE_POLICY, "/path/", "policy3"),
 			},
+			expectedResources: []string{},
 			getUserByExternalIDResult: &User{
 				ID:  "123456",
 				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
@@ -438,6 +466,15 @@ func TestGetEffectByUserActionResource(t *testing.T) {
 								GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
 							},
 						},
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								POLICY_ACTION_GET_POLICY,
+							},
+							Resources: []string{
+								GetUrnPrefix("example", RESOURCE_POLICY, "/path/path2"),
+							},
+						},
 					},
 				},
 			},
@@ -447,27 +484,16 @@ func TestGetEffectByUserActionResource(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			resourceUrn: "urn:ews:product:instance:resource*",
-			action:      "product:DoAction",
-			expectedEffectRestriction: &EffectRestriction{
-				Restrictions: &Restrictions{
-					AllowedFullUrns: []string{
-						"urn:ews:product:instance:resource/path1/resourceAllow",
-						"urn:ews:product:instance:resource/path2/resourceAllow",
-					},
-					AllowedUrnPrefixes: []string{
-						"urn:ews:product:instance:resource/path1/*",
-						"urn:ews:product:instance:resource/path2/*",
-					},
-					DeniedFullUrns: []string{
-						"urn:ews:product:instance:resource/path1/resourceDeny",
-						"urn:ews:product:instance:resource/path2/resourceDeny",
-					},
-					DeniedUrnPrefixes: []string{
-						"urn:ews:product:instance:resource/path3/*",
-						"urn:ews:product:instance:resource/path4/*",
-					},
-				},
+			resourceUrns: []string{
+				"urn:ews:product:instance:resource/path1/resourceAllow",
+				"urn:ews:product:instance:resource/path2/resourceAllow",
+				"urn:ews:product:instance:resource/path1/resourceDeny",
+				"urn:ews:product:instance:resource/path2/resourceDeny",
+			},
+			action: "product:DoAction",
+			expectedResources: []string{
+				"urn:ews:product:instance:resource/path1/resourceAllow",
+				"urn:ews:product:instance:resource/path2/resourceAllow",
 			},
 			getUserByExternalIDResult: &User{
 				ID:  "123456",
@@ -492,8 +518,8 @@ func TestGetEffectByUserActionResource(t *testing.T) {
 							Resources: []string{
 								"urn:ews:product:instance:resource/path1/resourceAllow",
 								"urn:ews:product:instance:resource/path2/resourceAllow",
-								"urn:ews:product:instance:resource/path1/*",
-								"urn:ews:product:instance:resource/path2/*",
+								"urn:ews:product:instance:resource/path1*",
+								"urn:ews:product:instance:resource/path2*",
 							},
 						},
 						Statement{
@@ -504,8 +530,8 @@ func TestGetEffectByUserActionResource(t *testing.T) {
 							Resources: []string{
 								"urn:ews:product:instance:resource/path1/resourceDeny",
 								"urn:ews:product:instance:resource/path2/resourceDeny",
-								"urn:ews:product:instance:resource/path3/*",
-								"urn:ews:product:instance:resource/path4/*",
+								"urn:ews:product:instance:resource/path3*",
+								"urn:ews:product:instance:resource/path4*",
 							},
 						},
 					},
@@ -528,7 +554,7 @@ func TestGetEffectByUserActionResource(t *testing.T) {
 		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = test.getPoliciesAttachedResult
 		testRepo.ArgsOut[GetPoliciesAttachedMethod][1] = test.getPoliciesAttachedError
 
-		effectRestriction, err := testAPI.GetEffectByUserActionResource(test.authUser, test.action, test.resourceUrn)
+		resources, err := testAPI.GetAuthorizedExternalResources(test.authUser, test.action, test.resourceUrns)
 		if test.wantError != nil {
 			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
 				t.Fatalf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
@@ -548,9 +574,9 @@ func TestGetEffectByUserActionResource(t *testing.T) {
 			}
 
 			// Check result
-			if !reflect.DeepEqual(effectRestriction, test.expectedEffectRestriction) {
-				t.Fatalf("Test %v failed. Received different effect restrictions (wanted:%v / received:%v)",
-					n, test.expectedEffectRestriction, effectRestriction)
+			if !reflect.DeepEqual(resources, test.expectedResources) {
+				t.Fatalf("Test %v failed. Received different resources (wanted:%v / received:%v)",
+					n, test.expectedResources, resources)
 			}
 		}
 	}
