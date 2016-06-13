@@ -1000,7 +1000,7 @@ func TestGetListUsers(t *testing.T) {
 				Identifier: "123456",
 				Admin:      true,
 			},
-			pathPrefix: "/example/",
+			pathPrefix: "",
 			GetUsersFilteredMethodResult: []User{
 				User{
 					ID:         "123",

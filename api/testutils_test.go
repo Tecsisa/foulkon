@@ -65,7 +65,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[AddPolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[UpdatePolicyMethod] = make([]interface{}, 5)
 	testRepo.ArgsIn[RemovePolicyMethod] = make([]interface{}, 1)
-	testRepo.ArgsIn[GetPoliciesFilteredMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[GetPoliciesFilteredMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[GetAllPolicyGroupRelationMethod] = make([]interface{}, 1)
 
 	testRepo.ArgsOut[GetUserByExternalIDMethod] = make([]interface{}, 2)
@@ -321,7 +321,18 @@ func (t TestRepo) RemovePolicy(id string) error {
 }
 
 func (t TestRepo) GetPoliciesFiltered(org string, pathPrefix string) ([]Policy, error) {
-	return nil, nil
+	t.ArgsIn[GetPoliciesFilteredMethod][0] = org
+	t.ArgsIn[GetPoliciesFilteredMethod][1] = pathPrefix
+
+	var policies []Policy
+	if t.ArgsOut[GetPoliciesFilteredMethod][0] != nil {
+		policies = t.ArgsOut[GetPoliciesFilteredMethod][0].([]Policy)
+	}
+	var err error
+	if t.ArgsOut[GetPoliciesFilteredMethod][1] != nil {
+		err = t.ArgsOut[GetPoliciesFilteredMethod][1].(error)
+	}
+	return policies, err
 }
 
 func (t TestRepo) GetAllPolicyGroupRelation(policyID string) ([]Group, error) {

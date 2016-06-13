@@ -81,6 +81,10 @@ func (api *AuthAPI) GetListUsers(authenticatedUser AuthenticatedUser, pathPrefix
 		}
 	}
 
+	if len(pathPrefix) == 0 {
+		pathPrefix = "/"
+	}
+
 	// Retrieve users with specified path prefix
 	users, err := api.UserRepo.GetUsersFiltered(pathPrefix)
 

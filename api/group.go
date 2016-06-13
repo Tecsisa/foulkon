@@ -407,6 +407,11 @@ func (api *AuthAPI) GetListGroups(authenticatedUser AuthenticatedUser, org strin
 			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", pathPrefix),
 		}
 	}
+
+	if len(pathPrefix) == 0 {
+		pathPrefix = "/"
+	}
+
 	// Call repo to retrieve the groups
 	groups, err := api.GroupRepo.GetGroupsFiltered(org, pathPrefix)
 

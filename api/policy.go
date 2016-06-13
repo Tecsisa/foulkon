@@ -92,6 +92,11 @@ func (api *AuthAPI) GetListPolicies(authenticatedUser AuthenticatedUser, org str
 			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", pathPrefix),
 		}
 	}
+
+	if len(pathPrefix) == 0 {
+		pathPrefix = "/"
+	}
+
 	// Call repo to retrieve the policies
 	policies, err := api.PolicyRepo.GetPoliciesFiltered(org, pathPrefix)
 
