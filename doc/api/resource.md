@@ -1,46 +1,42 @@
-## <a name="resource-order1_restriction">Restriction</a>
+## <a name="resource-authorize">Authorize</a>
 
 
-
-
-### Attributes
-
-| Name | Type | Description | Example |
-| ------- | ------- | ------- | ------- |
-| **AllowedFullUrns** | *array* | Locations where urn's are allowed | `["urn:ews:product:instance1:example/resource_path"]` |
-| **AllowedUrnPrefixes** | *array* | Locations where prefixes are allowed | `["urn:ews:product:instance2:*"]` |
-| **DeniedFullUrns** | *array* | Locations where urn's are denied | `["urn:ews:product:instance2:example2/resource_path"]` |
-| **DeniedUrnPrefixes** | *array* | Locations where prefixes are denied | `["urn:ews:product2:*"]` |
-
-
-## <a name="resource-order2_resource">Resource</a>
-
-
-Resource API
+Authorize API
 
 ### Attributes
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **Effect** | *string* | allow/deny resources | `"allow/deny"` |
-| **Restrictions:AllowedFullUrns** | *array* | Locations where urn's are allowed | `["urn:ews:product:instance1:example/resource_path"]` |
-| **Restrictions:AllowedUrnPrefixes** | *array* | Locations where prefixes are allowed | `["urn:ews:product:instance2:*"]` |
-| **Restrictions:DeniedFullUrns** | *array* | Locations where urn's are denied | `["urn:ews:product:instance2:example2/resource_path"]` |
-| **Restrictions:DeniedUrnPrefixes** | *array* | Locations where prefixes are denied | `["urn:ews:product2:*"]` |
+| **ResourcesAllowed** | *array* | List of resources allowed | `["urn:ews:product:instance:example/resource1"]` |
 
-### Resource Get Effect
+### Authorize resources
 
-Get user effect to do the action over the resource. If urn is full only return effect else if is a prefix return restrictions
+Authorize user to access resources
 
 ```
-GET /api/v1/resources?Action={Action_example}&Urn={Urn_example}
+POST /api/v1/authorize
 ```
+
+#### Required Parameters
+
+| Name | Type | Description | Example |
+| ------- | ------- | ------- | ------- |
+| **Action** | *string* | Action applied over the resources | `"example:Read"` |
+| **Resources** | *array* | List of resources | `["urn:ews:product:instance:example/resource1"]` |
+
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/resources?Action=$ACTION_EXAMPLE&Urn=$URN_EXAMPLE \
+$ curl -n -X POST /api/v1/authorize \
+  -d '{
+  "Action": "example:Read",
+  "Resources": [
+    "urn:ews:product:instance:example/resource1"
+  ]
+}' \
+  -H "Content-Type: application/json" \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -53,21 +49,9 @@ HTTP/1.1 200 OK
 
 ```json
 {
-  "Effect": "allow/deny",
-  "Restrictions": {
-    "AllowedUrnPrefixes": [
-      "urn:ews:product:instance2:*"
-    ],
-    "AllowedFullUrns": [
-      "urn:ews:product:instance1:example/resource_path"
-    ],
-    "DeniedUrnPrefixes": [
-      "urn:ews:product2:*"
-    ],
-    "DeniedFullUrns": [
-      "urn:ews:product:instance2:example2/resource_path"
-    ]
-  }
+  "ResourcesAllowed": [
+    "urn:ews:product:instance:example/resource1"
+  ]
 }
 ```
 
