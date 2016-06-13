@@ -35,7 +35,7 @@ type TestRepo struct {
 	SpecialFuncs map[string]interface{}
 }
 
-// func that initializates the TestRepo
+// func that initializes the TestRepo
 func makeTestRepo() *TestRepo {
 	testRepo := &TestRepo{
 		ArgsIn:       make(map[string][]interface{}),
@@ -48,7 +48,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[GetUsersFilteredMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetGroupsByUserIDMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[RemoveUserMethod] = make([]interface{}, 1)
-	testRepo.ArgsIn[GetGroupByNameMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[GetGroupByNameMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[IsMemberOfGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetGroupMembersMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[IsAttachedToGroupMethod] = make([]interface{}, 1)
@@ -191,8 +191,22 @@ func (t TestRepo) RemoveUser(id string) error {
 //////////////////
 
 func (t TestRepo) GetGroupByName(org string, name string) (*Group, error) {
-	return nil, nil
+	t.ArgsIn[GetGroupByNameMethod][0] = org
+	t.ArgsIn[GetGroupByNameMethod][1] = name
+	if specialFunc, ok := t.SpecialFuncs[GetGroupByNameMethod].(func(org string, name string) (*Group, error)); ok && specialFunc != nil {
+		return specialFunc(org, name)
+	}
+	var group *Group
+	if t.ArgsOut[GetGroupByNameMethod][0] != nil {
+		group = t.ArgsOut[GetGroupByNameMethod][0].(*Group)
+	}
+	var err error
+	if t.ArgsOut[GetGroupByNameMethod][1] != nil {
+		err = t.ArgsOut[GetGroupByNameMethod][1].(error)
+	}
+	return group, err
 }
+
 func (t TestRepo) IsMemberOfGroup(userID string, groupID string) (bool, error) {
 	return false, nil
 }
@@ -222,8 +236,18 @@ func (t TestRepo) RemoveGroup(id string) error {
 }
 
 func (t TestRepo) AddGroup(group Group) (*Group, error) {
-	return nil, nil
+	t.ArgsIn[AddGroupMethod][0] = group
+	var created *Group
+	if t.ArgsOut[AddGroupMethod][0] != nil {
+		created = t.ArgsOut[AddGroupMethod][0].(*Group)
+	}
+	var err error
+	if t.ArgsOut[AddGroupMethod][1] != nil {
+		err = t.ArgsOut[AddGroupMethod][1].(error)
+	}
+	return created, err
 }
+
 func (t TestRepo) AddMember(userID string, groupID string) error {
 	return nil
 }
