@@ -83,14 +83,14 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[RemoveGroupMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AddGroupMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AddMemberMethod] = make([]interface{}, 2)
-	testRepo.ArgsOut[RemoveMemberMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[RemoveMemberMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[UpdateGroupMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AttachPolicyMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[DetachPolicyMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[GetPolicyByNameMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AddPolicyMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[UpdatePolicyMethod] = make([]interface{}, 2)
-	testRepo.ArgsOut[RemovePolicyMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[RemovePolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[GetPoliciesFilteredMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[GetAllPolicyGroupRelationMethod] = make([]interface{}, 2)
 
@@ -317,7 +317,12 @@ func (t TestRepo) UpdatePolicy(policy Policy, newName string, newPath string, ne
 }
 
 func (t TestRepo) RemovePolicy(id string) error {
-	return nil
+	t.ArgsIn[RemovePolicyMethod][0] = id
+	var err error
+	if t.ArgsOut[RemovePolicyMethod][0] != nil {
+		err = t.ArgsOut[RemovePolicyMethod][0].(error)
+	}
+	return err
 }
 
 func (t TestRepo) GetPoliciesFiltered(org string, pathPrefix string) ([]Policy, error) {
