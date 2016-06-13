@@ -228,15 +228,20 @@ func TestGetPolicyByName(t *testing.T) {
 		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
 		policy, err := testAPI.GetPolicyByName(testcase.authUser, testcase.org, testcase.policyName)
 		if testcase.wantError != nil {
-			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
+			apiError, ok := err.(*Error)
+			if !ok || apiError == nil {
+				t.Fatalf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+			}
+			if apiError.Code != testcase.wantError.Code {
+				t.Fatalf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed", x)
+				t.Fatalf("Test %v failed. Error: %v", x, err)
 			} else {
 				if !reflect.DeepEqual(policy, testcase.getPolicyByNameMethodResult) {
-					t.Fatalf("Test %v failed. Received different policies", x)
+					t.Fatalf("Test %v failed. Received different policies (wanted:%v / received:%v)",
+						x, testcase.getPolicyByNameMethodResult, policy)
 				}
 			}
 		}
@@ -598,15 +603,20 @@ func TestAddPolicy(t *testing.T) {
 		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
 		policy, err := testAPI.AddPolicy(testcase.authUser, testcase.policyName, testcase.path, testcase.org, testcase.statements)
 		if testcase.wantError != nil {
-			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
+			apiError, ok := err.(*Error)
+			if !ok || apiError == nil {
+				t.Fatalf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+			}
+			if apiError.Code != testcase.wantError.Code {
+				t.Fatalf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed", x)
+				t.Fatalf("Test %v failed. Error: %v", x, err)
 			} else {
 				if !reflect.DeepEqual(policy, testcase.addPolicyMethodResult) {
-					t.Fatalf("Test %v failed. Received different policies: received: %v, expected: %v", x, policy, testcase.addPolicyMethodResult)
+					t.Fatalf("Test %v failed. Received different policies (wanted:%v / received:%v)",
+						x, testcase.addPolicyMethodResult, policy)
 				}
 			}
 		}
@@ -1883,15 +1893,294 @@ func TestUpdatePolicy(t *testing.T) {
 		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
 		policy, err := testAPI.UpdatePolicy(testcase.authUser, testcase.org, testcase.policyName, testcase.newPolicyName, testcase.newPath, testcase.newStatements)
 		if testcase.wantError != nil {
-			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
+			apiError, ok := err.(*Error)
+			if !ok || apiError == nil {
+				t.Fatalf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+			}
+			if apiError.Code != testcase.wantError.Code {
+				t.Fatalf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed: %v", x, err)
+				t.Fatalf("Test %v failed. Error: %v", x, err)
 			} else {
 				if !reflect.DeepEqual(policy, testcase.updatePolicyMethodResult) {
-					t.Fatalf("Test %v failed. Received different policies: received: %v, expected: %v", x, policy, testcase.updatePolicyMethodResult)
+					t.Fatalf("Test %v failed. Received different policies (wanted:%v / received:%v)",
+						x, testcase.updatePolicyMethodResult, policy)
+				}
+			}
+		}
+	}
+}
+
+func TestGetListPolicies(t *testing.T) {
+	testcases := map[string]struct {
+		authUser   AuthenticatedUser
+		org        string
+		pathPrefix string
+
+		expectedPolicies []PolicyIdentity
+
+		getGroupsByUserIDResult   []Group
+		getPoliciesAttachedResult []Policy
+		getUserByExternalIDResult *User
+		getUserByExternalIDErr    error
+
+		getPoliciesFilteredMethodResult []Policy
+		getPoliciesFilteredMethodErr    error
+
+		wantError *Error
+	}{
+		"ErrorCaseInvalidPath": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "123",
+			pathPrefix: "/path*/",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInternalErrorGetPoliciesFiltered": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "123",
+			pathPrefix: "/path/",
+			getPoliciesFilteredMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:        "123",
+			pathPrefix: "/path/",
+			getPoliciesFilteredMethodResult: []Policy{
+				Policy{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "example",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								POLICY_ACTION_GET_POLICY,
+							},
+							Resources: []string{
+								GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDErr: &database.Error{
+				Code: database.USER_NOT_FOUND,
+			},
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+		},
+		"OkTestCaseAdmin": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "123",
+			pathPrefix: "/",
+			expectedPolicies: []PolicyIdentity{
+				PolicyIdentity{
+					Org:  "example",
+					Name: "policyAllowed",
+				},
+				PolicyIdentity{
+					Org:  "example",
+					Name: "policyDenied",
+				},
+			},
+			getPoliciesFilteredMethodResult: []Policy{
+				Policy{
+					ID:   "PolicyAllowed",
+					Name: "policyAllowed",
+					Org:  "example",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyAllowed"),
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								POLICY_ACTION_GET_POLICY,
+							},
+							Resources: []string{
+								GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
+							},
+						},
+					},
+				},
+				Policy{
+					ID:   "PolicyDenied",
+					Name: "policyDenied",
+					Org:  "example",
+					Path: "/path2/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path2/", "policyDenied"),
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								POLICY_ACTION_GET_POLICY,
+							},
+							Resources: []string{
+								GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
+							},
+						},
+					},
+				},
+			},
+		},
+		"OkTestCaseUser": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org: "example",
+			expectedPolicies: []PolicyIdentity{
+				PolicyIdentity{
+					Org:  "example",
+					Name: "policyAllowed",
+				},
+			},
+			getPoliciesFilteredMethodResult: []Policy{
+				Policy{
+					ID:   "PolicyAllowed",
+					Name: "policyAllowed",
+					Org:  "example",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyAllowed"),
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								POLICY_ACTION_GET_POLICY,
+							},
+							Resources: []string{
+								GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
+							},
+						},
+					},
+				},
+				Policy{
+					ID:   "PolicyDenied",
+					Name: "policyDenied",
+					Org:  "example",
+					Path: "/path2/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path2/", "policyDenied"),
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								POLICY_ACTION_GET_POLICY,
+							},
+							Resources: []string{
+								GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			getGroupsByUserIDResult: []Group{
+				Group{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/1/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getPoliciesAttachedResult: []Policy{
+				Policy{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "example",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								POLICY_ACTION_LIST_POLICIES,
+							},
+							Resources: []string{
+								GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
+							},
+						},
+						Statement{
+							Effect: "deny",
+							Action: []string{
+								POLICY_ACTION_LIST_POLICIES,
+							},
+							Resources: []string{
+								GetUrnPrefix("example", RESOURCE_POLICY, "/path2/"),
+							},
+						},
+					},
+				},
+			},
+		},
+		// this has to be fixed (issue #68)
+		//"BadOrgName": {
+		//	authUser: AuthenticatedUser{
+		//		Identifier: "123456",
+		//		Admin:      true,
+		//	},
+		//	org:        "123~#**!",
+		//	policyName: "test",
+		//	wantError: &Error{
+		//		Code: INVALID_PARAMETER_ERROR,
+		//	},
+		//},
+	}
+
+	for x, testcase := range testcases {
+
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
+
+		testRepo.ArgsOut[GetPoliciesFilteredMethod][0] = testcase.getPoliciesFilteredMethodResult
+		testRepo.ArgsOut[GetPoliciesFilteredMethod][1] = testcase.getPoliciesFilteredMethodErr
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDErr
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
+		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
+		policies, err := testAPI.GetListPolicies(testcase.authUser, testcase.org, testcase.pathPrefix)
+		if testcase.wantError != nil {
+			apiError, ok := err.(*Error)
+			if !ok || apiError == nil {
+				t.Fatalf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+			}
+			if apiError.Code != testcase.wantError.Code {
+				t.Fatalf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+			}
+		} else {
+			if err != nil {
+				t.Fatalf("Test %v failed. Error: %v", x, err)
+			} else {
+				if !reflect.DeepEqual(policies, testcase.expectedPolicies) {
+					t.Fatalf("Test %v failed. Received different policies (wanted:%v / received:%v)",
+						x, testcase.expectedPolicies, policies)
 				}
 			}
 		}
