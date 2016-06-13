@@ -2458,3 +2458,305 @@ func TestDeletePolicy(t *testing.T) {
 		}
 	}
 }
+
+func TestGetPolicyAttachedGroups(t *testing.T) {
+	testcases := map[string]struct {
+		authUser       AuthenticatedUser
+		org            string
+		policyName     string
+		expectedGroups []GroupIdentity
+
+		getGroupsByUserIDResult   []Group
+		getPoliciesAttachedResult []Policy
+		getUserByExternalIDResult *User
+
+		getAllPolicyGroupRelationResult []Group
+		getAllPolicyGroupRelationErr    error
+
+		getPolicyByNameMethodResult *Policy
+		wantError                   *Error
+
+		getPolicyByNameMethodErr error
+	}{
+		"ErrorCaseInvalidName": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "123",
+			policyName: "invalid*",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCasePolicyNotExist": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "123",
+			policyName: "policy",
+			wantError: &Error{
+				Code: POLICY_BY_ORG_AND_NAME_NOT_FOUND,
+			},
+			getPolicyByNameMethodErr: &database.Error{
+				Code: database.POLICY_NOT_FOUND,
+			},
+		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:        "example",
+			policyName: "test",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+			getPolicyByNameMethodResult: &Policy{
+				ID:   "test1",
+				Name: "test",
+				Org:  "example",
+				Path: "/path/",
+				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]Statement{
+					Statement{
+						Effect: "allow",
+						Action: []string{
+							USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							GetUrnPrefix("", RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "123456",
+			},
+			getGroupsByUserIDResult: []Group{
+				Group{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+				},
+			},
+			getPoliciesAttachedResult: []Policy{
+				Policy{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								POLICY_ACTION_GET_POLICY,
+							},
+							Resources: []string{
+								GetUrnPrefix("example", RESOURCE_POLICY, "/"),
+							},
+						},
+					},
+				},
+			},
+		},
+		"ErrorCaseNotEnoughPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:        "example",
+			policyName: "test",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+			getPolicyByNameMethodResult: &Policy{
+				ID:   "test1",
+				Name: "test",
+				Org:  "example",
+				Path: "/path/",
+				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]Statement{
+					Statement{
+						Effect: "allow",
+						Action: []string{
+							USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							GetUrnPrefix("", RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "123456",
+			},
+			getGroupsByUserIDResult: []Group{
+				Group{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+				},
+			},
+			getPoliciesAttachedResult: []Policy{
+				Policy{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								POLICY_ACTION_GET_POLICY,
+							},
+							Resources: []string{
+								GetUrnPrefix("example", RESOURCE_POLICY, "/"),
+							},
+						},
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								POLICY_ACTION_LIST_ATTACHED_GROUPS,
+							},
+							Resources: []string{
+								GetUrnPrefix("example", RESOURCE_POLICY, "/"),
+							},
+						},
+						Statement{
+							Effect: "deny",
+							Action: []string{
+								POLICY_ACTION_LIST_ATTACHED_GROUPS,
+							},
+							Resources: []string{
+								GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
+							},
+						},
+					},
+				},
+			},
+		},
+		"ErrorCaseGetAllPolicyGroupRelationFail": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "example",
+			policyName: "test",
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+			getPolicyByNameMethodResult: &Policy{
+				ID:   "test1",
+				Name: "test",
+				Org:  "example",
+				Path: "/path/",
+				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]Statement{
+					Statement{
+						Effect: "allow",
+						Action: []string{
+							USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							GetUrnPrefix("", RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			getAllPolicyGroupRelationErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+		},
+		"OkTestCase": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "example",
+			policyName: "test",
+			getPolicyByNameMethodResult: &Policy{
+				ID:   "test1",
+				Name: "test",
+				Org:  "example",
+				Path: "/path/",
+				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]Statement{
+					Statement{
+						Effect: "allow",
+						Action: []string{
+							USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							GetUrnPrefix("", RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			getAllPolicyGroupRelationResult: []Group{
+				Group{
+					ID:   "Group1",
+					Org:  "org1",
+					Name: "group1",
+				},
+				Group{
+					ID:   "Group2",
+					Org:  "org2",
+					Name: "group2",
+				},
+			},
+			expectedGroups: []GroupIdentity{
+				GroupIdentity{
+					Org:  "org1",
+					Name: "group1",
+				},
+				GroupIdentity{
+					Org:  "org2",
+					Name: "group2",
+				},
+			},
+		},
+		// this has to be fixed (issue #68)
+		//"BadOrgName": {
+		//	authUser: AuthenticatedUser{
+		//		Identifier: "123456",
+		//		Admin:      true,
+		//	},
+		//	org:        "123~#**!",
+		//	policyName: "test",
+		//	wantError: &Error{
+		//		Code: INVALID_PARAMETER_ERROR,
+		//	},
+		//},
+	}
+
+	for x, testcase := range testcases {
+
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
+
+		testRepo.ArgsOut[GetPolicyByNameMethod][0] = testcase.getPolicyByNameMethodResult
+		testRepo.ArgsOut[GetPolicyByNameMethod][1] = testcase.getPolicyByNameMethodErr
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
+		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
+		testRepo.ArgsOut[GetAllPolicyGroupRelationMethod][0] = testcase.getAllPolicyGroupRelationResult
+		testRepo.ArgsOut[GetAllPolicyGroupRelationMethod][1] = testcase.getAllPolicyGroupRelationErr
+		groups, err := testAPI.GetPolicyAttachedGroups(testcase.authUser, testcase.org, testcase.policyName)
+		if testcase.wantError != nil {
+			apiError, ok := err.(*Error)
+			if !ok || apiError == nil {
+				t.Fatalf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+			}
+			if apiError.Code != testcase.wantError.Code {
+				t.Fatalf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+			}
+		} else {
+			if err != nil {
+				t.Fatalf("Test %v failed. Error: %v", x, err)
+			} else {
+				if !reflect.DeepEqual(groups, testcase.expectedGroups) {
+					t.Fatalf("Test %v failed. Received different groups (wanted:%v / received:%v)",
+						x, testcase.expectedGroups, groups)
+				}
+			}
+		}
+	}
+}

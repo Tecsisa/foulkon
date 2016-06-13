@@ -341,5 +341,15 @@ func (t TestRepo) GetPoliciesFiltered(org string, pathPrefix string) ([]Policy, 
 }
 
 func (t TestRepo) GetAllPolicyGroupRelation(policyID string) ([]Group, error) {
-	return nil, nil
+	t.ArgsIn[GetAllPolicyGroupRelationMethod][0] = policyID
+
+	var groups []Group
+	if t.ArgsOut[GetAllPolicyGroupRelationMethod][0] != nil {
+		groups = t.ArgsOut[GetAllPolicyGroupRelationMethod][0].([]Group)
+	}
+	var err error
+	if t.ArgsOut[GetAllPolicyGroupRelationMethod][1] != nil {
+		err = t.ArgsOut[GetAllPolicyGroupRelationMethod][1].(error)
+	}
+	return groups, err
 }
