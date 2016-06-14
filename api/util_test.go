@@ -40,3 +40,38 @@ func TestCreateUrn(t *testing.T) {
 		}
 	}
 }
+
+func TestGetUrnPrefix(t *testing.T) {
+	testcases := map[string]struct {
+		org         string
+		resource    string
+		path        string
+		expectedUrn string
+	}{
+		"UserResourcePrefix": {
+			resource:    RESOURCE_USER,
+			path:        "/mypath/",
+			expectedUrn: "urn:iws:iam::user/mypath/*",
+		},
+		"GroupResourcePrefix": {
+			resource:    RESOURCE_GROUP,
+			org:         "org1",
+			path:        "/mygrouppath",
+			expectedUrn: "urn:iws:iam:org1:group/mygrouppath*",
+		},
+		"PolicyResourcePrefix": {
+			resource:    RESOURCE_POLICY,
+			org:         "org1",
+			path:        "/policypath/",
+			expectedUrn: "urn:iws:iam:org1:policy/policypath/*",
+		},
+	}
+
+	for x, testcase := range testcases {
+		urn := GetUrnPrefix(testcase.org, testcase.resource, testcase.path)
+		if urn != testcase.expectedUrn {
+			t.Fatalf("Test %v failed. Received different urns (wanted: %v / received: %v)",
+				x, testcase.expectedUrn, urn)
+		}
+	}
+}
