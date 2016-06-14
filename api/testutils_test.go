@@ -1,5 +1,7 @@
 package api
 
+import "math/rand"
+
 const (
 	GetUserByExternalIDMethod       = "GetUserByExternalID"
 	AddUserMethod                   = "AddUser"
@@ -363,4 +365,12 @@ func (t TestRepo) GetAllPolicyGroupRelation(policyID string) ([]Group, error) {
 		err = t.ArgsOut[GetAllPolicyGroupRelationMethod][1].(error)
 	}
 	return groups, err
+}
+
+func GetRandomString(runeValue []rune, n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = runeValue[rand.Intn(len(runeValue))]
+	}
+	return string(b)
 }

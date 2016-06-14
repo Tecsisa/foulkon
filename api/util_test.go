@@ -75,3 +75,63 @@ func TestGetUrnPrefix(t *testing.T) {
 		}
 	}
 }
+
+func TestIsValidUserExternalID(t *testing.T) {
+	testcases := map[string]struct {
+		externalID string
+		valid      bool
+	}{
+		"Case1": {
+			externalID: "",
+			valid:      false,
+		},
+		"Case2": {
+			externalID: "*",
+			valid:      false,
+		},
+		"Case3": {
+			externalID: "/",
+			valid:      false,
+		},
+		"Case4": {
+			externalID: "something/",
+			valid:      false,
+		},
+		"Case5": {
+			externalID: "prefix*",
+			valid:      false,
+		},
+		"Case6": {
+			externalID: "pre*fix",
+			valid:      false,
+		},
+		"Case7": {
+			externalID: "comma,",
+			valid:      false,
+		},
+		"Case8": {
+			externalID: GetRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), MAX_EXTERNAL_ID_LENGTH+1),
+			valid:      false,
+		},
+		"Case9": {
+			externalID: "good",
+			valid:      true,
+		},
+		"Case10": {
+			externalID: "123456",
+			valid:      true,
+		},
+		"Case11": {
+			externalID: "example-of-user123@email.com-that-is-valid",
+			valid:      true,
+		},
+	}
+
+	for x, testcase := range testcases {
+		valid := IsValidUserExternalID(testcase.externalID)
+		if valid != testcase.valid {
+			t.Fatalf("Test %v failed. Received different values (wanted: %v / received: %v)",
+				x, testcase.valid, valid)
+		}
+	}
+}
