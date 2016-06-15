@@ -119,6 +119,14 @@ func (api *AuthAPI) AddMember(authenticatedUser AuthenticatedUser, userID string
 			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", userID),
 		}
 	}
+	// Validate Name
+	if !IsValidName(groupName) {
+		return &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: Name %v", groupName),
+		}
+	}
+
 	// Call repo to retrieve the group
 	groupDB, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {

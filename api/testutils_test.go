@@ -51,14 +51,14 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[GetGroupsByUserIDMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[RemoveUserMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetGroupByNameMethod] = make([]interface{}, 2)
-	testRepo.ArgsIn[IsMemberOfGroupMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[IsMemberOfGroupMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[GetGroupMembersMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[IsAttachedToGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetPoliciesAttachedMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetGroupsFilteredMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[RemoveGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[AddGroupMethod] = make([]interface{}, 1)
-	testRepo.ArgsIn[AddMemberMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[AddMemberMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[RemoveMemberMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[UpdateGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[AttachPolicyMethod] = make([]interface{}, 1)
@@ -84,7 +84,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[GetGroupsFilteredMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[RemoveGroupMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AddGroupMethod] = make([]interface{}, 2)
-	testRepo.ArgsOut[AddMemberMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[AddMemberMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[RemoveMemberMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[UpdateGroupMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AttachPolicyMethod] = make([]interface{}, 2)
@@ -210,7 +210,17 @@ func (t TestRepo) GetGroupByName(org string, name string) (*Group, error) {
 }
 
 func (t TestRepo) IsMemberOfGroup(userID string, groupID string) (bool, error) {
-	return false, nil
+	t.ArgsIn[IsMemberOfGroupMethod][0] = userID
+	t.ArgsIn[IsMemberOfGroupMethod][1] = groupID
+	var isMember bool
+	if t.ArgsOut[IsMemberOfGroupMethod][0] != nil {
+		isMember = t.ArgsOut[IsMemberOfGroupMethod][0].(bool)
+	}
+	var err error
+	if t.ArgsOut[IsMemberOfGroupMethod][1] != nil {
+		err = t.ArgsOut[IsMemberOfGroupMethod][1].(error)
+	}
+	return isMember, err
 }
 func (t TestRepo) GetGroupMembers(groupID string) ([]User, error) {
 	return nil, nil
@@ -262,8 +272,15 @@ func (t TestRepo) AddGroup(group Group) (*Group, error) {
 }
 
 func (t TestRepo) AddMember(userID string, groupID string) error {
-	return nil
+	t.ArgsIn[AddMemberMethod][0] = userID
+	t.ArgsIn[AddMemberMethod][1] = groupID
+	var err error
+	if t.ArgsOut[AddMemberMethod][0] != nil {
+		err = t.ArgsOut[AddMemberMethod][0].(error)
+	}
+	return err
 }
+
 func (t TestRepo) RemoveMember(userID string, groupID string) error {
 	return nil
 }
