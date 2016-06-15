@@ -179,3 +179,67 @@ func TestIsValidName(t *testing.T) {
 		}
 	}
 }
+
+func TestIsValidPath(t *testing.T) {
+	testcases := map[string]struct {
+		path  string
+		valid bool
+	}{
+		"Case1": {
+			path:  "",
+			valid: false,
+		},
+		"Case2": {
+			path:  "/path",
+			valid: false,
+		},
+		"Case3": {
+			path:  "path/",
+			valid: false,
+		},
+		"Case4": {
+			path:  ",",
+			valid: false,
+		},
+		"Case5": {
+			path:  "*",
+			valid: false,
+		},
+		"Case6": {
+			path:  "/*",
+			valid: false,
+		},
+		"Case7": {
+			path:  "*/",
+			valid: false,
+		},
+		"Case8": {
+			path:  "/*/",
+			valid: false,
+		},
+		"Case9": {
+			path:  "path.value",
+			valid: false,
+		},
+		"Case10": {
+			path:  "/" + GetRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), MAX_PATH_LENGTH-1) + "/",
+			valid: false,
+		},
+		"Case11": {
+			path:  "/",
+			valid: true,
+		},
+		"Case12": {
+			path:  "/path/",
+			valid: true,
+		},
+	}
+
+	for x, testcase := range testcases {
+		valid := IsValidPath(testcase.path)
+		if valid != testcase.valid {
+			t.Fatalf("Test %v failed. Received different values (wanted: %v / received: %v)",
+				x, testcase.valid, valid)
+		}
+	}
+}
