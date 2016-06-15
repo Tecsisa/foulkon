@@ -243,3 +243,42 @@ func TestIsValidPath(t *testing.T) {
 		}
 	}
 }
+
+func TestIsValidEffect(t *testing.T) {
+	testcases := map[string]struct {
+		// Method args
+		effect string
+		// Expected results
+		wantError *Error
+	}{
+		"OKCaseAllow": {
+			effect: "allow",
+		},
+		"OKCaseDeny": {
+			effect: "deny",
+		},
+		"ErrorCaseInvalidEffect": {
+			effect: "other",
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+	}
+
+	for x, testcase := range testcases {
+		err := IsValidEffect(testcase.effect)
+		if testcase.wantError != nil {
+			apiError, ok := err.(*Error)
+			if !ok || apiError == nil {
+				t.Fatalf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+			}
+			if apiError.Code != testcase.wantError.Code {
+				t.Fatalf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+			}
+		} else {
+			if err != nil {
+				t.Fatalf("Test %v failed. Error: %v", x, err)
+			}
+		}
+	}
+}
