@@ -282,3 +282,76 @@ func TestIsValidEffect(t *testing.T) {
 		}
 	}
 }
+
+func TestIsValidAction(t *testing.T) {
+	testcases := map[string]struct {
+		// Method args
+		actions []string
+		// Expected results
+		wantError *Error
+	}{
+		"OKCaseValidAction": {
+			actions: []string{
+				"iam:operation",
+				"iam:*",
+			},
+		},
+		"ErrorCaseMalformedAction": {
+			actions: []string{
+				"iam:",
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+		"ErrorCaseMalformedAction2": {
+			actions: []string{
+				"*",
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+		"ErrorCaseInvalidCharacters": {
+			actions: []string{
+				"iam:**",
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+		"ErrorCaseInvalidCharacters2": {
+			actions: []string{
+				"iam::",
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+		"ErrorCaseMaxLengthExceeded": {
+			actions: []string{
+				GetRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:*"), MAX_ACTION_LENGTH+1),
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+	}
+
+	for x, testcase := range testcases {
+		err := IsValidAction(testcase.actions)
+		if testcase.wantError != nil {
+			apiError, ok := err.(*Error)
+			if !ok || apiError == nil {
+				t.Fatalf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+			}
+			if apiError.Code != testcase.wantError.Code {
+				t.Fatalf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+			}
+		} else {
+			if err != nil {
+				t.Fatalf("Test %v failed. Error: %v", x, err)
+			}
+		}
+	}
+}

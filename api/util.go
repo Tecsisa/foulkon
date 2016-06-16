@@ -15,6 +15,7 @@ const (
 	// Constraints
 	MAX_EXTERNAL_ID_LENGTH = 128
 	MAX_NAME_LENGTH        = 128
+	MAX_ACTION_LENGTH      = 128
 	MAX_PATH_LENGTH        = 512
 
 	// Actions
@@ -101,7 +102,7 @@ func IsValidAction(actions []string) error {
 	r, _ := regexp.Compile(`^[\w\-:]+[\w-*]+$`)
 	r2, _ := regexp.Compile(`[*]{2,}|[:]{2,}`)
 	for _, action := range actions {
-		if !r.MatchString(action) || r2.MatchString(action) || len(action) > MAX_NAME_LENGTH {
+		if !r.MatchString(action) || r2.MatchString(action) || len(action) > MAX_ACTION_LENGTH {
 			return &Error{
 				Code:    REGEX_NO_MATCH,
 				Message: fmt.Sprintf("No regex match in action: %v", action),
