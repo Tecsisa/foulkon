@@ -26,7 +26,7 @@ Se utilizan test case con mapas que tiene que cumplir este criterio:
     getUserByExternalIDResult *User
     getGroupByNameResult      *Group
     isMemberOfGroupResult     bool
-    // API Errors
+    // Manager Errors
     getUserByExternalIDMethodErr error
     getGroupByNameMethodErr      error
     addMemberMethodErr           error

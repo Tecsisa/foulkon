@@ -198,6 +198,15 @@ func (api *AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, userID str
 			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", userID),
 		}
 	}
+
+	// Validate GroupName
+	if !IsValidName(groupName) {
+		return &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: Name %v", groupName),
+		}
+	}
+
 	// Call repo to retrieve the group
 	groupDB, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {
