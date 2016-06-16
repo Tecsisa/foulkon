@@ -222,12 +222,24 @@ func (t TestRepo) IsMemberOfGroup(userID string, groupID string) (bool, error) {
 	}
 	return isMember, err
 }
+
 func (t TestRepo) GetGroupMembers(groupID string) ([]User, error) {
-	return nil, nil
+	t.ArgsIn[GetGroupMembersMethod][0] = groupID
+	var members []User
+	if t.ArgsOut[GetGroupMembersMethod][0] != nil {
+		members = t.ArgsOut[GetGroupMembersMethod][0].([]User)
+	}
+	var err error
+	if t.ArgsOut[GetGroupMembersMethod][1] != nil {
+		err = t.ArgsOut[GetGroupMembersMethod][1].(error)
+	}
+	return members, err
 }
+
 func (t TestRepo) IsAttachedToGroup(groupID string, policyID string) (bool, error) {
 	return false, nil
 }
+
 func (t TestRepo) GetPoliciesAttached(groupID string) ([]Policy, error) {
 	t.ArgsIn[GetPoliciesAttachedMethod][0] = groupID
 	var policies []Policy
@@ -240,6 +252,7 @@ func (t TestRepo) GetPoliciesAttached(groupID string) ([]Policy, error) {
 	}
 	return policies, err
 }
+
 func (t TestRepo) GetGroupsFiltered(org string, pathPrefix string) ([]Group, error) {
 	t.ArgsIn[GetGroupsFilteredMethod][0] = org
 	t.ArgsIn[GetGroupsFilteredMethod][1] = pathPrefix
