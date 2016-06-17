@@ -59,7 +59,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[RemoveGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[AddGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[AddMemberMethod] = make([]interface{}, 2)
-	testRepo.ArgsIn[RemoveMemberMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[RemoveMemberMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[UpdateGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[AttachPolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[DetachPolicyMethod] = make([]interface{}, 1)
@@ -295,8 +295,15 @@ func (t TestRepo) AddMember(userID string, groupID string) error {
 }
 
 func (t TestRepo) RemoveMember(userID string, groupID string) error {
-	return nil
+	t.ArgsIn[RemoveMemberMethod][0] = userID
+	t.ArgsIn[RemoveMemberMethod][1] = groupID
+	var err error
+	if t.ArgsOut[RemoveMemberMethod][0] != nil {
+		err = t.ArgsOut[RemoveMemberMethod][0].(error)
+	}
+	return err
 }
+
 func (t TestRepo) UpdateGroup(group Group, newName string, newPath string, newUrn string) (*Group, error) {
 	return nil, nil
 }
