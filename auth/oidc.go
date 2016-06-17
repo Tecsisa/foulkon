@@ -3,9 +3,11 @@ package auth
 import (
 	"net/http"
 
+	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/emanoelxavier/openid2go/openid"
+	"github.com/satori/go.uuid"
 )
 
 // This struct represent a connector for OIDC that implements interface of auth connector
@@ -24,12 +26,24 @@ func InitOIDCConnector(logger *log.Logger, provider string, clientids []string) 
 		return []openid.Provider{provider}, nil
 	}
 	errorHandler := func(e error, rw http.ResponseWriter, r *http.Request) bool {
+		transactionID := uuid.NewV4().String()
 		if verr, ok := e.(*openid.ValidationError); ok {
-			http.Error(rw, verr.Message, verr.HTTPStatus)
+			logger.WithFields(log.Fields{
+				"RequestID": transactionID,
+				"Method":    r.Method,
+				"URI":       r.RequestURI,
+				"Address":   r.RemoteAddr,
+			}).Error(verr.Message)
+			http.Error(rw, fmt.Sprintf("TransactionID: %v. Error %v", transactionID, verr.Message), verr.HTTPStatus)
 		} else {
-			rw.WriteHeader(http.StatusInternalServerError)
+			logger.WithFields(log.Fields{
+				"RequestID": transactionID,
+				"Method":    r.Method,
+				"URI":       r.RequestURI,
+				"Address":   r.RemoteAddr,
+			}).Error("Internal server error")
+			http.Error(rw, fmt.Sprintf("TransactionID: %v. Unexpected error", transactionID), http.StatusInternalServerError)
 		}
-		logger.Errorf("There was an error in authentication. %v", e.Error())
 		return true
 	}
 	configuration, _ := openid.NewConfiguration(openid.ProvidersGetter(getProviders), openid.ErrorHandler(errorHandler))
