@@ -1,0 +1,39 @@
+# Server config
+[server]
+host = "${AUTHORIZR_PROXY_HOST}"
+port = "${AUTHORIZR_PROXY_PORT}"
+certfile = "${AUTHORIZR_PROXY_CERT_FILE_PATH}"
+keyfile = "${AUTHORIZR_PROXY_KEY_FILE_PATH}"
+worker-host = "${AUTHORIZR_PROXY_WORKER_LOCATION}"
+
+# Logger
+[logger]
+type = "${AUTHORIZR_PROXY_LOG_TYPE}" #If not specified default is StdOut
+#type = "${AUTHORIZR_PROXY_LOG_LEVEL}" #If not specified default is StdOut
+level = "debug"
+	# Directory for file configuration
+	[logger.file]
+	dir = "${AUTHORIZR_PROXY_LOG_PATH}"
+
+# Resources definition example
+[[resources]]
+    id = "resource1"
+    host = "https://httpbin.org/"
+    url = "/get"
+    method = "GET"
+    urn = "urn:ews:example:instance1:resource/get"
+    action = "example:get"
+[[resources]]
+    id = "resource2"
+    host = "https://httpbin.org/"
+    url = "/status/:code"
+    method = "GET"
+    urn = "urn:ews:example:instance1:resource/status/{code}"
+    action = "example:getCode"
+[[resources]]
+    id = "resource3"
+    host = "https://httpbin.org/"
+    url = "/post"
+    method = "POST"
+    urn = "urn:ews:example:instance1:resource/post"
+    action = "example:post"

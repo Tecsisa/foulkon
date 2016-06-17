@@ -10,7 +10,7 @@ In order to build the docker image, run:
 ```
 sh build.sh
 ```
-Then, you can run the docker image, mounting (-v) a config.toml inside the container (you could also make a custom Dockerfile with "ADD my-custom-conf.toml /my-custom-conf.toml")
+Then, you can run the docker image, mounting (-v) a config.toml or proxy.toml inside the container (you could also make a custom Dockerfile with "ADD my-custom-conf.toml /my-custom-conf.toml")
 ```
 docker run -v /home/myuser/authorizr/config.toml:/config.toml tecsisa/authorizr -config-file=/config.toml
 ```

@@ -27,7 +27,7 @@ type = "oidc"
 
 	# OIDC connector config
 	[authenticator.oidc]
-	issuer = "http://localhost:5556"
+	issuer = "https://discovery.wr.tecsisa.com:5556"
 	clientids = "9jCU4aaDHjV-y59SSlGwfrmpdo4mIkGBW4E41QvI-X0=@127.0.0.1"
 
 # Admin user config
