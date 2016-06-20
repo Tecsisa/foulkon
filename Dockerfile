@@ -2,8 +2,15 @@ FROM alpine
 MAINTAINER Tecsisa
 
 RUN apk update && apk add ca-certificates
-COPY bin/authorizr /go/bin/authorizr
+# Worker
+COPY bin/worker /go/bin/worker
 COPY config_env_vars.toml /config_env_vars.toml
-ENTRYPOINT ["/go/bin/authorizr", "-config-file=config_env_vars.toml"]
+# Proxy
+COPY bin/proxy /go/bin/proxy
+COPY proxy_env_vars.toml /proxy_env_vars.toml
 
-EXPOSE 8000
+ADD entrypoint.sh /go/bin/entrypoint.sh
+
+EXPOSE 8000 8001
+
+ENTRYPOINT ["/go/bin/entrypoint.sh"]

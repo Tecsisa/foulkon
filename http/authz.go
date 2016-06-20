@@ -20,22 +20,22 @@ type AuthorizeResourcesResponse struct {
 	ResourcesAllowed []string `json:"ResourcesAllowed, omitempty"`
 }
 
-func (a *AuthHandler) handleAuthorizeResources(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	userID := a.core.Authenticator.RetrieveUserID(*r)
+func (a *WorkerHandler) handleAuthorizeResources(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := a.worker.Authenticator.RetrieveUserID(*r)
 
 	// Decode request
 	request := AuthorizeResourcesRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		a.core.Logger.Errorln(err)
+		a.worker.Logger.Errorln(err)
 		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
 		return
 	}
 
 	// Retrieve allowed resources
-	result, err := a.core.AuthApi.GetAuthorizedExternalResources(userID, request.Action, request.Resources)
+	result, err := a.worker.AuthApi.GetAuthorizedExternalResources(userID, request.Action, request.Resources)
 	if err != nil {
-		a.core.Logger.Errorln(err)
+		a.worker.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		switch apiError.Code {

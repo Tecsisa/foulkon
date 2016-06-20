@@ -1,5 +1,5 @@
 {
-  "kind": "discoverty#restDescription",
+  "kind": "discovery#restDescription",
   "discoveryVersion": "v1",
   "id": "authorizr:v1",
   "name": "authorizrschema",
