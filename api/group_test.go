@@ -2132,3 +2132,390 @@ func TestUpdateGroup(t *testing.T) {
 		}
 	}
 }
+
+func TestAttachPolicyToGroup(t *testing.T) {
+	testcases := map[string]struct {
+		authUser   AuthenticatedUser
+		org        string
+		groupName  string
+		policyName string
+		// Expected result
+		wantError *Error
+		// Manager Results
+		getGroupByNameResult      *Group
+		getPolicyByNameResult     *Policy
+		getUserByExternalIDResult *User
+		getGroupsByUserIDResult   []Group
+		getPoliciesAttachedResult []Policy
+		isAttachedToGroupResult   bool
+		// API Errors
+		getGroupByNameMethodErr      error
+		getPolicyByNameMethodErr     error
+		getUserByExternalIDMethodErr error
+		isAttachedToGroupMethodErr   error
+		attachPolicyMethodErr        error
+	}{
+		"OkCaseAdmin": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "123",
+			groupName:  "group1",
+			policyName: "policy1",
+			getGroupByNameResult: &Group{
+				ID:   "12345",
+				Name: "group1",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "test"),
+			},
+			getPolicyByNameResult: &Policy{
+				ID:   "test1",
+				Name: "test",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]Statement{
+					Statement{
+						Effect: "allow",
+						Action: []string{
+							USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							GetUrnPrefix("", RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			isAttachedToGroupResult: false,
+		},
+		"ErrorCaseInvalidGroupName": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:       "123",
+			groupName: "$%·",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidPolicyName": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "123",
+			groupName:  "group1",
+			policyName: "$·%",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseGroupNotFound": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "123",
+			groupName:  "group1",
+			policyName: "policy1",
+			wantError: &Error{
+				Code: GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+			},
+			getGroupByNameMethodErr: &database.Error{
+				Code: database.GROUP_NOT_FOUND,
+			},
+		},
+		"ErrorCaseNoPermissionsToAttach": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:        "123",
+			groupName:  "group1",
+			policyName: "policy1",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "12345",
+				Name: "group1",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", ""),
+			},
+			getGroupsByUserIDResult: []Group{
+				Group{
+					ID:   "GROUP-USER-ID",
+					Name: "group1",
+					Org:  "123",
+					Path: "/path/",
+				},
+			},
+			getPoliciesAttachedResult: []Policy{
+				Policy{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "123",
+					Path: "/path/",
+					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								GROUP_ACTION_GET_GROUP,
+							},
+							Resources: []string{
+								GetUrnPrefix("123", RESOURCE_GROUP, ""),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
+		"ErrorCaseDenyToAttach": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:        "123",
+			groupName:  "group1",
+			policyName: "policy1",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "12345",
+				Name: "group1",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", ""),
+			},
+			getGroupsByUserIDResult: []Group{
+				Group{
+					ID:   "GROUP-USER-ID",
+					Name: "group1",
+					Org:  "123",
+					Path: "/path/",
+				},
+			},
+			getPoliciesAttachedResult: []Policy{
+				Policy{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "123",
+					Path: "/path/",
+					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						Statement{
+							Effect: "allow",
+							Action: []string{
+								GROUP_ACTION_GET_GROUP,
+								GROUP_ACTION_ATTACH_GROUP_POLICY,
+							},
+							Resources: []string{
+								GetUrnPrefix("123", RESOURCE_GROUP, ""),
+							},
+						},
+						Statement{
+							Effect: "deny",
+							Action: []string{
+								GROUP_ACTION_ATTACH_GROUP_POLICY,
+							},
+							Resources: []string{
+								GetUrnPrefix("123", RESOURCE_GROUP, ""),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
+		"ErrorCaseIsAttachedDBErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "123",
+			groupName:  "group1",
+			policyName: "policy1",
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "12345",
+				Name: "group1",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "test"),
+			},
+			getPolicyByNameResult: &Policy{
+				ID:   "test1",
+				Name: "test",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]Statement{
+					Statement{
+						Effect: "allow",
+						Action: []string{
+							USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							GetUrnPrefix("", RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			isAttachedToGroupMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+		},
+		"ErrorCasePolicyIsAlreadyAttached": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "123",
+			groupName:  "group1",
+			policyName: "policy1",
+			wantError: &Error{
+				Code: POLICY_IS_ALREADY_ATTACHED_TO_GROUP,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "12345",
+				Name: "group1",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "test"),
+			},
+			getPolicyByNameResult: &Policy{
+				ID:   "test1",
+				Name: "test",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]Statement{
+					Statement{
+						Effect: "allow",
+						Action: []string{
+							USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							GetUrnPrefix("", RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			isAttachedToGroupResult: true,
+		},
+		"ErrorCasePolicyNotFound": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "123",
+			groupName:  "group1",
+			policyName: "policy1",
+			wantError: &Error{
+				Code: POLICY_BY_ORG_AND_NAME_NOT_FOUND,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "12345",
+				Name: "group1",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "test"),
+			},
+			getPolicyByNameMethodErr: &database.Error{
+				Code: database.POLICY_NOT_FOUND,
+			},
+		},
+		"ErrorCaseAttachPolicyDBErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "123",
+			groupName:  "group1",
+			policyName: "policy1",
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "12345",
+				Name: "group1",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "test"),
+			},
+			getPolicyByNameResult: &Policy{
+				ID:   "test1",
+				Name: "test",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]Statement{
+					Statement{
+						Effect: "allow",
+						Action: []string{
+							USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							GetUrnPrefix("", RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			isAttachedToGroupResult: false,
+			attachPolicyMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+		},
+	}
+
+	testRepo := makeTestRepo()
+	testAPI := makeTestAPI(testRepo)
+
+	for x, testcase := range testcases {
+		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameResult
+		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
+		testRepo.ArgsOut[GetPolicyByNameMethod][0] = testcase.getPolicyByNameResult
+		testRepo.ArgsOut[GetPolicyByNameMethod][1] = testcase.getPolicyByNameMethodErr
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
+		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
+		testRepo.ArgsOut[IsAttachedToGroupMethod][0] = testcase.isAttachedToGroupResult
+		testRepo.ArgsOut[IsAttachedToGroupMethod][1] = testcase.isAttachedToGroupMethodErr
+		testRepo.ArgsOut[AttachPolicyMethod][0] = testcase.attachPolicyMethodErr
+
+		err := testAPI.AttachPolicyToGroup(testcase.authUser, testcase.org, testcase.groupName, testcase.policyName)
+		if testcase.wantError != nil {
+			apiError, ok := err.(*Error)
+			if !ok || apiError == nil {
+				t.Fatalf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+			}
+			if apiError.Code != testcase.wantError.Code {
+				t.Fatalf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+			}
+		} else {
+			if err != nil {
+				t.Fatalf("Test %v failed. Error: %v", x, err)
+			}
+		}
+	}
+}
