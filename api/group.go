@@ -500,9 +500,9 @@ func (api *AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string,
 	}
 
 	// Check if group with newName exist
-	_, err = api.GetGroupByName(authenticatedUser, org, newName)
+	newGroup, err := api.GetGroupByName(authenticatedUser, org, newName)
 
-	if err == nil {
+	if err == nil && group.ID != newGroup.ID {
 		// Group already exists
 		return nil, &Error{
 			Code:    GROUP_ALREADY_EXIST,
@@ -511,11 +511,8 @@ func (api *AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string,
 	}
 
 	if err != nil {
-		apiError := err.(*Error)
-		switch apiError.Code {
-		case UNAUTHORIZED_RESOURCES_ERROR, UNKNOWN_API_ERROR:
+		if apiError := err.(*Error); apiError.Code == UNAUTHORIZED_RESOURCES_ERROR || apiError.Code == UNKNOWN_API_ERROR {
 			return nil, err
-		default: //Do nothing
 		}
 	}
 
