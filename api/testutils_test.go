@@ -30,7 +30,7 @@ const (
 	GetAllPolicyGroupRelationMethod = "GetAllPolicyGroupRelation"
 )
 
-// Test repo that implements all manager interfaces
+// Test repo that implements all repo manager interfaces
 type TestRepo struct {
 	ArgsIn       map[string][]interface{}
 	ArgsOut      map[string][]interface{}

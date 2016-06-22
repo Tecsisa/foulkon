@@ -35,7 +35,7 @@ type Statement struct {
 	Resources []string `json:"Resources, omitempty"`
 }
 
-func (api *AuthAPI) GetPolicyByName(authenticatedUser AuthenticatedUser, org string, policyName string) (*Policy, error) {
+func (api AuthAPI) GetPolicyByName(authenticatedUser AuthenticatedUser, org string, policyName string) (*Policy, error) {
 	// Validate fields
 	if !IsValidName(policyName) {
 		return nil, &Error{
@@ -84,7 +84,7 @@ func (api *AuthAPI) GetPolicyByName(authenticatedUser AuthenticatedUser, org str
 	}
 }
 
-func (api *AuthAPI) GetListPolicies(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]PolicyIdentity, error) {
+func (api AuthAPI) GetListPolicies(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]PolicyIdentity, error) {
 	// Validate path prefix
 	if len(pathPrefix) > 0 && !IsValidPath(pathPrefix) {
 		return nil, &Error{
@@ -128,7 +128,7 @@ func (api *AuthAPI) GetListPolicies(authenticatedUser AuthenticatedUser, org str
 	return policyReferenceIds, nil
 }
 
-func (api *AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, path string, org string, statements []Statement) (*Policy, error) {
+func (api AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, path string, org string, statements []Statement) (*Policy, error) {
 	// Validate fields
 	if !IsValidName(name) {
 		return nil, &Error{
@@ -210,7 +210,7 @@ func (api *AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, 
 	}
 }
 
-func (api *AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string, policyName string, newName string, newPath string,
+func (api AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string, policyName string, newName string, newPath string,
 	newStatements []Statement) (*Policy, error) {
 	// Validate fields
 	if !IsValidName(policyName) {
@@ -314,7 +314,7 @@ func (api *AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string
 	return policy, nil
 }
 
-func (api *AuthAPI) DeletePolicy(authenticatedUser AuthenticatedUser, org string, name string) error {
+func (api AuthAPI) DeletePolicy(authenticatedUser AuthenticatedUser, org string, name string) error {
 	// Validate fields
 	if !IsValidName(name) {
 		return &Error{
@@ -358,7 +358,7 @@ func (api *AuthAPI) DeletePolicy(authenticatedUser AuthenticatedUser, org string
 	return nil
 }
 
-func (api *AuthAPI) GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser, org string, policyName string) ([]GroupIdentity, error) {
+func (api AuthAPI) GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser, org string, policyName string) ([]GroupIdentity, error) {
 	// Validate fields
 	if !IsValidName(policyName) {
 		return nil, &Error{

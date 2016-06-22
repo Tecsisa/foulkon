@@ -56,7 +56,7 @@ func (a *WorkerHandler) handleListPolicies(w http.ResponseWriter, r *http.Reques
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call policy API to retrieve policies
-	result, err := a.worker.AuthApi.GetListPolicies(a.worker.Authenticator.RetrieveUserID(*r), org, pathPrefix)
+	result, err := a.worker.PolicyApi.GetListPolicies(a.worker.Authenticator.RetrieveUserID(*r), org, pathPrefix)
 	if err != nil {
 		a.worker.Logger.Errorln(err)
 		// Transform to API errors
@@ -96,7 +96,7 @@ func (a *WorkerHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Store this policy
-	storedPolicy, err := a.worker.AuthApi.AddPolicy(a.worker.Authenticator.RetrieveUserID(*r), request.Name, request.Path, org, request.Statements)
+	storedPolicy, err := a.worker.PolicyApi.AddPolicy(a.worker.Authenticator.RetrieveUserID(*r), request.Name, request.Path, org, request.Statements)
 
 	// Error handling
 	if err != nil {
@@ -131,7 +131,7 @@ func (a *WorkerHandler) handleDeletePolicy(w http.ResponseWriter, r *http.Reques
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call API to delete policy
-	err := a.worker.AuthApi.DeletePolicy(a.worker.Authenticator.RetrieveUserID(*r), orgId, policyName)
+	err := a.worker.PolicyApi.DeletePolicy(a.worker.Authenticator.RetrieveUserID(*r), orgId, policyName)
 
 	if err != nil {
 		a.worker.Logger.Errorln(err)
@@ -169,7 +169,7 @@ func (a *WorkerHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Reques
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call policy API to update policy
-	result, err := a.worker.AuthApi.UpdatePolicy(a.worker.Authenticator.RetrieveUserID(*r), org, policyName, request.Name, request.Path, request.Statements)
+	result, err := a.worker.PolicyApi.UpdatePolicy(a.worker.Authenticator.RetrieveUserID(*r), org, policyName, request.Name, request.Path, request.Statements)
 
 	// Check errors
 	if err != nil {
@@ -205,7 +205,7 @@ func (a *WorkerHandler) handleGetPolicy(w http.ResponseWriter, r *http.Request, 
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call policies API to retrieve policy
-	result, err := a.worker.AuthApi.GetPolicyByName(a.worker.Authenticator.RetrieveUserID(*r), orgId, policyName)
+	result, err := a.worker.PolicyApi.GetPolicyByName(a.worker.Authenticator.RetrieveUserID(*r), orgId, policyName)
 
 	// Check errors
 	if err != nil {
@@ -239,7 +239,7 @@ func (a *WorkerHandler) handleGetPolicyAttachedGroups(w http.ResponseWriter, r *
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call policies API to retrieve attached groups
-	result, err := a.worker.AuthApi.GetPolicyAttachedGroups(a.worker.Authenticator.RetrieveUserID(*r), orgId, policyName)
+	result, err := a.worker.PolicyApi.GetPolicyAttachedGroups(a.worker.Authenticator.RetrieveUserID(*r), orgId, policyName)
 	if err != nil {
 		a.worker.Logger.Errorln(err)
 		// Transform to API errors
@@ -271,7 +271,7 @@ func (a *WorkerHandler) handleListAllPolicies(w http.ResponseWriter, r *http.Req
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call policies API to retrieve policies
-	result, err := a.worker.AuthApi.GetListPolicies(a.worker.Authenticator.RetrieveUserID(*r), org, pathPrefix)
+	result, err := a.worker.PolicyApi.GetListPolicies(a.worker.Authenticator.RetrieveUserID(*r), org, pathPrefix)
 	if err != nil {
 		a.worker.Logger.Errorln(err)
 		// Transform to API errors

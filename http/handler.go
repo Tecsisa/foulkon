@@ -131,7 +131,7 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 	router.GET(API_VERSION_1+"/policies", workerHandler.handleListAllPolicies)
 
 	// Get effect endpoint
-	router.POST(AUTHORIZE_URL, workerHandler.handleAuthorizeResources)
+	router.POST(AUTHORIZE_URL, workerHandler.HandleAuthorizeResources)
 
 	// Return handler
 	return worker.Authenticator.Authenticate(router)
