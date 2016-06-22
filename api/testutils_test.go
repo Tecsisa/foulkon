@@ -82,7 +82,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[IsAttachedToGroupMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[GetPoliciesAttachedMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[GetGroupsFilteredMethod] = make([]interface{}, 2)
-	testRepo.ArgsOut[RemoveGroupMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[RemoveGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[AddGroupMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AddMemberMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[RemoveMemberMethod] = make([]interface{}, 1)
@@ -278,7 +278,12 @@ func (t TestRepo) GetGroupsFiltered(org string, pathPrefix string) ([]Group, err
 	return groups, err
 }
 func (t TestRepo) RemoveGroup(id string) error {
-	return nil
+	t.ArgsIn[RemoveGroupMethod][0] = id
+	var err error
+	if t.ArgsOut[RemoveGroupMethod][0] != nil {
+		err = t.ArgsOut[RemoveGroupMethod][0].(error)
+	}
+	return err
 }
 
 func (t TestRepo) AddGroup(group Group) (*Group, error) {
