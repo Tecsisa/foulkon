@@ -48,7 +48,7 @@ func (h *WorkerHandler) handleGetUsers(w http.ResponseWriter, r *http.Request, _
 
 	// Call user API
 	userID := h.worker.Authenticator.RetrieveUserID(*r)
-	result, err := h.worker.AuthApi.GetListUsers(userID, pathPrefix)
+	result, err := h.worker.UserApi.GetListUsers(userID, pathPrefix)
 	if err != nil {
 		h.worker.Logger.Errorln(err)
 		// Transform to API errors
@@ -84,7 +84,7 @@ func (h *WorkerHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, 
 	}
 
 	// Call user API to create an user
-	result, err := h.worker.AuthApi.AddUser(h.worker.Authenticator.RetrieveUserID(*r), request.ExternalID, request.Path)
+	result, err := h.worker.UserApi.AddUser(h.worker.Authenticator.RetrieveUserID(*r), request.ExternalID, request.Path)
 
 	// Error handling
 	if err != nil {
@@ -127,7 +127,7 @@ func (h *WorkerHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps
 	id := ps.ByName(USER_ID)
 
 	// Call user API to update user
-	result, err := h.worker.AuthApi.UpdateUser(h.worker.Authenticator.RetrieveUserID(*r), id, request.Path)
+	result, err := h.worker.UserApi.UpdateUser(h.worker.Authenticator.RetrieveUserID(*r), id, request.Path)
 
 	// Error handling
 	if err != nil {
@@ -162,7 +162,7 @@ func (h *WorkerHandler) handleGetUserId(w http.ResponseWriter, r *http.Request, 
 	id := ps.ByName(USER_ID)
 
 	// Call user API to retrieve user
-	result, err := h.worker.AuthApi.GetUserByExternalId(h.worker.Authenticator.RetrieveUserID(*r), id)
+	result, err := h.worker.UserApi.GetUserByExternalId(h.worker.Authenticator.RetrieveUserID(*r), id)
 
 	// Error handling
 	if err != nil {
@@ -196,7 +196,7 @@ func (h *WorkerHandler) handleDeleteUserId(w http.ResponseWriter, r *http.Reques
 	id := ps.ByName(USER_ID)
 
 	// Call user API to delete user
-	err := h.worker.AuthApi.RemoveUserById(h.worker.Authenticator.RetrieveUserID(*r), id)
+	err := h.worker.UserApi.RemoveUserById(h.worker.Authenticator.RetrieveUserID(*r), id)
 
 	if err != nil {
 		h.worker.Logger.Errorln(err)
@@ -221,7 +221,7 @@ func (h *WorkerHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Reques
 	// Retrieve users using path
 	id := ps.ByName(USER_ID)
 
-	result, err := h.worker.AuthApi.GetGroupsByUserId(h.worker.Authenticator.RetrieveUserID(*r), id)
+	result, err := h.worker.UserApi.GetGroupsByUserId(h.worker.Authenticator.RetrieveUserID(*r), id)
 
 	if err != nil {
 		h.worker.Logger.Errorln(err)

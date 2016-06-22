@@ -22,7 +22,7 @@ func (u User) GetUrn() string {
 }
 
 // Retrieve user by external id
-func (api *AuthAPI) GetUserByExternalId(authenticatedUser AuthenticatedUser, id string) (*User, error) {
+func (api AuthAPI) GetUserByExternalId(authenticatedUser AuthenticatedUser, id string) (*User, error) {
 	// Call repo to retrieve the user if exist
 	if !IsValidUserExternalID(id) {
 		return nil, &Error{
@@ -71,7 +71,7 @@ func (api *AuthAPI) GetUserByExternalId(authenticatedUser AuthenticatedUser, id 
 }
 
 // Retrieve users that has path
-func (api *AuthAPI) GetListUsers(authenticatedUser AuthenticatedUser, pathPrefix string) ([]string, error) {
+func (api AuthAPI) GetListUsers(authenticatedUser AuthenticatedUser, pathPrefix string) ([]string, error) {
 
 	// Check parameters
 	if len(pathPrefix) > 0 && !IsValidPath(pathPrefix) {
@@ -115,7 +115,7 @@ func (api *AuthAPI) GetListUsers(authenticatedUser AuthenticatedUser, pathPrefix
 }
 
 // Add an User to database if not exist
-func (api *AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalID string, path string) (*User, error) {
+func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalID string, path string) (*User, error) {
 	// Validate external ID
 	if !IsValidUserExternalID(externalID) {
 		return nil, &Error{
@@ -191,7 +191,7 @@ func (api *AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalID stri
 }
 
 // Update an User to database if exist
-func (api *AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalID string, newPath string) (*User, error) {
+func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalID string, newPath string) (*User, error) {
 	// Validate external ID
 	if !IsValidUserExternalID(externalID) {
 		return nil, &Error{
@@ -265,7 +265,7 @@ func (api *AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalID s
 }
 
 // Remove user with this id
-func (api *AuthAPI) RemoveUserById(authenticatedUser AuthenticatedUser, id string) error {
+func (api AuthAPI) RemoveUserById(authenticatedUser AuthenticatedUser, id string) error {
 	// Call repo to retrieve the user
 	user, err := api.GetUserByExternalId(authenticatedUser, id)
 	if err != nil {
@@ -304,7 +304,7 @@ func (api *AuthAPI) RemoveUserById(authenticatedUser AuthenticatedUser, id strin
 }
 
 // Get groups for an user
-func (api *AuthAPI) GetGroupsByUserId(authenticatedUser AuthenticatedUser, id string) ([]GroupIdentity, error) {
+func (api AuthAPI) GetGroupsByUserId(authenticatedUser AuthenticatedUser, id string) ([]GroupIdentity, error) {
 	// Call repo to retrieve the user
 	user, err := api.GetUserByExternalId(authenticatedUser, id)
 	if err != nil {

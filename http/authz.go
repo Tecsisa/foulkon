@@ -20,7 +20,7 @@ type AuthorizeResourcesResponse struct {
 	ResourcesAllowed []string `json:"ResourcesAllowed, omitempty"`
 }
 
-func (a *WorkerHandler) handleAuthorizeResources(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *WorkerHandler) HandleAuthorizeResources(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	userID := a.worker.Authenticator.RetrieveUserID(*r)
 
 	// Decode request
@@ -33,7 +33,8 @@ func (a *WorkerHandler) handleAuthorizeResources(w http.ResponseWriter, r *http.
 	}
 
 	// Retrieve allowed resources
-	result, err := a.worker.AuthApi.GetAuthorizedExternalResources(userID, request.Action, request.Resources)
+	a.worker.Logger.Debugf("Action %v, Resources %v", request.Action, request.Resources)
+	result, err := a.worker.AuthzApi.GetAuthorizedExternalResources(userID, request.Action, request.Resources)
 	if err != nil {
 		a.worker.Logger.Errorln(err)
 		// Transform to API errors

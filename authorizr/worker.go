@@ -28,8 +28,11 @@ type Worker struct {
 	CertFile string
 	KeyFile  string
 
-	// API
-	AuthApi *api.AuthAPI
+	// APIs
+	UserApi   api.UserApi
+	GroupApi  api.GroupApi
+	PolicyApi api.PolicyApi
+	AuthzApi  api.AuthzApi
 
 	// Logger
 	Logger *log.Logger
@@ -68,7 +71,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 	logger.Infof("Logger type: %v, LogLevel: %v", loggerType, logger.Level.String())
 
 	// Start DB with API
-	var authApi *api.AuthAPI
+	var authApi api.AuthAPI
 
 	switch getMandatoryValue(config, "database.type") {
 	case "postgres": // Postgres DB
@@ -84,7 +87,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		repoDB := postgresql.PostgresRepo{
 			Dbmap: db,
 		}
-		authApi = &api.AuthAPI{
+		authApi = api.AuthAPI{
 			GroupRepo:  repoDB,
 			UserRepo:   repoDB,
 			PolicyRepo: repoDB,
@@ -137,7 +140,10 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		KeyFile:       getDefaultValue(config, "server.keyfile", ""),
 		Logger:        logger,
 		Authenticator: authenticator,
-		AuthApi:       authApi,
+		UserApi:       authApi,
+		GroupApi:      authApi,
+		PolicyApi:     authApi,
+		AuthzApi:      authApi,
 	}, nil
 }
 

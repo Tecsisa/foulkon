@@ -59,7 +59,7 @@ func (a *WorkerHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request
 
 	org := ps.ByName(ORG_NAME)
 	// Call group API to create an group
-	result, err := a.worker.AuthApi.AddGroup(a.worker.Authenticator.RetrieveUserID(*r), org, request.Name, request.Path)
+	result, err := a.worker.GroupApi.AddGroup(a.worker.Authenticator.RetrieveUserID(*r), org, request.Name, request.Path)
 
 	// Error handling
 	if err != nil {
@@ -94,7 +94,7 @@ func (a *WorkerHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request
 	name := ps.ByName(GROUP_NAME)
 
 	// Call user API to delete group
-	err := a.worker.AuthApi.RemoveGroup(a.worker.Authenticator.RetrieveUserID(*r), org, name)
+	err := a.worker.GroupApi.RemoveGroup(a.worker.Authenticator.RetrieveUserID(*r), org, name)
 
 	// Check if there were errors
 	if err != nil {
@@ -122,7 +122,7 @@ func (a *WorkerHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, p
 	name := ps.ByName(GROUP_NAME)
 
 	// Call group API to retrieve group
-	result, err := a.worker.AuthApi.GetGroupByName(a.worker.Authenticator.RetrieveUserID(*r), org, name)
+	result, err := a.worker.GroupApi.GetGroupByName(a.worker.Authenticator.RetrieveUserID(*r), org, name)
 
 	// Error handling
 	if err != nil {
@@ -157,7 +157,7 @@ func (a *WorkerHandler) handleListGroups(w http.ResponseWriter, r *http.Request,
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call group API to retrieve groups
-	result, err := a.worker.AuthApi.GetListGroups(a.worker.Authenticator.RetrieveUserID(*r), org, pathPrefix)
+	result, err := a.worker.GroupApi.GetListGroups(a.worker.Authenticator.RetrieveUserID(*r), org, pathPrefix)
 	if err != nil {
 		a.worker.Logger.Errorln(err)
 		// Transform to API errors
@@ -197,7 +197,7 @@ func (a *WorkerHandler) handleUpdateGroup(w http.ResponseWriter, r *http.Request
 	groupName := ps.ByName(GROUP_NAME)
 
 	// Call group API to update group
-	result, err := a.worker.AuthApi.UpdateGroup(a.worker.Authenticator.RetrieveUserID(*r), org, groupName, request.Name, request.Path)
+	result, err := a.worker.GroupApi.UpdateGroup(a.worker.Authenticator.RetrieveUserID(*r), org, groupName, request.Name, request.Path)
 
 	// Check errors
 	if err != nil {
@@ -235,7 +235,7 @@ func (a *WorkerHandler) handleListMembers(w http.ResponseWriter, r *http.Request
 	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to list members
-	result, err := a.worker.AuthApi.ListMembers(a.worker.Authenticator.RetrieveUserID(*r), org, group)
+	result, err := a.worker.GroupApi.ListMembers(a.worker.Authenticator.RetrieveUserID(*r), org, group)
 
 	// Check errors
 	if err != nil {
@@ -271,7 +271,7 @@ func (a *WorkerHandler) handleAddMember(w http.ResponseWriter, r *http.Request, 
 	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to create an group
-	err := a.worker.AuthApi.AddMember(a.worker.Authenticator.RetrieveUserID(*r), user, group, org)
+	err := a.worker.GroupApi.AddMember(a.worker.Authenticator.RetrieveUserID(*r), user, group, org)
 	// Error handling
 	if err != nil {
 		a.worker.Logger.Errorln(err)
@@ -301,7 +301,7 @@ func (a *WorkerHandler) handleRemoveMember(w http.ResponseWriter, r *http.Reques
 	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to create an group
-	err := a.worker.AuthApi.RemoveMember(a.worker.Authenticator.RetrieveUserID(*r), user, group, org)
+	err := a.worker.GroupApi.RemoveMember(a.worker.Authenticator.RetrieveUserID(*r), user, group, org)
 	// Error handling
 	if err != nil {
 		a.worker.Logger.Errorln(err)
@@ -330,7 +330,7 @@ func (a *WorkerHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.R
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call group API to attach policy to group
-	err := a.worker.AuthApi.AttachPolicyToGroup(a.worker.Authenticator.RetrieveUserID(*r), org, groupName, policyName)
+	err := a.worker.GroupApi.AttachPolicyToGroup(a.worker.Authenticator.RetrieveUserID(*r), org, groupName, policyName)
 
 	// Error handling
 	if err != nil {
@@ -363,7 +363,7 @@ func (a *WorkerHandler) handleDetachGroupPolicy(w http.ResponseWriter, r *http.R
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call group API to detach policy to group
-	err := a.worker.AuthApi.DetachPolicyToGroup(a.worker.Authenticator.RetrieveUserID(*r), org, groupName, policyName)
+	err := a.worker.GroupApi.DetachPolicyToGroup(a.worker.Authenticator.RetrieveUserID(*r), org, groupName, policyName)
 
 	// Error handling
 	if err != nil {
@@ -392,7 +392,7 @@ func (a *WorkerHandler) handleListAttachedGroupPolicies(w http.ResponseWriter, r
 	groupName := ps.ByName(GROUP_NAME)
 
 	// Call group API to retrieve attached policies
-	result, err := a.worker.AuthApi.ListAttachedGroupPolicies(a.worker.Authenticator.RetrieveUserID(*r), org, groupName)
+	result, err := a.worker.GroupApi.ListAttachedGroupPolicies(a.worker.Authenticator.RetrieveUserID(*r), org, groupName)
 	if err != nil {
 		a.worker.Logger.Errorln(err)
 		// Transform to API errors
@@ -425,7 +425,7 @@ func (a *WorkerHandler) handleListAllGroups(w http.ResponseWriter, r *http.Reque
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call group API to retrieve groups
-	result, err := a.worker.AuthApi.GetListGroups(a.worker.Authenticator.RetrieveUserID(*r), org, pathPrefix)
+	result, err := a.worker.GroupApi.GetListGroups(a.worker.Authenticator.RetrieveUserID(*r), org, pathPrefix)
 	if err != nil {
 		a.worker.Logger.Errorln(err)
 		// Transform to API errors

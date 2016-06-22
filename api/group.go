@@ -37,7 +37,7 @@ type GroupPolicies struct {
 }
 
 // Add an Group to database if not exist
-func (api *AuthAPI) AddGroup(authenticatedUser AuthenticatedUser, org string, name string, path string) (*Group, error) {
+func (api AuthAPI) AddGroup(authenticatedUser AuthenticatedUser, org string, name string, path string) (*Group, error) {
 	// Validate name
 	if !IsValidName(name) {
 		return nil, &Error{
@@ -111,7 +111,7 @@ func (api *AuthAPI) AddGroup(authenticatedUser AuthenticatedUser, org string, na
 }
 
 //  Add a new member into an existing group
-func (api *AuthAPI) AddMember(authenticatedUser AuthenticatedUser, userID string, groupName string, org string) error {
+func (api AuthAPI) AddMember(authenticatedUser AuthenticatedUser, userID string, groupName string, org string) error {
 	// Validate external ID
 	if !IsValidUserExternalID(userID) {
 		return &Error{
@@ -190,7 +190,7 @@ func (api *AuthAPI) AddMember(authenticatedUser AuthenticatedUser, userID string
 }
 
 //  Remove a member from a group
-func (api *AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, userID string, groupName string, org string) error {
+func (api AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, userID string, groupName string, org string) error {
 	// Validate external ID
 	if !IsValidUserExternalID(userID) {
 		return &Error{
@@ -270,7 +270,7 @@ func (api *AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, userID str
 }
 
 // List members of a group
-func (api *AuthAPI) ListMembers(authenticatedUser AuthenticatedUser, org string, groupName string) ([]string, error) {
+func (api AuthAPI) ListMembers(authenticatedUser AuthenticatedUser, org string, groupName string) ([]string, error) {
 	// Validate name
 	if !IsValidName(groupName) {
 		return nil, &Error{
@@ -321,7 +321,7 @@ func (api *AuthAPI) ListMembers(authenticatedUser AuthenticatedUser, org string,
 }
 
 // Remove group
-func (api *AuthAPI) RemoveGroup(authenticatedUser AuthenticatedUser, org string, name string) error {
+func (api AuthAPI) RemoveGroup(authenticatedUser AuthenticatedUser, org string, name string) error {
 	// Validate name
 	if !IsValidName(name) {
 		return &Error{
@@ -366,7 +366,7 @@ func (api *AuthAPI) RemoveGroup(authenticatedUser AuthenticatedUser, org string,
 	return nil
 }
 
-func (api *AuthAPI) GetGroupByName(authenticatedUser AuthenticatedUser, org string, name string) (*Group, error) {
+func (api AuthAPI) GetGroupByName(authenticatedUser AuthenticatedUser, org string, name string) (*Group, error) {
 	// Validate name
 	if !IsValidName(name) {
 		return nil, &Error{
@@ -416,7 +416,7 @@ func (api *AuthAPI) GetGroupByName(authenticatedUser AuthenticatedUser, org stri
 
 }
 
-func (api *AuthAPI) GetListGroups(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]GroupIdentity, error) {
+func (api AuthAPI) GetListGroups(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]GroupIdentity, error) {
 	// Validate path
 	if len(pathPrefix) > 0 && !IsValidPath(pathPrefix) {
 		return nil, &Error{
@@ -462,7 +462,7 @@ func (api *AuthAPI) GetListGroups(authenticatedUser AuthenticatedUser, org strin
 }
 
 // Update Group to database if exist
-func (api *AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, groupName string, newName string, newPath string) (*Group, error) {
+func (api AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, groupName string, newName string, newPath string) (*Group, error) {
 	// Validate name
 	if !IsValidName(newName) {
 		return nil, &Error{
@@ -551,7 +551,7 @@ func (api *AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string,
 
 }
 
-func (api *AuthAPI) AttachPolicyToGroup(authenticatedUser AuthenticatedUser, org string, groupName string, policyName string) error {
+func (api AuthAPI) AttachPolicyToGroup(authenticatedUser AuthenticatedUser, org string, groupName string, policyName string) error {
 	// Validate group name
 	if !IsValidName(groupName) {
 		return &Error{
@@ -625,7 +625,7 @@ func (api *AuthAPI) AttachPolicyToGroup(authenticatedUser AuthenticatedUser, org
 	return nil
 }
 
-func (api *AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org string, groupName string, policyName string) error {
+func (api AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org string, groupName string, policyName string) error {
 	// Validate group name
 	if !IsValidName(groupName) {
 		return &Error{
@@ -700,7 +700,7 @@ func (api *AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org
 	return nil
 }
 
-func (api *AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser, org string, groupName string) ([]PolicyIdentity, error) {
+func (api AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser, org string, groupName string) ([]PolicyIdentity, error) {
 	// Validate group name
 	if !IsValidName(groupName) {
 		return nil, &Error{
