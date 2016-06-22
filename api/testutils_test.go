@@ -53,7 +53,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[GetGroupByNameMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[IsMemberOfGroupMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[GetGroupMembersMethod] = make([]interface{}, 1)
-	testRepo.ArgsIn[IsAttachedToGroupMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[IsAttachedToGroupMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[GetPoliciesAttachedMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetGroupsFilteredMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[RemoveGroupMethod] = make([]interface{}, 1)
@@ -61,8 +61,8 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[AddMemberMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[RemoveMemberMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[UpdateGroupMethod] = make([]interface{}, 4)
-	testRepo.ArgsIn[AttachPolicyMethod] = make([]interface{}, 1)
-	testRepo.ArgsIn[DetachPolicyMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[AttachPolicyMethod] = make([]interface{}, 2)
+	testRepo.ArgsIn[DetachPolicyMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[GetPolicyByNameMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[AddPolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[UpdatePolicyMethod] = make([]interface{}, 5)
@@ -87,8 +87,8 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[AddMemberMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[RemoveMemberMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[UpdateGroupMethod] = make([]interface{}, 2)
-	testRepo.ArgsOut[AttachPolicyMethod] = make([]interface{}, 2)
-	testRepo.ArgsOut[DetachPolicyMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[AttachPolicyMethod] = make([]interface{}, 1)
+	testRepo.ArgsOut[DetachPolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[GetPolicyByNameMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AddPolicyMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[UpdatePolicyMethod] = make([]interface{}, 2)
@@ -237,7 +237,17 @@ func (t TestRepo) GetGroupMembers(groupID string) ([]User, error) {
 }
 
 func (t TestRepo) IsAttachedToGroup(groupID string, policyID string) (bool, error) {
-	return false, nil
+	t.ArgsIn[IsAttachedToGroupMethod][0] = groupID
+	t.ArgsIn[IsAttachedToGroupMethod][1] = policyID
+	var isAttached bool
+	if t.ArgsOut[IsAttachedToGroupMethod][0] != nil {
+		isAttached = t.ArgsOut[IsAttachedToGroupMethod][0].(bool)
+	}
+	var err error
+	if t.ArgsOut[IsAttachedToGroupMethod][1] != nil {
+		err = t.ArgsOut[IsAttachedToGroupMethod][1].(error)
+	}
+	return isAttached, err
 }
 
 func (t TestRepo) GetPoliciesAttached(groupID string) ([]Policy, error) {
@@ -322,10 +332,22 @@ func (t TestRepo) UpdateGroup(group Group, newName string, newPath string, newUr
 }
 
 func (t TestRepo) AttachPolicy(groupID string, policyID string) error {
-	return nil
+	t.ArgsIn[AttachPolicyMethod][0] = groupID
+	t.ArgsIn[AttachPolicyMethod][1] = policyID
+	var err error
+	if t.ArgsOut[AttachPolicyMethod][0] != nil {
+		err = t.ArgsOut[AttachPolicyMethod][0].(error)
+	}
+	return err
 }
 func (t TestRepo) DetachPolicy(groupID string, policyID string) error {
-	return nil
+	t.ArgsIn[DetachPolicyMethod][0] = groupID
+	t.ArgsIn[DetachPolicyMethod][1] = policyID
+	var err error
+	if t.ArgsOut[DetachPolicyMethod][0] != nil {
+		err = t.ArgsOut[DetachPolicyMethod][0].(error)
+	}
+	return err
 }
 
 //////////////////
