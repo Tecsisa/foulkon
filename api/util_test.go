@@ -355,3 +355,94 @@ func TestIsValidAction(t *testing.T) {
 		}
 	}
 }
+
+func TestIsValidStatement(t *testing.T) {
+	testcases := map[string]struct {
+		// Method args
+		Statements *[]Statement
+		// Expected results
+		wantError *Error
+	}{
+		"OKCase": {
+			Statements: &[]Statement{
+				Statement{
+					Effect: "allow",
+					Action: []string{
+						USER_ACTION_GET_USER,
+					},
+					Resources: []string{
+						GetUrnPrefix("", RESOURCE_USER, "/path/"),
+					},
+				},
+			},
+		},
+		"ErrorCaseInvalidEffect": {
+			Statements: &[]Statement{
+				Statement{
+					Effect: "FAILallowZ",
+					Action: []string{
+						USER_ACTION_GET_USER,
+					},
+					Resources: []string{
+						GetUrnPrefix("", RESOURCE_USER, "/path/"),
+					},
+				},
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+		"ErrorCaseInvalidAction": {
+			Statements: &[]Statement{
+				Statement{
+					Effect: "allow",
+					Action: []string{
+						"fail***",
+					},
+					Resources: []string{
+						GetUrnPrefix("", RESOURCE_USER, "/path/"),
+					},
+				},
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+		"ErrorCaseInvalidResource": {
+			Statements: &[]Statement{
+				Statement{
+					Effect: "allow",
+					Action: []string{
+						USER_ACTION_GET_USER,
+					},
+					Resources: []string{
+						GetUrnPrefix("", RESOURCE_USER, "/path/***"),
+					},
+				},
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+	}
+
+	for x, testcase := range testcases {
+		err := IsValidStatement(testcase.Statements)
+		if testcase.wantError != nil {
+			apiError, ok := err.(*Error)
+			if !ok || apiError == nil {
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				continue
+			}
+			if apiError.Code != testcase.wantError.Code {
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test %v failed. Error: %v", x, err)
+				continue
+			}
+		}
+	}
+}
