@@ -446,3 +446,138 @@ func TestIsValidStatement(t *testing.T) {
 		}
 	}
 }
+
+func TestIsValidResources(t *testing.T) {
+	testcases := map[string]struct {
+		// Method args
+		Resources []string
+		// Expected results
+		wantError *Error
+	}{
+		"OKCase1block": {
+			Resources: []string{
+				"*",
+			},
+		},
+		"ErrorCase1block": {
+			Resources: []string{
+				"fail",
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+		"OKCase2block": {
+			Resources: []string{
+				"urn:*",
+			},
+		},
+		"ErrorCase2blockNotUrn": {
+			Resources: []string{
+				"fail:asd",
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+		"ErrorCase2block": {
+			Resources: []string{
+				"urn:fail",
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+		"OKCase3block": {
+			Resources: []string{
+				"urn:iws:*",
+			},
+		},
+		"ErrorCase3blockBadString": {
+			Resources: []string{
+				"urn:iws***:something",
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+		"ErrorCase3block": {
+			Resources: []string{
+				"urn:iws:fail",
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+		"OKCase4block": {
+			Resources: []string{
+				"urn:iws:iam:*",
+			},
+		},
+		"ErrorCase4blockBadString": {
+			Resources: []string{
+				"urn:iws:some***:fail",
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+		"ErrorCase4block": {
+			Resources: []string{
+				"urn:iws:iam:fail",
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+		"OKCase5block": {
+			Resources: []string{
+				"urn:iws:iam::sysadmins/user1",
+			},
+		},
+		"ErrorCase5blockBadString": {
+			Resources: []string{
+				"urn:iws:iam:some***:fail",
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+		"ErrorCase5block": {
+			Resources: []string{
+				"urn:iws:iam:org1:fail**!^_#",
+			},
+			wantError: &Error{
+				Code: REGEX_NO_MATCH,
+			},
+		},
+		"ErrorCaseBadResource": {
+			Resources: []string{
+				"urn:iws:iam:org1:fail:fail:fail",
+			},
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+	}
+
+	for x, testcase := range testcases {
+		err := IsValidResources(testcase.Resources)
+		if testcase.wantError != nil {
+			apiError, ok := err.(*Error)
+			if !ok || apiError == nil {
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				continue
+			}
+			if apiError.Code != testcase.wantError.Code {
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test %v failed. Error: %v", x, err)
+				continue
+			}
+		}
+	}
+}
