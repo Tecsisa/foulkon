@@ -13,7 +13,7 @@ import (
 func TestWorkerHandler_HandleAuthorizeResources(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		request interface{}
+		request *AuthorizeResourcesRequest
 		// Expected result
 		expectedStatusCode int
 		expectedResponse   AuthorizeResourcesResponse
@@ -24,7 +24,7 @@ func TestWorkerHandler_HandleAuthorizeResources(t *testing.T) {
 		getAuthorizedExternalResourcesErr error
 	}{
 		"OkCase": {
-			request: AuthorizeResourcesRequest{
+			request: &AuthorizeResourcesRequest{
 				Resources: []string{},
 				Action:    api.USER_ACTION_GET_USER,
 			},
@@ -42,7 +42,7 @@ func TestWorkerHandler_HandleAuthorizeResources(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidParameter": {
-			request: AuthorizeResourcesRequest{
+			request: &AuthorizeResourcesRequest{
 				Resources: []string{},
 				Action:    api.USER_ACTION_GET_USER,
 			},
@@ -57,7 +57,7 @@ func TestWorkerHandler_HandleAuthorizeResources(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedError": {
-			request: AuthorizeResourcesRequest{
+			request: &AuthorizeResourcesRequest{
 				Resources: []string{},
 				Action:    api.USER_ACTION_GET_USER,
 			},
@@ -72,7 +72,7 @@ func TestWorkerHandler_HandleAuthorizeResources(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnknownApiError": {
-			request: AuthorizeResourcesRequest{
+			request: &AuthorizeResourcesRequest{
 				Resources: []string{},
 				Action:    api.USER_ACTION_GET_USER,
 			},
