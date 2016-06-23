@@ -16,3 +16,4 @@ import:
   version: 90f51ccdd292798d4995b9c5057d4cbc94a8b782
 - package: github.com/pelletier/go-toml
   version: 0.3.4
+- package: github.com/kylelemons/godebug
