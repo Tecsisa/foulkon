@@ -42,7 +42,7 @@ type GetGroupsByUserIdResponse struct {
 }
 
 // This method returns a list of users that belongs to Org param and have PathPrefix
-func (h *WorkerHandler) handleGetUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *WorkerHandler) HandleGetUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Retrieve PathPrefix
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 

@@ -223,7 +223,17 @@ func (t TestAPI) GetUserByExternalId(authenticatedUser api.AuthenticatedUser, id
 }
 
 func (t TestAPI) GetListUsers(authenticatedUser api.AuthenticatedUser, pathPrefix string) ([]string, error) {
-	return nil, nil
+	t.ArgsIn[GetListUsersMethod][0] = authenticatedUser
+	t.ArgsIn[GetListUsersMethod][1] = pathPrefix
+	var externalIDs []string
+	if t.ArgsOut[GetListUsersMethod][0] != nil {
+		externalIDs = t.ArgsOut[GetListUsersMethod][0].([]string)
+	}
+	var err error
+	if t.ArgsOut[GetListUsersMethod][1] != nil {
+		err = t.ArgsOut[GetListUsersMethod][1].(error)
+	}
+	return externalIDs, err
 }
 
 func (t TestAPI) UpdateUser(authenticatedUser api.AuthenticatedUser, externalID string, newPath string) (*api.User, error) {
