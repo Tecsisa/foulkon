@@ -566,7 +566,7 @@ func TestWorkerHandler_HandleGetUserId(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnknownApiError": {
-			externalID:         "UnauthorizedID",
+			externalID:         "ExceptionID",
 			expectedStatusCode: http.StatusInternalServerError,
 			getUserByExternalIdErr: &api.Error{
 				Code:    api.UNKNOWN_API_ERROR,
@@ -620,6 +620,132 @@ func TestWorkerHandler_HandleGetUserId(t *testing.T) {
 					n, diff)
 				continue
 			}
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
+					n, diff)
+				continue
+			}
+
+		}
+
+	}
+}
+
+func TestWorkerHandler_HandleDeleteUserId(t *testing.T) {
+	now := time.Now()
+	testcases := map[string]struct {
+		// API method args
+		externalID string
+		// Expected result
+		expectedStatusCode int
+		expectedResponse   GetUserByIdResponse
+		expectedError      api.Error
+		// Manager Errors
+		removeUserByIdErr error
+	}{
+		"OkCase": {
+			externalID:         "UserID",
+			expectedStatusCode: http.StatusNoContent,
+			expectedResponse: GetUserByIdResponse{
+				User: &api.User{
+					ID:         "UserID",
+					ExternalID: "ExternalID",
+					Path:       "Path",
+					Urn:        "urn",
+					CreateAt:   now,
+				},
+			},
+		},
+		"ErrorCaseUserNotExist": {
+			externalID:         "UserID",
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code:    api.USER_BY_EXTERNAL_ID_NOT_FOUND,
+				Message: "User not exist",
+			},
+			removeUserByIdErr: &api.Error{
+				Code:    api.USER_BY_EXTERNAL_ID_NOT_FOUND,
+				Message: "User not exist",
+			},
+		},
+		"ErrorCaseInvalidParameterError": {
+			externalID:         "InvalidID",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+			removeUserByIdErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+		},
+		"ErrorCaseUnauthorizedResourcesError": {
+			externalID:         "UnauthorizedID",
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+			removeUserByIdErr: &api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+		},
+		"ErrorCaseUnknownApiError": {
+			externalID:         "ExceptionID",
+			expectedStatusCode: http.StatusInternalServerError,
+			removeUserByIdErr: &api.Error{
+				Code:    api.UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[RemoveUserByIdMethod][0] = test.removeUserByIdErr
+
+		req, err := http.NewRequest(http.MethodDelete, server.URL+USER_ROOT_URL+"/"+test.externalID, nil)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
+			continue
+		}
+
+		res, err := client.Do(req)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
+			continue
+		}
+
+		// Check received parameters
+		if testApi.ArgsIn[RemoveUserByIdMethod][1] != test.externalID {
+			t.Errorf("Test case %v. Received different ExternalID (wanted:%v / received:%v)", n, test.externalID, testApi.ArgsIn[RemoveUserByIdMethod][1])
+			continue
+		}
+
+		// check status code
+		if test.expectedStatusCode != res.StatusCode {
+			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
+			continue
+		}
+
+		switch res.StatusCode {
+		case http.StatusNoContent:
+			// No message expected
+			continue
 		case http.StatusInternalServerError: // Empty message so continue
 			continue
 		default:

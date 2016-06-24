@@ -252,8 +252,15 @@ func (t TestAPI) UpdateUser(authenticatedUser api.AuthenticatedUser, externalID 
 }
 
 func (t TestAPI) RemoveUserById(authenticatedUser api.AuthenticatedUser, id string) error {
-	return nil
+	t.ArgsIn[RemoveUserByIdMethod][0] = authenticatedUser
+	t.ArgsIn[RemoveUserByIdMethod][1] = id
+	var err error
+	if t.ArgsOut[RemoveUserByIdMethod][0] != nil {
+		err = t.ArgsOut[RemoveUserByIdMethod][0].(error)
+	}
+	return err
 }
+
 func (t TestAPI) GetGroupsByUserId(authenticatedUser api.AuthenticatedUser, id string) ([]api.GroupIdentity, error) {
 	return nil, nil
 }
