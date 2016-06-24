@@ -89,7 +89,7 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 
 	router.GET(USER_ID_URL, workerHandler.HandleGetUserId)
 	router.PUT(USER_ID_URL, workerHandler.HandlePutUser)
-	router.DELETE(USER_ID_URL, workerHandler.handleDeleteUserId)
+	router.DELETE(USER_ID_URL, workerHandler.HandleDeleteUserId)
 
 	router.GET(USER_ID_GROUPS_URL, workerHandler.handleUserIdGroups)
 
