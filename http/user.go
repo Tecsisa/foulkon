@@ -112,7 +112,7 @@ func (h *WorkerHandler) HandlePostUsers(w http.ResponseWriter, r *http.Request, 
 	h.RespondCreated(r, &userID, w, response)
 }
 
-func (h *WorkerHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *WorkerHandler) HandlePutUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	userID := h.worker.Authenticator.RetrieveUserID(*r)
 	// Decode request
 	request := UpdateUserRequest{}
@@ -127,7 +127,7 @@ func (h *WorkerHandler) handlePutUser(w http.ResponseWriter, r *http.Request, ps
 	id := ps.ByName(USER_ID)
 
 	// Call user API to update user
-	result, err := h.worker.UserApi.UpdateUser(h.worker.Authenticator.RetrieveUserID(*r), id, request.Path)
+	result, err := h.worker.UserApi.UpdateUser(userID, id, request.Path)
 
 	// Error handling
 	if err != nil {
