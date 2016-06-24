@@ -494,3 +494,149 @@ func TestWorkerHandler_HandlePutUser(t *testing.T) {
 
 	}
 }
+
+func TestWorkerHandler_HandleGetUserId(t *testing.T) {
+	now := time.Now()
+	testcases := map[string]struct {
+		// API method args
+		externalID string
+		// Expected result
+		expectedStatusCode int
+		expectedResponse   GetUserByIdResponse
+		expectedError      api.Error
+		// Manager Results
+		getUserByExternalIdResult *api.User
+		// Manager Errors
+		getUserByExternalIdErr error
+	}{
+		"OkCase": {
+			externalID:         "UserID",
+			expectedStatusCode: http.StatusOK,
+			expectedResponse: GetUserByIdResponse{
+				User: &api.User{
+					ID:         "UserID",
+					ExternalID: "ExternalID",
+					Path:       "Path",
+					Urn:        "urn",
+					CreateAt:   now,
+				},
+			},
+			getUserByExternalIdResult: &api.User{
+				ID:         "UserID",
+				ExternalID: "ExternalID",
+				Path:       "Path",
+				Urn:        "urn",
+				CreateAt:   now,
+			},
+		},
+		"ErrorCaseUserNotExist": {
+			externalID:         "UserID",
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code:    api.USER_BY_EXTERNAL_ID_NOT_FOUND,
+				Message: "User not exist",
+			},
+			getUserByExternalIdErr: &api.Error{
+				Code:    api.USER_BY_EXTERNAL_ID_NOT_FOUND,
+				Message: "User not exist",
+			},
+		},
+		"ErrorCaseInvalidParameterError": {
+			externalID:         "InvalidID",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+			getUserByExternalIdErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+		},
+		"ErrorCaseUnauthorizedResourcesError": {
+			externalID:         "UnauthorizedID",
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+			getUserByExternalIdErr: &api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+		},
+		"ErrorCaseUnknownApiError": {
+			externalID:         "UnauthorizedID",
+			expectedStatusCode: http.StatusInternalServerError,
+			getUserByExternalIdErr: &api.Error{
+				Code:    api.UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[GetUserByExternalIdMethod][0] = test.getUserByExternalIdResult
+		testApi.ArgsOut[GetUserByExternalIdMethod][1] = test.getUserByExternalIdErr
+
+		req, err := http.NewRequest(http.MethodGet, server.URL+USER_ROOT_URL+"/"+test.externalID, nil)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
+			continue
+		}
+
+		res, err := client.Do(req)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
+			continue
+		}
+
+		// Check received parameters
+		if testApi.ArgsIn[GetUserByExternalIdMethod][1] != test.externalID {
+			t.Errorf("Test case %v. Received different ExternalID (wanted:%v / received:%v)", n, test.externalID, testApi.ArgsIn[GetUserByExternalIdMethod][1])
+			continue
+		}
+
+		// check status code
+		if test.expectedStatusCode != res.StatusCode {
+			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
+			continue
+		}
+
+		switch res.StatusCode {
+		case http.StatusOK:
+			getUserByIdResponse := GetUserByIdResponse{}
+			err = json.NewDecoder(res.Body).Decode(&getUserByIdResponse)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(getUserByIdResponse, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
+					n, diff)
+				continue
+			}
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
+					n, diff)
+				continue
+			}
+
+		}
+
+	}
+}
