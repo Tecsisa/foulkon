@@ -262,7 +262,17 @@ func (t TestAPI) RemoveUserById(authenticatedUser api.AuthenticatedUser, id stri
 }
 
 func (t TestAPI) GetGroupsByUserId(authenticatedUser api.AuthenticatedUser, id string) ([]api.GroupIdentity, error) {
-	return nil, nil
+	t.ArgsIn[GetGroupsByUserIdMethod][0] = authenticatedUser
+	t.ArgsIn[GetGroupsByUserIdMethod][1] = id
+	var groups []api.GroupIdentity
+	if t.ArgsOut[GetGroupsByUserIdMethod][0] != nil {
+		groups = t.ArgsOut[GetGroupsByUserIdMethod][0].([]api.GroupIdentity)
+	}
+	var err error
+	if t.ArgsOut[GetGroupsByUserIdMethod][1] != nil {
+		err = t.ArgsOut[GetGroupsByUserIdMethod][1].(error)
+	}
+	return groups, err
 }
 
 // GROUP API

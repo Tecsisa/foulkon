@@ -218,7 +218,7 @@ func (h *WorkerHandler) HandleDeleteUserId(w http.ResponseWriter, r *http.Reques
 	h.RespondNoContent(r, &authenticatedUser, w)
 }
 
-func (h *WorkerHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *WorkerHandler) HandleUserIdGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
 	// Retrieve users using path
 	id := ps.ByName(USER_ID)
@@ -234,6 +234,8 @@ func (h *WorkerHandler) handleUserIdGroups(w http.ResponseWriter, r *http.Reques
 			h.RespondNotFound(r, &authenticatedUser, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
 			h.RespondForbidden(r, &authenticatedUser, w, apiError)
+		case api.INVALID_PARAMETER_ERROR:
+			h.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		default: // Unexpected API error
 			h.RespondInternalServerError(r, &authenticatedUser, w)
 		}
