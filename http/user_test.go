@@ -1,11 +1,15 @@
 package http
 
 import (
+	"bytes"
 	"encoding/json"
-	"github.com/tecsisa/authorizr/api"
 	"net/http"
-	"reflect"
 	"testing"
+
+	"time"
+
+	"github.com/kylelemons/godebug/pretty"
+	"github.com/tecsisa/authorizr/api"
 )
 
 func TestWorkerHandler_HandleGetUsers(t *testing.T) {
@@ -96,9 +100,9 @@ func TestWorkerHandler_HandleGetUsers(t *testing.T) {
 				continue
 			}
 			// Check result
-			if !reflect.DeepEqual(getUserExternalIDsResponse, test.expectedResponse) {
-				t.Errorf("Test %v failed. Received different responses (wanted:%v / received:%v)",
-					n, test.expectedResponse, getUserExternalIDsResponse)
+			if diff := pretty.Compare(getUserExternalIDsResponse, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
+					n, diff)
 				continue
 			}
 		case http.StatusInternalServerError: // Empty message so continue
@@ -111,9 +115,196 @@ func TestWorkerHandler_HandleGetUsers(t *testing.T) {
 				continue
 			}
 			// Check result
-			if !reflect.DeepEqual(apiError, test.expectedError) {
-				t.Errorf("Test %v failed. Received different error response (wanted:%v / received:%v)",
-					n, test.expectedError, apiError)
+			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
+					n, diff)
+				continue
+			}
+
+		}
+
+	}
+}
+
+func TestWorkerHandler_HandlePostUsers(t *testing.T) {
+	now := time.Now()
+	testcases := map[string]struct {
+		// API method args
+		request *CreateUserRequest
+		// Expected result
+		expectedStatusCode int
+		expectedResponse   CreateUserResponse
+		expectedError      api.Error
+		// Manager Results
+		addUserResult *api.User
+		// Manager Errors
+		addUserErr error
+	}{
+		"OkCase": {
+			request: &CreateUserRequest{
+				ExternalID: "UserID",
+				Path:       "Path",
+			},
+			expectedStatusCode: http.StatusCreated,
+			expectedResponse: CreateUserResponse{
+				User: &api.User{
+					ID:         "UserID",
+					ExternalID: "ExternalID",
+					Path:       "Path",
+					Urn:        "urn",
+					CreateAt:   now,
+				},
+			},
+			addUserResult: &api.User{
+				ID:         "UserID",
+				ExternalID: "ExternalID",
+				Path:       "Path",
+				Urn:        "urn",
+				CreateAt:   now,
+			},
+		},
+		"ErrorCaseMalformedRequest": {
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "EOF",
+			},
+		},
+		"ErrorCaseUserAlreadyExist": {
+			request: &CreateUserRequest{
+				ExternalID: "UserID",
+				Path:       "Path",
+			},
+			expectedStatusCode: http.StatusConflict,
+			expectedError: api.Error{
+				Code:    api.USER_ALREADY_EXIST,
+				Message: "User already exist",
+			},
+			addUserErr: &api.Error{
+				Code:    api.USER_ALREADY_EXIST,
+				Message: "User already exist",
+			},
+		},
+		"ErrorCaseInvalidParameterError": {
+			request: &CreateUserRequest{
+				ExternalID: "UserID",
+				Path:       "Path",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+			addUserErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+		},
+		"ErrorCaseUnauthorizedResourcesError": {
+			request: &CreateUserRequest{
+				ExternalID: "UserID",
+				Path:       "Path",
+			},
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+			addUserErr: &api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+		},
+		"ErrorCaseUnknownApiError": {
+			request: &CreateUserRequest{
+				ExternalID: "UserID",
+				Path:       "Path",
+			},
+			expectedStatusCode: http.StatusInternalServerError,
+			addUserErr: &api.Error{
+				Code:    api.UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[AddUserMethod][0] = test.addUserResult
+		testApi.ArgsOut[AddUserMethod][1] = test.addUserErr
+
+		var body *bytes.Buffer
+		if test.request != nil {
+			jsonObject, err := json.Marshal(test.request)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected marshalling api request %v", n, err)
+				continue
+			}
+			body = bytes.NewBuffer(jsonObject)
+		}
+		if body == nil {
+			body = bytes.NewBuffer([]byte{})
+		}
+
+		req, err := http.NewRequest(http.MethodPost, server.URL+USER_ROOT_URL, body)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
+			continue
+		}
+
+		res, err := client.Do(req)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
+			continue
+		}
+
+		if test.request != nil {
+			// Check received parameters
+			if testApi.ArgsIn[AddUserMethod][1] != test.request.ExternalID {
+				t.Errorf("Test case %v. Received different ExternalID (wanted:%v / received:%v)", n, test.request.ExternalID, testApi.ArgsIn[AddUserMethod][1])
+				continue
+			}
+			if testApi.ArgsIn[AddUserMethod][2] != test.request.Path {
+				t.Errorf("Test case %v. Received different Path (wanted:%v / received:%v)", n, test.request.Path, testApi.ArgsIn[AddUserMethod][2])
+				continue
+			}
+		}
+
+		// check status code
+		if test.expectedStatusCode != res.StatusCode {
+			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
+			continue
+		}
+
+		switch res.StatusCode {
+		case http.StatusCreated:
+			createUserResponse := CreateUserResponse{}
+			err = json.NewDecoder(res.Body).Decode(&createUserResponse)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(createUserResponse, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
+					n, diff)
+				continue
+			}
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
+					n, diff)
 				continue
 			}
 

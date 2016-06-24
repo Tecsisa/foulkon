@@ -72,7 +72,7 @@ func (h *WorkerHandler) HandleGetUsers(w http.ResponseWriter, r *http.Request, _
 }
 
 // This method creates the user passed by form request and return the user created
-func (h *WorkerHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *WorkerHandler) HandlePostUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	userID := h.worker.Authenticator.RetrieveUserID(*r)
 	// Decode request
 	request := CreateUserRequest{}
@@ -84,7 +84,7 @@ func (h *WorkerHandler) handlePostUsers(w http.ResponseWriter, r *http.Request, 
 	}
 
 	// Call user API to create an user
-	result, err := h.worker.UserApi.AddUser(h.worker.Authenticator.RetrieveUserID(*r), request.ExternalID, request.Path)
+	result, err := h.worker.UserApi.AddUser(userID, request.ExternalID, request.Path)
 
 	// Error handling
 	if err != nil {
