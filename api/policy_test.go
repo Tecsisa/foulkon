@@ -230,18 +230,22 @@ func TestGetPolicyByName(t *testing.T) {
 		if testcase.wantError != nil {
 			apiError, ok := err.(*Error)
 			if !ok || apiError == nil {
-				t.Fatalf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				continue
 			}
 			if apiError.Code != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed. Error: %v", x, err)
+				t.Errorf("Test %v failed. Error: %v", x, err)
+				continue
 			} else {
 				if !reflect.DeepEqual(policy, testcase.getPolicyByNameMethodResult) {
-					t.Fatalf("Test %v failed. Received different policies (wanted:%v / received:%v)",
+					t.Errorf("Test %v failed. Received different policies (wanted:%v / received:%v)",
 						x, testcase.getPolicyByNameMethodResult, policy)
+					continue
 				}
 			}
 		}
@@ -605,18 +609,22 @@ func TestAddPolicy(t *testing.T) {
 		if testcase.wantError != nil {
 			apiError, ok := err.(*Error)
 			if !ok || apiError == nil {
-				t.Fatalf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				continue
 			}
 			if apiError.Code != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed. Error: %v", x, err)
+				t.Errorf("Test %v failed. Error: %v", x, err)
+				continue
 			} else {
 				if !reflect.DeepEqual(policy, testcase.addPolicyMethodResult) {
-					t.Fatalf("Test %v failed. Received different policies (wanted:%v / received:%v)",
+					t.Errorf("Test %v failed. Received different policies (wanted:%v / received:%v)",
 						x, testcase.addPolicyMethodResult, policy)
+					continue
 				}
 			}
 		}
@@ -1895,18 +1903,22 @@ func TestUpdatePolicy(t *testing.T) {
 		if testcase.wantError != nil {
 			apiError, ok := err.(*Error)
 			if !ok || apiError == nil {
-				t.Fatalf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				continue
 			}
 			if apiError.Code != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed. Error: %v", x, err)
+				t.Errorf("Test %v failed. Error: %v", x, err)
+				continue
 			} else {
 				if !reflect.DeepEqual(policy, testcase.updatePolicyMethodResult) {
-					t.Fatalf("Test %v failed. Received different policies (wanted:%v / received:%v)",
+					t.Errorf("Test %v failed. Received different policies (wanted:%v / received:%v)",
 						x, testcase.updatePolicyMethodResult, policy)
+					continue
 				}
 			}
 		}
@@ -2169,18 +2181,22 @@ func TestGetListPolicies(t *testing.T) {
 		if testcase.wantError != nil {
 			apiError, ok := err.(*Error)
 			if !ok || apiError == nil {
-				t.Fatalf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				continue
 			}
 			if apiError.Code != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed. Error: %v", x, err)
+				t.Errorf("Test %v failed. Error: %v", x, err)
+				continue
 			} else {
 				if !reflect.DeepEqual(policies, testcase.expectedPolicies) {
-					t.Fatalf("Test %v failed. Received different policies (wanted:%v / received:%v)",
+					t.Errorf("Test %v failed. Received different policies (wanted:%v / received:%v)",
 						x, testcase.expectedPolicies, policies)
+					continue
 				}
 			}
 		}
@@ -2446,14 +2462,17 @@ func TestDeletePolicy(t *testing.T) {
 		if testcase.wantError != nil {
 			apiError, ok := err.(*Error)
 			if !ok || apiError == nil {
-				t.Fatalf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				continue
 			}
 			if apiError.Code != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed. Error: %v", x, err)
+				t.Errorf("Test %v failed. Error: %v", x, err)
+				continue
 			}
 		}
 	}
@@ -2743,18 +2762,22 @@ func TestGetPolicyAttachedGroups(t *testing.T) {
 		if testcase.wantError != nil {
 			apiError, ok := err.(*Error)
 			if !ok || apiError == nil {
-				t.Fatalf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				continue
 			}
 			if apiError.Code != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed. Error: %v", x, err)
+				t.Errorf("Test %v failed. Error: %v", x, err)
+				continue
 			} else {
 				if !reflect.DeepEqual(groups, testcase.expectedGroups) {
-					t.Fatalf("Test %v failed. Received different groups (wanted:%v / received:%v)",
+					t.Errorf("Test %v failed. Received different groups (wanted:%v / received:%v)",
 						x, testcase.expectedGroups, groups)
+					continue
 				}
 			}
 		}

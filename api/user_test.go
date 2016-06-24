@@ -147,14 +147,18 @@ func TestGetUserByExternalId(t *testing.T) {
 		user, err := testAPI.GetUserByExternalId(testcase.authUser, testcase.externalID)
 		if testcase.wantError != nil {
 			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed", x)
+				t.Errorf("Test %v failed", x)
+				continue
 			} else {
 				if testcase.expectedUser.ExternalID != user.ExternalID {
-					t.Fatalf("Test %v failed. Received different users (wanted:%v / received:%v)", x, testcase.expectedUser.ExternalID, user.ExternalID)
+					t.Errorf("Test %v failed. Received different users (wanted:%v / received:%v)",
+						x, testcase.expectedUser.ExternalID, user.ExternalID)
+					continue
 				}
 			}
 		}
@@ -382,14 +386,17 @@ func TestAddUser(t *testing.T) {
 		user, err := testAPI.AddUser(testcase.authUser, testcase.externalID, testcase.path)
 		if testcase.wantError != nil {
 			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed: %v", x, err)
+				t.Errorf("Test %v failed: %v", x, err)
+				continue
 			} else {
 				if !reflect.DeepEqual(testcase.expectedUser, user) {
-					t.Fatalf("Test %v failed. Received different users", x)
+					t.Errorf("Test %v failed. Received different users", x)
+					continue
 				}
 			}
 		}
@@ -759,14 +766,18 @@ func TestUpdateUser(t *testing.T) {
 		user, err := testAPI.UpdateUser(testcase.authUser, testcase.externalID, testcase.newPath)
 		if testcase.wantError != nil {
 			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed: %v", x, err)
+				t.Errorf("Test %v failed: %v", x, err)
+				continue
 			} else {
 				if testcase.expectedUser.ExternalID != user.ExternalID {
-					t.Fatalf("Test %v failed. Received different users (wanted:%v / received:%v)", x, testcase.expectedUser.ExternalID, user.ExternalID)
+					t.Errorf("Test %v failed. Received different users (wanted:%v / received:%v)",
+						x, testcase.expectedUser.ExternalID, user.ExternalID)
+					continue
 				}
 			}
 		}
@@ -970,11 +981,14 @@ func TestRemoveUser(t *testing.T) {
 		err := testAPI.RemoveUserById(testcase.authUser, testcase.externalID)
 		if testcase.wantError != nil {
 			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
+				t.Errorf("Test %v failed. Got error %v, expected %v",
+					x, errCode, testcase.wantError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed: %v", x, err)
+				t.Errorf("Test %v failed: %v", x, err)
+				continue
 			}
 		}
 	}
@@ -1065,11 +1079,15 @@ func TestGetListUsers(t *testing.T) {
 		users, err := testAPI.GetListUsers(testcase.authUser, testcase.pathPrefix)
 		if testcase.wantError != nil {
 			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
+				t.Errorf("Test %v failed. Got error %v, expected %v",
+					x, errCode, testcase.wantError.Code)
+				continue
 			}
 		} else {
 			if reflect.DeepEqual(testcase.GetUsersFilteredMethodResult, users) {
-				t.Fatalf("Test %v failed. Received different users (wanted:%v / received:%v)", x, testcase.GetUsersFilteredMethodResult, users)
+				t.Errorf("Test %v failed. Received different users (wanted:%v / received:%v)",
+					x, testcase.GetUsersFilteredMethodResult, users)
+				continue
 			}
 		}
 	}
@@ -1294,11 +1312,14 @@ func TestGetGroupsByUserID(t *testing.T) {
 		groups, err := testAPI.GetGroupsByUserId(testcase.authUser, testcase.externalID)
 		if testcase.wantError != nil {
 			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
+				t.Errorf("Test %v failed. Got error %v, expected %v",
+					x, errCode, testcase.wantError.Code)
+				continue
 			}
 		} else {
 			if reflect.DeepEqual(groups, testcase.expectedGroups) {
-				t.Fatalf("Test %v failed. Received different groups", x)
+				t.Errorf("Test %v failed. Received different groups", x)
+				continue
 			}
 		}
 	}
