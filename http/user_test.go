@@ -312,3 +312,185 @@ func TestWorkerHandler_HandlePostUsers(t *testing.T) {
 
 	}
 }
+
+func TestWorkerHandler_HandlePutUser(t *testing.T) {
+	now := time.Now()
+	testcases := map[string]struct {
+		// API method args
+		request *UpdateUserRequest
+		// Expected result
+		expectedStatusCode int
+		expectedResponse   UpdateUserResponse
+		expectedError      api.Error
+		// Manager Results
+		updateUserResult *api.User
+		// Manager Errors
+		updateUserErr error
+	}{
+		"OkCase": {
+			request: &UpdateUserRequest{
+				Path: "NewPath",
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse: UpdateUserResponse{
+				User: &api.User{
+					ID:         "UserID",
+					ExternalID: "ExternalID",
+					Path:       "Path",
+					Urn:        "urn",
+					CreateAt:   now,
+				},
+			},
+			updateUserResult: &api.User{
+				ID:         "UserID",
+				ExternalID: "ExternalID",
+				Path:       "Path",
+				Urn:        "urn",
+				CreateAt:   now,
+			},
+		},
+		"ErrorCaseMalformedRequest": {
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "EOF",
+			},
+		},
+		"ErrorCaseUserNotExist": {
+			request: &UpdateUserRequest{
+				Path: "NewPath",
+			},
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code:    api.USER_BY_EXTERNAL_ID_NOT_FOUND,
+				Message: "User not exist",
+			},
+			updateUserErr: &api.Error{
+				Code:    api.USER_BY_EXTERNAL_ID_NOT_FOUND,
+				Message: "User not exist",
+			},
+		},
+		"ErrorCaseInvalidParameterError": {
+			request: &UpdateUserRequest{
+				Path: "InvalidPath",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+			updateUserErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+		},
+		"ErrorCaseUnauthorizedResourcesError": {
+			request: &UpdateUserRequest{
+				Path: "NewPath",
+			},
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+			updateUserErr: &api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+		},
+		"ErrorCaseUnknownApiError": {
+			request: &UpdateUserRequest{
+				Path: "NewPath",
+			},
+			expectedStatusCode: http.StatusInternalServerError,
+			updateUserErr: &api.Error{
+				Code:    api.UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[UpdateUserMethod][0] = test.updateUserResult
+		testApi.ArgsOut[UpdateUserMethod][1] = test.updateUserErr
+
+		var body *bytes.Buffer
+		if test.request != nil {
+			jsonObject, err := json.Marshal(test.request)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected marshalling api request %v", n, err)
+				continue
+			}
+			body = bytes.NewBuffer(jsonObject)
+		}
+		if body == nil {
+			body = bytes.NewBuffer([]byte{})
+		}
+
+		req, err := http.NewRequest(http.MethodPut, server.URL+USER_ROOT_URL+"/userid", body)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
+			continue
+		}
+
+		res, err := client.Do(req)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
+			continue
+		}
+
+		if test.request != nil {
+			// Check received parameters
+			if testApi.ArgsIn[UpdateUserMethod][1] != "userid" {
+				t.Errorf("Test case %v. Received different ExternalID (wanted:%v / received:%v)", n, "userid", testApi.ArgsIn[UpdateUserMethod][1])
+				continue
+			}
+			if testApi.ArgsIn[UpdateUserMethod][2] != test.request.Path {
+				t.Errorf("Test case %v. Received different Path (wanted:%v / received:%v)", n, test.request.Path, testApi.ArgsIn[UpdateUserMethod][2])
+				continue
+			}
+		}
+
+		// check status code
+		if test.expectedStatusCode != res.StatusCode {
+			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
+			continue
+		}
+
+		switch res.StatusCode {
+		case http.StatusOK:
+			updateUserResponse := UpdateUserResponse{}
+			err = json.NewDecoder(res.Body).Decode(&updateUserResponse)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(updateUserResponse, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
+					n, diff)
+				continue
+			}
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
+					n, diff)
+				continue
+			}
+
+		}
+
+	}
+}

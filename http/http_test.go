@@ -237,8 +237,20 @@ func (t TestAPI) GetListUsers(authenticatedUser api.AuthenticatedUser, pathPrefi
 }
 
 func (t TestAPI) UpdateUser(authenticatedUser api.AuthenticatedUser, externalID string, newPath string) (*api.User, error) {
-	return nil, nil
+	t.ArgsIn[UpdateUserMethod][0] = authenticatedUser
+	t.ArgsIn[UpdateUserMethod][1] = externalID
+	t.ArgsIn[UpdateUserMethod][2] = newPath
+	var user *api.User
+	if t.ArgsOut[UpdateUserMethod][0] != nil {
+		user = t.ArgsOut[UpdateUserMethod][0].(*api.User)
+	}
+	var err error
+	if t.ArgsOut[UpdateUserMethod][1] != nil {
+		err = t.ArgsOut[UpdateUserMethod][1].(error)
+	}
+	return user, err
 }
+
 func (t TestAPI) RemoveUserById(authenticatedUser api.AuthenticatedUser, id string) error {
 	return nil
 }
