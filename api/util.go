@@ -53,6 +53,19 @@ const (
 	POLICY_ACTION_LIST_ALL_POLICIES    = "iam:ListAllPolicies"
 )
 
+var (
+	rUserExtID, _          = regexp.Compile(`^[\w+.@\-]+$`)
+	rName, _               = regexp.Compile(`^[\w\-]+$`)
+	rPath, _               = regexp.Compile(`^/$|^/[\w+/\-]+\w+/$`)
+	rPathExclude, _        = regexp.Compile(`[/]{2,}`)
+	rAction, _             = regexp.Compile(`^[\w\-:]+[\w-*]+$`)
+	rActionExclude, _      = regexp.Compile(`[*]{2,}|[:]{2,}`)
+	rWordResource, _       = regexp.Compile(`^[\w+\-.@]+$`)
+	rWordResourcePrefix, _ = regexp.Compile(`^[\w+\-.@]+\*$`)
+	rUrn, _                = regexp.Compile(`^\*$|^[\w+\-@.]+\*?$|^[\w+\-@.]+\*?$|^[\w+\-@.]+(/?([\w+\-@.]+/)*([\w+\-@.]|[*])+)?$`)
+	rUrnExclude, _         = regexp.Compile(`[/]{2,}|[:]{2,}|[*]{2,}`)
+)
+
 func CreateUrn(org string, resource string, path string, name string) string {
 	switch resource {
 	case RESOURCE_USER:
@@ -72,20 +85,16 @@ func GetUrnPrefix(org string, resource string, path string) string {
 }
 
 func IsValidUserExternalID(externalID string) bool {
-	r, _ := regexp.Compile(`^[\w+.@\-]+$`)
-	return r.MatchString(externalID) && len(externalID) < MAX_EXTERNAL_ID_LENGTH
+	return rUserExtID.MatchString(externalID) && len(externalID) < MAX_EXTERNAL_ID_LENGTH
 }
 
 // this func validates group and policy names
 func IsValidName(name string) bool {
-	r, _ := regexp.Compile(`^[\w\-]+$`)
-	return r.MatchString(name) && len(name) < MAX_NAME_LENGTH
+	return rName.MatchString(name) && len(name) < MAX_NAME_LENGTH
 }
 
 func IsValidPath(path string) bool {
-	r, _ := regexp.Compile(`^/$|^/[\w+/\-]+\w+/$`)
-	r2, _ := regexp.Compile(`[/]{2,}`)
-	return r.MatchString(path) && !r2.MatchString(path) && len(path) < MAX_PATH_LENGTH
+	return rPath.MatchString(path) && !rPathExclude.MatchString(path) && len(path) < MAX_PATH_LENGTH
 }
 
 func IsValidEffect(effect string) error {
@@ -99,10 +108,9 @@ func IsValidEffect(effect string) error {
 }
 
 func IsValidAction(actions []string) error {
-	r, _ := regexp.Compile(`^[\w\-:]+[\w-*]+$`)
-	r2, _ := regexp.Compile(`[*]{2,}|[:]{2,}`)
+
 	for _, action := range actions {
-		if !r.MatchString(action) || r2.MatchString(action) || len(action) > MAX_ACTION_LENGTH {
+		if !rAction.MatchString(action) || rActionExclude.MatchString(action) || len(action) > MAX_ACTION_LENGTH {
 			return &Error{
 				Code:    REGEX_NO_MATCH,
 				Message: fmt.Sprintf("No regex match in action: %v", action),
@@ -121,12 +129,6 @@ func IsValidResources(resources []string) error {
 		}
 	}
 
-	wordRegex, _ := regexp.Compile(`^[\w+\-.@]+$`)
-	wordPrefixRegex, _ := regexp.Compile(`^[\w+\-.@]+\*$`)
-
-	r, _ := regexp.Compile(`^\*$|^[\w+\-@.]+\*?$|^[\w+\-@.]+\*?$|^[\w+\-@.]+(/?([\w+\-@.]+/)*([\w+\-@.]|[*])+)?$`)
-	r2, _ := regexp.Compile(`[/]{2,}|[:]{2,}|[*]{2,}`)
-
 	for _, resource := range resources {
 		blocks := strings.Split(resource, ":")
 		for n, block := range blocks {
@@ -143,36 +145,36 @@ func IsValidResources(resources []string) error {
 				}
 			case 1:
 				if len(blocks) < 3 { // This is the last block
-					if block != "*" && !wordPrefixRegex.MatchString(block) {
+					if block != "*" && !rWordResourcePrefix.MatchString(block) {
 						return errFunc(resource)
 					}
 				} else {
-					if !wordRegex.MatchString(block) {
+					if !rWordResource.MatchString(block) {
 						return errFunc(resource)
 					}
 				}
 			case 2:
 				if len(blocks) < 4 { // This is the last block
-					if block != "*" && !wordPrefixRegex.MatchString(block) {
+					if block != "*" && !rWordResourcePrefix.MatchString(block) {
 						return errFunc(resource)
 					}
 				} else {
-					if !wordRegex.MatchString(block) {
+					if !rWordResource.MatchString(block) {
 						return errFunc(resource)
 					}
 				}
 			case 3:
 				if len(blocks) < 5 { // This is the last block
-					if block != "*" && !wordPrefixRegex.MatchString(block) {
+					if block != "*" && !rWordResourcePrefix.MatchString(block) {
 						return errFunc(resource)
 					}
 				} else {
-					if block != "" && !wordRegex.MatchString(block) {
+					if block != "" && !rWordResource.MatchString(block) {
 						return errFunc(resource)
 					}
 				}
 			case 4:
-				if !r.MatchString(block) || r2.MatchString(block) {
+				if !rUrn.MatchString(block) || rUrnExclude.MatchString(block) {
 					return errFunc(resource)
 				}
 			default:
