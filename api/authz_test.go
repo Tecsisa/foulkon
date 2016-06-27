@@ -84,26 +84,30 @@ func TestGetUsersAuthorized(t *testing.T) {
 		authorizedUsers, err := testAPI.GetUsersAuthorized(test.authUser, test.resourceUrn, test.action, test.usersToAuthorize)
 		if test.wantError != nil {
 			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
-				t.Fatalf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
+				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
 					test.wantError.Code, apiError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed. Error: %v", n, err)
+				t.Errorf("Test %v failed. Error: %v", n, err)
+				continue
 			}
 
 			if !test.authUser.Admin {
 				// Check received authenticated user in method GetUserByExternalID
 				if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
-					t.Fatalf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+					t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
 						n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
+					continue
 				}
 			}
 
 			// Check result
 			if !reflect.DeepEqual(authorizedUsers, test.usersAuthorized) {
-				t.Fatalf("Test %v failed. Received different authorized users (wanted:%v / received:%v)",
+				t.Errorf("Test %v failed. Received different authorized users (wanted:%v / received:%v)",
 					test.usersAuthorized, authorizedUsers)
+				continue
 			}
 
 		}
@@ -187,26 +191,30 @@ func TestGroupsAuthorized(t *testing.T) {
 		authorizedGroups, err := testAPI.GetGroupsAuthorized(test.authUser, test.resourceUrn, test.action, test.groupsToAuthorize)
 		if test.wantError != nil {
 			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
-				t.Fatalf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
+				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
 					test.wantError.Code, apiError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed. Error: %v", n, err)
+				t.Errorf("Test %v failed. Error: %v", n, err)
+				continue
 			}
 
 			if !test.authUser.Admin {
 				// Check received authenticated user in method GetUserByExternalID
 				if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
-					t.Fatalf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+					t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
 						n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
+					continue
 				}
 			}
 
 			// Check result
 			if !reflect.DeepEqual(authorizedGroups, test.groupsAuthorized) {
-				t.Fatalf("Test %v failed. Received different authorized groups (wanted:%v / received:%v)",
+				t.Errorf("Test %v failed. Received different authorized groups (wanted:%v / received:%v)",
 					test.groupsAuthorized, authorizedGroups)
+				continue
 			}
 		}
 	}
@@ -289,26 +297,30 @@ func TestGetPoliciesAuthorized(t *testing.T) {
 		authorizedPolicies, err := testAPI.GetPoliciesAuthorized(test.authUser, test.resourceUrn, test.action, test.policiesToAuthorize)
 		if test.wantError != nil {
 			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
-				t.Fatalf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
+				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
 					test.wantError.Code, apiError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed. Error: %v", n, err)
+				t.Errorf("Test %v failed. Error: %v", n, err)
+				continue
 			}
 
 			if !test.authUser.Admin {
 				// Check received authenticated user in method GetUserByExternalID
 				if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
-					t.Fatalf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+					t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
 						n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
+					continue
 				}
 			}
 
 			// Check result
 			if !reflect.DeepEqual(authorizedPolicies, test.policiesAuthorized) {
-				t.Fatalf("Test %v failed. Received different authorized policies (wanted:%v / received:%v)",
+				t.Errorf("Test %v failed. Received different authorized policies (wanted:%v / received:%v)",
 					authorizedPolicies, test.policiesAuthorized)
+				continue
 			}
 		}
 	}
@@ -557,26 +569,30 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 		resources, err := testAPI.GetAuthorizedExternalResources(test.authUser, test.action, test.resourceUrns)
 		if test.wantError != nil {
 			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
-				t.Fatalf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
+				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
 					test.wantError.Code, apiError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed. Error: %v", n, err)
+				t.Errorf("Test %v failed. Error: %v", n, err)
+				continue
 			}
 
 			if !test.authUser.Admin {
 				// Check received authenticated user in method GetUserByExternalID
 				if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
-					t.Fatalf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+					t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
 						n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
+					continue
 				}
 			}
 
 			// Check result
 			if !reflect.DeepEqual(resources, test.expectedResources) {
-				t.Fatalf("Test %v failed. Received different resources (wanted:%v / received:%v)",
+				t.Errorf("Test %v failed. Received different resources (wanted:%v / received:%v)",
 					n, test.expectedResources, resources)
+				continue
 			}
 		}
 	}
@@ -800,26 +816,30 @@ func TestGetAuthorizedResources(t *testing.T) {
 		authorizedResources, err := testAPI.getAuthorizedResources(test.authUser, test.resourceUrn, test.action, test.resourcesToAuthorize)
 		if test.wantError != nil {
 			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
-				t.Fatalf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
+				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
 					test.wantError.Code, apiError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed. Error: %v", n, err)
+				t.Errorf("Test %v failed. Error: %v", n, err)
+				continue
 			}
 
 			if !test.authUser.Admin {
 				// Check received authenticated user in method GetUserByExternalID
 				if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
-					t.Fatalf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+					t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
 						n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
+					continue
 				}
 			}
 
 			// Check result
 			if !reflect.DeepEqual(authorizedResources, test.resourcesAuthorized) {
-				t.Fatalf("Test %v failed. Received different authorized resources (wanted:%v / received:%v)",
+				t.Errorf("Test %v failed. Received different authorized resources (wanted:%v / received:%v)",
 					n, test.resourcesAuthorized, authorizedResources)
+				continue
 			}
 		}
 	}
@@ -1066,34 +1086,40 @@ func TestGetRestrictions(t *testing.T) {
 		restrictions, err := testAPI.getRestrictions(test.authUserID, test.action, test.resourceUrn)
 		if test.wantError != nil {
 			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
-				t.Fatalf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
+				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
 					test.wantError.Code, apiError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed. Error: %v", n, err)
+				t.Errorf("Test %v failed. Error: %v", n, err)
+				continue
 			}
 
 			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUserID {
-				t.Fatalf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
 					n, test.authUserID, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
+				continue
 			}
 
 			if param := testRepo.ArgsIn[GetGroupsByUserIDMethod][0]; test.authUserID != "" && param != test.authUserID {
-				t.Fatalf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
 					n, test.authUserID, testRepo.ArgsIn[GetGroupsByUserIDMethod][0])
+				continue
 			}
 
 			if param := testRepo.ArgsIn[GetPoliciesAttachedMethod][0]; test.getGroupsByUserIDResult != nil &&
 				param != test.getGroupsByUserIDResult[0].ID {
-				t.Fatalf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
 					n, test.authUserID, testRepo.ArgsIn[GetPoliciesAttachedMethod][0])
+				continue
 			}
 
 			// Check result
 			if !reflect.DeepEqual(test.expectedRestrictions, restrictions) {
-				t.Fatalf("Test %v failed. Received different restrictions (wanted:%v / received:%v)",
+				t.Errorf("Test %v failed. Received different restrictions (wanted:%v / received:%v)",
 					n, test.expectedRestrictions, restrictions)
+				continue
 			}
 		}
 	}
@@ -1152,23 +1178,27 @@ func TestGetGroupsByUser(t *testing.T) {
 		groups, err := testAPI.getGroupsByUser(test.userID)
 		if test.wantError != nil {
 			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
-				t.Fatalf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
+				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
 					test.wantError.Code, apiError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed. Error: %v", n, err)
+				t.Errorf("Test %v failed. Error: %v", n, err)
+				continue
 			}
 
 			if param := testRepo.ArgsIn[GetGroupsByUserIDMethod][0]; param != test.userID {
-				t.Fatalf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
 					n, test.userID, testRepo.ArgsIn[GetGroupsByUserIDMethod][0])
+				continue
 			}
 
 			// Check result
 			if !reflect.DeepEqual(test.expectedGroups, groups) {
-				t.Fatalf("Test %v failed. Received different restrictions (wanted:%v / received:%v)",
+				t.Errorf("Test %v failed. Received different restrictions (wanted:%v / received:%v)",
 					n, test.expectedGroups, groups)
+				continue
 			}
 		}
 	}
@@ -1252,24 +1282,28 @@ func TestGetPoliciesByGroups(t *testing.T) {
 		policies, err := testAPI.getPoliciesByGroups(test.groups)
 		if test.wantError != nil {
 			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
-				t.Fatalf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
+				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
 					test.wantError.Code, apiError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed. Error: %v", n, err)
+				t.Errorf("Test %v failed. Error: %v", n, err)
+				continue
 			}
 
 			if param := testRepo.ArgsIn[GetPoliciesAttachedMethod][0]; len(test.groups) > 0 &&
 				param != test.groups[len(test.groups)-1].ID {
-				t.Fatalf("Test %v failed. Received different group identifiers (wanted:%v / received:%v)",
+				t.Errorf("Test %v failed. Received different group identifiers (wanted:%v / received:%v)",
 					n, test.groups[len(test.groups)-1].ID, testRepo.ArgsIn[GetPoliciesAttachedMethod][0])
+				continue
 			}
 
 			// Check result
 			if !reflect.DeepEqual(test.expectedPolicies, policies) {
-				t.Fatalf("Test %v failed. Received different policies (wanted:%v / received:%v)",
+				t.Errorf("Test %v failed. Received different policies (wanted:%v / received:%v)",
 					n, test.expectedPolicies, policies)
+				continue
 			}
 		}
 	}
@@ -1378,8 +1412,9 @@ func TestGetStatementsByRequestedAction(t *testing.T) {
 
 		// Check result
 		if !reflect.DeepEqual(test.expectedStatements, statements) {
-			t.Fatalf("Test %v failed. Received different statements (wanted:%v / received:%v)",
+			t.Errorf("Test %v failed. Received different statements (wanted:%v / received:%v)",
 				n, test.expectedStatements, statements)
+			continue
 		}
 
 	}
@@ -1448,8 +1483,9 @@ func TestIsActionContained(t *testing.T) {
 
 		// Check result
 		if test.expectedResponse != isContained {
-			t.Fatalf("Test %v failed. Received different values (wanted:%v / received:%v)",
+			t.Errorf("Test %v failed. Received different values (wanted:%v / received:%v)",
 				n, test.expectedResponse, isContained)
+			continue
 		}
 	}
 }
@@ -1483,8 +1519,9 @@ func TestIsResourceContained(t *testing.T) {
 
 		// Check result
 		if test.expectedResponse != isContained {
-			t.Fatalf("Test %v failed. Received different values (wanted:%v / received:%v)",
+			t.Errorf("Test %v failed. Received different values (wanted:%v / received:%v)",
 				n, test.expectedResponse, isContained)
+			continue
 		}
 	}
 }
@@ -1510,8 +1547,9 @@ func TestIsFullUrn(t *testing.T) {
 
 		// Check result
 		if test.expectedResponse != isContained {
-			t.Fatalf("Test %v failed. Received different values (wanted:%v / received:%v)",
+			t.Errorf("Test %v failed. Received different values (wanted:%v / received:%v)",
 				n, test.expectedResponse, isContained)
+			continue
 		}
 	}
 }
@@ -1627,8 +1665,9 @@ func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
 
 		// Check result
 		if !reflect.DeepEqual(test.expectedRestrictions, restrictions) {
-			t.Fatalf("Test %v failed. Received different restrictions (wanted:%v / received:%v)",
+			t.Errorf("Test %v failed. Received different restrictions (wanted:%v / received:%v)",
 				n, test.expectedRestrictions, restrictions)
+			continue
 		}
 	}
 }
@@ -1738,8 +1777,9 @@ func TestGetRestrictionsWhenResourceRequestedIsFullUrn(t *testing.T) {
 
 		// Check result
 		if !reflect.DeepEqual(test.expectedRestrictions, restrictions) {
-			t.Fatalf("Test %v failed. Received different restrictions (wanted:%v / received:%v)",
+			t.Errorf("Test %v failed. Received different restrictions (wanted:%v / received:%v)",
 				n, test.expectedRestrictions, restrictions)
+			continue
 		}
 	}
 }
@@ -1806,8 +1846,9 @@ func TestFilterResources(t *testing.T) {
 
 		// Check result
 		if !reflect.DeepEqual(test.expectedResources, filteredResources) {
-			t.Fatalf("Test %v failed. Received different resources (wanted:%v / received:%v)",
+			t.Errorf("Test %v failed. Received different resources (wanted:%v / received:%v)",
 				n, test.expectedResources, filteredResources)
+			continue
 		}
 	}
 }
@@ -1926,8 +1967,9 @@ func TestIsAllowedResource(t *testing.T) {
 
 		// Check result
 		if !reflect.DeepEqual(test.expectedData, response) {
-			t.Fatalf("Test %v failed. Received different responses (wanted:%v / received:%v)",
+			t.Errorf("Test %v failed. Received different responses (wanted:%v / received:%v)",
 				n, test.expectedData, response)
+			continue
 		}
 	}
 }

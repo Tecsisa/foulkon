@@ -35,8 +35,9 @@ func TestCreateUrn(t *testing.T) {
 	for x, testcase := range testcases {
 		urn := CreateUrn(testcase.org, testcase.resource, testcase.path, testcase.name)
 		if urn != testcase.expectedUrn {
-			t.Fatalf("Test %v failed. Received different urns (wanted: %v / received: %v)",
+			t.Errorf("Test %v failed. Received different urns (wanted: %v / received: %v)",
 				x, testcase.expectedUrn, urn)
+			continue
 		}
 	}
 }
@@ -70,8 +71,9 @@ func TestGetUrnPrefix(t *testing.T) {
 	for x, testcase := range testcases {
 		urn := GetUrnPrefix(testcase.org, testcase.resource, testcase.path)
 		if urn != testcase.expectedUrn {
-			t.Fatalf("Test %v failed. Received different urns (wanted: %v / received: %v)",
+			t.Errorf("Test %v failed. Received different urns (wanted: %v / received: %v)",
 				x, testcase.expectedUrn, urn)
+			continue
 		}
 	}
 }
@@ -130,8 +132,9 @@ func TestIsValidUserExternalID(t *testing.T) {
 	for x, testcase := range testcases {
 		valid := IsValidUserExternalID(testcase.externalID)
 		if valid != testcase.valid {
-			t.Fatalf("Test %v failed. Received different values (wanted: %v / received: %v)",
+			t.Errorf("Test %v failed. Received different values (wanted: %v / received: %v)",
 				x, testcase.valid, valid)
+			continue
 		}
 	}
 }
@@ -174,8 +177,9 @@ func TestIsValidName(t *testing.T) {
 	for x, testcase := range testcases {
 		valid := IsValidName(testcase.name)
 		if valid != testcase.valid {
-			t.Fatalf("Test %v failed. Received different values (wanted: %v / received: %v)",
+			t.Errorf("Test %v failed. Received different values (wanted: %v / received: %v)",
 				x, testcase.valid, valid)
+			continue
 		}
 	}
 }
@@ -238,8 +242,9 @@ func TestIsValidPath(t *testing.T) {
 	for x, testcase := range testcases {
 		valid := IsValidPath(testcase.path)
 		if valid != testcase.valid {
-			t.Fatalf("Test %v failed. Received different values (wanted: %v / received: %v)",
+			t.Errorf("Test %v failed. Received different values (wanted: %v / received: %v)",
 				x, testcase.valid, valid)
+			continue
 		}
 	}
 }
@@ -270,14 +275,17 @@ func TestIsValidEffect(t *testing.T) {
 		if testcase.wantError != nil {
 			apiError, ok := err.(*Error)
 			if !ok || apiError == nil {
-				t.Fatalf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				continue
 			}
 			if apiError.Code != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed. Error: %v", x, err)
+				t.Errorf("Test %v failed. Error: %v", x, err)
+				continue
 			}
 		}
 	}
@@ -343,14 +351,17 @@ func TestIsValidAction(t *testing.T) {
 		if testcase.wantError != nil {
 			apiError, ok := err.(*Error)
 			if !ok || apiError == nil {
-				t.Fatalf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				continue
 			}
 			if apiError.Code != testcase.wantError.Code {
-				t.Fatalf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				continue
 			}
 		} else {
 			if err != nil {
-				t.Fatalf("Test %v failed. Error: %v", x, err)
+				t.Errorf("Test %v failed. Error: %v", x, err)
+				continue
 			}
 		}
 	}

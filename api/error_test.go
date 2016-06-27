@@ -34,8 +34,9 @@ func TestError(t *testing.T) {
 
 	for x, testcase := range testcases {
 		if testcase.error.Error() != testcase.expectedMessage {
-			t.Fatalf("Test %v failed. Received different messages (wanted:%v / received:%v)",
+			t.Errorf("Test %v failed. Received different messages (wanted:%v / received:%v)",
 				x, testcase.expectedMessage, testcase.error.Error())
+			continue
 		}
 	}
 }
