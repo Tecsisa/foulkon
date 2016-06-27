@@ -59,7 +59,7 @@ func (a *WorkerHandler) HandleCreateGroup(w http.ResponseWriter, r *http.Request
 
 	org := ps.ByName(ORG_NAME)
 	// Call group API to create an group
-	result, err := a.worker.GroupApi.AddGroup(a.worker.Authenticator.RetrieveUserID(*r), org, request.Name, request.Path)
+	result, err := a.worker.GroupApi.AddGroup(authenticatedUser, org, request.Name, request.Path)
 
 	// Error handling
 	if err != nil {
@@ -87,14 +87,14 @@ func (a *WorkerHandler) HandleCreateGroup(w http.ResponseWriter, r *http.Request
 	a.RespondCreated(r, &authenticatedUser, w, response)
 }
 
-func (a *WorkerHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	userID := a.worker.Authenticator.RetrieveUserID(*r)
+func (a *WorkerHandler) HandleDeleteGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	// Retrieve group org and name from path
 	org := ps.ByName(ORG_NAME)
 	name := ps.ByName(GROUP_NAME)
 
 	// Call user API to delete group
-	err := a.worker.GroupApi.RemoveGroup(a.worker.Authenticator.RetrieveUserID(*r), org, name)
+	err := a.worker.GroupApi.RemoveGroup(authenticatedUser, org, name)
 
 	// Check if there were errors
 	if err != nil {
@@ -103,15 +103,17 @@ func (a *WorkerHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w, apiError)
+			a.RespondNotFound(r, &authenticatedUser, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w, apiError)
+			a.RespondForbidden(r, &authenticatedUser, w, apiError)
+		case api.INVALID_PARAMETER_ERROR:
+			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		default: // Unexpected API error
-			a.RespondInternalServerError(r, &userID, w)
+			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
 	} else { // a.Respond without content
-		a.RespondNoContent(r, &userID, w)
+		a.RespondNoContent(r, &authenticatedUser, w)
 	}
 }
 
@@ -122,7 +124,7 @@ func (a *WorkerHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, p
 	name := ps.ByName(GROUP_NAME)
 
 	// Call group API to retrieve group
-	result, err := a.worker.GroupApi.GetGroupByName(a.worker.Authenticator.RetrieveUserID(*r), org, name)
+	result, err := a.worker.GroupApi.GetGroupByName(authenticatedUser, org, name)
 
 	// Error handling
 	if err != nil {

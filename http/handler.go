@@ -100,7 +100,7 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 	router.POST(GROUP_ORG_ROOT_URL, workerHandler.HandleCreateGroup)
 	router.GET(GROUP_ORG_ROOT_URL, workerHandler.handleListGroups)
 
-	router.DELETE(GROUP_ID_URL, workerHandler.handleDeleteGroup)
+	router.DELETE(GROUP_ID_URL, workerHandler.HandleDeleteGroup)
 	router.GET(GROUP_ID_URL, workerHandler.handleGetGroup)
 	router.PUT(GROUP_ID_URL, workerHandler.handleUpdateGroup)
 
