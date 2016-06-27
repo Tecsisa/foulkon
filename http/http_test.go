@@ -282,7 +282,18 @@ func (t TestAPI) AddGroup(authenticatedUser api.AuthenticatedUser, org string, n
 }
 
 func (t TestAPI) GetGroupByName(authenticatedUser api.AuthenticatedUser, org string, name string) (*api.Group, error) {
-	return nil, nil
+	t.ArgsIn[GetGroupByNameMethod][0] = authenticatedUser
+	t.ArgsIn[GetGroupByNameMethod][1] = org
+	t.ArgsIn[GetGroupByNameMethod][2] = name
+	var group *api.Group
+	if t.ArgsOut[GetGroupByNameMethod][0] != nil {
+		group = t.ArgsOut[GetGroupByNameMethod][0].(*api.Group)
+	}
+	var err error
+	if t.ArgsOut[GetGroupByNameMethod][1] != nil {
+		err = t.ArgsOut[GetGroupByNameMethod][1].(error)
+	}
+	return group, err
 }
 
 func (t TestAPI) GetListGroups(authenticatedUser api.AuthenticatedUser, org string, pathPrefix string) ([]api.GroupIdentity, error) {

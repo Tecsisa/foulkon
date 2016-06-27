@@ -116,7 +116,7 @@ func (a *WorkerHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request
 }
 
 func (a *WorkerHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	userID := a.worker.Authenticator.RetrieveUserID(*r)
+	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	// Retrieve group org and name from path
 	org := ps.ByName(ORG_NAME)
 	name := ps.ByName(GROUP_NAME)
@@ -131,11 +131,13 @@ func (a *WorkerHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, p
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w, apiError)
+			a.RespondNotFound(r, &authenticatedUser, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w, apiError)
+			a.RespondForbidden(r, &authenticatedUser, w, apiError)
+		case api.INVALID_PARAMETER_ERROR:
+			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		default: // Unexpected API error
-			a.RespondInternalServerError(r, &userID, w)
+			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
 	}
@@ -145,7 +147,7 @@ func (a *WorkerHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, p
 	}
 
 	// Write group to response
-	a.RespondOk(r, &userID, w, response)
+	a.RespondOk(r, &authenticatedUser, w, response)
 }
 
 func (a *WorkerHandler) handleListGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
