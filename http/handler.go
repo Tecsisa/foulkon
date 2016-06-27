@@ -97,7 +97,7 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 	router.GET(API_VERSION_1+ORG_ROOT+"/users", workerHandler.handleOrgListUsers)
 
 	// Group api
-	router.POST(GROUP_ORG_ROOT_URL, workerHandler.handleCreateGroup)
+	router.POST(GROUP_ORG_ROOT_URL, workerHandler.HandleCreateGroup)
 	router.GET(GROUP_ORG_ROOT_URL, workerHandler.handleListGroups)
 
 	router.DELETE(GROUP_ID_URL, workerHandler.handleDeleteGroup)
