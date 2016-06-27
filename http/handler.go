@@ -91,7 +91,7 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 	router.PUT(USER_ID_URL, workerHandler.HandlePutUser)
 	router.DELETE(USER_ID_URL, workerHandler.HandleDeleteUserId)
 
-	router.GET(USER_ID_GROUPS_URL, workerHandler.handleUserIdGroups)
+	router.GET(USER_ID_GROUPS_URL, workerHandler.HandleUserIdGroups)
 
 	// Special endpoint with organization URI for users
 	router.GET(API_VERSION_1+ORG_ROOT+"/users", workerHandler.handleOrgListUsers)
