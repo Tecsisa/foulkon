@@ -1,0 +1,166 @@
+package http
+
+import (
+	"encoding/json"
+	"net/http"
+	"testing"
+
+	"time"
+
+	"github.com/kylelemons/godebug/pretty"
+	"github.com/tecsisa/authorizr/api"
+)
+
+func TestWorkerHandler_HandleGetGroup(t *testing.T) {
+	now := time.Now()
+	testcases := map[string]struct {
+		// API method args
+		org  string
+		name string
+		// Expected result
+		expectedStatusCode int
+		expectedResponse   GetGroupNameResponse
+		expectedError      api.Error
+		// Manager Results
+		getGroupByNameResult *api.Group
+		// Manager Errors
+		getGroupByNameErr error
+	}{
+		"OkCase": {
+			org:                "org1",
+			name:               "group1",
+			expectedStatusCode: http.StatusOK,
+			expectedResponse: GetGroupNameResponse{
+				Group: &api.Group{
+					ID:       "groupID",
+					Name:     "group1",
+					Path:     "Path",
+					Urn:      "Urn",
+					Org:      "Org",
+					CreateAt: now,
+				},
+			},
+			getGroupByNameResult: &api.Group{
+				ID:       "groupID",
+				Name:     "group1",
+				Path:     "Path",
+				Urn:      "Urn",
+				Org:      "Org",
+				CreateAt: now,
+			},
+		},
+		"ErrorCaseGroupNotFound": {
+			name:               "group1",
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code:    api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "Group not found",
+			},
+			getGroupByNameErr: &api.Error{
+				Code:    api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "Group not found",
+			},
+		},
+		"ErrorCaseUnauthorizedResourcesError": {
+			name:               "group1",
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+			getGroupByNameErr: &api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+		},
+		"ErrorCaseInvalidParameterError": {
+			name:               "group1",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+			getGroupByNameErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+		},
+		"ErrorCaseUnknownApiError": {
+			name:               "group1",
+			expectedStatusCode: http.StatusInternalServerError,
+			getGroupByNameErr: &api.Error{
+				Code:    api.UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[GetGroupByNameMethod][0] = test.getGroupByNameResult
+		testApi.ArgsOut[GetGroupByNameMethod][1] = test.getGroupByNameErr
+
+		req, err := http.NewRequest(http.MethodGet, server.URL+API_VERSION_1+"/organizations/"+test.org+"/groups/"+test.name, nil)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
+			continue
+		}
+
+		res, err := client.Do(req)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
+			continue
+		}
+
+		// Check received parameters
+		if testApi.ArgsIn[GetGroupByNameMethod][1] != test.org {
+			t.Errorf("Test case %v. Received different org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[GetGroupByNameMethod][1])
+			continue
+		}
+		if testApi.ArgsIn[GetGroupByNameMethod][2] != test.name {
+			t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.name, testApi.ArgsIn[GetGroupByNameMethod][2])
+			continue
+		}
+
+		// check status code
+		if test.expectedStatusCode != res.StatusCode {
+			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
+			continue
+		}
+
+		switch res.StatusCode {
+		case http.StatusOK:
+			getGroupNameResponse := GetGroupNameResponse{}
+			err = json.NewDecoder(res.Body).Decode(&getGroupNameResponse)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(getGroupNameResponse, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
+					n, diff)
+				continue
+			}
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
+					n, diff)
+				continue
+			}
+
+		}
+
+	}
+}
