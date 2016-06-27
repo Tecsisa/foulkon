@@ -46,14 +46,14 @@ type GetGroupPoliciesResponse struct {
 	AttachedPolicies []api.PolicyIdentity
 }
 
-func (a *WorkerHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	userID := a.worker.Authenticator.RetrieveUserID(*r)
+func (a *WorkerHandler) HandleCreateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	// Decode request
 	request := CreateGroupRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		a.worker.Logger.Errorln(err)
-		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
+		a.RespondBadRequest(r, &authenticatedUser, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
 		return
 	}
 
@@ -68,13 +68,13 @@ func (a *WorkerHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_ALREADY_EXIST:
-			a.RespondConflict(r, &userID, w, apiError)
+			a.RespondConflict(r, &authenticatedUser, w, apiError)
 		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &userID, w, apiError)
+			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w, apiError)
+			a.RespondForbidden(r, &authenticatedUser, w, apiError)
 		default: // Unexpected API error
-			a.RespondInternalServerError(r, &userID, w)
+			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
 	}
@@ -84,7 +84,7 @@ func (a *WorkerHandler) handleCreateGroup(w http.ResponseWriter, r *http.Request
 	}
 
 	// Write group to response
-	a.RespondCreated(r, &userID, w, response)
+	a.RespondCreated(r, &authenticatedUser, w, response)
 }
 
 func (a *WorkerHandler) handleDeleteGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
