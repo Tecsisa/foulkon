@@ -17,8 +17,10 @@ import (
 	"github.com/tecsisa/authorizr/database/postgresql"
 )
 
-// Worker is the manager of authorize. This use abstractions of connectors for backends,
-// that you define at startup
+// aux var for ${OS_ENV_VAR} regex
+var rEnvVar, _ = regexp.Compile(`^\$\{(\w+)\}$`)
+
+// Worker is the Authorization server.
 type Worker struct {
 	// Server config
 	Host string
@@ -74,7 +76,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 	var authApi api.AuthAPI
 
 	switch getMandatoryValue(config, "database.type") {
-	case "postgres": // Postgres DB
+	case "postgres": // PostgreSQL DB
 		logger.Info("Connecting to postgres database")
 		db, err := postgresql.InitDb(getMandatoryValue(config, "database.postgres.datasourcename"))
 		if err != nil {
@@ -128,11 +130,9 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		return nil, err
 	}
 
-	// Create authenticator
 	authenticator := auth.NewAuthenticator(authConnector, adminUser, adminPassword)
 	logger.Infof("Created authenticator with admin username %v", adminUser)
 
-	// Return created core
 	return &Worker{
 		Host:          getMandatoryValue(config, "server.host"),
 		Port:          getMandatoryValue(config, "server.port"),
@@ -164,7 +164,7 @@ func getMandatoryValue(config *toml.TomlTree, key string) string {
 
 }
 
-// This aux method returns a value if exist or default value
+// This aux method returns a value if defined in config file. Else, returns default value
 func getDefaultValue(config *toml.TomlTree, key string, def string) string {
 	value := def
 	if config.Has(key) {
@@ -177,20 +177,12 @@ func getDefaultValue(config *toml.TomlTree, key string, def string) string {
 // If the value of a key is '${SOMETHING}', we will search the value in the OS ENV vars
 // If the value of a key is something else, return that value
 func getVar(config *toml.TomlTree, key string) string {
-	r, err := regexp.Compile(`^\$\{(\w+)\}$`)
-	if err != nil {
-		fmt.Printf("Regexp compilation error.\n")
-		os.Exit(1)
-		return ""
-	}
-
 	value := config.Get(key).(string)
-	match := r.FindStringSubmatch(value)
+	match := rEnvVar.FindStringSubmatch(value)
 	if match != nil && len(match) > 1 {
 		if match[1] != "" {
 			return os.Getenv(match[1])
 		}
 	}
 	return value
-
 }

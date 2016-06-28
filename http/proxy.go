@@ -7,13 +7,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strings"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/satori/go.uuid"
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/authorizr"
-	"os"
-	"regexp"
-	"strings"
 )
 
 const (
@@ -25,9 +25,13 @@ const (
 	FORBIDDEN_ERROR                      = "ForbiddenError"
 )
 
+var rUrnParam, _ = regexp.Compile(`\{(\w+)\}`)
+
 func (h *ProxyHandler) handleRequest(resource authorizr.APIResource) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		transactionID := uuid.NewV4().String()
+		r.Header.Set("Transaction-ID", transactionID)
+		w.Header().Set("Transaction-ID", transactionID)
 		// Retrieve parameters to replace in URN
 		parameters := getUrnParameters(resource.Urn)
 		urn := resource.Urn
@@ -52,7 +56,6 @@ func (h *ProxyHandler) handleRequest(resource authorizr.APIResource) httprouter.
 				http.Error(w, getErrorMessage(transactionID, DESTINATION_HOST_RESOURCE_CALL_ERROR), http.StatusForbidden)
 				return
 			}
-
 			res.Write(w)
 			h.TransactionLog(r, transactionID, fmt.Sprint("Request accepted"))
 		} else {
@@ -145,14 +148,8 @@ func (h *ProxyHandler) checkAuthorization(r *http.Request, urn string, action st
 
 // Check parameters in URN to replace with URI parameters
 func getUrnParameters(urn string) [][]string {
-	r, err := regexp.Compile(`\{(\w+)\}`)
-	if err != nil {
-		fmt.Printf("Regexp compilation error.\n")
-		os.Exit(1)
-		return nil
-	}
 
-	match := r.FindAllStringSubmatch(urn, -1)
+	match := rUrnParam.FindAllStringSubmatch(urn, -1)
 	if match != nil && len(match) > 0 {
 		return match
 	}
@@ -169,6 +166,6 @@ func isFullUrn(resource string) bool {
 }
 
 func getErrorMessage(transactionID string, errorCode string) string {
-	return fmt.Sprintf("Forbidden resource. If you should have access contact with an administrator."+
+	return fmt.Sprintf("Forbidden resource. If you need access, contact the administrators."+
 		" Transaction id %v. Error code %v", transactionID, errorCode)
 }
