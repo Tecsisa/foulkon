@@ -352,7 +352,15 @@ func (t TestAPI) RemoveGroup(authenticatedUser api.AuthenticatedUser, org string
 }
 
 func (t TestAPI) AddMember(authenticatedUser api.AuthenticatedUser, userID string, groupName string, org string) error {
-	return nil
+	t.ArgsIn[AddMemberMethod][0] = authenticatedUser
+	t.ArgsIn[AddMemberMethod][1] = userID
+	t.ArgsIn[AddMemberMethod][2] = groupName
+	t.ArgsIn[AddMemberMethod][3] = org
+	var err error
+	if t.ArgsOut[AddMemberMethod][0] != nil {
+		err = t.ArgsOut[AddMemberMethod][0].(error)
+	}
+	return err
 }
 
 func (t TestAPI) RemoveMember(authenticatedUser api.AuthenticatedUser, userID string, groupName string, org string) error {

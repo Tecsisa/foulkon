@@ -269,15 +269,15 @@ func (a *WorkerHandler) HandleListMembers(w http.ResponseWriter, r *http.Request
 
 }
 
-func (a *WorkerHandler) handleAddMember(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	userID := a.worker.Authenticator.RetrieveUserID(*r)
+func (a *WorkerHandler) HandleAddMember(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	// Retrieve group, org and user from path
 	org := ps.ByName(ORG_NAME)
 	user := ps.ByName(USER_ID)
 	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to create an group
-	err := a.worker.GroupApi.AddMember(a.worker.Authenticator.RetrieveUserID(*r), user, group, org)
+	err := a.worker.GroupApi.AddMember(authenticatedUser, user, group, org)
 	// Error handling
 	if err != nil {
 		a.worker.Logger.Errorln(err)
@@ -285,17 +285,19 @@ func (a *WorkerHandler) handleAddMember(w http.ResponseWriter, r *http.Request, 
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.USER_BY_EXTERNAL_ID_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w, apiError)
+			a.RespondNotFound(r, &authenticatedUser, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w, apiError)
+			a.RespondForbidden(r, &authenticatedUser, w, apiError)
+		case api.INVALID_PARAMETER_ERROR:
+			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		case api.USER_IS_ALREADY_A_MEMBER_OF_GROUP:
-			a.RespondConflict(r, &userID, w, apiError)
+			a.RespondConflict(r, &authenticatedUser, w, apiError)
 		default:
-			a.RespondInternalServerError(r, &userID, w)
+			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
 	} else { // a.Respond without content
-		a.RespondNoContent(r, &userID, w)
+		a.RespondNoContent(r, &authenticatedUser, w)
 	}
 }
 
