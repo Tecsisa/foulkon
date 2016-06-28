@@ -360,7 +360,18 @@ func (t TestAPI) RemoveMember(authenticatedUser api.AuthenticatedUser, userID st
 }
 
 func (t TestAPI) ListMembers(authenticatedUser api.AuthenticatedUser, org string, groupName string) ([]string, error) {
-	return nil, nil
+	t.ArgsIn[ListMembersMethod][0] = authenticatedUser
+	t.ArgsIn[ListMembersMethod][1] = org
+	t.ArgsIn[ListMembersMethod][2] = groupName
+	var externalIDs []string
+	if t.ArgsOut[ListMembersMethod][0] != nil {
+		externalIDs = t.ArgsOut[ListMembersMethod][0].([]string)
+	}
+	var err error
+	if t.ArgsOut[ListMembersMethod][1] != nil {
+		err = t.ArgsOut[ListMembersMethod][1].(error)
+	}
+	return externalIDs, err
 }
 
 func (t TestAPI) AttachPolicyToGroup(authenticatedUser api.AuthenticatedUser, org string, groupName string, policyName string) error {
