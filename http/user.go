@@ -47,17 +47,17 @@ func (h *WorkerHandler) HandleGetUsers(w http.ResponseWriter, r *http.Request, _
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call user API
-	userID := h.worker.Authenticator.RetrieveUserID(*r)
-	result, err := h.worker.UserApi.GetListUsers(userID, pathPrefix)
+	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
+	result, err := h.worker.UserApi.GetListUsers(authenticatedUser, pathPrefix)
 	if err != nil {
 		h.worker.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			h.RespondForbidden(r, &userID, w, apiError)
+			h.RespondForbidden(r, &authenticatedUser, w, apiError)
 		default: // Unexpected API error
-			h.RespondInternalServerError(r, &userID, w)
+			h.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
 	}
@@ -68,7 +68,7 @@ func (h *WorkerHandler) HandleGetUsers(w http.ResponseWriter, r *http.Request, _
 	}
 
 	// Return data
-	h.RespondOk(r, &userID, w, response)
+	h.RespondOk(r, &authenticatedUser, w, response)
 }
 
 // This method creates the user passed by form request and return the user created
