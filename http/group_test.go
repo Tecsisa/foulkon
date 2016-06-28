@@ -1129,3 +1129,165 @@ func TestWorkerHandler_HandleAddMember(t *testing.T) {
 		}
 	}
 }
+
+func TestWorkerHandler_HandleRemoveMember(t *testing.T) {
+	testcases := map[string]struct {
+		// API method args
+		org       string
+		userID    string
+		groupName string
+		// Expected result
+		expectedStatusCode int
+		expectedError      api.Error
+		// Manager Errors
+		removeMemberErr error
+	}{
+		"OkCase": {
+			org:                "org1",
+			userID:             "user1",
+			groupName:          "group1",
+			expectedStatusCode: http.StatusNoContent,
+		},
+		"ErrorCaseGroupNotFoundErr": {
+			org:                "org1",
+			userID:             "user1",
+			groupName:          "Invalid Group",
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code:    api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "Group Not Found",
+			},
+			removeMemberErr: &api.Error{
+				Code:    api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "Group Not Found",
+			},
+		},
+		"ErrorCaseUserNotFoundErr": {
+			org:                "org1",
+			userID:             "Invalid User",
+			groupName:          "group1",
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code:    api.USER_BY_EXTERNAL_ID_NOT_FOUND,
+				Message: "User Not Found",
+			},
+			removeMemberErr: &api.Error{
+				Code:    api.USER_BY_EXTERNAL_ID_NOT_FOUND,
+				Message: "User Not Found",
+			},
+		},
+		"ErrorCaseUserIsNotMemberErr": {
+			org:                "org1",
+			userID:             "user1",
+			groupName:          "group1",
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code:    api.USER_IS_NOT_A_MEMBER_OF_GROUP,
+				Message: "User is not a member",
+			},
+			removeMemberErr: &api.Error{
+				Code:    api.USER_IS_NOT_A_MEMBER_OF_GROUP,
+				Message: "User is not a member",
+			},
+		},
+		"ErrorCaseUnauthorizedError": {
+			org:                "org1",
+			userID:             "user1",
+			groupName:          "group1",
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+			removeMemberErr: &api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+		},
+		"ErrorCaseInvalidParameterErr": {
+			org:                "org1",
+			userID:             "user1",
+			groupName:          "group1",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid Parameter",
+			},
+			removeMemberErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid Parameter",
+			},
+		},
+		"ErrorCaseUnknownApiError": {
+			org:                "org1",
+			userID:             "user1",
+			groupName:          "group1",
+			expectedStatusCode: http.StatusInternalServerError,
+			removeMemberErr: &api.Error{
+				Code:    api.UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[RemoveMemberMethod][0] = test.removeMemberErr
+
+		req, err := http.NewRequest(http.MethodDelete, server.URL+API_VERSION_1+"/organizations/"+test.org+"/groups/"+test.groupName+"/users/"+test.userID, nil)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
+			continue
+		}
+
+		res, err := client.Do(req)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
+			continue
+		}
+
+		// Check received parameters
+		if testApi.ArgsIn[RemoveMemberMethod][1] != test.userID {
+			t.Errorf("Test case %v. Received different UserID (wanted:%v / received:%v)", n, test.userID, testApi.ArgsIn[RemoveMemberMethod][2])
+			continue
+		}
+		if testApi.ArgsIn[RemoveMemberMethod][2] != test.groupName {
+			t.Errorf("Test case %v. Received different GroupName (wanted:%v / received:%v)", n, test.groupName, testApi.ArgsIn[RemoveMemberMethod][2])
+			continue
+		}
+		if testApi.ArgsIn[RemoveMemberMethod][3] != test.org {
+			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[RemoveMemberMethod][1])
+			continue
+		}
+
+		// check status code
+		if test.expectedStatusCode != res.StatusCode {
+			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
+			continue
+		}
+
+		switch res.StatusCode {
+		case http.StatusNoContent:
+			// No message expected
+			continue
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
+					n, diff)
+				continue
+			}
+
+		}
+	}
+}
