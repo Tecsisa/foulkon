@@ -43,6 +43,13 @@ func (api AuthAPI) GetPolicyByName(authenticatedUser AuthenticatedUser, org stri
 			Message: fmt.Sprintf("Invalid parameter: Policy name %v", policyName),
 		}
 	}
+	// Validate org
+	if !IsValidOrg(org) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+		}
+	}
 
 	// Call repo to retrieve the policy
 	policy, err := api.PolicyRepo.GetPolicyByName(org, policyName)
@@ -92,7 +99,13 @@ func (api AuthAPI) GetListPolicies(authenticatedUser AuthenticatedUser, org stri
 			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", pathPrefix),
 		}
 	}
-
+	// Validate org
+	if !IsValidOrg(org) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+		}
+	}
 	if len(pathPrefix) == 0 {
 		pathPrefix = "/"
 	}
@@ -134,6 +147,13 @@ func (api AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, p
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: Policy name %v", name),
+		}
+	}
+	// Validate org
+	if !IsValidOrg(org) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
 		}
 	}
 	if !IsValidPath(path) {
@@ -217,6 +237,13 @@ func (api AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string,
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: Policy name %v", policyName),
+		}
+	}
+	// Validate org
+	if !IsValidOrg(org) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
 		}
 	}
 	if !IsValidName(newName) {
@@ -322,6 +349,13 @@ func (api AuthAPI) DeletePolicy(authenticatedUser AuthenticatedUser, org string,
 			Message: fmt.Sprintf("Invalid parameter: Policy name %v", name),
 		}
 	}
+	// Validate org
+	if !IsValidOrg(org) {
+		return &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+		}
+	}
 
 	// Call repo to retrieve the policy
 	policy, err := api.GetPolicyByName(authenticatedUser, org, name)
@@ -364,6 +398,13 @@ func (api AuthAPI) GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser, 
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: Policy name %v", policyName),
+		}
+	}
+	// Validate org
+	if !IsValidOrg(org) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
 		}
 	}
 
