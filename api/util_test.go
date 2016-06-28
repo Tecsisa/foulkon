@@ -139,6 +139,51 @@ func TestIsValidUserExternalID(t *testing.T) {
 	}
 }
 
+func TestIsValidOrg(t *testing.T) {
+	testcases := map[string]struct {
+		org   string
+		valid bool
+	}{
+		"Case1": {
+			org:   "",
+			valid: false,
+		},
+		"Case2": {
+			org:   "name.value",
+			valid: false,
+		},
+		"Case3": {
+			org:   "@",
+			valid: false,
+		},
+		"Case4": {
+			org:   ",",
+			valid: false,
+		},
+		"Case5": {
+			org:   "/",
+			valid: false,
+		},
+		"Case6": {
+			org:   GetRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), MAX_NAME_LENGTH+1),
+			valid: false,
+		},
+		"Case7": {
+			org:   "validName",
+			valid: true,
+		},
+	}
+
+	for x, testcase := range testcases {
+		valid := IsValidOrg(testcase.org)
+		if valid != testcase.valid {
+			t.Errorf("Test %v failed. Received different values (wanted: %v / received: %v)",
+				x, testcase.valid, valid)
+			continue
+		}
+	}
+}
+
 func TestIsValidName(t *testing.T) {
 	testcases := map[string]struct {
 		name  string

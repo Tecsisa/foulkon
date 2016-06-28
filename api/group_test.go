@@ -58,6 +58,18 @@ func TestAddGroup(t *testing.T) {
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			name: "n1",
+			org:  "*%~#@|",
+			path: "/example/",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
 		"ErrorCaseInvalidPath": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -338,6 +350,17 @@ func TestRemoveGroup(t *testing.T) {
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			name: "n1",
+			org:  "**^!$%&",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
 		"ErrorCaseGroupNotFound": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -572,6 +595,18 @@ func TestGetGroupByName(t *testing.T) {
 			},
 			name: "*%~#@|",
 			org:  "org1",
+			path: "/example/",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			name: "n1",
+			org:  "*%~#@|",
 			path: "/example/",
 			wantError: &Error{
 				Code: INVALID_PARAMETER_ERROR,
@@ -979,6 +1014,18 @@ func TestAddMember(t *testing.T) {
 				Admin:      true,
 			},
 			userID: "d*%$",
+			org:    "org1",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID: "12345",
+			org:    "!^**$%&",
 			wantError: &Error{
 				Code: INVALID_PARAMETER_ERROR,
 			},
@@ -989,6 +1036,7 @@ func TestAddMember(t *testing.T) {
 				Admin:      true,
 			},
 			userID:    "12345",
+			org:       "org1",
 			groupName: "d*%$",
 			wantError: &Error{
 				Code: INVALID_PARAMETER_ERROR,
@@ -1000,6 +1048,7 @@ func TestAddMember(t *testing.T) {
 				Admin:      true,
 			},
 			userID:    "12345",
+			org:       "org1",
 			groupName: "group1",
 			wantError: &Error{
 				Code: GROUP_BY_ORG_AND_NAME_NOT_FOUND,
@@ -1014,6 +1063,7 @@ func TestAddMember(t *testing.T) {
 				Admin:      false,
 			},
 			userID:    "12345",
+			org:       "org1",
 			groupName: "group1",
 			wantError: &Error{
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -1075,6 +1125,7 @@ func TestAddMember(t *testing.T) {
 				Admin:      false,
 			},
 			userID:    "12345",
+			org:       "org1",
 			groupName: "group1",
 			wantError: &Error{
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -1138,6 +1189,7 @@ func TestAddMember(t *testing.T) {
 				Admin:      true,
 			},
 			userID:    "12345",
+			org:       "org1",
 			groupName: "group1",
 			wantError: &Error{
 				Code: USER_BY_EXTERNAL_ID_NOT_FOUND,
@@ -1158,6 +1210,7 @@ func TestAddMember(t *testing.T) {
 				Admin:      true,
 			},
 			userID:    "12345",
+			org:       "org1",
 			groupName: "group1",
 			wantError: &Error{
 				Code: USER_IS_ALREADY_A_MEMBER_OF_GROUP,
@@ -1181,6 +1234,7 @@ func TestAddMember(t *testing.T) {
 				Admin:      true,
 			},
 			userID:    "12345",
+			org:       "org1",
 			groupName: "group1",
 			wantError: &Error{
 				Code: UNKNOWN_API_ERROR,
@@ -1206,6 +1260,7 @@ func TestAddMember(t *testing.T) {
 				Admin:      true,
 			},
 			userID:    "12345",
+			org:       "org1",
 			groupName: "group1",
 			wantError: &Error{
 				Code: UNKNOWN_API_ERROR,
@@ -1320,6 +1375,17 @@ func TestListMembers(t *testing.T) {
 			},
 			org:       "org1",
 			groupName: "*%$",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:       "!^**$%&",
+			groupName: "g1",
 			wantError: &Error{
 				Code: INVALID_PARAMETER_ERROR,
 			},
@@ -1593,6 +1659,19 @@ func TestRemoveMember(t *testing.T) {
 				Admin:      true,
 			},
 			userID:    "$%&",
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			org:       "$**^%&!",
 			groupName: "group1",
 			wantError: &Error{
 				Code: INVALID_PARAMETER_ERROR,
@@ -1604,6 +1683,7 @@ func TestRemoveMember(t *testing.T) {
 				Admin:      true,
 			},
 			userID:    "12345",
+			org:       "org1",
 			groupName: "$%&",
 			wantError: &Error{
 				Code: INVALID_PARAMETER_ERROR,
@@ -1615,6 +1695,7 @@ func TestRemoveMember(t *testing.T) {
 				Admin:      true,
 			},
 			userID:    "12345",
+			org:       "org1",
 			groupName: "group1",
 			wantError: &Error{
 				Code: GROUP_BY_ORG_AND_NAME_NOT_FOUND,
@@ -2004,6 +2085,17 @@ func TestUpdateGroup(t *testing.T) {
 			},
 			org:          "123",
 			newGroupName: "%$%&&",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:          "$^**!",
+			newGroupName: "g1",
 			wantError: &Error{
 				Code: INVALID_PARAMETER_ERROR,
 			},
@@ -2515,6 +2607,17 @@ func TestAttachPolicyToGroup(t *testing.T) {
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:       "$%&!",
+			groupName: "g1",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
 		"ErrorCaseInvalidPolicyName": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -2901,6 +3004,17 @@ func TestDetachPolicyToGroup(t *testing.T) {
 			},
 			org:       "123",
 			groupName: "$%·",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:       "$%·",
+			groupName: "g1",
 			wantError: &Error{
 				Code: INVALID_PARAMETER_ERROR,
 			},
@@ -3330,6 +3444,17 @@ func TestListAttachedGroupPolicies(t *testing.T) {
 			},
 			name: "invalid*",
 			org:  "org1",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			name: "n1",
+			org:  "!**$%&",
 			wantError: &Error{
 				Code: INVALID_PARAMETER_ERROR,
 			},

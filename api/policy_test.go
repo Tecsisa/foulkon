@@ -73,6 +73,17 @@ func TestGetPolicyByName(t *testing.T) {
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
+		"BadOrgName": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "~#**!",
+			policyName: "p1",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
 		"PolicyNotFound": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -360,6 +371,29 @@ func TestAddPolicy(t *testing.T) {
 			},
 			org:        "123",
 			policyName: "**!^#~",
+			path:       "/path/",
+			statements: []Statement{
+				Statement{
+					Effect: "allow",
+					Action: []string{
+						USER_ACTION_GET_USER,
+					},
+					Resources: []string{
+						GetUrnPrefix("", RESOURCE_USER, "/path/"),
+					},
+				},
+			},
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"BadOrgName": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "**!^#~",
+			policyName: "p1",
 			path:       "/path/",
 			statements: []Statement{
 				Statement{
@@ -732,6 +766,42 @@ func TestUpdatePolicy(t *testing.T) {
 			},
 			org:        "123",
 			policyName: "**!~#",
+			path:       "/path/",
+			statements: []Statement{
+				Statement{
+					Effect: "allow",
+					Action: []string{
+						USER_ACTION_GET_USER,
+					},
+					Resources: []string{
+						GetUrnPrefix("", RESOURCE_USER, "/path/"),
+					},
+				},
+			},
+			newPolicyName: "test2",
+			newPath:       "/path2/",
+			newStatements: []Statement{
+				Statement{
+					Effect: "allow",
+					Action: []string{
+						USER_ACTION_GET_USER,
+					},
+					Resources: []string{
+						GetUrnPrefix("", RESOURCE_USER, "/path2/"),
+					},
+				},
+			},
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"InvalidOrgName": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "**!~#",
+			policyName: "p1",
 			path:       "/path/",
 			statements: []Statement{
 				Statement{
@@ -1954,6 +2024,17 @@ func TestGetListPolicies(t *testing.T) {
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "!#$$%**^",
+			pathPrefix: "/",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
 		"ErrorCaseInternalErrorGetPoliciesFiltered": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -2226,6 +2307,17 @@ func TestDeletePolicy(t *testing.T) {
 			},
 			org:  "123",
 			name: "invalid*",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:  "**!^#$%",
+			name: "invalid",
 			wantError: &Error{
 				Code: INVALID_PARAMETER_ERROR,
 			},
@@ -2504,6 +2596,17 @@ func TestGetPolicyAttachedGroups(t *testing.T) {
 			},
 			org:        "123",
 			policyName: "invalid*",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "!*^**~$%",
+			policyName: "p1",
 			wantError: &Error{
 				Code: INVALID_PARAMETER_ERROR,
 			},

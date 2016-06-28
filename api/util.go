@@ -56,6 +56,7 @@ const (
 var (
 	rUserExtID, _          = regexp.Compile(`^[\w+.@\-]+$`)
 	rName, _               = regexp.Compile(`^[\w\-]+$`)
+	rOrg, _                = regexp.Compile(`^[\w\-]+$`)
 	rPath, _               = regexp.Compile(`^/$|^/[\w+/\-]+\w+/$`)
 	rPathExclude, _        = regexp.Compile(`[/]{2,}`)
 	rAction, _             = regexp.Compile(`^[\w\-:]+[\w-*]+$`)
@@ -86,6 +87,10 @@ func GetUrnPrefix(org string, resource string, path string) string {
 
 func IsValidUserExternalID(externalID string) bool {
 	return rUserExtID.MatchString(externalID) && len(externalID) < MAX_EXTERNAL_ID_LENGTH
+}
+
+func IsValidOrg(org string) bool {
+	return rOrg.MatchString(org) && len(org) < MAX_NAME_LENGTH
 }
 
 // this func validates group and policy names

@@ -45,6 +45,13 @@ func (api AuthAPI) AddGroup(authenticatedUser AuthenticatedUser, org string, nam
 			Message: fmt.Sprintf("Invalid parameter: Name %v", name),
 		}
 	}
+	// Validate org
+	if !IsValidOrg(org) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+		}
+	}
 	// Validate path
 	if !IsValidPath(path) {
 		return nil, &Error{
@@ -117,6 +124,13 @@ func (api AuthAPI) AddMember(authenticatedUser AuthenticatedUser, userID string,
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", userID),
+		}
+	}
+	// Validate org
+	if !IsValidName(org) {
+		return &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
 		}
 	}
 	// Validate Name
@@ -198,7 +212,13 @@ func (api AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, userID stri
 			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", userID),
 		}
 	}
-
+	// Validate org
+	if !IsValidOrg(org) {
+		return &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+		}
+	}
 	// Validate GroupName
 	if !IsValidName(groupName) {
 		return &Error{
@@ -278,6 +298,14 @@ func (api AuthAPI) ListMembers(authenticatedUser AuthenticatedUser, org string, 
 			Message: fmt.Sprintf("Invalid parameter: Group name %v", groupName),
 		}
 	}
+	// Validate org
+	if !IsValidOrg(org) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+		}
+	}
+
 	// Call repo to retrieve the group
 	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {
@@ -329,6 +357,14 @@ func (api AuthAPI) RemoveGroup(authenticatedUser AuthenticatedUser, org string, 
 			Message: fmt.Sprintf("Invalid parameter: Group name %v", name),
 		}
 	}
+	// Validate org
+	if !IsValidOrg(org) {
+		return &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+		}
+	}
+
 	// Call repo to retrieve the group
 	group, err := api.GetGroupByName(authenticatedUser, org, name)
 	if err != nil {
@@ -374,6 +410,14 @@ func (api AuthAPI) GetGroupByName(authenticatedUser AuthenticatedUser, org strin
 			Message: fmt.Sprintf("Invalid parameter: Group name %v", name),
 		}
 	}
+	// Validate org
+	if !IsValidOrg(org) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+		}
+	}
+
 	// Call repo to retrieve the group
 	group, err := api.GroupRepo.GetGroupByName(org, name)
 
@@ -470,6 +514,13 @@ func (api AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, 
 			Message: fmt.Sprintf("Invalid parameter: Name %v", newName),
 		}
 	}
+	// Validate org
+	if !IsValidOrg(org) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+		}
+	}
 	// Validate path
 	if !IsValidPath(newPath) {
 		return nil, &Error{
@@ -559,6 +610,13 @@ func (api AuthAPI) AttachPolicyToGroup(authenticatedUser AuthenticatedUser, org 
 			Message: fmt.Sprintf("Invalid parameter: Group name %v", groupName),
 		}
 	}
+	// Validate org
+	if !IsValidOrg(org) {
+		return &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+		}
+	}
 	// Validate policy name
 	if !IsValidName(policyName) {
 		return &Error{
@@ -631,6 +689,13 @@ func (api AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org 
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: Group name %v", groupName),
+		}
+	}
+	// Validate org
+	if !IsValidOrg(org) {
+		return &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
 		}
 	}
 	// Validate policy name
@@ -708,6 +773,14 @@ func (api AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser
 			Message: fmt.Sprintf("Invalid parameter: Group name %v", groupName),
 		}
 	}
+	// Validate org
+	if !IsValidOrg(org) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+		}
+	}
+
 	// Check if group exist
 	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {
