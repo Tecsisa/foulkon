@@ -232,14 +232,14 @@ func (a *WorkerHandler) HandleUpdateGroup(w http.ResponseWriter, r *http.Request
 	a.RespondOk(r, &authenticatedUser, w, response)
 }
 
-func (a *WorkerHandler) handleListMembers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	userID := a.worker.Authenticator.RetrieveUserID(*r)
+func (a *WorkerHandler) HandleListMembers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	// Retrieve group, org
 	org := ps.ByName(ORG_NAME)
 	group := ps.ByName(GROUP_NAME)
 
 	// Call group API to list members
-	result, err := a.worker.GroupApi.ListMembers(a.worker.Authenticator.RetrieveUserID(*r), org, group)
+	result, err := a.worker.GroupApi.ListMembers(authenticatedUser, org, group)
 
 	// Check errors
 	if err != nil {
@@ -248,11 +248,13 @@ func (a *WorkerHandler) handleListMembers(w http.ResponseWriter, r *http.Request
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w, apiError)
+			a.RespondNotFound(r, &authenticatedUser, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w, apiError)
+			a.RespondForbidden(r, &authenticatedUser, w, apiError)
+		case api.INVALID_PARAMETER_ERROR:
+			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		default:
-			a.RespondInternalServerError(r, &userID, w)
+			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
 	}
@@ -263,7 +265,7 @@ func (a *WorkerHandler) handleListMembers(w http.ResponseWriter, r *http.Request
 	}
 
 	// Write GroupMembers to response
-	a.RespondOk(r, &userID, w, response)
+	a.RespondOk(r, &authenticatedUser, w, response)
 
 }
 

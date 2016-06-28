@@ -826,5 +826,144 @@ func TestWorkerHandler_HandleUpdateGroup(t *testing.T) {
 
 		}
 	}
+}
 
+func TestWorkerHandler_HandleListMembers(t *testing.T) {
+	testcases := map[string]struct {
+		// API method args
+		org  string
+		name string
+		// Expected result
+		expectedStatusCode int
+		expectedResponse   GetGroupMembersResponse
+		expectedError      api.Error
+		// Manager Results
+		getListMembersResult []string
+		// Manager Errors
+		getListMembersErr error
+	}{
+		"OkCase": {
+			org:                "org1",
+			name:               "group1",
+			expectedStatusCode: http.StatusOK,
+			expectedResponse: GetGroupMembersResponse{
+				Members: []string{"member1", "member2"},
+			},
+			getListMembersResult: []string{"member1", "member2"},
+		},
+		"ErrorCaseGroupNotFoundErr": {
+			org:                "org1",
+			name:               "group1",
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code:    api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "Group Not Found",
+			},
+			getListMembersErr: &api.Error{
+				Code:    api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "Group Not Found",
+			},
+		},
+		"ErrorCaseInvalidParameterErr": {
+			org:                "org1",
+			name:               "group1",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid Parameter",
+			},
+			getListMembersErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid Parameter",
+			},
+		},
+		"ErrorCaseUnauthorizedError": {
+			org:                "org1",
+			name:               "group1",
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+			getListMembersErr: &api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+		},
+		"ErrorCaseUnknownApiError": {
+			expectedStatusCode: http.StatusInternalServerError,
+			getListMembersErr: &api.Error{
+				Code:    api.UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[ListMembersMethod][0] = test.getListMembersResult
+		testApi.ArgsOut[ListMembersMethod][1] = test.getListMembersErr
+
+		req, err := http.NewRequest(http.MethodGet, server.URL+API_VERSION_1+"/organizations/"+test.org+"/groups/"+test.name+"/users", nil)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
+			continue
+		}
+
+		res, err := client.Do(req)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
+			continue
+		}
+
+		// Check received parameter
+		if testApi.ArgsIn[ListMembersMethod][1] != test.org {
+			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[ListMembersMethod][1])
+			continue
+		}
+		if testApi.ArgsIn[ListMembersMethod][2] != test.name {
+			t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.name, testApi.ArgsIn[ListMembersMethod][2])
+			continue
+		}
+
+		// check status code
+		if test.expectedStatusCode != res.StatusCode {
+			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
+			continue
+		}
+
+		switch res.StatusCode {
+		case http.StatusOK:
+			getGroupMembersResponse := GetGroupMembersResponse{}
+			err = json.NewDecoder(res.Body).Decode(&getGroupMembersResponse)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(getGroupMembersResponse, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
+					n, diff)
+				continue
+			}
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
+					n, diff)
+				continue
+			}
+
+		}
+	}
 }
