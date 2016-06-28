@@ -12,7 +12,7 @@ func (g PostgresRepo) GetGroupByName(org string, name string) (*api.Group, error
 	group := &Group{}
 	query := g.Dbmap.Where("org like ? AND name like ?", org, name).First(group)
 
-	// Check if group exist
+	// Check if group exists
 	if query.RecordNotFound() {
 		return nil, &database.Error{
 			Code:    database.GROUP_NOT_FOUND,
@@ -28,15 +28,14 @@ func (g PostgresRepo) GetGroupByName(org string, name string) (*api.Group, error
 		}
 	}
 
-	// Return group
-	return groupDBToGroupAPI(group), nil
+	return dbGroupToAPIGroup(group), nil
 }
 
 func (g PostgresRepo) IsMemberOfGroup(userID string, groupID string) (bool, error) {
 	relation := GroupUserRelation{}
 	query := g.Dbmap.Where("user_id like ? AND group_id like ?", userID, groupID).First(&relation)
 
-	// Check if relation exist
+	// Check if relation exists
 	if query.RecordNotFound() {
 		return false, nil
 	}
@@ -56,7 +55,7 @@ func (g PostgresRepo) GetGroupById(id string) (*api.Group, error) {
 	group := &Group{}
 	query := g.Dbmap.Where("id like ?", id).First(group)
 
-	// Check if group exist
+	// Check if group exists
 	if query.RecordNotFound() {
 		return nil, &database.Error{
 			Code:    database.GROUP_NOT_FOUND,
@@ -72,8 +71,7 @@ func (g PostgresRepo) GetGroupById(id string) (*api.Group, error) {
 		}
 	}
 
-	// Return group
-	return groupDBToGroupAPI(group), nil
+	return dbGroupToAPIGroup(group), nil
 }
 
 func (g PostgresRepo) AddGroup(group api.Group) (*api.Group, error) {
@@ -99,7 +97,7 @@ func (g PostgresRepo) AddGroup(group api.Group) (*api.Group, error) {
 		}
 	}
 
-	return groupDBToGroupAPI(groupDB), nil
+	return dbGroupToAPIGroup(groupDB), nil
 }
 
 func (g PostgresRepo) AddMember(userID string, groupID string) error {
@@ -125,7 +123,6 @@ func (g PostgresRepo) AddMember(userID string, groupID string) error {
 }
 
 func (g PostgresRepo) RemoveMember(userID string, groupID string) error {
-	// Go to delete member
 	err := g.Dbmap.Where("user_id like ? AND group_id like ?", userID, groupID).Delete(&GroupUserRelation{}).Error
 
 	// Error handling
@@ -141,7 +138,7 @@ func (g PostgresRepo) RemoveMember(userID string, groupID string) error {
 func (g PostgresRepo) UpdateGroup(group api.Group, newName string, newPath string, urn string) (*api.Group, error) {
 
 	// Create new group
-	groupUpdated := Group{
+	updatedGroup := Group{
 		Name: newName,
 		Path: newPath,
 		Urn:  urn,
@@ -157,7 +154,7 @@ func (g PostgresRepo) UpdateGroup(group api.Group, newName string, newPath strin
 	}
 
 	// Update group
-	query := g.Dbmap.Model(&groupDB).Update(groupUpdated)
+	query := g.Dbmap.Model(&groupDB).Update(updatedGroup)
 
 	// Check if group exist
 	if query.RecordNotFound() {
@@ -175,7 +172,7 @@ func (g PostgresRepo) UpdateGroup(group api.Group, newName string, newPath strin
 		}
 	}
 
-	return groupDBToGroupAPI(&groupDB), nil
+	return dbGroupToAPIGroup(&groupDB), nil
 }
 
 func (g PostgresRepo) GetGroupsFiltered(org string, pathPrefix string) ([]api.Group, error) {
@@ -197,11 +194,11 @@ func (g PostgresRepo) GetGroupsFiltered(org string, pathPrefix string) ([]api.Gr
 
 	// Transform users for API
 	if groups != nil {
-		apigroups := make([]api.Group, len(groups), cap(groups))
+		apiGroups := make([]api.Group, len(groups), cap(groups))
 		for i, g := range groups {
-			apigroups[i] = *groupDBToGroupAPI(&g)
+			apiGroups[i] = *dbGroupToAPIGroup(&g)
 		}
-		return apigroups, nil
+		return apiGroups, nil
 	}
 
 	// No data to return
@@ -236,7 +233,6 @@ func (g PostgresRepo) GetGroupMembers(groupID string) ([]api.User, error) {
 			apiUsers[i] = *user
 		}
 
-		// Return members
 		return apiUsers, nil
 	}
 
@@ -278,7 +274,7 @@ func (g PostgresRepo) IsAttachedToGroup(groupID string, policyID string) (bool, 
 	relation := GroupPolicyRelation{}
 	query := g.Dbmap.Where("group_id like ? AND policy_id like ?", groupID, policyID).First(&relation)
 
-	// Check if relation exist
+	// Check if relation exists
 	if query.RecordNotFound() {
 		return false, nil
 	}
@@ -330,7 +326,7 @@ func (g PostgresRepo) DetachPolicy(groupID string, policyID string) error {
 	return nil
 }
 
-func (g PostgresRepo) GetPoliciesAttached(groupID string) ([]api.Policy, error) {
+func (g PostgresRepo) GetAttachedPolicies(groupID string) ([]api.Policy, error) {
 	relations := []GroupPolicyRelation{}
 	query := g.Dbmap.Where("group_id like ?", groupID).Find(&relations)
 
@@ -358,7 +354,6 @@ func (g PostgresRepo) GetPoliciesAttached(groupID string) ([]api.Policy, error) 
 			apiPolicies[i] = *policy
 		}
 
-		// Return GroupMembers
 		return apiPolicies, nil
 	}
 
@@ -366,7 +361,7 @@ func (g PostgresRepo) GetPoliciesAttached(groupID string) ([]api.Policy, error) 
 }
 
 // Transform a Group retrieved from db into a group for API
-func groupDBToGroupAPI(groupdb *Group) *api.Group {
+func dbGroupToAPIGroup(groupdb *Group) *api.Group {
 	return &api.Group{
 		ID:       groupdb.ID,
 		Name:     groupdb.Name,

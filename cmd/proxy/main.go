@@ -27,7 +27,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Create core
+	// Create Proxy
 	proxy, err := authorizr.NewProxy(config)
 	if err != nil {
 		fmt.Fprint(os.Stderr, err.Error())

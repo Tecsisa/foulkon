@@ -12,8 +12,7 @@ type PostgresRepo struct {
 }
 
 func InitDb(datasourcename string) (*gorm.DB, error) {
-	// connect to db using standard Go database/sql API
-	// use whatever database/sql driver you wish
+	// connect to db using GORM - github.com/jinzhu/gorm
 	db, err := gorm.Open("postgres", datasourcename)
 	if err != nil {
 		return nil, err

@@ -9,7 +9,7 @@ import (
 	"github.com/emanoelxavier/openid2go/openid"
 )
 
-// This struct represent a connector for OIDC that implements interface of auth connector
+// This struct represents an OIDC connector that implements interface of auth connector
 type OIDCAuthConnector struct {
 	configuration openid.Configuration
 }
@@ -47,7 +47,7 @@ func InitOIDCConnector(logger *log.Logger, provider string, clientids []string) 
 
 }
 
-// This method retrieve data from a request an check if user is correctly authenticated
+// This method retrieves data from request an checks if user is correctly authenticated
 func (c OIDCAuthConnector) Authenticate(h http.Handler) http.Handler {
 	return openid.Authenticate(&c.configuration, h)
 }

@@ -61,7 +61,7 @@ type WorkerHandler struct {
 
 func (a *WorkerHandler) TransactionLog(r *http.Request, requestID string, userID string, msg string) {
 
-	// TODO: X-Forwarded headers
+	// TODO: X-Forwarded headers?
 	//for header, _ := range r.Header {
 	//	println(header, ": ", r.Header.Get(header))
 	//}
@@ -75,7 +75,7 @@ func (a *WorkerHandler) TransactionLog(r *http.Request, requestID string, userID
 	}).Info(msg)
 }
 
-// Handler returns an http.Handler for the APIs.
+// Handler returns http.Handler for the APIs.
 func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 	// Create the muxer to handle the actual endpoints
 	router := httprouter.New()

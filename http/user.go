@@ -49,7 +49,7 @@ func (h *WorkerHandler) HandleGetUsers(w http.ResponseWriter, r *http.Request, _
 	// Call user API
 	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
-	result, err := h.worker.UserApi.GetListUsers(authenticatedUser, pathPrefix)
+	result, err := h.worker.UserApi.GetUserList(authenticatedUser, pathPrefix)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -68,7 +68,7 @@ func (h *WorkerHandler) HandleGetUsers(w http.ResponseWriter, r *http.Request, _
 		ExternalIDs: result,
 	}
 
-	// Return data
+	// Return users
 	h.RespondOk(r, &authenticatedUser, w, response)
 }
 

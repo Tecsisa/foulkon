@@ -81,7 +81,7 @@ func TestGetUsersAuthorized(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = test.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
 
-		authorizedUsers, err := testAPI.GetUsersAuthorized(test.authUser, test.resourceUrn, test.action, test.usersToAuthorize)
+		authorizedUsers, err := testAPI.GetAuthorizedUsers(test.authUser, test.resourceUrn, test.action, test.usersToAuthorize)
 		if test.wantError != nil {
 			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
 				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
@@ -188,7 +188,7 @@ func TestGroupsAuthorized(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = test.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
 
-		authorizedGroups, err := testAPI.GetGroupsAuthorized(test.authUser, test.resourceUrn, test.action, test.groupsToAuthorize)
+		authorizedGroups, err := testAPI.GetAuthorizedGroups(test.authUser, test.resourceUrn, test.action, test.groupsToAuthorize)
 		if test.wantError != nil {
 			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
 				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
@@ -294,7 +294,7 @@ func TestGetPoliciesAuthorized(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = test.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
 
-		authorizedPolicies, err := testAPI.GetPoliciesAuthorized(test.authUser, test.resourceUrn, test.action, test.policiesToAuthorize)
+		authorizedPolicies, err := testAPI.GetAuthorizedPolicies(test.authUser, test.resourceUrn, test.action, test.policiesToAuthorize)
 		if test.wantError != nil {
 			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
 				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
@@ -344,9 +344,9 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 		// GetGroupsByUserID Method Out Arguments
 		getGroupsByUserIDResult []Group
 		getGroupsByUserIDError  error
-		// GetPoliciesAttached Method Out Arguments
-		getPoliciesAttachedResult []Policy
-		getPoliciesAttachedError  error
+		// GetAttachedPolicies Method Out Arguments
+		getAttachedPoliciesResult []Policy
+		getAttachedPoliciesError  error
 	}{
 		"ErrortestCaseInvalidAction": {
 			action: "valid::Action",
@@ -424,7 +424,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:  "POLICY-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
@@ -464,7 +464,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:  "POLICY-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
@@ -517,7 +517,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:  "POLICY-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
@@ -563,8 +563,8 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = test.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = test.getGroupsByUserIDError
 
-		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = test.getPoliciesAttachedResult
-		testRepo.ArgsOut[GetPoliciesAttachedMethod][1] = test.getPoliciesAttachedError
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = test.getAttachedPoliciesResult
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = test.getAttachedPoliciesError
 
 		resources, err := testAPI.GetAuthorizedExternalResources(test.authUser, test.action, test.resourceUrns)
 		if test.wantError != nil {
@@ -620,9 +620,9 @@ func TestGetAuthorizedResources(t *testing.T) {
 		// GetGroupsByUserID Method Out Arguments
 		getGroupsByUserIDResult []Group
 		getGroupsByUserIDError  error
-		// GetPoliciesAttached Method Out Arguments
-		getPoliciesAttachedResult []Policy
-		getPoliciesAttachedError  error
+		// GetAttachedPolicies Method Out Arguments
+		getAttachedPoliciesResult []Policy
+		getAttachedPoliciesError  error
 	}{
 		"OKtestCaseAdmin": {
 			authUser: AuthenticatedUser{
@@ -731,7 +731,7 @@ func TestGetAuthorizedResources(t *testing.T) {
 					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:  "POLICY-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
@@ -779,7 +779,7 @@ func TestGetAuthorizedResources(t *testing.T) {
 					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:  "POLICY-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
@@ -810,8 +810,8 @@ func TestGetAuthorizedResources(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = test.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = test.getGroupsByUserIDError
 
-		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = test.getPoliciesAttachedResult
-		testRepo.ArgsOut[GetPoliciesAttachedMethod][1] = test.getPoliciesAttachedError
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = test.getAttachedPoliciesResult
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = test.getAttachedPoliciesError
 
 		authorizedResources, err := testAPI.getAuthorizedResources(test.authUser, test.resourceUrn, test.action, test.resourcesToAuthorize)
 		if test.wantError != nil {
@@ -863,9 +863,9 @@ func TestGetRestrictions(t *testing.T) {
 		// GetGroupsByUserID Method Out Arguments
 		getGroupsByUserIDResult []Group
 		getGroupsByUserIDError  error
-		// GetPoliciesAttached Method Out Arguments
-		getPoliciesAttachedResult []Policy
-		getPoliciesAttachedError  error
+		// GetAttachedPolicies Method Out Arguments
+		getAttachedPoliciesResult []Policy
+		getAttachedPoliciesError  error
 	}{
 		"ErrortestCaseGetUserAuthenticatedNotFound": {
 			authUserID:  "NotFound",
@@ -918,7 +918,7 @@ func TestGetRestrictions(t *testing.T) {
 					ID: "GroupID",
 				},
 			},
-			getPoliciesAttachedError: &database.Error{
+			getAttachedPoliciesError: &database.Error{
 				Code: database.INTERNAL_ERROR,
 			},
 		},
@@ -972,7 +972,7 @@ func TestGetRestrictions(t *testing.T) {
 					ID: "GROUP-USER-ID",
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:  "POLICY-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
@@ -1035,7 +1035,7 @@ func TestGetRestrictions(t *testing.T) {
 					ID: "GROUP-USER-ID",
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:  "POLICY-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
@@ -1080,8 +1080,8 @@ func TestGetRestrictions(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = test.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = test.getGroupsByUserIDError
 
-		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = test.getPoliciesAttachedResult
-		testRepo.ArgsOut[GetPoliciesAttachedMethod][1] = test.getPoliciesAttachedError
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = test.getAttachedPoliciesResult
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = test.getAttachedPoliciesError
 
 		restrictions, err := testAPI.getRestrictions(test.authUserID, test.action, test.resourceUrn)
 		if test.wantError != nil {
@@ -1108,10 +1108,10 @@ func TestGetRestrictions(t *testing.T) {
 				continue
 			}
 
-			if param := testRepo.ArgsIn[GetPoliciesAttachedMethod][0]; test.getGroupsByUserIDResult != nil &&
+			if param := testRepo.ArgsIn[GetAttachedPoliciesMethod][0]; test.getGroupsByUserIDResult != nil &&
 				param != test.getGroupsByUserIDResult[0].ID {
 				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-					n, test.authUserID, testRepo.ArgsIn[GetPoliciesAttachedMethod][0])
+					n, test.authUserID, testRepo.ArgsIn[GetAttachedPoliciesMethod][0])
 				continue
 			}
 
@@ -1210,9 +1210,9 @@ func TestGetPoliciesByGroups(t *testing.T) {
 		expectedPolicies []Policy
 		// Error to compare when we expect an error
 		wantError *Error
-		// GetPoliciesAttached Method Out Arguments
-		getPoliciesAttachedResult []Policy
-		getPoliciesAttachedError  error
+		// GetAttachedPolicies Method Out Arguments
+		getAttachedPoliciesResult []Policy
+		getAttachedPoliciesError  error
 	}{
 		"OktestCaseEmptyGroups": {
 			groups: []Group{},
@@ -1228,7 +1228,7 @@ func TestGetPoliciesByGroups(t *testing.T) {
 				},
 			},
 			expectedPolicies:          []Policy{},
-			getPoliciesAttachedResult: nil,
+			getAttachedPoliciesResult: nil,
 		},
 		"OktestCase": {
 			groups: []Group{
@@ -1247,7 +1247,7 @@ func TestGetPoliciesByGroups(t *testing.T) {
 					ID: "PolicyID",
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID: "PolicyID",
 				},
@@ -1265,7 +1265,7 @@ func TestGetPoliciesByGroups(t *testing.T) {
 			wantError: &Error{
 				Code: UNKNOWN_API_ERROR,
 			},
-			getPoliciesAttachedError: &database.Error{
+			getAttachedPoliciesError: &database.Error{
 				Code: database.INTERNAL_ERROR,
 			},
 		},
@@ -1276,8 +1276,8 @@ func TestGetPoliciesByGroups(t *testing.T) {
 
 	for n, test := range testcases {
 
-		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = test.getPoliciesAttachedResult
-		testRepo.ArgsOut[GetPoliciesAttachedMethod][1] = test.getPoliciesAttachedError
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = test.getAttachedPoliciesResult
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = test.getAttachedPoliciesError
 
 		policies, err := testAPI.getPoliciesByGroups(test.groups)
 		if test.wantError != nil {
@@ -1292,10 +1292,10 @@ func TestGetPoliciesByGroups(t *testing.T) {
 				continue
 			}
 
-			if param := testRepo.ArgsIn[GetPoliciesAttachedMethod][0]; len(test.groups) > 0 &&
+			if param := testRepo.ArgsIn[GetAttachedPoliciesMethod][0]; len(test.groups) > 0 &&
 				param != test.groups[len(test.groups)-1].ID {
 				t.Errorf("Test %v failed. Received different group identifiers (wanted:%v / received:%v)",
-					n, test.groups[len(test.groups)-1].ID, testRepo.ArgsIn[GetPoliciesAttachedMethod][0])
+					n, test.groups[len(test.groups)-1].ID, testRepo.ArgsIn[GetAttachedPoliciesMethod][0])
 				continue
 			}
 

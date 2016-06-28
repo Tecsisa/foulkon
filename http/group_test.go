@@ -9,6 +9,7 @@ import (
 
 	"bytes"
 	"fmt"
+
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/tecsisa/authorizr/api"
 )
@@ -561,8 +562,8 @@ func TestWorkerHandler_HandleListGroups(t *testing.T) {
 
 	for n, test := range testcases {
 
-		testApi.ArgsOut[GetListGroupsMethod][0] = test.getListGroupResult
-		testApi.ArgsOut[GetListGroupsMethod][1] = test.getListGroupsErr
+		testApi.ArgsOut[GetGroupListMethod][0] = test.getListGroupResult
+		testApi.ArgsOut[GetGroupListMethod][1] = test.getListGroupsErr
 
 		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/groups?PathPrefix=", test.org, test.pathPrefix)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -584,12 +585,12 @@ func TestWorkerHandler_HandleListGroups(t *testing.T) {
 		}
 
 		// Check received parameter
-		if testApi.ArgsIn[GetListGroupsMethod][1] != test.org {
-			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[GetListGroupsMethod][1])
+		if testApi.ArgsIn[GetGroupListMethod][1] != test.org {
+			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[GetGroupListMethod][1])
 			continue
 		}
-		if testApi.ArgsIn[GetListGroupsMethod][2] != test.pathPrefix {
-			t.Errorf("Test case %v. Received different PathPrefix (wanted:%v / received:%v)", n, test.pathPrefix, testApi.ArgsIn[GetListGroupsMethod][2])
+		if testApi.ArgsIn[GetGroupListMethod][2] != test.pathPrefix {
+			t.Errorf("Test case %v. Received different PathPrefix (wanted:%v / received:%v)", n, test.pathPrefix, testApi.ArgsIn[GetGroupListMethod][2])
 			continue
 		}
 
@@ -1860,8 +1861,8 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 
 	for n, test := range testcases {
 
-		testApi.ArgsOut[GetListGroupsMethod][0] = test.getListAllGroupResult
-		testApi.ArgsOut[GetListGroupsMethod][1] = test.getListAllGroupErr
+		testApi.ArgsOut[GetGroupListMethod][0] = test.getListAllGroupResult
+		testApi.ArgsOut[GetGroupListMethod][1] = test.getListAllGroupErr
 
 		url := fmt.Sprintf(server.URL+API_VERSION_1+"/groups?Org=%v&PathPrefix=%v", test.org, test.pathPrefix)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -1878,12 +1879,12 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 
 		// Check received parameter
 		// Check received parameter
-		if testApi.ArgsIn[GetListGroupsMethod][1] != test.org {
-			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[GetListGroupsMethod][1])
+		if testApi.ArgsIn[GetGroupListMethod][1] != test.org {
+			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[GetGroupListMethod][1])
 			continue
 		}
-		if testApi.ArgsIn[GetListGroupsMethod][2] != test.pathPrefix {
-			t.Errorf("Test case %v. Received different PathPrefix (wanted:%v / received:%v)", n, test.pathPrefix, testApi.ArgsIn[GetListGroupsMethod][2])
+		if testApi.ArgsIn[GetGroupListMethod][2] != test.pathPrefix {
+			t.Errorf("Test case %v. Received different PathPrefix (wanted:%v / received:%v)", n, test.pathPrefix, testApi.ArgsIn[GetGroupListMethod][2])
 			continue
 		}
 

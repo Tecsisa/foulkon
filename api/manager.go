@@ -2,7 +2,7 @@ package api
 
 import log "github.com/Sirupsen/logrus"
 
-// Authorizr API that implements APIs interfaces using with repositories
+// Authorizr API that implements API interfaces using repositories
 type AuthAPI struct {
 	UserRepo   UserRepo
 	GroupRepo  GroupRepo
@@ -12,19 +12,19 @@ type AuthAPI struct {
 
 // API INTERFACES
 
-type UserApi interface {
+type UserAPI interface {
 	AddUser(authenticatedUser AuthenticatedUser, externalID string, path string) (*User, error)
 	GetUserByExternalId(authenticatedUser AuthenticatedUser, id string) (*User, error)
-	GetListUsers(authenticatedUser AuthenticatedUser, pathPrefix string) ([]string, error)
+	GetUserList(authenticatedUser AuthenticatedUser, pathPrefix string) ([]string, error)
 	UpdateUser(authenticatedUser AuthenticatedUser, externalID string, newPath string) (*User, error)
 	RemoveUserById(authenticatedUser AuthenticatedUser, id string) error
 	GetGroupsByUserId(authenticatedUser AuthenticatedUser, id string) ([]GroupIdentity, error)
 }
 
-type GroupApi interface {
+type GroupAPI interface {
 	AddGroup(authenticatedUser AuthenticatedUser, org string, name string, path string) (*Group, error)
 	GetGroupByName(authenticatedUser AuthenticatedUser, org string, name string) (*Group, error)
-	GetListGroups(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]GroupIdentity, error)
+	GetGroupList(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]GroupIdentity, error)
 	UpdateGroup(authenticatedUser AuthenticatedUser, org string, groupName string, newName string, newPath string) (*Group, error)
 	RemoveGroup(authenticatedUser AuthenticatedUser, org string, name string) error
 
@@ -37,20 +37,20 @@ type GroupApi interface {
 	ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser, org string, groupName string) ([]PolicyIdentity, error)
 }
 
-type PolicyApi interface {
+type PolicyAPI interface {
 	AddPolicy(authenticatedUser AuthenticatedUser, name string, path string, org string, statements []Statement) (*Policy, error)
 	GetPolicyByName(authenticatedUser AuthenticatedUser, org string, policyName string) (*Policy, error)
-	GetListPolicies(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]PolicyIdentity, error)
+	GetPolicyList(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]PolicyIdentity, error)
 	UpdatePolicy(authenticatedUser AuthenticatedUser, org string, policyName string, newName string, newPath string,
 		newStatements []Statement) (*Policy, error)
 	DeletePolicy(authenticatedUser AuthenticatedUser, org string, name string) error
-	GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser, org string, policyName string) ([]GroupIdentity, error)
+	GetAttachedGroups(authenticatedUser AuthenticatedUser, org string, policyName string) ([]GroupIdentity, error)
 }
 
-type AuthzApi interface {
-	GetUsersAuthorized(authenticatedUser AuthenticatedUser, resourceUrn string, action string, users []User) ([]User, error)
-	GetGroupsAuthorized(authenticatedUser AuthenticatedUser, resourceUrn string, action string, groups []Group) ([]Group, error)
-	GetPoliciesAuthorized(authenticatedUser AuthenticatedUser, resourceUrn string, action string, policies []Policy) ([]Policy, error)
+type AuthzAPI interface {
+	GetAuthorizedUsers(authenticatedUser AuthenticatedUser, resourceUrn string, action string, users []User) ([]User, error)
+	GetAuthorizedGroups(authenticatedUser AuthenticatedUser, resourceUrn string, action string, groups []Group) ([]Group, error)
+	GetAuthorizedPolicies(authenticatedUser AuthenticatedUser, resourceUrn string, action string, policies []Policy) ([]Policy, error)
 	GetAuthorizedExternalResources(authenticatedUser AuthenticatedUser, action string, resources []string) ([]string, error)
 }
 
@@ -58,15 +58,8 @@ type AuthzApi interface {
 
 // User repository that contains all user operations for this domain
 type UserRepo interface {
-	// This method get a user with specified External ID.
-	// If user exists, it will return the user with error param as nil
-	// If user doesn't exists, it will return the error code database.USER_NOT_FOUND
-	// If there is an error, it will return error param with associated error message
-	// and error code database.INTERNAL_ERROR
 	GetUserByExternalID(id string) (*User, error)
 
-	// This method store a user.
-	// If there are a problem inserting user it will return an database.Error error
 	AddUser(user User) (*User, error)
 	UpdateUser(user User, newPath string, newUrn string) (*User, error)
 
@@ -81,7 +74,7 @@ type GroupRepo interface {
 	IsMemberOfGroup(userID string, groupID string) (bool, error)
 	GetGroupMembers(groupID string) ([]User, error)
 	IsAttachedToGroup(groupID string, policyID string) (bool, error)
-	GetPoliciesAttached(groupID string) ([]Policy, error)
+	GetAttachedPolicies(groupID string) ([]Policy, error)
 	GetGroupsFiltered(org string, pathPrefix string) ([]Group, error)
 	RemoveGroup(id string) error
 
@@ -100,5 +93,5 @@ type PolicyRepo interface {
 	UpdatePolicy(policy Policy, newName string, newPath string, newUrn string, newStatements []Statement) (*Policy, error)
 	RemovePolicy(id string) error
 	GetPoliciesFiltered(org string, pathPrefix string) ([]Policy, error)
-	GetAllPolicyGroupRelation(policyID string) ([]Group, error)
+	GetAttachedGroups(policyID string) ([]Group, error)
 }

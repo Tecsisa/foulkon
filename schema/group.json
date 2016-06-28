@@ -10,40 +10,40 @@
       "type": "object",
       "definitions": {
         "ID": {
-          "description": "Unique identifier of group",
+          "description": "Unique group identifier",
           "readOnly": true,
           "format": "uuid",
           "type": "string"
         },
         "Name": {
-          "description": "Name of group",
+          "description": "Group name",
           "example": "group1",
           "type": "string"
         },
         "Path": {
-          "description": "Group's location",
+          "description": "Group location",
           "example": "/example/admin/",
           "type": "string"
         },
         "CreatedAt": {
-          "description": "When group was created",
+          "description": "Group creation date",
           "format": "date-time",
           "type": "string"
         },
         "Urn": {
-          "description": "Uniform Resource Name of group",
+          "description": "Group's Uniform Resource Name",
           "example": "urn:iws:iam:tecsisa:group/example/admin/group1",
           "type": "string"
         },
         "Org": {
-          "description": "Organization of group",
+          "description": "Group's organization",
           "example": "tecsisa",
           "type": "string"
         }
       },
       "links": [
         {
-          "description": "Create a new group.",
+          "description": "Create a new group",
           "href": "/api/v1/organizations/{organization_id}/groups",
           "method": "POST",
           "rel": "create",
@@ -68,7 +68,7 @@
           "title": "Create"
         },
         {
-          "description": "Update an existing group.",
+          "description": "Update an existing group",
           "href": "/api/v1/organizations/{organization_id}/groups/{group_name}",
           "method": "PUT",
           "rel": "update",
@@ -93,7 +93,7 @@
           "title": "Update"
         },
         {
-          "description": "Delete an existing group.",
+          "description": "Delete an existing group",
           "href": "/api/v1/organizations/{organization_id}/groups/{group_name}",
           "method": "DELETE",
           "rel": "empty",
@@ -103,7 +103,7 @@
           "title": "Delete"
         },
         {
-          "description": "Get an existing group.",
+          "description": "Get an existing group",
           "href": "/api/v1/organizations/{organization_id}/groups/{group_name}",
           "method": "GET",
           "rel": "self",
@@ -166,12 +166,12 @@
     "order3_members": {
       "$schema": "",
       "title": "Member",
-      "description": "Members of a group.",
+      "description": "Group members",
       "strictProperties": true,
       "type": "object",
       "links": [
         {
-          "description": "Add member to a group",
+          "description": "Add member to a group.",
           "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/users/{user_id}",
           "method": "POST",
           "rel": "empty",
@@ -230,7 +230,7 @@
           "title": "Attach"
         },
         {
-          "description": "Detach policy to group",
+          "description": "Detach policy from group",
           "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/policies/{policy_id}",
           "method": "DELETE",
           "rel": "empty",

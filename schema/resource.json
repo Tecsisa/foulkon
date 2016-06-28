@@ -44,7 +44,7 @@
       ],
       "properties": {
         "ResourcesAllowed": {
-          "description": "List of resources allowed",
+          "description": "List of allowed resources",
           "example": ["urn:ews:product:instance:example/resource1"],
           "type": "array",
           "items": {

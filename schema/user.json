@@ -10,7 +10,7 @@
       "type": "object",
       "definitions": {
         "ID": {
-          "description": "Unique identifier of user",
+          "description": "Unique user identifier",
           "readOnly": true,
           "format": "uuid",
           "type": [
@@ -18,22 +18,22 @@
           ]
         },
         "ExternalID": {
-          "description": "Identifier of user",
+          "description": "User's external identifier",
           "example": "user1",
           "type": "string"
         },
         "Path": {
-          "description": "User's location",
+          "description": "User location",
           "example": "/example/admin/",
           "type": "string"
         },
         "CreatedAt": {
-          "description": "When user was created",
+          "description": "User creation date",
           "format": "date-time",
           "type": "string"
         },
         "Urn": {
-          "description": "Uniform Resource Name of user",
+          "description": "User's Uniform Resource Name",
           "example": "urn:iws:iam::user/example/admin/user1",
           "type": "string"
         }
@@ -144,7 +144,7 @@
       ],
       "properties": {
         "ExternalID": {
-          "description": "Identifier of user",
+          "description": "User identifier",
           "example": ["User1"],
           "type": "array",
           "items": {
@@ -173,12 +173,12 @@
       ],
       "properties": {
         "Org": {
-          "description": "Organization of group",
+          "description": "Group's organization",
           "example": "tecsisa",
           "type": "string"
         },
         "Name": {
-          "description": "Name of group",
+          "description": "Group name",
           "example": "group1",
           "type": "string"
         }
