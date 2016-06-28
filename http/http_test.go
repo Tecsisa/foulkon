@@ -324,7 +324,20 @@ func (t TestAPI) GetListGroups(authenticatedUser api.AuthenticatedUser, org stri
 }
 
 func (t TestAPI) UpdateGroup(authenticatedUser api.AuthenticatedUser, org string, groupName string, newName string, newPath string) (*api.Group, error) {
-	return nil, nil
+	t.ArgsIn[UpdateGroupMethod][0] = authenticatedUser
+	t.ArgsIn[UpdateGroupMethod][1] = org
+	t.ArgsIn[UpdateGroupMethod][2] = groupName
+	t.ArgsIn[UpdateGroupMethod][3] = newName
+	t.ArgsIn[UpdateGroupMethod][4] = newPath
+	var group *api.Group
+	if t.ArgsOut[UpdateGroupMethod][0] != nil {
+		group = t.ArgsOut[UpdateGroupMethod][0].(*api.Group)
+	}
+	var err error
+	if t.ArgsOut[UpdateGroupMethod][1] != nil {
+		err = t.ArgsOut[UpdateGroupMethod][1].(error)
+	}
+	return group, err
 }
 
 func (t TestAPI) RemoveGroup(authenticatedUser api.AuthenticatedUser, org string, name string) error {
