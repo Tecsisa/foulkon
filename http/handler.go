@@ -115,7 +115,7 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 	router.DELETE(GROUP_ID_POLICIES_ID_URL, workerHandler.HandleDetachGroupPolicy)
 
 	// Special endpoint without organization URI for groups
-	router.GET(API_VERSION_1+"/groups", workerHandler.handleListAllGroups)
+	router.GET(API_VERSION_1+"/groups", workerHandler.HandleListAllGroups)
 
 	// Policy api
 	router.GET(POLICY_ROOT_URL, workerHandler.handleListPolicies)
