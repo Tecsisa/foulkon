@@ -137,6 +137,8 @@ func (h *WorkerHandler) HandlePutUser(w http.ResponseWriter, r *http.Request, ps
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
 			h.RespondNotFound(r, &authenticatedUser, w, apiError)
+		case api.USER_ALREADY_EXIST:
+			h.RespondConflict(r, &authenticatedUser, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
 			h.RespondForbidden(r, &authenticatedUser, w, apiError)
 		case api.INVALID_PARAMETER_ERROR:
