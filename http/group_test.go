@@ -141,8 +141,7 @@ func TestWorkerHandler_HandleGetGroup(t *testing.T) {
 			}
 			// Check result
 			if diff := pretty.Compare(getGroupNameResponse, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
-					n, diff)
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
 		case http.StatusInternalServerError: // Empty message so continue
@@ -156,8 +155,7 @@ func TestWorkerHandler_HandleGetGroup(t *testing.T) {
 			}
 			// Check result
 			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
 				continue
 			}
 
@@ -340,8 +338,7 @@ func TestWorkerHandler_HandleCreateGroup(t *testing.T) {
 			}
 			// Check result
 			if diff := pretty.Compare(createGroupResponse, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
-					n, diff)
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
 		case http.StatusInternalServerError: // Empty message so continue
@@ -355,8 +352,7 @@ func TestWorkerHandler_HandleCreateGroup(t *testing.T) {
 			}
 			// Check result
 			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
 				continue
 			}
 		}
@@ -478,8 +474,7 @@ func TestWorkerHandler_HandleDeleteGroup(t *testing.T) {
 			}
 			// Check result
 			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
 				continue
 			}
 
@@ -593,8 +588,7 @@ func TestWorkerHandler_HandleListGroups(t *testing.T) {
 			}
 			// Check result
 			if diff := pretty.Compare(getGroupsResponse, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
-					n, diff)
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
 		case http.StatusInternalServerError: // Empty message so continue
@@ -608,8 +602,7 @@ func TestWorkerHandler_HandleListGroups(t *testing.T) {
 			}
 			// Check result
 			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
 				continue
 			}
 
@@ -804,8 +797,7 @@ func TestWorkerHandler_HandleUpdateGroup(t *testing.T) {
 			}
 			// Check result
 			if diff := pretty.Compare(updateGroupResponse, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
-					n, diff)
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
 		case http.StatusInternalServerError: // Empty message so continue
@@ -819,8 +811,7 @@ func TestWorkerHandler_HandleUpdateGroup(t *testing.T) {
 			}
 			// Check result
 			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
 				continue
 			}
 
@@ -944,8 +935,7 @@ func TestWorkerHandler_HandleListMembers(t *testing.T) {
 			}
 			// Check result
 			if diff := pretty.Compare(getGroupMembersResponse, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
-					n, diff)
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
 		case http.StatusInternalServerError: // Empty message so continue
@@ -959,8 +949,7 @@ func TestWorkerHandler_HandleListMembers(t *testing.T) {
 			}
 			// Check result
 			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
 				continue
 			}
 
@@ -1121,8 +1110,7 @@ func TestWorkerHandler_HandleAddMember(t *testing.T) {
 			}
 			// Check result
 			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
 				continue
 			}
 
@@ -1283,8 +1271,7 @@ func TestWorkerHandler_HandleRemoveMember(t *testing.T) {
 			}
 			// Check result
 			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
 				continue
 			}
 
@@ -1445,8 +1432,7 @@ func TestWorkerHandler_HandleAttachGroupPolicy(t *testing.T) {
 			}
 			// Check result
 			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
 				continue
 			}
 
@@ -1607,8 +1593,163 @@ func TestWorkerHandler_HandleDetachGroupPolicy(t *testing.T) {
 			}
 			// Check result
 			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
+				continue
+			}
+
+		}
+	}
+}
+
+func TestWorkerHandler_HandleListAttachedGroupPolicies(t *testing.T) {
+	testcases := map[string]struct {
+		// API method args
+		org  string
+		name string
+		// Expected result
+		expectedStatusCode int
+		expectedResponse   GetGroupPoliciesResponse
+		expectedError      api.Error
+		// Manager Results
+		getListAttachedGroupPoliciesResult []api.PolicyIdentity
+		// Manager Errors
+		getListAttachedGroupPoliciesErr error
+	}{
+		"OkCase": {
+			org:                "org1",
+			name:               "group1",
+			expectedStatusCode: http.StatusOK,
+			expectedResponse: GetGroupPoliciesResponse{
+				AttachedPolicies: []api.PolicyIdentity{
+					api.PolicyIdentity{
+						Org:  "org1",
+						Name: "policy1",
+					},
+					api.PolicyIdentity{
+						Org:  "org1",
+						Name: "policy2",
+					},
+				},
+			},
+			getListAttachedGroupPoliciesResult: []api.PolicyIdentity{
+				api.PolicyIdentity{
+					Org:  "org1",
+					Name: "policy1",
+				},
+				api.PolicyIdentity{
+					Org:  "org1",
+					Name: "policy2",
+				},
+			},
+		},
+		"ErrorCaseGroupNotFoundErr": {
+			org:                "org1",
+			name:               "group1",
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code:    api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "Group Not Found",
+			},
+			getListAttachedGroupPoliciesErr: &api.Error{
+				Code:    api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "Group Not Found",
+			},
+		},
+		"ErrorCaseInvalidParameterErr": {
+			org:                "org1",
+			name:               "group1",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid Parameter",
+			},
+			getListAttachedGroupPoliciesErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid Parameter",
+			},
+		},
+		"ErrorCaseUnauthorizedError": {
+			org:                "org1",
+			name:               "group1",
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+			getListAttachedGroupPoliciesErr: &api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+		},
+		"ErrorCaseUnknownApiError": {
+			expectedStatusCode: http.StatusInternalServerError,
+			getListAttachedGroupPoliciesErr: &api.Error{
+				Code:    api.UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[ListAttachedGroupPoliciesMethod][0] = test.getListAttachedGroupPoliciesResult
+		testApi.ArgsOut[ListAttachedGroupPoliciesMethod][1] = test.getListAttachedGroupPoliciesErr
+
+		req, err := http.NewRequest(http.MethodGet, server.URL+API_VERSION_1+"/organizations/"+test.org+"/groups/"+test.name+"/policies", nil)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
+			continue
+		}
+
+		res, err := client.Do(req)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
+			continue
+		}
+
+		// Check received parameter
+		if testApi.ArgsIn[ListAttachedGroupPoliciesMethod][1] != test.org {
+			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[ListAttachedGroupPoliciesMethod][1])
+			continue
+		}
+		if testApi.ArgsIn[ListAttachedGroupPoliciesMethod][2] != test.name {
+			t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.name, testApi.ArgsIn[ListAttachedGroupPoliciesMethod][2])
+			continue
+		}
+
+		// check status code
+		if test.expectedStatusCode != res.StatusCode {
+			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
+			continue
+		}
+
+		switch res.StatusCode {
+		case http.StatusOK:
+			getGroupPoliciesResponse := GetGroupPoliciesResponse{}
+			err = json.NewDecoder(res.Body).Decode(&getGroupPoliciesResponse)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(getGroupPoliciesResponse, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+				continue
+			}
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
 				continue
 			}
 
