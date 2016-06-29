@@ -169,6 +169,8 @@ func (a *WorkerHandler) HandleListGroups(w http.ResponseWriter, r *http.Request,
 		switch apiError.Code {
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
 			a.RespondForbidden(r, &authenticatedUser, w, apiError)
+		case api.INVALID_PARAMETER_ERROR:
+			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
@@ -434,23 +436,25 @@ func (a *WorkerHandler) HandleListAttachedGroupPolicies(w http.ResponseWriter, r
 
 }
 
-func (a *WorkerHandler) handleListAllGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	userID := a.worker.Authenticator.RetrieveUserID(*r)
+func (a *WorkerHandler) HandleListAllGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	// get Org and PathPrefix from request, so the query can be filtered
 	org := r.URL.Query().Get("Org")
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call group API to retrieve groups
-	result, err := a.worker.GroupApi.GetListGroups(a.worker.Authenticator.RetrieveUserID(*r), org, pathPrefix)
+	result, err := a.worker.GroupApi.GetListGroups(authenticatedUser, org, pathPrefix)
 	if err != nil {
 		a.worker.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w, apiError)
+			a.RespondForbidden(r, &authenticatedUser, w, apiError)
+		case api.INVALID_PARAMETER_ERROR:
+			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		default:
-			a.RespondInternalServerError(r, &userID, w)
+			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
 	}
@@ -461,6 +465,6 @@ func (a *WorkerHandler) handleListAllGroups(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Return data
-	a.RespondOk(r, &userID, w, response)
+	a.RespondOk(r, &authenticatedUser, w, response)
 
 }
