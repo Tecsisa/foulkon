@@ -1088,7 +1088,7 @@ func TestWorkerHandler_HandleAddMember(t *testing.T) {
 
 		// Check received parameters
 		if testApi.ArgsIn[AddMemberMethod][1] != test.userID {
-			t.Errorf("Test case %v. Received different UserID (wanted:%v / received:%v)", n, test.userID, testApi.ArgsIn[AddMemberMethod][2])
+			t.Errorf("Test case %v. Received different UserID (wanted:%v / received:%v)", n, test.userID, testApi.ArgsIn[AddMemberMethod][1])
 			continue
 		}
 		if testApi.ArgsIn[AddMemberMethod][2] != test.groupName {
@@ -1096,7 +1096,7 @@ func TestWorkerHandler_HandleAddMember(t *testing.T) {
 			continue
 		}
 		if testApi.ArgsIn[AddMemberMethod][3] != test.org {
-			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[AddMemberMethod][1])
+			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[AddMemberMethod][3])
 			continue
 		}
 
@@ -1259,6 +1259,168 @@ func TestWorkerHandler_HandleRemoveMember(t *testing.T) {
 		}
 		if testApi.ArgsIn[RemoveMemberMethod][3] != test.org {
 			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[RemoveMemberMethod][1])
+			continue
+		}
+
+		// check status code
+		if test.expectedStatusCode != res.StatusCode {
+			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
+			continue
+		}
+
+		switch res.StatusCode {
+		case http.StatusNoContent:
+			// No message expected
+			continue
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
+					n, diff)
+				continue
+			}
+
+		}
+	}
+}
+
+func TestWorkerHandler_HandleAttachGroupPolicy(t *testing.T) {
+	testcases := map[string]struct {
+		// API method args
+		org        string
+		groupName  string
+		policyName string
+		// Expected result
+		expectedStatusCode int
+		expectedError      api.Error
+		// Manager Errors
+		attachGroupPolicyErr error
+	}{
+		"OkCase": {
+			org:                "org1",
+			groupName:          "group1",
+			policyName:         "policy1",
+			expectedStatusCode: http.StatusNoContent,
+		},
+		"ErrorCaseGroupNotFoundErr": {
+			org:                "org1",
+			groupName:          "Invalid Group",
+			policyName:         "policy1",
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code:    api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "Group Not Found",
+			},
+			attachGroupPolicyErr: &api.Error{
+				Code:    api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "Group Not Found",
+			},
+		},
+		"ErrorCaseUserNotFoundErr": {
+			org:                "org1",
+			groupName:          "group1",
+			policyName:         "Invalid Policy",
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code:    api.POLICY_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "User Not Found",
+			},
+			attachGroupPolicyErr: &api.Error{
+				Code:    api.POLICY_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "User Not Found",
+			},
+		},
+		"ErrorCaseUnauthorizedError": {
+			org:                "org1",
+			groupName:          "group1",
+			policyName:         "policy1",
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+			attachGroupPolicyErr: &api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+		},
+		"ErrorCaseInvalidParameterErr": {
+			org:                "org1",
+			groupName:          "group1",
+			policyName:         "policy1",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid Parameter",
+			},
+			attachGroupPolicyErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid Parameter",
+			},
+		},
+		"ErrorCasePolicyIsAlreadyAttachedErr": {
+			org:                "org1",
+			groupName:          "group1",
+			policyName:         "policy1",
+			expectedStatusCode: http.StatusConflict,
+			expectedError: api.Error{
+				Code:    api.POLICY_IS_ALREADY_ATTACHED_TO_GROUP,
+				Message: "Policy is already attached to group",
+			},
+			attachGroupPolicyErr: &api.Error{
+				Code:    api.POLICY_IS_ALREADY_ATTACHED_TO_GROUP,
+				Message: "Policy is already attached to group",
+			},
+		},
+		"ErrorCaseUnknownApiError": {
+			org:                "org1",
+			groupName:          "group1",
+			policyName:         "policy1",
+			expectedStatusCode: http.StatusInternalServerError,
+			attachGroupPolicyErr: &api.Error{
+				Code:    api.UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[AttachPolicyToGroupMethod][0] = test.attachGroupPolicyErr
+
+		req, err := http.NewRequest(http.MethodPost, server.URL+API_VERSION_1+"/organizations/"+test.org+"/groups/"+test.groupName+"/policies/"+test.policyName, nil)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
+			continue
+		}
+
+		res, err := client.Do(req)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
+			continue
+		}
+
+		// Check received parameters
+		if testApi.ArgsIn[AttachPolicyToGroupMethod][1] != test.org {
+			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[AttachPolicyToGroupMethod][1])
+			continue
+		}
+		if testApi.ArgsIn[AttachPolicyToGroupMethod][2] != test.groupName {
+			t.Errorf("Test case %v. Received different GroupName (wanted:%v / received:%v)", n, test.groupName, testApi.ArgsIn[AttachPolicyToGroupMethod][2])
+			continue
+		}
+		if testApi.ArgsIn[AttachPolicyToGroupMethod][3] != test.policyName {
+			t.Errorf("Test case %v. Received different policyName (wanted:%v / received:%v)", n, test.policyName, testApi.ArgsIn[AttachPolicyToGroupMethod][3])
 			continue
 		}
 
