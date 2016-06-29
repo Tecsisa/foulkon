@@ -370,6 +370,20 @@ func TestWorkerHandler_HandlePutUser(t *testing.T) {
 				Message: "User not exist",
 			},
 		},
+		"ErrorCaseUserAlreadyExistErr": {
+			request: &UpdateUserRequest{
+				Path: "NewPath",
+			},
+			expectedStatusCode: http.StatusConflict,
+			expectedError: api.Error{
+				Code:    api.USER_ALREADY_EXIST,
+				Message: "User already exist",
+			},
+			updateUserErr: &api.Error{
+				Code:    api.USER_ALREADY_EXIST,
+				Message: "User already exist",
+			},
+		},
 		"ErrorCaseInvalidParameterError": {
 			request: &UpdateUserRequest{
 				Path: "InvalidPath",
