@@ -111,7 +111,7 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 
 	router.GET(GROUP_ID_POLICIES_URL, workerHandler.handleListAttachedGroupPolicies)
 
-	router.POST(GROUP_ID_POLICIES_ID_URL, workerHandler.handleAttachGroupPolicy)
+	router.POST(GROUP_ID_POLICIES_ID_URL, workerHandler.HandleAttachGroupPolicy)
 	router.DELETE(GROUP_ID_POLICIES_ID_URL, workerHandler.handleDetachGroupPolicy)
 
 	// Special endpoint without organization URI for groups

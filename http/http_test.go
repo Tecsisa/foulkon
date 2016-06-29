@@ -391,7 +391,15 @@ func (t TestAPI) ListMembers(authenticatedUser api.AuthenticatedUser, org string
 }
 
 func (t TestAPI) AttachPolicyToGroup(authenticatedUser api.AuthenticatedUser, org string, groupName string, policyName string) error {
-	return nil
+	t.ArgsIn[AttachPolicyToGroupMethod][0] = authenticatedUser
+	t.ArgsIn[AttachPolicyToGroupMethod][1] = org
+	t.ArgsIn[AttachPolicyToGroupMethod][2] = groupName
+	t.ArgsIn[AttachPolicyToGroupMethod][3] = policyName
+	var err error
+	if t.ArgsOut[AttachPolicyToGroupMethod][0] != nil {
+		err = t.ArgsOut[AttachPolicyToGroupMethod][0].(error)
+	}
+	return err
 }
 
 func (t TestAPI) DetachPolicyToGroup(authenticatedUser api.AuthenticatedUser, org string, groupName string, policyName string) error {

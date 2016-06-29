@@ -332,15 +332,15 @@ func (a *WorkerHandler) HandleRemoveMember(w http.ResponseWriter, r *http.Reques
 
 }
 
-func (a *WorkerHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	userID := a.worker.Authenticator.RetrieveUserID(*r)
+func (a *WorkerHandler) HandleAttachGroupPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	// Retrieve group, org and policy from path
 	org := ps.ByName(ORG_NAME)
 	groupName := ps.ByName(GROUP_NAME)
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call group API to attach policy to group
-	err := a.worker.GroupApi.AttachPolicyToGroup(a.worker.Authenticator.RetrieveUserID(*r), org, groupName, policyName)
+	err := a.worker.GroupApi.AttachPolicyToGroup(authenticatedUser, org, groupName, policyName)
 
 	// Error handling
 	if err != nil {
@@ -349,18 +349,20 @@ func (a *WorkerHandler) handleAttachGroupPolicy(w http.ResponseWriter, r *http.R
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND, api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w, apiError)
+			a.RespondNotFound(r, &authenticatedUser, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w, apiError)
+			a.RespondForbidden(r, &authenticatedUser, w, apiError)
+		case api.INVALID_PARAMETER_ERROR:
+			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		case api.POLICY_IS_ALREADY_ATTACHED_TO_GROUP:
-			a.RespondConflict(r, &userID, w, apiError)
+			a.RespondConflict(r, &authenticatedUser, w, apiError)
 		default: // Unexpected API error
-			a.RespondInternalServerError(r, &userID, w)
+			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
 
 	} else { // a.Respond without content
-		a.RespondNoContent(r, &userID, w)
+		a.RespondNoContent(r, &authenticatedUser, w)
 	}
 
 }
