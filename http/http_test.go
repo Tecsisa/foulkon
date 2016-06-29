@@ -403,8 +403,15 @@ func (t TestAPI) AttachPolicyToGroup(authenticatedUser api.AuthenticatedUser, or
 }
 
 func (t TestAPI) DetachPolicyToGroup(authenticatedUser api.AuthenticatedUser, org string, groupName string, policyName string) error {
-	return nil
-}
+	t.ArgsIn[DetachPolicyToGroupMethod][0] = authenticatedUser
+	t.ArgsIn[DetachPolicyToGroupMethod][1] = org
+	t.ArgsIn[DetachPolicyToGroupMethod][2] = groupName
+	t.ArgsIn[DetachPolicyToGroupMethod][3] = policyName
+	var err error
+	if t.ArgsOut[DetachPolicyToGroupMethod][0] != nil {
+		err = t.ArgsOut[DetachPolicyToGroupMethod][0].(error)
+	}
+	return err}
 
 func (t TestAPI) ListAttachedGroupPolicies(authenticatedUser api.AuthenticatedUser, org string, groupName string) ([]api.PolicyIdentity, error) {
 	return nil, nil
