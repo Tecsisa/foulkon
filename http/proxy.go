@@ -27,7 +27,7 @@ const (
 
 var rUrnParam, _ = regexp.Compile(`\{(\w+)\}`)
 
-func (h *ProxyHandler) handleRequest(resource authorizr.APIResource) httprouter.Handle {
+func (h *ProxyHandler) HandleRequest(resource authorizr.APIResource) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		requestID := uuid.NewV4().String()
 		w.Header().Set(REQUEST_ID_HEADER, requestID)
@@ -43,7 +43,7 @@ func (h *ProxyHandler) handleRequest(resource authorizr.APIResource) httprouter.
 			destURL, err := url.Parse(resource.Host)
 			if err != nil {
 				h.TransactionErrorLog(r, requestID, workerRequestID, fmt.Sprintf("Error creating destination host URL: %v", err.Error()))
-				http.Error(w, getErrorMessage(requestID, INVALID_DEST_HOST_URL), http.StatusForbidden)
+				h.RespondForbidden(w, getErrorMessage(INVALID_DEST_HOST_URL))
 				return
 			}
 			r.URL.Host = destURL.Host
@@ -52,14 +52,16 @@ func (h *ProxyHandler) handleRequest(resource authorizr.APIResource) httprouter.
 			res, err := h.client.Do(r)
 			if err != nil {
 				h.TransactionErrorLog(r, requestID, workerRequestID, fmt.Sprintf("Error calling to destination host resource: %v", err.Error()))
-				http.Error(w, getErrorMessage(requestID, DESTINATION_HOST_RESOURCE_CALL_ERROR), http.StatusForbidden)
+				h.RespondForbidden(w, getErrorMessage(DESTINATION_HOST_RESOURCE_CALL_ERROR))
 				return
 			}
-			res.Write(w)
+			buffer := new(bytes.Buffer)
+			buffer.ReadFrom(res.Body)
+			w.Write(buffer.Bytes())
 			h.TransactionLog(r, requestID, workerRequestID, "Request accepted")
 		} else {
 			h.TransactionErrorLog(r, requestID, workerRequestID, fmt.Sprintf("Error in authorization: %v", err.Error()))
-			http.Error(w, getErrorMessage(requestID, AUTHORIZATION_ERROR), http.StatusForbidden)
+			h.RespondForbidden(w, getErrorMessage(AUTHORIZATION_ERROR))
 			return
 		}
 	}
@@ -183,7 +185,9 @@ func isFullUrn(resource string) bool {
 	}
 }
 
-func getErrorMessage(transactionID string, errorCode string) string {
-	return fmt.Sprintf("Forbidden resource. If you need access, contact the administrators."+
-		" Transaction id %v. Error code %v", transactionID, errorCode)
+func getErrorMessage(errorCode string) *api.Error {
+	return &api.Error{
+		Code:    errorCode,
+		Message: "Forbidden resource. If you need access, contact the administrators.",
+	}
 }
