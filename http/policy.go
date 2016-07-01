@@ -1,9 +1,8 @@
 package http
 
 import (
-	"net/http"
-
 	"encoding/json"
+	"net/http"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/tecsisa/authorizr/api"

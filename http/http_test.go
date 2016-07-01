@@ -1,12 +1,12 @@
 package http
 
 import (
+	"flag"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
 
-	"flag"
 	log "github.com/Sirupsen/logrus"
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/auth"
@@ -432,7 +432,20 @@ func (t TestAPI) ListAttachedGroupPolicies(authenticatedUser api.AuthenticatedUs
 // POLICY API
 
 func (t TestAPI) AddPolicy(authenticatedUser api.AuthenticatedUser, name string, path string, org string, statements []api.Statement) (*api.Policy, error) {
-	return nil, nil
+	t.ArgsIn[AddPolicyMethod][0] = authenticatedUser
+	t.ArgsIn[AddPolicyMethod][1] = name
+	t.ArgsIn[AddPolicyMethod][2] = path
+	t.ArgsIn[AddPolicyMethod][3] = org
+	t.ArgsIn[AddPolicyMethod][4] = statements
+	var policy *api.Policy
+	if t.ArgsOut[AddPolicyMethod][0] != nil {
+		policy = t.ArgsOut[AddPolicyMethod][0].(*api.Policy)
+	}
+	var err error
+	if t.ArgsOut[AddPolicyMethod][1] != nil {
+		err = t.ArgsOut[AddPolicyMethod][1].(error)
+	}
+	return policy, err
 }
 
 func (t TestAPI) GetPolicyByName(authenticatedUser api.AuthenticatedUser, org string, policyName string) (*api.Policy, error) {
