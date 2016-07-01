@@ -122,13 +122,14 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 	router.POST(POLICY_ROOT_URL, workerHandler.HandleCreatePolicy)
 
 	router.DELETE(POLICY_ID_URL, workerHandler.HandleDeletePolicy)
-	router.GET(POLICY_ID_URL, workerHandler.handleGetPolicy)
-	router.PUT(POLICY_ID_URL, workerHandler.handleUpdatePolicy)
 
-	router.GET(POLICY_ID_GROUPS_URL, workerHandler.handleGetPolicyAttachedGroups)
+	router.GET(POLICY_ID_URL, workerHandler.HandleGetPolicy)
+	router.PUT(POLICY_ID_URL, workerHandler.HandleUpdatePolicy)
+
+	router.GET(POLICY_ID_GROUPS_URL, workerHandler.HandleGetPolicyAttachedGroups)
 
 	// Special endpoint without organization URI for policies
-	router.GET(API_VERSION_1+"/policies", workerHandler.handleListAllPolicies)
+	router.GET(API_VERSION_1+"/policies", workerHandler.HandleListAllPolicies)
 
 	// Get effect endpoint
 	router.POST(AUTHORIZE_URL, workerHandler.HandleAuthorizeResources)

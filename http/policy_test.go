@@ -543,3 +543,177 @@ func TestWorkerHandler_HandleDeletePolicy(t *testing.T) {
 
 	}
 }
+
+func TestWorkerHandler_HandleGetPolicy(t *testing.T) {
+	now := time.Now()
+	testcases := map[string]struct {
+		// API method args
+		org        string
+		policyName string
+		// Expected result
+		expectedStatusCode int
+		expectedResponse   GetPolicyResponse
+		expectedError      *api.Error
+		// Manager Results
+		getPolicyByNameResult *api.Policy
+		// Manager Errors
+		getPolicyByNameErr error
+	}{
+		"OkCase": {
+			org:                "org1",
+			policyName:         "p1",
+			expectedStatusCode: http.StatusOK,
+			expectedResponse: GetPolicyResponse{
+				&api.Policy{
+					ID:       "test1",
+					Name:     "test",
+					Org:      "org1",
+					Path:     "/path/",
+					CreateAt: now,
+					Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
+					Statements: &[]api.Statement{
+						api.Statement{
+							Effect: "allow",
+							Action: []string{
+								api.USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+							},
+						},
+					},
+				},
+			},
+			getPolicyByNameResult: &api.Policy{
+				ID:       "test1",
+				Name:     "test",
+				Org:      "org1",
+				Path:     "/path/",
+				CreateAt: now,
+				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]api.Statement{
+					api.Statement{
+						Effect: "allow",
+						Action: []string{
+							api.USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+		},
+		"ErrorCasePolicyNotFound": {
+			org:                "org1",
+			policyName:         "p1",
+			expectedStatusCode: http.StatusNotFound,
+			getPolicyByNameErr: &api.Error{
+				Code: api.POLICY_BY_ORG_AND_NAME_NOT_FOUND,
+			},
+			expectedError: &api.Error{
+				Code: api.POLICY_BY_ORG_AND_NAME_NOT_FOUND,
+			},
+		},
+		"ErrorCaseUnauthorized": {
+			org:                "org1",
+			policyName:         "p1",
+			expectedStatusCode: http.StatusForbidden,
+			getPolicyByNameErr: &api.Error{
+				Code: api.UNAUTHORIZED_RESOURCES_ERROR,
+			},
+			expectedError: &api.Error{
+				Code: api.UNAUTHORIZED_RESOURCES_ERROR,
+			},
+		},
+		"ErrorCaseInvalidParam": {
+			org:                "org1",
+			policyName:         "p1",
+			expectedStatusCode: http.StatusBadRequest,
+			getPolicyByNameErr: &api.Error{
+				Code: api.INVALID_PARAMETER_ERROR,
+			},
+			expectedError: &api.Error{
+				Code: api.INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInternalServerError": {
+			org:                "org1",
+			policyName:         "p1",
+			expectedStatusCode: http.StatusInternalServerError,
+			getPolicyByNameErr: &api.Error{
+				Code: api.UNKNOWN_API_ERROR,
+			},
+			expectedError: &api.Error{
+				Code: api.UNKNOWN_API_ERROR,
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[GetPolicyByNameMethod][0] = test.getPolicyByNameResult
+		testApi.ArgsOut[GetPolicyByNameMethod][1] = test.getPolicyByNameErr
+
+		req, err := http.NewRequest(http.MethodGet, server.URL+API_VERSION_1+"/organizations/"+test.org+"/policies/"+test.policyName, nil)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
+			continue
+		}
+
+		res, err := client.Do(req)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
+			continue
+		}
+
+		// Check received parameters
+		if testApi.ArgsIn[GetPolicyByNameMethod][1] != test.org {
+			t.Errorf("Test case %v. Received different org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[GetPolicyByNameMethod][1])
+			continue
+		}
+		if testApi.ArgsIn[GetPolicyByNameMethod][2] != test.policyName {
+			t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.policyName, testApi.ArgsIn[GetPolicyByNameMethod][2])
+			continue
+		}
+
+		// check status code
+		if test.expectedStatusCode != res.StatusCode {
+			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
+			continue
+		}
+
+		switch res.StatusCode {
+		case http.StatusOK:
+			GetPolicyByNameMethodResponse := GetPolicyResponse{}
+			err = json.NewDecoder(res.Body).Decode(&GetPolicyByNameMethodResponse)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(GetPolicyByNameMethodResponse, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+				continue
+			}
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
+				continue
+			}
+
+		}
+
+	}
+}
