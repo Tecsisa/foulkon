@@ -101,7 +101,7 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 	router.GET(GROUP_ORG_ROOT_URL, workerHandler.HandleListGroups)
 
 	router.DELETE(GROUP_ID_URL, workerHandler.HandleDeleteGroup)
-	router.GET(GROUP_ID_URL, workerHandler.handleGetGroup)
+	router.GET(GROUP_ID_URL, workerHandler.HandleGetGroup)
 	router.PUT(GROUP_ID_URL, workerHandler.HandleUpdateGroup)
 
 	router.GET(GROUP_ID_USERS_URL, workerHandler.HandleListMembers)
@@ -118,8 +118,8 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 	router.GET(API_VERSION_1+"/groups", workerHandler.HandleListAllGroups)
 
 	// Policy api
-	router.GET(POLICY_ROOT_URL, workerHandler.handleListPolicies)
-	router.POST(POLICY_ROOT_URL, workerHandler.handleCreatePolicy)
+	router.GET(POLICY_ROOT_URL, workerHandler.HandleListPolicies)
+	router.POST(POLICY_ROOT_URL, workerHandler.HandleCreatePolicy)
 
 	router.DELETE(POLICY_ID_URL, workerHandler.handleDeletePolicy)
 	router.GET(POLICY_ID_URL, workerHandler.handleGetPolicy)

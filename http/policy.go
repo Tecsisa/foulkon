@@ -46,8 +46,8 @@ type GetPolicyGroupsResponse struct {
 	Groups []api.GroupIdentity
 }
 
-func (a *WorkerHandler) handleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	userID := a.worker.Authenticator.RetrieveUserID(*r)
+func (a *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	// Retrieve org from path
 	org := ps.ByName(ORG_NAME)
 
@@ -55,18 +55,18 @@ func (a *WorkerHandler) handleListPolicies(w http.ResponseWriter, r *http.Reques
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call policy API to retrieve policies
-	result, err := a.worker.PolicyApi.GetListPolicies(a.worker.Authenticator.RetrieveUserID(*r), org, pathPrefix)
+	result, err := a.worker.PolicyApi.GetListPolicies(authenticatedUser, org, pathPrefix)
 	if err != nil {
 		a.worker.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &userID, w, apiError)
+			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w, apiError)
+			a.RespondForbidden(r, &authenticatedUser, w, apiError)
 		default: // Unexpected API error
-			a.RespondInternalServerError(r, &userID, w)
+			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
 	}
@@ -77,11 +77,11 @@ func (a *WorkerHandler) handleListPolicies(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Return data
-	a.RespondOk(r, &userID, w, response)
+	a.RespondOk(r, &authenticatedUser, w, response)
 }
 
-func (a *WorkerHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	userID := a.worker.Authenticator.RetrieveUserID(*r)
+func (a *WorkerHandler) HandleCreatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	// Retrieve Organization
 	org := ps.ByName(ORG_NAME)
 
@@ -90,12 +90,12 @@ func (a *WorkerHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Reques
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		a.worker.Logger.Errorln(err)
-		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
+		a.RespondBadRequest(r, &authenticatedUser, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
 		return
 	}
 
 	// Store this policy
-	storedPolicy, err := a.worker.PolicyApi.AddPolicy(a.worker.Authenticator.RetrieveUserID(*r), request.Name, request.Path, org, request.Statements)
+	storedPolicy, err := a.worker.PolicyApi.AddPolicy(authenticatedUser, request.Name, request.Path, org, request.Statements)
 
 	// Error handling
 	if err != nil {
@@ -104,13 +104,13 @@ func (a *WorkerHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Reques
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.POLICY_ALREADY_EXIST:
-			a.RespondConflict(r, &userID, w, apiError)
+			a.RespondConflict(r, &authenticatedUser, w, apiError)
 		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &userID, w, apiError)
+			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w, apiError)
+			a.RespondForbidden(r, &authenticatedUser, w, apiError)
 		default:
-			a.RespondInternalServerError(r, &userID, w)
+			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
 	}
@@ -120,7 +120,7 @@ func (a *WorkerHandler) handleCreatePolicy(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Write group to response
-	a.RespondCreated(r, &userID, w, response)
+	a.RespondCreated(r, &authenticatedUser, w, response)
 }
 
 func (a *WorkerHandler) handleDeletePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
