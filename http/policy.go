@@ -251,6 +251,8 @@ func (a *WorkerHandler) HandleGetPolicyAttachedGroups(w http.ResponseWriter, r *
 			a.RespondNotFound(r, &authethicatedUser, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
 			a.RespondForbidden(r, &authethicatedUser, w, apiError)
+		case api.INVALID_PARAMETER_ERROR:
+			a.RespondBadRequest(r, &authethicatedUser, w, apiError)
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &authethicatedUser, w)
 		}
