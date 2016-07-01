@@ -538,9 +538,285 @@ func TestWorkerHandler_HandleDeletePolicy(t *testing.T) {
 				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
 				continue
 			}
+		}
+	}
+}
 
+func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
+	now := time.Now()
+	testcases := map[string]struct {
+		// API method args
+		org     string
+		request *UpdatePolicyRequest
+		// Expected result
+		expectedStatusCode int
+		expectedResponse   UpdatePolicyResponse
+		expectedError      api.Error
+		// Manager Results
+		updatePolicyResult *api.Policy
+		// Manager Errors
+		updatePolicyErr error
+	}{
+		"OkCase": {
+			org: "org1",
+			request: &UpdatePolicyRequest{
+				Name: "policy1",
+				Path: "path1",
+				Statements: []api.Statement{
+					api.Statement{
+						Effect: "allow",
+						Action: []string{
+							api.USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse: UpdatePolicyResponse{
+				Policy: &api.Policy{
+					ID:       "test1",
+					Name:     "policy1",
+					Path:     "/path/",
+					Org:      "org1",
+					CreateAt: now,
+					Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
+					Statements: &[]api.Statement{
+						api.Statement{
+							Effect: "allow",
+							Action: []string{
+								api.USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+							},
+						},
+					},
+				},
+			},
+			updatePolicyResult: &api.Policy{
+				ID:       "test1",
+				Name:     "policy1",
+				Path:     "/path/",
+				Org:      "org1",
+				CreateAt: now,
+				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]api.Statement{
+					api.Statement{
+						Effect: "allow",
+						Action: []string{
+							api.USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+		},
+		"ErrorCaseMalformedRequest": {
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "EOF",
+			},
+		},
+		"ErrorCasePolicyNotFound": {
+			org: "org1",
+			request: &UpdatePolicyRequest{
+				Name: "policy1",
+				Path: "path1",
+				Statements: []api.Statement{
+					api.Statement{
+						Effect: "allow",
+						Action: []string{
+							api.USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code:    api.POLICY_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "Group not found",
+			},
+			updatePolicyErr: &api.Error{
+				Code:    api.POLICY_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "Group not found",
+			},
+		},
+		"ErrorCaseInvalidParameterError": {
+			org: "org1",
+			request: &UpdatePolicyRequest{
+				Name: "policy1",
+				Path: "path1",
+				Statements: []api.Statement{
+					api.Statement{
+						Effect: "allow",
+						Action: []string{
+							api.USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			updatePolicyErr: &api.Error{
+				Code: api.INVALID_PARAMETER_ERROR,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code: api.INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseUnauthorizedResourcesError": {
+			org: "org1",
+			request: &UpdatePolicyRequest{
+				Name: "policy1",
+				Path: "path1",
+				Statements: []api.Statement{
+					api.Statement{
+						Effect: "allow",
+						Action: []string{
+							api.USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			updatePolicyErr: &api.Error{
+				Code: api.UNAUTHORIZED_RESOURCES_ERROR,
+			},
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code: api.UNAUTHORIZED_RESOURCES_ERROR,
+			},
+		},
+		"ErrorCaseUnknownApiError": {
+			org: "org1",
+			request: &UpdatePolicyRequest{
+				Name: "policy1",
+				Path: "path1",
+				Statements: []api.Statement{
+					api.Statement{
+						Effect: "allow",
+						Action: []string{
+							api.USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			updatePolicyErr: &api.Error{
+				Code: api.UNKNOWN_API_ERROR,
+			},
+			expectedStatusCode: http.StatusInternalServerError,
+			expectedError: api.Error{
+				Code: api.UNKNOWN_API_ERROR,
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[UpdatePolicyMethod][0] = test.updatePolicyResult
+		testApi.ArgsOut[UpdatePolicyMethod][1] = test.updatePolicyErr
+
+		var body *bytes.Buffer
+		if test.request != nil {
+			jsonObject, err := json.Marshal(test.request)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected marshalling api request %v", n, err)
+				continue
+			}
+			body = bytes.NewBuffer(jsonObject)
+		}
+		if body == nil {
+			body = bytes.NewBuffer([]byte{})
+		}
+		req, err := http.NewRequest(http.MethodPut, server.URL+API_VERSION_1+"/organizations/"+test.org+"/policies/policy1", body)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
+			continue
 		}
 
+		res, err := client.Do(req)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
+			continue
+		}
+
+		if test.request != nil {
+			// Check received parameters
+			if testApi.ArgsIn[UpdatePolicyMethod][1] != test.org {
+				t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[UpdatePolicyMethod][1])
+				continue
+			}
+			if testApi.ArgsIn[UpdatePolicyMethod][2] != "policy1" {
+				t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, "policy1", testApi.ArgsIn[UpdatePolicyMethod][2])
+				continue
+			}
+			if testApi.ArgsIn[UpdatePolicyMethod][3] != test.request.Name {
+				t.Errorf("Test case %v. Received different newName (wanted:%v / received:%v)", n, test.request.Name, testApi.ArgsIn[UpdatePolicyMethod][3])
+				continue
+			}
+			if testApi.ArgsIn[UpdatePolicyMethod][4] != test.request.Path {
+				t.Errorf("Test case %v. Received different Path (wanted:%v / received:%v)", n, test.request.Path, testApi.ArgsIn[UpdatePolicyMethod][4])
+				continue
+			}
+			if diff := pretty.Compare(testApi.ArgsIn[UpdatePolicyMethod][5], test.request.Statements); diff != "" {
+				t.Errorf("Test %v failed. Received different statements (received/wanted) %v",
+					n, diff)
+				continue
+			}
+		}
+
+		// check status code
+		if test.expectedStatusCode != res.StatusCode {
+			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
+			continue
+		}
+
+		switch res.StatusCode {
+		case http.StatusOK:
+			updatePolicyResponse := UpdatePolicyResponse{}
+			err = json.NewDecoder(res.Body).Decode(&updatePolicyResponse)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(updatePolicyResponse, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+				continue
+			}
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
+				continue
+			}
+		}
 	}
 }
 
