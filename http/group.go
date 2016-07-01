@@ -117,7 +117,7 @@ func (a *WorkerHandler) HandleDeleteGroup(w http.ResponseWriter, r *http.Request
 	}
 }
 
-func (a *WorkerHandler) handleGetGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *WorkerHandler) HandleGetGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	// Retrieve group org and name from path
 	org := ps.ByName(ORG_NAME)
