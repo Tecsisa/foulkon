@@ -473,7 +473,14 @@ func (t TestAPI) UpdatePolicy(authenticatedUser api.AuthenticatedUser, org strin
 }
 
 func (t TestAPI) DeletePolicy(authenticatedUser api.AuthenticatedUser, org string, name string) error {
-	return nil
+	t.ArgsIn[DeletePolicyMethod][0] = authenticatedUser
+	t.ArgsIn[DeletePolicyMethod][1] = org
+	t.ArgsIn[DeletePolicyMethod][2] = name
+	var err error
+	if t.ArgsOut[DeletePolicyMethod][0] != nil {
+		err = t.ArgsOut[DeletePolicyMethod][0].(error)
+	}
+	return err
 }
 
 func (t TestAPI) GetPolicyAttachedGroups(authenticatedUser api.AuthenticatedUser, org string, policyName string) ([]api.GroupIdentity, error) {

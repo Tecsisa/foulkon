@@ -423,3 +423,123 @@ func TestWorkerHandler_HandleCreatePolicy(t *testing.T) {
 
 	}
 }
+
+func TestWorkerHandler_HandleDeletePolicy(t *testing.T) {
+	testcases := map[string]struct {
+		// API method args
+		org        string
+		policyName string
+		// Expected result
+		expectedStatusCode int
+		expectedError      api.Error
+		// Manager Errors
+		deletePolicyErr error
+	}{
+		"OkCase": {
+			org:                "org1",
+			policyName:         "p1",
+			expectedStatusCode: http.StatusNoContent,
+		},
+		"ErrorCasePolicyNotFound": {
+			org:        "org1",
+			policyName: "p1",
+			deletePolicyErr: &api.Error{
+				Code: api.POLICY_BY_ORG_AND_NAME_NOT_FOUND,
+			},
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code: api.POLICY_BY_ORG_AND_NAME_NOT_FOUND,
+			},
+		},
+		"ErrorCaseInvalidParam": {
+			org:        "org1",
+			policyName: "p1",
+			deletePolicyErr: &api.Error{
+				Code: api.INVALID_PARAMETER_ERROR,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code: api.INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseUnauthorized": {
+			org:        "org1",
+			policyName: "p1",
+			deletePolicyErr: &api.Error{
+				Code: api.UNAUTHORIZED_RESOURCES_ERROR,
+			},
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code: api.UNAUTHORIZED_RESOURCES_ERROR,
+			},
+		},
+		"ErrorCaseInternalServerError": {
+			org:        "org1",
+			policyName: "p1",
+			deletePolicyErr: &api.Error{
+				Code: api.UNKNOWN_API_ERROR,
+			},
+			expectedStatusCode: http.StatusInternalServerError,
+			expectedError: api.Error{
+				Code: api.UNKNOWN_API_ERROR,
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[DeletePolicyMethod][0] = test.deletePolicyErr
+
+		req, err := http.NewRequest(http.MethodDelete, server.URL+API_VERSION_1+"/organizations/"+test.org+"/policies/"+test.policyName, nil)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
+			continue
+		}
+
+		res, err := client.Do(req)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
+			continue
+		}
+
+		// Check received parameters
+		if testApi.ArgsIn[DeletePolicyMethod][1] != test.org {
+			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[DeletePolicyMethod][1])
+			continue
+		}
+		if testApi.ArgsIn[DeletePolicyMethod][2] != test.policyName {
+			t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.policyName, testApi.ArgsIn[DeletePolicyMethod][2])
+			continue
+		}
+
+		// check status code
+		if test.expectedStatusCode != res.StatusCode {
+			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
+			continue
+		}
+
+		switch res.StatusCode {
+		case http.StatusNoContent:
+			// No message expected
+			continue
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
+				continue
+			}
+
+		}
+
+	}
+}

@@ -123,14 +123,14 @@ func (a *WorkerHandler) HandleCreatePolicy(w http.ResponseWriter, r *http.Reques
 	a.RespondCreated(r, &authenticatedUser, w, response)
 }
 
-func (a *WorkerHandler) handleDeletePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	userID := a.worker.Authenticator.RetrieveUserID(*r)
+func (a *WorkerHandler) HandleDeletePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	// Retrieve org and policy name from request path
 	orgId := ps.ByName(ORG_NAME)
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call API to delete policy
-	err := a.worker.PolicyApi.DeletePolicy(a.worker.Authenticator.RetrieveUserID(*r), orgId, policyName)
+	err := a.worker.PolicyApi.DeletePolicy(authenticatedUser, orgId, policyName)
 
 	if err != nil {
 		a.worker.Logger.Errorln(err)
@@ -138,18 +138,18 @@ func (a *WorkerHandler) handleDeletePolicy(w http.ResponseWriter, r *http.Reques
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w, apiError)
+			a.RespondNotFound(r, &authenticatedUser, w, apiError)
 		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &userID, w, apiError)
+			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w, apiError)
+			a.RespondForbidden(r, &authenticatedUser, w, apiError)
 		default: // Unexpected API error
-			a.RespondInternalServerError(r, &userID, w)
+			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
 	}
 
-	a.RespondNoContent(r, &userID, w)
+	a.RespondNoContent(r, &authenticatedUser, w)
 }
 
 func (a *WorkerHandler) handleUpdatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

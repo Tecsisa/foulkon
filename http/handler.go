@@ -121,7 +121,7 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 	router.GET(POLICY_ROOT_URL, workerHandler.HandleListPolicies)
 	router.POST(POLICY_ROOT_URL, workerHandler.HandleCreatePolicy)
 
-	router.DELETE(POLICY_ID_URL, workerHandler.handleDeletePolicy)
+	router.DELETE(POLICY_ID_URL, workerHandler.HandleDeletePolicy)
 	router.GET(POLICY_ID_URL, workerHandler.handleGetPolicy)
 	router.PUT(POLICY_ID_URL, workerHandler.handleUpdatePolicy)
 
