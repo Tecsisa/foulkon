@@ -495,7 +495,18 @@ func (t TestAPI) DeletePolicy(authenticatedUser api.AuthenticatedUser, org strin
 }
 
 func (t TestAPI) GetPolicyAttachedGroups(authenticatedUser api.AuthenticatedUser, org string, policyName string) ([]api.GroupIdentity, error) {
-	return nil, nil
+	t.ArgsIn[GetPolicyAttachedGroupsMethod][0] = authenticatedUser
+	t.ArgsIn[GetPolicyAttachedGroupsMethod][1] = org
+	t.ArgsIn[GetPolicyAttachedGroupsMethod][2] = policyName
+	var groups []api.GroupIdentity
+	if t.ArgsOut[GetPolicyAttachedGroupsMethod][0] != nil {
+		groups = t.ArgsOut[GetPolicyAttachedGroupsMethod][0].([]api.GroupIdentity)
+	}
+	var err error
+	if t.ArgsOut[GetPolicyAttachedGroupsMethod][1] != nil {
+		err = t.ArgsOut[GetPolicyAttachedGroupsMethod][1].(error)
+	}
+	return groups, err
 }
 
 // AUTHZ API
