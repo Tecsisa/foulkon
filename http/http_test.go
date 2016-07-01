@@ -480,7 +480,22 @@ func (t TestAPI) GetListPolicies(authenticatedUser api.AuthenticatedUser, org st
 
 func (t TestAPI) UpdatePolicy(authenticatedUser api.AuthenticatedUser, org string, policyName string, newName string, newPath string,
 	newStatements []api.Statement) (*api.Policy, error) {
-	return nil, nil
+	t.ArgsIn[UpdatePolicyMethod][0] = authenticatedUser
+	t.ArgsIn[UpdatePolicyMethod][1] = org
+	t.ArgsIn[UpdatePolicyMethod][2] = policyName
+	t.ArgsIn[UpdatePolicyMethod][3] = newName
+	t.ArgsIn[UpdatePolicyMethod][4] = newPath
+	t.ArgsIn[UpdatePolicyMethod][5] = newStatements
+
+	var policy *api.Policy
+	if t.ArgsOut[UpdatePolicyMethod][0] != nil {
+		policy = t.ArgsOut[UpdatePolicyMethod][0].(*api.Policy)
+	}
+	var err error
+	if t.ArgsOut[UpdatePolicyMethod][1] != nil {
+		err = t.ArgsOut[UpdatePolicyMethod][1].(error)
+	}
+	return policy, err
 }
 
 func (t TestAPI) DeletePolicy(authenticatedUser api.AuthenticatedUser, org string, name string) error {

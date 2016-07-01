@@ -154,13 +154,13 @@ func (a *WorkerHandler) HandleDeletePolicy(w http.ResponseWriter, r *http.Reques
 }
 
 func (a *WorkerHandler) HandleUpdatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	userID := a.worker.Authenticator.RetrieveUserID(*r)
+	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	// Decode request
 	request := UpdatePolicyRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		a.worker.Logger.Errorln(err)
-		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
+		a.RespondBadRequest(r, &authenticatedUser, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
 		return
 	}
 
@@ -169,7 +169,7 @@ func (a *WorkerHandler) HandleUpdatePolicy(w http.ResponseWriter, r *http.Reques
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call policy API to update policy
-	result, err := a.worker.PolicyApi.UpdatePolicy(a.worker.Authenticator.RetrieveUserID(*r), org, policyName, request.Name, request.Path, request.Statements)
+	result, err := a.worker.PolicyApi.UpdatePolicy(authenticatedUser, org, policyName, request.Name, request.Path, request.Statements)
 
 	// Check errors
 	if err != nil {
@@ -178,13 +178,13 @@ func (a *WorkerHandler) HandleUpdatePolicy(w http.ResponseWriter, r *http.Reques
 		apiError := err.(*api.Error)
 		switch apiError.Code {
 		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &userID, w, apiError)
+			a.RespondNotFound(r, &authenticatedUser, w, apiError)
 		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &userID, w, apiError)
+			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w, apiError)
+			a.RespondForbidden(r, &authenticatedUser, w, apiError)
 		default: // Unexpected API error
-			a.RespondInternalServerError(r, &userID, w)
+			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
 	}
@@ -195,7 +195,7 @@ func (a *WorkerHandler) HandleUpdatePolicy(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Write policy to response
-	a.RespondOk(r, &userID, w, response)
+	a.RespondOk(r, &authenticatedUser, w, response)
 }
 
 func (a *WorkerHandler) HandleGetPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
