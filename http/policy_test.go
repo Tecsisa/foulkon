@@ -1148,3 +1148,152 @@ func TestWorkerHandler_HandleGetPolicyAttachedGroups(t *testing.T) {
 
 	}
 }
+
+func TestWorkerHandler_HandleListAllPolicies(t *testing.T) {
+	testcases := map[string]struct {
+		// API method args
+		org        string
+		pathPrefix string
+		// Expected result
+		expectedStatusCode int
+		expectedResponse   ListAllPoliciesResponse
+		expectedError      api.Error
+		// Manager Results
+		getListPoliciesResult []api.PolicyIdentity
+		// Manager Errors
+		getListPoliciesErr error
+	}{
+		"OkCase": {
+			org:                "org1",
+			pathPrefix:         "path",
+			expectedStatusCode: http.StatusOK,
+			expectedResponse: ListAllPoliciesResponse{
+				[]api.PolicyIdentity{
+					api.PolicyIdentity{
+						Org:  "org1",
+						Name: "policy1",
+					},
+					api.PolicyIdentity{
+						Org:  "org1",
+						Name: "policy2",
+					},
+				},
+			},
+			getListPoliciesResult: []api.PolicyIdentity{
+				api.PolicyIdentity{
+					Org:  "org1",
+					Name: "policy1",
+				},
+				api.PolicyIdentity{
+					Org:  "org1",
+					Name: "policy2",
+				},
+			},
+		},
+		"ErrorCaseInvalidParameterError": {
+			org:                "org1",
+			pathPrefix:         "path",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Unauthorized",
+			},
+			getListPoliciesErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Unauthorized",
+			},
+		},
+		"ErrorCaseUnauthorizedError": {
+			org:                "org1",
+			pathPrefix:         "path",
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+			getListPoliciesErr: &api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+		},
+		"ErrorCaseUnknownApiError": {
+			org:                "org1",
+			pathPrefix:         "path",
+			expectedStatusCode: http.StatusInternalServerError,
+			getListPoliciesErr: &api.Error{
+				Code:    api.UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[GetListPoliciesMethod][0] = test.getListPoliciesResult
+		testApi.ArgsOut[GetListPoliciesMethod][1] = test.getListPoliciesErr
+
+		req, err := http.NewRequest(http.MethodGet, server.URL+API_VERSION_1+"/policies?Org="+test.org+"&PathPrefix="+test.pathPrefix, nil)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
+			continue
+		}
+
+		if test.pathPrefix != "" {
+			q := req.URL.Query()
+			q.Add("PathPrefix", test.pathPrefix)
+			req.URL.RawQuery = q.Encode()
+		}
+
+		res, err := client.Do(req)
+		if err != nil {
+			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
+			continue
+		}
+		if testApi.ArgsIn[GetListPoliciesMethod][1] != test.org {
+			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[GetListPoliciesMethod][1])
+			continue
+		}
+		if testApi.ArgsIn[GetListPoliciesMethod][2] != test.pathPrefix {
+			t.Errorf("Test case %v. Received different PathPrefix (wanted:%v / received:%v)", n, test.pathPrefix, testApi.ArgsIn[GetListPoliciesMethod][2])
+			continue
+		}
+		if test.expectedStatusCode != res.StatusCode {
+			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
+			continue
+		}
+
+		switch res.StatusCode {
+		case http.StatusOK:
+			listAllPoliciesResponse := ListAllPoliciesResponse{}
+			err = json.NewDecoder(res.Body).Decode(&listAllPoliciesResponse)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(listAllPoliciesResponse, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
+					n, diff)
+				continue
+			}
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			if err != nil {
+				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
+				continue
+			}
+			// Check result
+			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
+					n, diff)
+				continue
+			}
+
+		}
+	}
+}
