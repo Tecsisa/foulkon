@@ -1,7 +1,7 @@
 # Server config
 [server]
-host = "${AUTHORIZR_HOST}"
-port = "${AUTHORIZR_PORT}"
+host = "${AUTHORIZR_WORKER_HOST}"
+port = "${AUTHORIZR_WORKER_PORT}"
 certfile = "${AUTHORIZR_CERT_FILE_PATH}"
 keyfile = "${AUTHORIZR_KEY_FILE_PATH}"
 
@@ -12,11 +12,11 @@ password = "${AUTHORIZR_ADMIN_PASS}"
 
 # Logger
 [logger]
-type = "${AUTHORIZR_LOG_TYPE}" #(default, file)
-level = "${AUTHORIZR_LOG_LEVEL}" #(debug,info,warn,error)
+type = "${AUTHORIZR_WORKER_LOG_TYPE}" #(default, file)
+level = "${AUTHORIZR_WORKER_LOG_LEVEL}" #(debug,info,warn,error)
 	# Directory for file configuration
 	[logger.file]
-	dir = "${AUTHORIZR_LOG_PATH}"
+	dir = "${AUTHORIZR_WORKER_LOG_PATH}"
 
 # Database config
 [database]

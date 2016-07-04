@@ -1,0 +1,15 @@
+FROM alpine
+MAINTAINER Tecsisa
+
+USER root
+RUN apk update && apk add ca-certificates
+# Worker
+COPY bin/worker /go/bin/worker
+COPY config_env_vars.toml /config_env_vars.toml
+
+ADD entrypoint.sh /go/bin/entrypoint.sh
+RUN chmod 750 /go/bin/*
+
+EXPOSE 8000 8001
+
+ENTRYPOINT ["/go/bin/entrypoint.sh", "-w"]

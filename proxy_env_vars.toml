@@ -4,7 +4,7 @@ host = "${AUTHORIZR_PROXY_HOST}"
 port = "${AUTHORIZR_PROXY_PORT}"
 certfile = "${AUTHORIZR_PROXY_CERT_FILE_PATH}"
 keyfile = "${AUTHORIZR_PROXY_KEY_FILE_PATH}"
-worker-host = "${AUTHORIZR_PROXY_WORKER_LOCATION}"
+worker-host = "${AUTHORIZR_WORKER_URL}"
 
 # Logger
 [logger]

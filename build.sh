@@ -6,7 +6,8 @@ mkdir bin/ 2>/dev/null
 cp $GOPATH/bin/worker ./bin
 cp $GOPATH/bin/proxy ./bin
 
-docker build -t tecsisa/authorizr .
+docker build -t tecsisa/authorizr-proxy -f Dockerfile_proxy .
+docker build -t tecsisa/authorizr-worker -f Dockerfile_worker .
 
-echo "Docker image built!"
+echo "Docker images built!"
 docker images | grep "tecsisa/authorizr"
