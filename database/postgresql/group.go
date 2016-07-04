@@ -182,10 +182,10 @@ func (g PostgresRepo) GetGroupsFiltered(org string, pathPrefix string) ([]api.Gr
 	groups := []Group{}
 	query := g.Dbmap
 	if len(org) > 0 {
-		query = g.Dbmap.Where("org like ? ", org)
+		query = query.Where("org like ? ", org)
 	}
 	if len(pathPrefix) > 0 {
-		query = g.Dbmap.Where("path like ? ", pathPrefix+"%")
+		query = query.Where("path like ? ", pathPrefix+"%")
 	}
 	// Error handling
 	if err := query.Find(&groups).Error; err != nil {
