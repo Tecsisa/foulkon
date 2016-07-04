@@ -8,6 +8,7 @@ import (
 
 	"time"
 
+	"fmt"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/tecsisa/authorizr/api"
 )
@@ -61,7 +62,8 @@ func TestWorkerHandler_HandleGetUsers(t *testing.T) {
 		testApi.ArgsOut[GetListUsersMethod][0] = test.getListUsersResult
 		testApi.ArgsOut[GetListUsersMethod][1] = test.getListUsersErr
 
-		req, err := http.NewRequest(http.MethodGet, server.URL+USER_ROOT_URL, nil)
+		url := fmt.Sprintf(server.URL + USER_ROOT_URL)
+		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -248,7 +250,8 @@ func TestWorkerHandler_HandlePostUsers(t *testing.T) {
 			body = bytes.NewBuffer([]byte{})
 		}
 
-		req, err := http.NewRequest(http.MethodPost, server.URL+USER_ROOT_URL, body)
+		url := fmt.Sprintf(server.URL + USER_ROOT_URL)
+		req, err := http.NewRequest(http.MethodPost, url, body)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -430,7 +433,8 @@ func TestWorkerHandler_HandlePutUser(t *testing.T) {
 			body = bytes.NewBuffer([]byte{})
 		}
 
-		req, err := http.NewRequest(http.MethodPut, server.URL+USER_ROOT_URL+"/userid", body)
+		url := fmt.Sprintf(server.URL + USER_ROOT_URL + "/userid")
+		req, err := http.NewRequest(http.MethodPut, url, body)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -582,7 +586,8 @@ func TestWorkerHandler_HandleGetUserId(t *testing.T) {
 		testApi.ArgsOut[GetUserByExternalIdMethod][0] = test.getUserByExternalIdResult
 		testApi.ArgsOut[GetUserByExternalIdMethod][1] = test.getUserByExternalIdErr
 
-		req, err := http.NewRequest(http.MethodGet, server.URL+USER_ROOT_URL+"/"+test.externalID, nil)
+		url := fmt.Sprintf(server.URL+USER_ROOT_URL+"/%v", test.externalID)
+		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -707,7 +712,8 @@ func TestWorkerHandler_HandleDeleteUserId(t *testing.T) {
 
 		testApi.ArgsOut[RemoveUserByIdMethod][0] = test.removeUserByIdErr
 
-		req, err := http.NewRequest(http.MethodDelete, server.URL+USER_ROOT_URL+"/"+test.externalID, nil)
+		url := fmt.Sprintf(server.URL+USER_ROOT_URL+"/%v", test.externalID)
+		req, err := http.NewRequest(http.MethodDelete, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -848,7 +854,8 @@ func TestWorkerHandler_HandleUserIdGroups(t *testing.T) {
 		testApi.ArgsOut[GetGroupsByUserIdMethod][0] = test.getGroupsByUserIdResult
 		testApi.ArgsOut[GetGroupsByUserIdMethod][1] = test.getGroupsByUserIdErr
 
-		req, err := http.NewRequest(http.MethodGet, server.URL+USER_ROOT_URL+"/"+test.externalID+"/groups", nil)
+		url := fmt.Sprintf(server.URL+USER_ROOT_URL+"/%v/groups", test.externalID)
+		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue

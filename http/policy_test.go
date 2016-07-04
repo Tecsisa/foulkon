@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"fmt"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/tecsisa/authorizr/api"
 )
@@ -86,7 +87,8 @@ func TestWorkerHandler_HandleListPolicies(t *testing.T) {
 		testApi.ArgsOut[GetListPoliciesMethod][0] = test.getListPoliciesResult
 		testApi.ArgsOut[GetListPoliciesMethod][1] = test.getListPoliciesErr
 
-		req, err := http.NewRequest(http.MethodGet, server.URL+API_VERSION_1+"/organizations/"+test.org+"/policies?PathPrefix="+test.pathPrefix, nil)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies?PathPrefix=%v", test.org, test.pathPrefix)
+		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -353,7 +355,8 @@ func TestWorkerHandler_HandleCreatePolicy(t *testing.T) {
 			body = bytes.NewBuffer([]byte{})
 		}
 
-		req, err := http.NewRequest(http.MethodPost, server.URL+API_VERSION_1+"/organizations/"+test.org+"/policies", body)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies", test.org)
+		req, err := http.NewRequest(http.MethodPost, url, body)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -492,7 +495,8 @@ func TestWorkerHandler_HandleDeletePolicy(t *testing.T) {
 
 		testApi.ArgsOut[DeletePolicyMethod][0] = test.deletePolicyErr
 
-		req, err := http.NewRequest(http.MethodDelete, server.URL+API_VERSION_1+"/organizations/"+test.org+"/policies/"+test.policyName, nil)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies/%v", test.org, test.policyName)
+		req, err := http.NewRequest(http.MethodDelete, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -746,7 +750,9 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 		if body == nil {
 			body = bytes.NewBuffer([]byte{})
 		}
-		req, err := http.NewRequest(http.MethodPut, server.URL+API_VERSION_1+"/organizations/"+test.org+"/policies/policy1", body)
+
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies/policy1", test.org)
+		req, err := http.NewRequest(http.MethodPut, url, body)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -933,7 +939,8 @@ func TestWorkerHandler_HandleGetPolicy(t *testing.T) {
 		testApi.ArgsOut[GetPolicyByNameMethod][0] = test.getPolicyByNameResult
 		testApi.ArgsOut[GetPolicyByNameMethod][1] = test.getPolicyByNameErr
 
-		req, err := http.NewRequest(http.MethodGet, server.URL+API_VERSION_1+"/organizations/"+test.org+"/policies/"+test.policyName, nil)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies/%v", test.org, test.policyName)
+		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -1088,7 +1095,8 @@ func TestWorkerHandler_HandleGetPolicyAttachedGroups(t *testing.T) {
 		testApi.ArgsOut[GetPolicyAttachedGroupsMethod][0] = test.getPolicyGroupsResult
 		testApi.ArgsOut[GetPolicyAttachedGroupsMethod][1] = test.getPolicyGroupsErr
 
-		req, err := http.NewRequest(http.MethodGet, server.URL+API_VERSION_1+"/organizations/"+test.org+"/policies/"+test.policyName+"/groups", nil)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies/%v/groups", test.org, test.policyName)
+		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -1234,7 +1242,8 @@ func TestWorkerHandler_HandleListAllPolicies(t *testing.T) {
 		testApi.ArgsOut[GetListPoliciesMethod][0] = test.getListPoliciesResult
 		testApi.ArgsOut[GetListPoliciesMethod][1] = test.getListPoliciesErr
 
-		req, err := http.NewRequest(http.MethodGet, server.URL+API_VERSION_1+"/policies?Org="+test.org+"&PathPrefix="+test.pathPrefix, nil)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/policies?Org=%v&&PathPrefix=%v", test.org, test.pathPrefix)
+		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue

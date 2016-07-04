@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"bytes"
+	"fmt"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/tecsisa/authorizr/api"
 )
@@ -103,7 +104,8 @@ func TestWorkerHandler_HandleGetGroup(t *testing.T) {
 		testApi.ArgsOut[GetGroupByNameMethod][0] = test.getGroupByNameResult
 		testApi.ArgsOut[GetGroupByNameMethod][1] = test.getGroupByNameErr
 
-		req, err := http.NewRequest(http.MethodGet, server.URL+API_VERSION_1+"/organizations/"+test.org+"/groups/"+test.name, nil)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/groups/%v", test.org, test.name)
+		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -294,7 +296,8 @@ func TestWorkerHandler_HandleCreateGroup(t *testing.T) {
 			body = bytes.NewBuffer([]byte{})
 		}
 
-		req, err := http.NewRequest(http.MethodPost, server.URL+API_VERSION_1+"/organizations/"+test.org+"/groups", body)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/groups", test.org)
+		req, err := http.NewRequest(http.MethodPost, url, body)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -431,7 +434,8 @@ func TestWorkerHandler_HandleDeleteGroup(t *testing.T) {
 
 		testApi.ArgsOut[RemoveGroupMethod][0] = test.removeGroupErr
 
-		req, err := http.NewRequest(http.MethodDelete, server.URL+API_VERSION_1+"/organizations/"+test.org+"/groups/"+test.name, nil)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/groups/%v", test.org, test.name)
+		req, err := http.NewRequest(http.MethodDelete, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -560,7 +564,8 @@ func TestWorkerHandler_HandleListGroups(t *testing.T) {
 		testApi.ArgsOut[GetListGroupsMethod][0] = test.getListGroupResult
 		testApi.ArgsOut[GetListGroupsMethod][1] = test.getListGroupsErr
 
-		req, err := http.NewRequest(http.MethodGet, server.URL+API_VERSION_1+"/organizations/"+test.org+"/groups?PathPrefix="+test.pathPrefix, nil)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/groups?PathPrefix=", test.org, test.pathPrefix)
+		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -764,7 +769,9 @@ func TestWorkerHandler_HandleUpdateGroup(t *testing.T) {
 		if body == nil {
 			body = bytes.NewBuffer([]byte{})
 		}
-		req, err := http.NewRequest(http.MethodPut, server.URL+API_VERSION_1+"/organizations/"+test.org+"/groups/group1", body)
+
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/groups/group1", test.org)
+		req, err := http.NewRequest(http.MethodPut, url, body)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -913,7 +920,8 @@ func TestWorkerHandler_HandleListMembers(t *testing.T) {
 		testApi.ArgsOut[ListMembersMethod][0] = test.getListMembersResult
 		testApi.ArgsOut[ListMembersMethod][1] = test.getListMembersErr
 
-		req, err := http.NewRequest(http.MethodGet, server.URL+API_VERSION_1+"/organizations/"+test.org+"/groups/"+test.name+"/users", nil)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/groups/%v/users", test.org, test.name)
+		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -1079,7 +1087,8 @@ func TestWorkerHandler_HandleAddMember(t *testing.T) {
 
 		testApi.ArgsOut[AddMemberMethod][0] = test.addMemberErr
 
-		req, err := http.NewRequest(http.MethodPost, server.URL+API_VERSION_1+"/organizations/"+test.org+"/groups/"+test.groupName+"/users/"+test.userID, nil)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/groups/%v/users/%v", test.org, test.groupName, test.userID)
+		req, err := http.NewRequest(http.MethodPost, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -1240,7 +1249,8 @@ func TestWorkerHandler_HandleRemoveMember(t *testing.T) {
 
 		testApi.ArgsOut[RemoveMemberMethod][0] = test.removeMemberErr
 
-		req, err := http.NewRequest(http.MethodDelete, server.URL+API_VERSION_1+"/organizations/"+test.org+"/groups/"+test.groupName+"/users/"+test.userID, nil)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/groups/%v/users/%v", test.org, test.groupName, test.userID)
+		req, err := http.NewRequest(http.MethodDelete, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -1401,7 +1411,8 @@ func TestWorkerHandler_HandleAttachGroupPolicy(t *testing.T) {
 
 		testApi.ArgsOut[AttachPolicyToGroupMethod][0] = test.attachGroupPolicyErr
 
-		req, err := http.NewRequest(http.MethodPost, server.URL+API_VERSION_1+"/organizations/"+test.org+"/groups/"+test.groupName+"/policies/"+test.policyName, nil)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/groups/%v/policies/%v", test.org, test.groupName, test.policyName)
+		req, err := http.NewRequest(http.MethodPost, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -1562,7 +1573,8 @@ func TestWorkerHandler_HandleDetachGroupPolicy(t *testing.T) {
 
 		testApi.ArgsOut[DetachPolicyToGroupMethod][0] = test.detachGroupPolicyErr
 
-		req, err := http.NewRequest(http.MethodDelete, server.URL+API_VERSION_1+"/organizations/"+test.org+"/groups/"+test.groupName+"/policies/"+test.policyName, nil)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/groups/%v/policies/%v", test.org, test.groupName, test.policyName)
+		req, err := http.NewRequest(http.MethodDelete, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -1713,7 +1725,8 @@ func TestWorkerHandler_HandleListAttachedGroupPolicies(t *testing.T) {
 		testApi.ArgsOut[ListAttachedGroupPoliciesMethod][0] = test.getListAttachedGroupPoliciesResult
 		testApi.ArgsOut[ListAttachedGroupPoliciesMethod][1] = test.getListAttachedGroupPoliciesErr
 
-		req, err := http.NewRequest(http.MethodGet, server.URL+API_VERSION_1+"/organizations/"+test.org+"/groups/"+test.name+"/policies", nil)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/groups/%v/policies", test.org, test.name)
+		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -1850,7 +1863,8 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 		testApi.ArgsOut[GetListGroupsMethod][0] = test.getListAllGroupResult
 		testApi.ArgsOut[GetListGroupsMethod][1] = test.getListAllGroupErr
 
-		req, err := http.NewRequest(http.MethodGet, server.URL+API_VERSION_1+"/groups?Org="+test.org+"&PathPrefix="+test.pathPrefix, nil)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/groups?Org=%v&PathPrefix=%v", test.org, test.pathPrefix)
+		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
