@@ -1,8 +1,9 @@
 package auth
 
 import (
-	"github.com/tecsisa/authorizr/api"
 	"net/http"
+
+	"github.com/tecsisa/authorizr/api"
 )
 
 // Authenticator system, with connector and basic admin authentication
@@ -27,7 +28,7 @@ type AuthConnector interface {
 	RetrieveUserID(r http.Request) string
 }
 
-// Authenticate method. This checks all problem related to user authentication, so if somthing goes wrong, it return a error message.
+// Authenticate method. This checks all problem related to user authentication, so if something goes wrong, it return a error message.
 func (a *Authenticator) Authenticate(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var handler http.Handler

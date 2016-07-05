@@ -48,18 +48,18 @@ const (
 
 	// Authorization URLs
 	AUTHORIZE_URL = API_VERSION_1 + "/authorize"
+
+	// HTTP Header
+	REQUEST_ID_HEADER = "Request-ID"
 )
+
+// WORKER
 
 type WorkerHandler struct {
 	worker *authorizr.Worker
 }
 
-type ProxyHandler struct {
-	proxy  *authorizr.Proxy
-	client *http.Client
-}
-
-func (a *WorkerHandler) TransactionLog(r *http.Request, authenticatedUser *api.AuthenticatedUser, status int, msg string) {
+func (a *WorkerHandler) TransactionLog(r *http.Request, requestID string, userID string, msg string) {
 
 	// TODO: X-Forwarded headers
 	//for header, _ := range r.Header {
@@ -67,12 +67,11 @@ func (a *WorkerHandler) TransactionLog(r *http.Request, authenticatedUser *api.A
 	//}
 
 	a.worker.Logger.WithFields(logrus.Fields{
-		"RequestID": uuid.NewV4().String(),
-		"Method":    r.Method,
+		"requestID": requestID,
+		"method":    r.Method,
 		"URI":       r.RequestURI,
-		"Address":   r.RemoteAddr,
-		"User":      authenticatedUser.Identifier,
-		"Status":    status,
+		"address":   r.RemoteAddr,
+		"user":      userID,
 	}).Info(msg)
 }
 
@@ -92,9 +91,6 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 	router.DELETE(USER_ID_URL, workerHandler.HandleDeleteUserId)
 
 	router.GET(USER_ID_GROUPS_URL, workerHandler.HandleUserIdGroups)
-
-	// Special endpoint with organization URI for users
-	router.GET(API_VERSION_1+ORG_ROOT+"/users", workerHandler.handleOrgListUsers)
 
 	// Group api
 	router.POST(GROUP_ORG_ROOT_URL, workerHandler.HandleCreateGroup)
@@ -134,55 +130,17 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 	// Get effect endpoint
 	router.POST(AUTHORIZE_URL, workerHandler.HandleAuthorizeResources)
 
-	// Return handler
-	return worker.Authenticator.Authenticate(router)
+	// Return handler with request logging
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestID := uuid.NewV4().String()
+		r.Header.Set(REQUEST_ID_HEADER, requestID)
+		w.Header().Add(REQUEST_ID_HEADER, requestID)
+		worker.Authenticator.Authenticate(router).ServeHTTP(w, r)
+		workerHandler.TransactionLog(r, requestID, worker.Authenticator.RetrieveUserID(*r).Identifier, "")
+	})
 }
 
-func (h *ProxyHandler) TransactionErrorLog(r *http.Request, transactionID string, msg string) {
-
-	// TODO: X-Forwarded headers
-	//for header, _ := range r.Header {
-	//	println(header, ": ", r.Header.Get(header))
-	//}
-
-	h.proxy.Logger.WithFields(logrus.Fields{
-		"RequestID": transactionID,
-		"Method":    r.Method,
-		"URI":       r.RequestURI,
-		"Address":   r.RemoteAddr,
-	}).Error(msg)
-}
-
-func (h *ProxyHandler) TransactionLog(r *http.Request, transactionID string, msg string) {
-
-	// TODO: X-Forwarded headers
-	//for header, _ := range r.Header {
-	//	println(header, ": ", r.Header.Get(header))
-	//}
-
-	h.proxy.Logger.WithFields(logrus.Fields{
-		"RequestID": transactionID,
-		"Method":    r.Method,
-		"URI":       r.RequestURI,
-		"Address":   r.RemoteAddr,
-	}).Info(msg)
-}
-
-// Handler returns an http.Handler for the Proxy.
-func ProxyHandlerRouter(proxy *authorizr.Proxy) http.Handler {
-	// Create the muxer to handle the actual endpoints
-	router := httprouter.New()
-
-	proxyHandler := ProxyHandler{proxy: proxy, client: http.DefaultClient}
-
-	for _, res := range proxy.APIResources {
-		router.Handle(res.Method, res.Url, proxyHandler.handleRequest(res))
-	}
-
-	return router
-}
-
-// HTTP responses
+// HTTP WORKER responses
 
 // 2xx RESPONSES
 
@@ -195,7 +153,6 @@ func (a *WorkerHandler) RespondOk(r *http.Request, authenticatedUser *api.Authen
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(b)
-	a.TransactionLog(r, authenticatedUser, http.StatusOK, "Request processed")
 }
 
 func (a *WorkerHandler) RespondCreated(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, value interface{}) {
@@ -208,22 +165,20 @@ func (a *WorkerHandler) RespondCreated(r *http.Request, authenticatedUser *api.A
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(b)
-	a.TransactionLog(r, authenticatedUser, http.StatusCreated, "Request processed")
 }
 
 func (a *WorkerHandler) RespondNoContent(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNoContent)
-	a.TransactionLog(r, authenticatedUser, http.StatusNoContent, "Request processed")
 }
 
 // 4xx RESPONSES
+
 func (a *WorkerHandler) RespondNotFound(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, apiError *api.Error) {
 	w, err := writeErrorWithStatus(w, apiError, http.StatusNotFound)
 	if err != nil {
 		a.RespondInternalServerError(r, authenticatedUser, w)
 		return
 	}
-	a.TransactionLog(r, authenticatedUser, http.StatusNotFound, "Request processed")
 }
 
 func (a *WorkerHandler) RespondBadRequest(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, apiError *api.Error) {
@@ -232,7 +187,6 @@ func (a *WorkerHandler) RespondBadRequest(r *http.Request, authenticatedUser *ap
 		a.RespondInternalServerError(r, authenticatedUser, w)
 		return
 	}
-	a.TransactionLog(r, authenticatedUser, http.StatusBadRequest, "Bad Request")
 }
 
 func (a *WorkerHandler) RespondConflict(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, apiError *api.Error) {
@@ -241,7 +195,6 @@ func (a *WorkerHandler) RespondConflict(r *http.Request, authenticatedUser *api.
 		a.RespondInternalServerError(r, authenticatedUser, w)
 		return
 	}
-	a.TransactionLog(r, authenticatedUser, http.StatusConflict, "Resource conflict")
 }
 
 func (a *WorkerHandler) RespondForbidden(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, apiError *api.Error) {
@@ -250,14 +203,74 @@ func (a *WorkerHandler) RespondForbidden(r *http.Request, authenticatedUser *api
 		a.RespondInternalServerError(r, authenticatedUser, w)
 		return
 	}
-	a.TransactionLog(r, authenticatedUser, http.StatusForbidden, "Forbidden")
 }
 
 // 5xx RESPONSES
 
 func (a *WorkerHandler) RespondInternalServerError(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter) {
+	requestID := r.Header.Get(REQUEST_ID_HEADER)
+	a.worker.Logger.WithFields(logrus.Fields{
+		"requestID": requestID,
+		"method":    r.Method,
+		"URI":       r.RequestURI,
+		"address":   r.RemoteAddr,
+		"user":      authenticatedUser.Identifier,
+		"status":    http.StatusInternalServerError,
+	}).Error("Internal server error")
 	w.WriteHeader(http.StatusInternalServerError)
-	a.TransactionLog(r, authenticatedUser, http.StatusInternalServerError, "Server error")
+}
+
+// PROXY
+
+type ProxyHandler struct {
+	proxy  *authorizr.Proxy
+	client *http.Client
+}
+
+func (h *ProxyHandler) TransactionErrorLog(r *http.Request, requestID string, workerRequestID string, msg string) {
+
+	// TODO: X-Forwarded headers
+	//for header, _ := range r.Header {
+	//	println(header, ": ", r.Header.Get(header))
+	//}
+
+	h.proxy.Logger.WithFields(logrus.Fields{
+		"requestID":       requestID,
+		"method":          r.Method,
+		"URI":             r.RequestURI,
+		"address":         r.RemoteAddr,
+		"workerRequestID": workerRequestID,
+	}).Error(msg)
+}
+
+func (h *ProxyHandler) TransactionLog(r *http.Request, requestID string, workerRequestID string, msg string) {
+
+	// TODO: X-Forwarded headers
+	//for header, _ := range r.Header {
+	//	println(header, ": ", r.Header.Get(header))
+	//}
+
+	h.proxy.Logger.WithFields(logrus.Fields{
+		"requestID":       requestID,
+		"method":          r.Method,
+		"URI":             r.RequestURI,
+		"address":         r.RemoteAddr,
+		"workerRequestID": workerRequestID,
+	}).Info(msg)
+}
+
+// Handler returns an http.Handler for the Proxy including all resources defined in proxy file.
+func ProxyHandlerRouter(proxy *authorizr.Proxy) http.Handler {
+	// Create the muxer to handle the actual endpoints
+	router := httprouter.New()
+
+	proxyHandler := ProxyHandler{proxy: proxy, client: http.DefaultClient}
+
+	for _, res := range proxy.APIResources {
+		router.Handle(res.Method, res.Url, proxyHandler.handleRequest(res))
+	}
+
+	return router
 }
 
 // Private Helper Methods

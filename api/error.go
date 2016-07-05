@@ -1,6 +1,9 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/Sirupsen/logrus"
+)
 
 const (
 	// Generic API error codes
@@ -42,4 +45,11 @@ type Error struct {
 
 func (e Error) Error() string {
 	return fmt.Sprintf("Code: %v, Message: %v", e.Code, e.Message)
+}
+
+func LogErrorMessage(logger *logrus.Logger, requestID string, err *Error) {
+	logger.WithFields(logrus.Fields{
+		"RequestID": requestID,
+		"Code":      err.Code,
+	}).Error(err.Message)
 }

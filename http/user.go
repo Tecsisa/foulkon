@@ -48,11 +48,12 @@ func (h *WorkerHandler) HandleGetUsers(w http.ResponseWriter, r *http.Request, _
 
 	// Call user API
 	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
+	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	result, err := h.worker.UserApi.GetListUsers(authenticatedUser, pathPrefix)
 	if err != nil {
-		h.worker.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestID, apiError)
 		switch apiError.Code {
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
 			h.RespondForbidden(r, &authenticatedUser, w, apiError)
@@ -74,12 +75,17 @@ func (h *WorkerHandler) HandleGetUsers(w http.ResponseWriter, r *http.Request, _
 // This method creates the user passed by form request and return the user created
 func (h *WorkerHandler) HandlePostUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
+	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	// Decode request
 	request := CreateUserRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		h.worker.Logger.Errorln(err)
-		h.RespondBadRequest(r, &authenticatedUser, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
+		apiError := &api.Error{
+			Code:    api.INVALID_PARAMETER_ERROR,
+			Message: err.Error(),
+		}
+		api.LogErrorMessage(h.worker.Logger, requestID, apiError)
+		h.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		return
 	}
 
@@ -88,9 +94,9 @@ func (h *WorkerHandler) HandlePostUsers(w http.ResponseWriter, r *http.Request, 
 
 	// Error handling
 	if err != nil {
-		h.worker.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestID, apiError)
 		switch apiError.Code {
 		case api.USER_ALREADY_EXIST:
 			h.RespondConflict(r, &authenticatedUser, w, apiError)
@@ -114,12 +120,17 @@ func (h *WorkerHandler) HandlePostUsers(w http.ResponseWriter, r *http.Request, 
 
 func (h *WorkerHandler) HandlePutUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
+	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	// Decode request
 	request := UpdateUserRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		h.worker.Logger.Errorln(err)
-		h.RespondBadRequest(r, &authenticatedUser, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
+		apiError := &api.Error{
+			Code:    api.INVALID_PARAMETER_ERROR,
+			Message: err.Error(),
+		}
+		api.LogErrorMessage(h.worker.Logger, requestID, apiError)
+		h.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		return
 	}
 
@@ -131,9 +142,9 @@ func (h *WorkerHandler) HandlePutUser(w http.ResponseWriter, r *http.Request, ps
 
 	// Error handling
 	if err != nil {
-		h.worker.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestID, apiError)
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
 			h.RespondNotFound(r, &authenticatedUser, w, apiError)
@@ -158,6 +169,7 @@ func (h *WorkerHandler) HandlePutUser(w http.ResponseWriter, r *http.Request, ps
 
 func (h *WorkerHandler) HandleGetUserId(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
+	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	// Retrieve user id from path
 	id := ps.ByName(USER_ID)
 
@@ -166,9 +178,9 @@ func (h *WorkerHandler) HandleGetUserId(w http.ResponseWriter, r *http.Request, 
 
 	// Error handling
 	if err != nil {
-		h.worker.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestID, apiError)
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
 			h.RespondNotFound(r, &authenticatedUser, w, apiError)
@@ -192,6 +204,7 @@ func (h *WorkerHandler) HandleGetUserId(w http.ResponseWriter, r *http.Request, 
 
 func (h *WorkerHandler) HandleDeleteUserId(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
+	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	// Retrieve user id from path
 	id := ps.ByName(USER_ID)
 
@@ -199,9 +212,9 @@ func (h *WorkerHandler) HandleDeleteUserId(w http.ResponseWriter, r *http.Reques
 	err := h.worker.UserApi.RemoveUserById(authenticatedUser, id)
 
 	if err != nil {
-		h.worker.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestID, apiError)
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
 			h.RespondNotFound(r, &authenticatedUser, w, apiError)
@@ -220,15 +233,16 @@ func (h *WorkerHandler) HandleDeleteUserId(w http.ResponseWriter, r *http.Reques
 
 func (h *WorkerHandler) HandleUserIdGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
+	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	// Retrieve users using path
 	id := ps.ByName(USER_ID)
 
 	result, err := h.worker.UserApi.GetGroupsByUserId(authenticatedUser, id)
 
 	if err != nil {
-		h.worker.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestID, apiError)
 		switch apiError.Code {
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
 			h.RespondNotFound(r, &authenticatedUser, w, apiError)
@@ -248,8 +262,4 @@ func (h *WorkerHandler) HandleUserIdGroups(w http.ResponseWriter, r *http.Reques
 
 	// Write user to response
 	h.RespondOk(r, &authenticatedUser, w, response)
-}
-
-func (h *WorkerHandler) handleOrgListUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	//TODO: Unimplemented
 }
