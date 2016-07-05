@@ -22,23 +22,28 @@ type AuthorizeResourcesResponse struct {
 
 func (a *WorkerHandler) HandleAuthorizeResources(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	userID := a.worker.Authenticator.RetrieveUserID(*r)
+	requestID := r.Header.Get(REQUEST_ID_HEADER)
 
 	// Decode request
 	request := AuthorizeResourcesRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		a.worker.Logger.Errorln(err)
-		a.RespondBadRequest(r, &userID, w, &api.Error{Code: api.INVALID_PARAMETER_ERROR, Message: err.Error()})
+		apiError := &api.Error{
+			Code:    api.INVALID_PARAMETER_ERROR,
+			Message: err.Error(),
+		}
+		api.LogErrorMessage(a.worker.Logger, requestID, apiError)
+		a.RespondBadRequest(r, &userID, w, apiError)
 		return
 	}
 
 	// Retrieve allowed resources
-	a.worker.Logger.Debugf("Action %v, Resources %v", request.Action, request.Resources)
+	a.worker.Logger.Debugf("Request ID %v. Action %v, Resources %v", requestID, request.Action, request.Resources)
 	result, err := a.worker.AuthzApi.GetAuthorizedExternalResources(userID, request.Action, request.Resources)
 	if err != nil {
-		a.worker.Logger.Errorln(err)
 		// Transform to API errors
 		apiError := err.(*api.Error)
+		api.LogErrorMessage(a.worker.Logger, requestID, apiError)
 		switch apiError.Code {
 		case api.INVALID_PARAMETER_ERROR:
 			a.RespondBadRequest(r, &userID, w, apiError)
