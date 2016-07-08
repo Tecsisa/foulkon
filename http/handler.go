@@ -259,6 +259,17 @@ func (h *ProxyHandler) TransactionLog(r *http.Request, requestID string, workerR
 	}).Info(msg)
 }
 
+func (h *ProxyHandler) RespondForbidden(w http.ResponseWriter, proxyErr *api.Error) {
+	b, err := json.Marshal(proxyErr)
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusForbidden)
+	w.Write(b)
+}
+
 // Handler returns an http.Handler for the Proxy including all resources defined in proxy file.
 func ProxyHandlerRouter(proxy *authorizr.Proxy) http.Handler {
 	// Create the muxer to handle the actual endpoints
@@ -267,7 +278,7 @@ func ProxyHandlerRouter(proxy *authorizr.Proxy) http.Handler {
 	proxyHandler := ProxyHandler{proxy: proxy, client: http.DefaultClient}
 
 	for _, res := range proxy.APIResources {
-		router.Handle(res.Method, res.Url, proxyHandler.handleRequest(res))
+		router.Handle(res.Method, res.Url, proxyHandler.HandleRequest(res))
 	}
 
 	return router

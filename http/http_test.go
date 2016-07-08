@@ -1,7 +1,6 @@
 package http
 
 import (
-	"flag"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -52,7 +51,9 @@ const (
 
 // Test server used to test handlers
 var server *httptest.Server
+var proxy *httptest.Server
 var testApi *TestAPI
+var authConnector *TestConnector
 
 // Test API that implements all api manager interfaces
 type TestAPI struct {
@@ -63,10 +64,19 @@ type TestAPI struct {
 
 // Aux connector
 type TestConnector struct {
-	userID string
+	userID          string
+	unauthenticated bool
 }
 
 func (tc TestConnector) Authenticate(h http.Handler) http.Handler {
+	if authConnector.unauthenticated {
+		// Reset value
+		authConnector.unauthenticated = false
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		})
+	}
 	return h
 }
 
@@ -76,8 +86,6 @@ func (tc TestConnector) RetrieveUserID(r http.Request) string {
 
 // Main Test that executes at first time and create all necessary data to work
 func TestMain(m *testing.M) {
-	flag.Parse()
-
 	// Create logger
 	logger := &log.Logger{
 		Out:       os.Stdout,
@@ -89,8 +97,9 @@ func TestMain(m *testing.M) {
 	testApi = makeTestApi()
 
 	// Instantiate Auth Connector
-	authConnector := &TestConnector{
-		userID: "userID",
+	authConnector = &TestConnector{
+		userID:          "userID",
+		unauthenticated: false,
 	}
 
 	adminUser := "admin"
@@ -110,6 +119,63 @@ func TestMain(m *testing.M) {
 	}
 
 	server = httptest.NewServer(WorkerHandlerRouter(worker))
+
+	proxy_core := &authorizr.Proxy{
+		Logger:     logger,
+		WorkerHost: server.URL,
+		APIResources: []authorizr.APIResource{
+			authorizr.APIResource{
+				Id:     "resource1",
+				Host:   server.URL,
+				Url:    USER_ID_URL,
+				Method: "GET",
+				Urn:    "urn:ews:example:instance1:resource/{userid}",
+				Action: "example:user",
+			},
+			authorizr.APIResource{
+				Id:     "invalidResource",
+				Host:   "fail",
+				Url:    "/fail",
+				Method: "GET",
+				Urn:    "urn:ews:example:instance1:resource/fail",
+				Action: "example:fail",
+			},
+			authorizr.APIResource{
+				Id:     "invalidHost",
+				Host:   "%&",
+				Url:    "/invalid",
+				Method: "GET",
+				Urn:    "urn:ews:example:instance1:resource/invalid",
+				Action: "example:invalid",
+			},
+			authorizr.APIResource{
+				Id:     "invalidUrn",
+				Host:   server.URL,
+				Url:    "/invalidUrn",
+				Method: "GET",
+				Urn:    "%&",
+				Action: "example:invalid",
+			},
+			authorizr.APIResource{
+				Id:     "urnPrefix",
+				Host:   server.URL,
+				Url:    "/urnPrefix",
+				Method: "GET",
+				Urn:    "urn:*",
+				Action: "&%",
+			},
+			authorizr.APIResource{
+				Id:     "invalidAction",
+				Host:   server.URL,
+				Url:    "/invalidAction",
+				Method: "GET",
+				Urn:    "urn:ews:example:instance1:resource/user",
+				Action: "&%",
+			},
+		},
+	}
+
+	proxy = httptest.NewServer(ProxyHandlerRouter(proxy_core))
 
 	// Run tests
 	result := m.Run()
