@@ -12,7 +12,7 @@ func (u PostgresRepo) GetUserByExternalID(id string) (*api.User, error) {
 	user := &User{}
 	query := u.Dbmap.Where("external_id like ?", id).First(user)
 
-	// Check if user exist
+	// Check if user exists
 	if query.RecordNotFound() {
 		return nil, &database.Error{
 			Code:    database.USER_NOT_FOUND,
@@ -28,15 +28,14 @@ func (u PostgresRepo) GetUserByExternalID(id string) (*api.User, error) {
 		}
 	}
 
-	// Return user
-	return userDBToUserAPI(user), nil
+	return dbUserToAPIUser(user), nil
 }
 
 func (u PostgresRepo) GetUserByID(id string) (*api.User, error) {
 	user := &User{}
 	query := u.Dbmap.Where("id like ?", id).First(user)
 
-	// Check if user exist
+	// Check if user exists
 	if query.RecordNotFound() {
 		return nil, &database.Error{
 			Code:    database.USER_NOT_FOUND,
@@ -52,8 +51,7 @@ func (u PostgresRepo) GetUserByID(id string) (*api.User, error) {
 		}
 	}
 
-	// Return user
-	return userDBToUserAPI(user), nil
+	return dbUserToAPIUser(user), nil
 }
 
 func (u PostgresRepo) AddUser(user api.User) (*api.User, error) {
@@ -78,7 +76,7 @@ func (u PostgresRepo) AddUser(user api.User) (*api.User, error) {
 		}
 	}
 
-	return userDBToUserAPI(userDB), nil
+	return dbUserToAPIUser(userDB), nil
 }
 
 func (u PostgresRepo) UpdateUser(user api.User, newPath string, newUrn string) (*api.User, error) {
@@ -100,7 +98,7 @@ func (u PostgresRepo) UpdateUser(user api.User, newPath string, newUrn string) (
 	// Update user
 	query := u.Dbmap.Model(&userDB).Update(userUpdated)
 
-	// Check if user exist
+	// Check if user exists
 	if query.RecordNotFound() {
 		return nil, &database.Error{
 			Code:    database.USER_NOT_FOUND,
@@ -116,7 +114,7 @@ func (u PostgresRepo) UpdateUser(user api.User, newPath string, newUrn string) (
 		}
 	}
 
-	return userDBToUserAPI(&userDB), nil
+	return dbUserToAPIUser(&userDB), nil
 }
 
 func (u PostgresRepo) GetUsersFiltered(pathPrefix string) ([]api.User, error) {
@@ -140,12 +138,11 @@ func (u PostgresRepo) GetUsersFiltered(pathPrefix string) ([]api.User, error) {
 	if users != nil {
 		apiusers := make([]api.User, len(users), cap(users))
 		for i, u := range users {
-			apiusers[i] = *userDBToUserAPI(&u)
+			apiusers[i] = *dbUserToAPIUser(&u)
 		}
 		return apiusers, nil
 	}
 
-	// No data to return
 	return nil, nil
 }
 
@@ -177,7 +174,6 @@ func (u PostgresRepo) GetGroupsByUserID(id string) ([]api.Group, error) {
 			apiGroups[i] = *group
 		}
 
-		// Return GroupMembers
 		return apiGroups, nil
 	}
 
@@ -186,7 +182,7 @@ func (u PostgresRepo) GetGroupsByUserID(id string) ([]api.Group, error) {
 
 func (u PostgresRepo) RemoveUser(id string) error {
 	transaction := u.Dbmap.Begin()
-	// Go to delete user
+	// Delete user
 	transaction.Where("id like ?", id).Delete(&User{})
 
 	// Error handling
@@ -216,7 +212,7 @@ func (u PostgresRepo) RemoveUser(id string) error {
 }
 
 // Transform a user retrieved from db into a user for API
-func userDBToUserAPI(userdb *User) *api.User {
+func dbUserToAPIUser(userdb *User) *api.User {
 	return &api.User{
 		ID:         userdb.ID,
 		ExternalID: userdb.ExternalID,

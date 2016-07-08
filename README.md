@@ -4,6 +4,10 @@ authorizr is an authorization server that allows or denies the access to web res
 
 ## Installation / usage
 
+This project generates 2 apps:
+- Worker: This is the authorization server itself.
+- Proxy: This proxies the requests to the authorization server (worker).
+
 ### Docker
 
 In order to build the docker image, run:
@@ -12,7 +16,8 @@ sh build.sh
 ```
 Then, you can run the docker image, mounting (-v) a config.toml or proxy.toml inside the container (you could also make a custom Dockerfile with "ADD my-custom-conf.toml /my-custom-conf.toml")
 ```
-docker run -v /home/myuser/authorizr/config.toml:/config.toml tecsisa/authorizr -config-file=/config.toml
+docker run -v /home/myuser/authorizr/config.toml:/config.toml tecsisa/authorizr-worker -config-file=/config.toml
+docker run -v /home/myuser/authorizr/proxy_config.toml:/proxy_config.toml tecsisa/authorizr-proxy -config-file=/proxy_config.toml
 ```
 
 ## Configuration
@@ -42,7 +47,7 @@ You have to specify configuration file using flag -config-file (authorizr -confi
     - username : admin (Admin username)
     - password: password (Admin password)
 
-You can use environment vars, using syntax ${VAR_ENV}. This is a config file example:
+You can use OS Environment vars, using syntax ${ENV_VAR}. This is a config file example:
 
 ```
 # Server config
@@ -92,7 +97,7 @@ password = "admin"
 
 [Resource API](doc/api/resource.md)
 
-You can import a [Postman collection](schema/postman.json) file with all API methods.
+You can import this [Postman collection](schema/postman.json) file with all API methods.
 
 ## Testing
 

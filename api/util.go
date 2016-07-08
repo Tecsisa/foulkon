@@ -105,8 +105,8 @@ func IsValidPath(path string) bool {
 func IsValidEffect(effect string) error {
 	if effect != "allow" && effect != "deny" {
 		return &Error{
-			Code:    REGEX_NO_MATCH,
-			Message: fmt.Sprintf("No regex match in effect: %v", effect),
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid effect: %v - Only 'allow' and 'deny' accepted", effect),
 		}
 	}
 	return nil

@@ -31,10 +31,10 @@ type Worker struct {
 	KeyFile  string
 
 	// APIs
-	UserApi   api.UserApi
-	GroupApi  api.GroupApi
-	PolicyApi api.PolicyApi
-	AuthzApi  api.AuthzApi
+	UserApi   api.UserAPI
+	GroupApi  api.GroupAPI
+	PolicyApi api.PolicyAPI
+	AuthzApi  api.AuthzAPI
 
 	// Logger
 	Logger *log.Logger
@@ -58,7 +58,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		}
 		logOut = file
 	}
-	// Logger level
+	// Logger level. Defaults to INFO
 	loglevel, err := log.ParseLevel(getDefaultValue(config, "logger.level", "info"))
 	if err != nil {
 		loglevel = log.InfoLevel
@@ -147,7 +147,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 	}, nil
 }
 
-// This aux method returns mandatory config value or finish program execution
+// This aux method returns mandatory config value or finishes program execution
 func getMandatoryValue(config *toml.TomlTree, key string) string {
 	if !config.Has(key) {
 		fmt.Fprintf(os.Stderr, "Cannot retrieve configuration value %v", key)
@@ -174,8 +174,8 @@ func getDefaultValue(config *toml.TomlTree, key string, def string) string {
 }
 
 // Check variables in TOML file.
-// If the value of a key is '${SOMETHING}', we will search the value in the OS ENV vars
-// If the value of a key is something else, return that value
+// If the value of a key is '${SOME_KEY}', we will search the value in the OS ENV vars
+// If the value of a key is 'something_else', returns that as the value
 func getVar(config *toml.TomlTree, key string) string {
 	value := config.Get(key).(string)
 	match := rEnvVar.FindStringSubmatch(value)

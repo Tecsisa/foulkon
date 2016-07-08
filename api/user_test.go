@@ -13,7 +13,7 @@ func TestGetUserByExternalId(t *testing.T) {
 		externalID string
 
 		getGroupsByUserIDResult   []Group
-		getPoliciesAttachedResult []Policy
+		getAttachedPoliciesResult []Policy
 		getUserByExternalIDResult *User
 
 		expectedUser *User
@@ -67,7 +67,7 @@ func TestGetUserByExternalId(t *testing.T) {
 					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
@@ -143,7 +143,7 @@ func TestGetUserByExternalId(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.expectedUser
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
-		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		user, err := testAPI.GetUserByExternalId(testcase.authUser, testcase.externalID)
 		if testcase.wantError != nil {
 			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
@@ -174,7 +174,7 @@ func TestAddUser(t *testing.T) {
 
 		getUserByExternalIDResult *User
 		getGroupsByUserIDResult   []Group
-		getPoliciesAttachedResult []Policy
+		getAttachedPoliciesResult []Policy
 
 		expectedUser *User
 		wantError    *Error
@@ -257,7 +257,7 @@ func TestAddUser(t *testing.T) {
 					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
@@ -380,7 +380,7 @@ func TestAddUser(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
-		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[AddUserMethod][0] = testcase.expectedUser
 		testRepo.ArgsOut[AddUserMethod][1] = testcase.addUserMethodErr
 		user, err := testAPI.AddUser(testcase.authUser, testcase.externalID, testcase.path)
@@ -413,7 +413,7 @@ func TestUpdateUser(t *testing.T) {
 		expectedUser *User
 
 		getGroupsByUserIDResult   []Group
-		getPoliciesAttachedResult []Policy
+		getAttachedPoliciesResult []Policy
 
 		wantError *Error
 
@@ -532,7 +532,7 @@ func TestUpdateUser(t *testing.T) {
 					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
@@ -594,7 +594,7 @@ func TestUpdateUser(t *testing.T) {
 					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
@@ -638,7 +638,7 @@ func TestUpdateUser(t *testing.T) {
 					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
@@ -700,7 +700,7 @@ func TestUpdateUser(t *testing.T) {
 					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
@@ -760,7 +760,7 @@ func TestUpdateUser(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.expectedUser
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
-		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[UpdateUserMethod][0] = testcase.expectedUser
 		testRepo.ArgsOut[UpdateUserMethod][1] = testcase.updateUserMethodErr
 		user, err := testAPI.UpdateUser(testcase.authUser, testcase.externalID, testcase.newPath)
@@ -793,7 +793,7 @@ func TestRemoveUser(t *testing.T) {
 		expectedUser *User
 
 		getGroupsByUserIDResult   []Group
-		getPoliciesAttachedResult []Policy
+		getAttachedPoliciesResult []Policy
 
 		wantError *Error
 
@@ -866,7 +866,7 @@ func TestRemoveUser(t *testing.T) {
 					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
@@ -909,7 +909,7 @@ func TestRemoveUser(t *testing.T) {
 					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
@@ -976,7 +976,7 @@ func TestRemoveUser(t *testing.T) {
 	for x, testcase := range testcases {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.expectedUser
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
-		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[RemoveUserMethod][0] = testcase.removeUserMethodErr
 		err := testAPI.RemoveUserById(testcase.authUser, testcase.externalID)
 		if testcase.wantError != nil {
@@ -994,14 +994,14 @@ func TestRemoveUser(t *testing.T) {
 	}
 }
 
-func TestGetListUsers(t *testing.T) {
+func TestAuthAPI_GetUserList(t *testing.T) {
 	testcases := map[string]struct {
 		authUser   AuthenticatedUser
 		pathPrefix string
 
 		GetUsersFilteredMethodResult []User
 		getGroupsByUserIDResult      []Group
-		getPoliciesAttachedResult    []Policy
+		getAttachedPoliciesResult    []Policy
 		getUserByExternalIDResult    *User
 
 		wantError *Error
@@ -1073,10 +1073,10 @@ func TestGetListUsers(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
-		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[GetUsersFilteredMethod][0] = testcase.GetUsersFilteredMethodResult
 		testRepo.ArgsOut[GetUsersFilteredMethod][1] = testcase.GetUsersFilteredMethodErr
-		users, err := testAPI.GetListUsers(testcase.authUser, testcase.pathPrefix)
+		users, err := testAPI.GetUserList(testcase.authUser, testcase.pathPrefix)
 		if testcase.wantError != nil {
 			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
 				t.Errorf("Test %v failed. Got error %v, expected %v",
@@ -1103,7 +1103,7 @@ func TestGetGroupsByUserID(t *testing.T) {
 		expectedGroups []Group
 
 		getGroupsByUserIDResult   []Group
-		getPoliciesAttachedResult []Policy
+		getAttachedPoliciesResult []Policy
 
 		wantError *Error
 
@@ -1214,7 +1214,7 @@ func TestGetGroupsByUserID(t *testing.T) {
 					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
@@ -1275,7 +1275,7 @@ func TestGetGroupsByUserID(t *testing.T) {
 					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
-			getPoliciesAttachedResult: []Policy{
+			getAttachedPoliciesResult: []Policy{
 				Policy{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
@@ -1308,7 +1308,7 @@ func TestGetGroupsByUserID(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = testcase.getGroupsByUserIDErr
-		testRepo.ArgsOut[GetPoliciesAttachedMethod][0] = testcase.getPoliciesAttachedResult
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		groups, err := testAPI.GetGroupsByUserId(testcase.authUser, testcase.externalID)
 		if testcase.wantError != nil {
 			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {

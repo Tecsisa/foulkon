@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"fmt"
+
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/tecsisa/authorizr/api"
 )
@@ -22,9 +23,9 @@ func TestWorkerHandler_HandleGetUsers(t *testing.T) {
 		expectedResponse   GetUserExternalIDsResponse
 		expectedError      api.Error
 		// Manager Results
-		getListUsersResult []string
+		getUserListResult []string
 		// Manager Errors
-		getListUsersErr error
+		getUserListErr error
 	}{
 		"OkCase": {
 			pathPrefix:         "myPath",
@@ -32,7 +33,7 @@ func TestWorkerHandler_HandleGetUsers(t *testing.T) {
 			expectedResponse: GetUserExternalIDsResponse{
 				ExternalIDs: []string{"userId1", "userId2"},
 			},
-			getListUsersResult: []string{"userId1", "userId2"},
+			getUserListResult: []string{"userId1", "userId2"},
 		},
 		"ErrorCaseUnauthorizedError": {
 			pathPrefix:         "myPath",
@@ -41,14 +42,14 @@ func TestWorkerHandler_HandleGetUsers(t *testing.T) {
 				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "Error",
 			},
-			getListUsersErr: &api.Error{
+			getUserListErr: &api.Error{
 				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "Error",
 			},
 		},
 		"ErrorCaseUnknownApiError": {
 			expectedStatusCode: http.StatusInternalServerError,
-			getListUsersErr: &api.Error{
+			getUserListErr: &api.Error{
 				Code:    api.UNKNOWN_API_ERROR,
 				Message: "Error",
 			},
@@ -59,8 +60,8 @@ func TestWorkerHandler_HandleGetUsers(t *testing.T) {
 
 	for n, test := range testcases {
 
-		testApi.ArgsOut[GetListUsersMethod][0] = test.getListUsersResult
-		testApi.ArgsOut[GetListUsersMethod][1] = test.getListUsersErr
+		testApi.ArgsOut[GetUserListMethod][0] = test.getUserListResult
+		testApi.ArgsOut[GetUserListMethod][1] = test.getUserListErr
 
 		url := fmt.Sprintf(server.URL + USER_ROOT_URL)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -82,8 +83,8 @@ func TestWorkerHandler_HandleGetUsers(t *testing.T) {
 		}
 
 		// Check received parameter
-		if testApi.ArgsIn[GetListUsersMethod][1] != test.pathPrefix {
-			t.Errorf("Test case %v. Received different PathPrefix (wanted:%v / received:%v)", n, test.pathPrefix, testApi.ArgsIn[GetListUsersMethod][1])
+		if testApi.ArgsIn[GetUserListMethod][1] != test.pathPrefix {
+			t.Errorf("Test case %v. Received different PathPrefix (wanted:%v / received:%v)", n, test.pathPrefix, testApi.ArgsIn[GetUserListMethod][1])
 			continue
 		}
 

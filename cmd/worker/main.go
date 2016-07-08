@@ -29,7 +29,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Create core
+	// Create Worker
 	core, err := authorizr.NewWorker(config)
 	if err != nil {
 		fmt.Fprint(os.Stderr, err.Error())

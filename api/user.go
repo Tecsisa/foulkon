@@ -23,13 +23,13 @@ func (u User) GetUrn() string {
 
 // Retrieve user by external id
 func (api AuthAPI) GetUserByExternalId(authenticatedUser AuthenticatedUser, id string) (*User, error) {
-	// Call repo to retrieve the user if exist
 	if !IsValidUserExternalID(id) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", id),
 		}
 	}
+	// Retrieve user from DB
 	user, err := api.UserRepo.GetUserByExternalID(id)
 
 	// Error handling
@@ -51,15 +51,13 @@ func (api AuthAPI) GetUserByExternalId(authenticatedUser AuthenticatedUser, id s
 	}
 
 	// Check restrictions
-	usersFiltered, err := api.GetUsersAuthorized(authenticatedUser, user.Urn, USER_ACTION_GET_USER, []User{*user})
+	filteredUsers, err := api.GetAuthorizedUsers(authenticatedUser, user.Urn, USER_ACTION_GET_USER, []User{*user})
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if we have our user authorized
-	if len(usersFiltered) > 0 {
-		userFiltered := usersFiltered[0]
-		return &userFiltered, nil
+	if len(filteredUsers) > 0 {
+		filteredUser := filteredUsers[0]
+		return &filteredUser, nil
 	} else {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -70,9 +68,7 @@ func (api AuthAPI) GetUserByExternalId(authenticatedUser AuthenticatedUser, id s
 
 }
 
-// Retrieve users that has path
-func (api AuthAPI) GetListUsers(authenticatedUser AuthenticatedUser, pathPrefix string) ([]string, error) {
-
+func (api AuthAPI) GetUserList(authenticatedUser AuthenticatedUser, pathPrefix string) ([]string, error) {
 	// Check parameters
 	if len(pathPrefix) > 0 && !IsValidPath(pathPrefix) {
 		return nil, &Error{
@@ -98,14 +94,14 @@ func (api AuthAPI) GetListUsers(authenticatedUser AuthenticatedUser, pathPrefix 
 		}
 	}
 
-	// Check restrictions to list
+	// Check restrictions
 	urnPrefix := GetUrnPrefix("", RESOURCE_USER, pathPrefix)
-	usersFiltered, err := api.GetUsersAuthorized(authenticatedUser, urnPrefix, USER_ACTION_LIST_USERS, users)
+	usersFiltered, err := api.GetAuthorizedUsers(authenticatedUser, urnPrefix, USER_ACTION_LIST_USERS, users)
 	if err != nil {
 		return nil, err
 	}
 
-	// Return only identifiers
+	// Return user IDs
 	externalIDs := []string{}
 	for _, u := range usersFiltered {
 		externalIDs = append(externalIDs, u.ExternalID)
@@ -114,17 +110,14 @@ func (api AuthAPI) GetListUsers(authenticatedUser AuthenticatedUser, pathPrefix 
 	return externalIDs, nil
 }
 
-// Add an User to database if not exist
 func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalID string, path string) (*User, error) {
-	// Validate external ID
+	// Validate fields
 	if !IsValidUserExternalID(externalID) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", externalID),
 		}
 	}
-
-	// Validate path
 	if !IsValidPath(path) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -132,16 +125,13 @@ func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalID strin
 		}
 	}
 
-	// Create user
 	user := createUser(externalID, path)
 
 	// Check restrictions
-	usersFiltered, err := api.GetUsersAuthorized(authenticatedUser, user.Urn, USER_ACTION_CREATE_USER, []User{user})
+	usersFiltered, err := api.GetAuthorizedUsers(authenticatedUser, user.Urn, USER_ACTION_CREATE_USER, []User{user})
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if we have our user authorized
 	if len(usersFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -150,7 +140,7 @@ func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalID strin
 		}
 	}
 
-	// Check if user already exist
+	// Check if user already exists
 	_, err = api.UserRepo.GetUserByExternalID(externalID)
 
 	// Check if user could be retrieved
@@ -161,9 +151,9 @@ func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalID strin
 		switch dbError.Code {
 		case database.USER_NOT_FOUND:
 			// Create user
-			userCreated, err := api.UserRepo.AddUser(user)
+			createdUser, err := api.UserRepo.AddUser(user)
 
-			// Check if there is an unexpected error in DB
+			// Check unexpected DB error
 			if err != nil {
 				//Transform to DB error
 				dbError := err.(*database.Error)
@@ -174,7 +164,7 @@ func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalID strin
 			}
 
 			// Return user created
-			return userCreated, nil
+			return createdUser, nil
 		default: // Unexpected error
 			return nil, &Error{
 				Code:    UNKNOWN_API_ERROR,
@@ -190,17 +180,14 @@ func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalID strin
 
 }
 
-// Update an User to database if exist
 func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalID string, newPath string) (*User, error) {
-	// Validate external ID
+	// Validate fields
 	if !IsValidUserExternalID(externalID) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", externalID),
 		}
 	}
-
-	// Validate path
 	if !IsValidPath(newPath) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -215,12 +202,10 @@ func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalID st
 	}
 
 	// Check restrictions
-	usersFiltered, err := api.GetUsersAuthorized(authenticatedUser, userDB.Urn, USER_ACTION_UPDATE_USER, []User{*userDB})
+	usersFiltered, err := api.GetAuthorizedUsers(authenticatedUser, userDB.Urn, USER_ACTION_UPDATE_USER, []User{*userDB})
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if we have our user authorized
 	if len(usersFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -229,16 +214,13 @@ func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalID st
 		}
 	}
 
-	// Get User to update
 	userToUpdate := createUser(externalID, newPath)
 
 	// Check restrictions
-	usersFiltered, err = api.GetUsersAuthorized(authenticatedUser, userToUpdate.Urn, USER_ACTION_GET_USER, []User{userToUpdate})
+	usersFiltered, err = api.GetAuthorizedUsers(authenticatedUser, userToUpdate.Urn, USER_ACTION_GET_USER, []User{userToUpdate})
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if we have our user authorized
 	if len(usersFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -250,7 +232,7 @@ func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalID st
 	// Update user
 	user, err := api.UserRepo.UpdateUser(*userDB, newPath, userToUpdate.Urn)
 
-	// Check if there is an unexpected error in DB
+	// Check unexpected DB error
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
@@ -264,7 +246,6 @@ func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalID st
 
 }
 
-// Remove user with this id
 func (api AuthAPI) RemoveUserById(authenticatedUser AuthenticatedUser, id string) error {
 	// Call repo to retrieve the user
 	user, err := api.GetUserByExternalId(authenticatedUser, id)
@@ -273,12 +254,10 @@ func (api AuthAPI) RemoveUserById(authenticatedUser AuthenticatedUser, id string
 	}
 
 	// Check restrictions
-	usersFiltered, err := api.GetUsersAuthorized(authenticatedUser, user.Urn, USER_ACTION_DELETE_USER, []User{*user})
+	usersFiltered, err := api.GetAuthorizedUsers(authenticatedUser, user.Urn, USER_ACTION_DELETE_USER, []User{*user})
 	if err != nil {
 		return err
 	}
-
-	// Check if we have our user authorized
 	if len(usersFiltered) < 1 {
 		return &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -303,7 +282,6 @@ func (api AuthAPI) RemoveUserById(authenticatedUser AuthenticatedUser, id string
 	return nil
 }
 
-// Get groups for an user
 func (api AuthAPI) GetGroupsByUserId(authenticatedUser AuthenticatedUser, id string) ([]GroupIdentity, error) {
 	// Call repo to retrieve the user
 	user, err := api.GetUserByExternalId(authenticatedUser, id)
@@ -312,12 +290,10 @@ func (api AuthAPI) GetGroupsByUserId(authenticatedUser AuthenticatedUser, id str
 	}
 
 	// Check restrictions
-	usersFiltered, err := api.GetUsersAuthorized(authenticatedUser, user.Urn, USER_ACTION_LIST_GROUPS_FOR_USER, []User{*user})
+	usersFiltered, err := api.GetAuthorizedUsers(authenticatedUser, user.Urn, USER_ACTION_LIST_GROUPS_FOR_USER, []User{*user})
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if we have our user authorized
 	if len(usersFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -340,15 +316,15 @@ func (api AuthAPI) GetGroupsByUserId(authenticatedUser AuthenticatedUser, id str
 	}
 
 	// Transform to identifiers
-	groupReferenceIds := []GroupIdentity{}
+	groupIDs := []GroupIdentity{}
 	for _, g := range groups {
-		groupReferenceIds = append(groupReferenceIds, GroupIdentity{
+		groupIDs = append(groupIDs, GroupIdentity{
 			Org:  g.Org,
 			Name: g.Name,
 		})
 	}
 
-	return groupReferenceIds, nil
+	return groupIDs, nil
 }
 
 // Private helper methods

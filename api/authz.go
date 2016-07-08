@@ -7,13 +7,12 @@ import (
 	"github.com/tecsisa/authorizr/database"
 )
 
-// Interface that all resource have to implement
+// Interface that all resource types have to implement
 type Resource interface {
-	// This method return urn associated to resource
+	// This method must return resource URN
 	GetUrn() string
 }
 
-// User struct that define what role is
 type AuthenticatedUser struct {
 	Identifier string
 	Admin      bool
@@ -31,7 +30,6 @@ type Restrictions struct {
 	DeniedFullUrns     []string
 }
 
-// Struct that represent a external resource, with only URN attribute
 type ExternalResource struct {
 	Urn string
 }
@@ -40,8 +38,8 @@ func (e ExternalResource) GetUrn() string {
 	return e.Urn
 }
 
-// Return authorized users according to restrictions associated to authenticated user
-func (api AuthAPI) GetUsersAuthorized(user AuthenticatedUser, resourceUrn string, action string, users []User) ([]User, error) {
+// Return authorized users for specified resource+action
+func (api AuthAPI) GetAuthorizedUsers(user AuthenticatedUser, resourceUrn string, action string, users []User) ([]User, error) {
 	resourcesToAuthorize := []Resource{}
 	for _, usr := range users {
 		resourcesToAuthorize = append(resourcesToAuthorize, usr)
@@ -57,8 +55,8 @@ func (api AuthAPI) GetUsersAuthorized(user AuthenticatedUser, resourceUrn string
 	return usersFiltered, nil
 }
 
-// Return authorized groups according to restrictions associated to authenticated user
-func (api AuthAPI) GetGroupsAuthorized(user AuthenticatedUser, resourceUrn string, action string, groups []Group) ([]Group, error) {
+// Return authorized users for specified user combined with resource+action
+func (api AuthAPI) GetAuthorizedGroups(user AuthenticatedUser, resourceUrn string, action string, groups []Group) ([]Group, error) {
 	resourcesToAuthorize := []Resource{}
 	for _, group := range groups {
 		resourcesToAuthorize = append(resourcesToAuthorize, group)
@@ -74,8 +72,8 @@ func (api AuthAPI) GetGroupsAuthorized(user AuthenticatedUser, resourceUrn strin
 	return groupsFiltered, nil
 }
 
-// Return authorized policies according to restrictions associated to authenticated user
-func (api AuthAPI) GetPoliciesAuthorized(user AuthenticatedUser, resourceUrn string, action string, policies []Policy) ([]Policy, error) {
+// Return authorized policies for specified user combined with resource+action
+func (api AuthAPI) GetAuthorizedPolicies(user AuthenticatedUser, resourceUrn string, action string, policies []Policy) ([]Policy, error) {
 	resourcesToAuthorize := []Resource{}
 	for _, policy := range policies {
 		resourcesToAuthorize = append(resourcesToAuthorize, policy)
@@ -91,7 +89,7 @@ func (api AuthAPI) GetPoliciesAuthorized(user AuthenticatedUser, resourceUrn str
 	return policiesFiltered, nil
 }
 
-// Get user effect to do the action over the resource
+// Get the resources where the specified user has the action granted
 func (api AuthAPI) GetAuthorizedExternalResources(user AuthenticatedUser, action string, resources []string) ([]string, error) {
 	// Validate parameters
 	if err := IsValidAction([]string{action}); err != nil {
@@ -148,8 +146,7 @@ func (api AuthAPI) GetAuthorizedExternalResources(user AuthenticatedUser, action
 
 // Private Helper Methods
 
-// This method use authenticated user to retrieve its restrictions, apply it to a resource URN (could be a prefix)
-// and retrieve filtered resources
+// This method retrieves filtered resources where the authenticated user has permissions
 func (api AuthAPI) getAuthorizedResources(user AuthenticatedUser, resourceUrn string, action string, resources []Resource) ([]Resource, error) {
 
 	// If user is an admin return all resources without restriction
@@ -181,7 +178,7 @@ func (api AuthAPI) getAuthorizedResources(user AuthenticatedUser, resourceUrn st
 
 // Get restrictions for this action and full resource or prefix resource, attached to this authenticated user
 func (api AuthAPI) getRestrictions(externalID string, action string, resource string) (*Restrictions, error) {
-	// Get user if exist
+	// Get user if exists
 	user, err := api.UserRepo.GetUserByExternalID(externalID)
 
 	// Error handling
@@ -192,7 +189,7 @@ func (api AuthAPI) getRestrictions(externalID string, action string, resource st
 		case database.USER_NOT_FOUND:
 			return nil, &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
-				Message: fmt.Sprintf("User authenticated with external ID %v not found. It can't be possible retrieve its permission", externalID),
+				Message: fmt.Sprintf("Authenticated user with external ID %v not found. Unable to retrieve permissions.", externalID),
 			}
 		default:
 			return nil, &Error{
@@ -202,26 +199,20 @@ func (api AuthAPI) getRestrictions(externalID string, action string, resource st
 		}
 	}
 
-	// Get groups for this user
 	groups, err := api.getGroupsByUser(user.ID)
-
-	// Error handling
 	if err != nil {
 		return nil, err
 	}
 
-	// Get policies by groups
 	policies, err := api.getPoliciesByGroups(groups)
-
-	// Error handling
 	if err != nil {
 		return nil, err
 	}
 
-	// Retrieve statements for action requested for these policies
+	// Retrieve valid statements
 	statements := getStatementsByRequestedAction(policies, action)
 
-	// Retrieve restrictions restrictions
+	// Retrieve restrictions
 	var authResources *Restrictions
 	if isFullUrn(resource) {
 		authResources = getRestrictionsWhenResourceRequestedIsFullUrn(statements, resource)
@@ -233,12 +224,8 @@ func (api AuthAPI) getRestrictions(externalID string, action string, resource st
 	return cleanRepeatedRestrictions(authResources), nil
 }
 
-// Retrieve groups that user is member
 func (api AuthAPI) getGroupsByUser(userID string) ([]Group, error) {
-	// Get group relations by user
 	groups, err := api.UserRepo.GetGroupsByUserID(userID)
-
-	// Error handling
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
@@ -248,13 +235,11 @@ func (api AuthAPI) getGroupsByUser(userID string) ([]Group, error) {
 		}
 	}
 
-	// Return groups
 	return groups, nil
 }
 
 // Retrieve policies attached to a slice of groups
 func (api AuthAPI) getPoliciesByGroups(groups []Group) ([]Policy, error) {
-	// Retrieve per each group its attached policies
 	if groups == nil || len(groups) < 1 {
 		return nil, nil
 	}
@@ -262,11 +247,10 @@ func (api AuthAPI) getPoliciesByGroups(groups []Group) ([]Policy, error) {
 	// Create an empty slice
 	policies := []Policy{}
 
+	// Retrieve per each group its attached policies
 	for _, group := range groups {
 		// Retrieve policies for this group
-		policiesAttached, err := api.GroupRepo.GetPoliciesAttached(group.ID)
-
-		// Error handling
+		policiesAttached, err := api.GroupRepo.GetAttachedPolicies(group.ID)
 		if err != nil {
 			//Transform to DB error
 			dbError := err.(*database.Error)
@@ -281,40 +265,35 @@ func (api AuthAPI) getPoliciesByGroups(groups []Group) ([]Policy, error) {
 		}
 	}
 
-	// Return filled policies
 	return policies, nil
 }
 
 // Filter a slice of statements for a specified action
-func getStatementsByRequestedAction(policies []Policy, actionRequested string) []Statement {
+func getStatementsByRequestedAction(policies []Policy, requestedAction string) []Statement {
 	// Check received policies
 	if policies == nil || len(policies) < 1 {
 		return nil
 	}
 
-	// Retrieve statements related to action requested
 	statements := []Statement{}
 	for _, policy := range policies {
-		// Policy always has an statement at least
 		for _, statement := range *policy.Statements {
-			// Check if there are an action related to requested
-			if isActionContained(actionRequested, statement.Action) {
+			if isActionContained(requestedAction, statement.Action) {
 				statements = append(statements, statement)
 			}
 		}
 	}
 
-	// Return statements
 	return statements
 }
 
-// Clean restrictions that are repeated or contained by others (Deny is prior than Allow)
+// Clean repeated restrictions or contained by others (Deny has priority over Allow)
 func cleanRepeatedRestrictions(authResources *Restrictions) *Restrictions {
 	// TODO rsoleto: Falta implementar
 	return authResources
 }
 
-// Return if an action is contained inside a slice of statement's actions
+// Returns true if an action is contained inside a slice of statements
 func isActionContained(actionRequested string, statementActions []string) bool {
 	match := false
 	for _, statementAction := range statementActions {
@@ -334,7 +313,7 @@ func isActionContained(actionRequested string, statementActions []string) bool {
 	return match
 }
 
-// Return if a resource is contained by the prefix
+// Returns true if a resource is contained in a prefix
 func isResourceContained(resource string, resourcePrefix string) bool {
 	prefix := strings.Trim(resourcePrefix, "*")
 	if len(prefix) < 1 {
@@ -363,7 +342,8 @@ func getRestrictionsWhenResourceRequestedIsPrefix(statements []Statement, resour
 	if statements != nil || len(statements) > 0 {
 		for _, statement := range statements {
 			for _, statementResource := range statement.Resources {
-				// If is full URN the statement of resource, we need to check if is a sub resource
+				// Append resource to allowed or denied resources, if the resource URN is not a prefix (full URN), and is contained inside the passed resource.
+				// Else, it means that resource is a prefix, so we have to check if the passed resource contains it or viceversa.
 				if isFullUrn(statementResource) && isResourceContained(statementResource, resource) {
 					if statement.Effect == "allow" {
 						authResources.AllowedFullUrns = append(authResources.AllowedFullUrns, statementResource)
@@ -371,8 +351,6 @@ func getRestrictionsWhenResourceRequestedIsPrefix(statements []Statement, resour
 						authResources.DeniedFullUrns = append(authResources.DeniedFullUrns, statementResource)
 					}
 				} else {
-					// We have two prefixes, now we have to decide which is shorter,
-					// and then if shorter contains other resource
 					switch {
 					case len(statementResource) > len(resource):
 						if isResourceContained(statementResource, resource) {
@@ -493,7 +471,6 @@ func isAllowedResource(resource Resource, restrictions Restrictions) bool {
 		}
 	}
 
-	// If it is allowed and not denied
 	if allowed && !denied {
 		return true
 	} else {

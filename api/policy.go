@@ -23,7 +23,7 @@ func (p Policy) GetUrn() string {
 	return p.Urn
 }
 
-// Identifier for policy that allow you to retrieve from Database
+// Policy identifier to retrieve them from DB
 type PolicyIdentity struct {
 	Org  string `json:"Org, omitempty"`
 	Name string `json:"Name, omitempty"`
@@ -73,12 +73,10 @@ func (api AuthAPI) GetPolicyByName(authenticatedUser AuthenticatedUser, org stri
 	}
 
 	// Check restrictions
-	policiesFiltered, err := api.GetPoliciesAuthorized(authenticatedUser, policy.Urn, POLICY_ACTION_GET_POLICY, []Policy{*policy})
+	policiesFiltered, err := api.GetAuthorizedPolicies(authenticatedUser, policy.Urn, POLICY_ACTION_GET_POLICY, []Policy{*policy})
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if we have our user authorized
 	if len(policiesFiltered) > 0 {
 		policyFiltered := policiesFiltered[0]
 		return &policyFiltered, nil
@@ -91,15 +89,14 @@ func (api AuthAPI) GetPolicyByName(authenticatedUser AuthenticatedUser, org stri
 	}
 }
 
-func (api AuthAPI) GetListPolicies(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]PolicyIdentity, error) {
-	// Validate path prefix
+func (api AuthAPI) GetPolicyList(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]PolicyIdentity, error) {
+	// Validate fields
 	if len(pathPrefix) > 0 && !IsValidPath(pathPrefix) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", pathPrefix),
 		}
 	}
-	// Validate org
 	if !IsValidOrg(org) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -125,20 +122,20 @@ func (api AuthAPI) GetListPolicies(authenticatedUser AuthenticatedUser, org stri
 
 	// Check restrictions to list
 	urnPrefix := GetUrnPrefix(org, RESOURCE_POLICY, pathPrefix)
-	policiesFiltered, err := api.GetPoliciesAuthorized(authenticatedUser, urnPrefix, POLICY_ACTION_LIST_POLICIES, policies)
+	policiesFiltered, err := api.GetAuthorizedPolicies(authenticatedUser, urnPrefix, POLICY_ACTION_LIST_POLICIES, policies)
 	if err != nil {
 		return nil, err
 	}
 
-	policyReferenceIds := []PolicyIdentity{}
+	policyIDs := []PolicyIdentity{}
 	for _, p := range policiesFiltered {
-		policyReferenceIds = append(policyReferenceIds, PolicyIdentity{
+		policyIDs = append(policyIDs, PolicyIdentity{
 			Org:  p.Org,
 			Name: p.Name,
 		})
 	}
 
-	return policyReferenceIds, nil
+	return policyIDs, nil
 }
 
 func (api AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, path string, org string, statements []Statement) (*Policy, error) {
@@ -149,7 +146,6 @@ func (api AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, p
 			Message: fmt.Sprintf("Invalid parameter: Policy name %v", name),
 		}
 	}
-	// Validate org
 	if !IsValidOrg(org) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -163,7 +159,6 @@ func (api AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, p
 		}
 
 	}
-
 	err := IsValidStatement(&statements)
 	if err != nil {
 		apiError := err.(*Error)
@@ -177,12 +172,10 @@ func (api AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, p
 	policy := createPolicy(name, path, org, &statements)
 
 	// Check restrictions
-	policiesFiltered, err := api.GetPoliciesAuthorized(authenticatedUser, policy.Urn, POLICY_ACTION_CREATE_POLICY, []Policy{policy})
+	policiesFiltered, err := api.GetAuthorizedPolicies(authenticatedUser, policy.Urn, POLICY_ACTION_CREATE_POLICY, []Policy{policy})
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if we have our user authorized
 	if len(policiesFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -191,7 +184,7 @@ func (api AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, p
 		}
 	}
 
-	// Check if policy already exist
+	// Check if policy already exists
 	_, err = api.PolicyRepo.GetPolicyByName(org, name)
 
 	// Check if policy could be retrieved
@@ -202,7 +195,7 @@ func (api AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, p
 		// Policy doesn't exist in DB
 		case database.POLICY_NOT_FOUND:
 			// Create policy
-			policyCreated, err := api.PolicyRepo.AddPolicy(policy)
+			createdPolicy, err := api.PolicyRepo.AddPolicy(policy)
 
 			// Check if there is an unexpected error in DB
 			if err != nil {
@@ -215,14 +208,14 @@ func (api AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, p
 			}
 
 			// Return policy created
-			return policyCreated, nil
+			return createdPolicy, nil
 		default: // Unexpected error
 			return nil, &Error{
 				Code:    UNKNOWN_API_ERROR,
 				Message: dbError.Message,
 			}
 		}
-	} else { // If policy exist it can't create it
+	} else { // Fail if policy exists
 		return nil, &Error{
 			Code:    POLICY_ALREADY_EXIST,
 			Message: fmt.Sprintf("Unable to create policy, policy with org %v and name %v already exist", org, name),
@@ -239,7 +232,6 @@ func (api AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string,
 			Message: fmt.Sprintf("Invalid parameter: Policy name %v", policyName),
 		}
 	}
-	// Validate org
 	if !IsValidOrg(org) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -276,12 +268,10 @@ func (api AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string,
 	}
 
 	// Check restrictions
-	policiesFiltered, err := api.GetPoliciesAuthorized(authenticatedUser, policyDB.Urn, POLICY_ACTION_UPDATE_POLICY, []Policy{*policyDB})
+	policiesFiltered, err := api.GetAuthorizedPolicies(authenticatedUser, policyDB.Urn, POLICY_ACTION_UPDATE_POLICY, []Policy{*policyDB})
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if we have our user authorized
 	if len(policiesFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -290,7 +280,7 @@ func (api AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string,
 		}
 	}
 
-	// Check if policy with newName exist
+	// Check if policy with "newName" exists
 	targetPolicy, err := api.GetPolicyByName(authenticatedUser, org, newName)
 
 	if err == nil && targetPolicy.ID != policyDB.ID {
@@ -300,7 +290,6 @@ func (api AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string,
 			Message: fmt.Sprintf("Policy name: %v already exists", newName),
 		}
 	}
-
 	if err != nil {
 		if apiError := err.(*Error); apiError.Code == UNAUTHORIZED_RESOURCES_ERROR || apiError.Code == UNKNOWN_API_ERROR {
 			return nil, err
@@ -311,12 +300,10 @@ func (api AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string,
 	policyToUpdate := createPolicy(newName, newPath, org, &newStatements)
 
 	// Check restrictions
-	policiesFiltered, err = api.GetPoliciesAuthorized(authenticatedUser, policyToUpdate.Urn, POLICY_ACTION_UPDATE_POLICY, []Policy{policyToUpdate})
+	policiesFiltered, err = api.GetAuthorizedPolicies(authenticatedUser, policyToUpdate.Urn, POLICY_ACTION_UPDATE_POLICY, []Policy{policyToUpdate})
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if we have our user authorized
 	if len(policiesFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -328,7 +315,7 @@ func (api AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string,
 	// Update policy
 	policy, err := api.PolicyRepo.UpdatePolicy(*policyDB, newName, newPath, policyToUpdate.Urn, newStatements)
 
-	// Check if there is an unexpected error in DB
+	// Check unexpected DB error
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
@@ -349,7 +336,6 @@ func (api AuthAPI) DeletePolicy(authenticatedUser AuthenticatedUser, org string,
 			Message: fmt.Sprintf("Invalid parameter: Policy name %v", name),
 		}
 	}
-	// Validate org
 	if !IsValidOrg(org) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -364,12 +350,10 @@ func (api AuthAPI) DeletePolicy(authenticatedUser AuthenticatedUser, org string,
 	}
 
 	// Check restrictions
-	policiesFiltered, err := api.GetPoliciesAuthorized(authenticatedUser, policy.Urn, POLICY_ACTION_DELETE_POLICY, []Policy{*policy})
+	policiesFiltered, err := api.GetAuthorizedPolicies(authenticatedUser, policy.Urn, POLICY_ACTION_DELETE_POLICY, []Policy{*policy})
 	if err != nil {
 		return err
 	}
-
-	// Check if we have our user authorized
 	if len(policiesFiltered) < 1 {
 		return &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -392,7 +376,7 @@ func (api AuthAPI) DeletePolicy(authenticatedUser AuthenticatedUser, org string,
 	return nil
 }
 
-func (api AuthAPI) GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser, org string, policyName string) ([]GroupIdentity, error) {
+func (api AuthAPI) GetAttachedGroups(authenticatedUser AuthenticatedUser, org string, policyName string) ([]GroupIdentity, error) {
 	// Validate fields
 	if !IsValidName(policyName) {
 		return nil, &Error{
@@ -400,7 +384,6 @@ func (api AuthAPI) GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser, 
 			Message: fmt.Sprintf("Invalid parameter: Policy name %v", policyName),
 		}
 	}
-	// Validate org
 	if !IsValidOrg(org) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -415,12 +398,10 @@ func (api AuthAPI) GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser, 
 	}
 
 	// Check restrictions
-	policiesFiltered, err := api.GetPoliciesAuthorized(authenticatedUser, policy.Urn, POLICY_ACTION_LIST_ATTACHED_GROUPS, []Policy{*policy})
+	policiesFiltered, err := api.GetAuthorizedPolicies(authenticatedUser, policy.Urn, POLICY_ACTION_LIST_ATTACHED_GROUPS, []Policy{*policy})
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if we have our user authorized
 	if len(policiesFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -430,7 +411,7 @@ func (api AuthAPI) GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser, 
 	}
 
 	// Call repo to retrieve the attached groups
-	groups, err := api.PolicyRepo.GetAllPolicyGroupRelation(policy.ID)
+	groups, err := api.PolicyRepo.GetAttachedGroups(policy.ID)
 
 	// Error handling
 	if err != nil {
@@ -442,15 +423,15 @@ func (api AuthAPI) GetPolicyAttachedGroups(authenticatedUser AuthenticatedUser, 
 		}
 	}
 
-	groupReferenceIDs := []GroupIdentity{}
+	groupIDs := []GroupIdentity{}
 	for _, g := range groups {
-		groupReferenceIDs = append(groupReferenceIDs, GroupIdentity{
+		groupIDs = append(groupIDs, GroupIdentity{
 			Org:  g.Org,
 			Name: g.Name,
 		})
 	}
 
-	return groupReferenceIDs, nil
+	return groupIDs, nil
 }
 
 func createPolicy(name string, path string, org string, statements *[]Statement) Policy {

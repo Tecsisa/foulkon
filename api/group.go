@@ -22,7 +22,7 @@ func (g Group) GetUrn() string {
 	return g.Urn
 }
 
-// Identifier for group that allow you to retrieve from Database
+// Group identifier to retrieve them from DB
 type GroupIdentity struct {
 	Org  string `json:"Org, omitempty"`
 	Name string `json:"Name, omitempty"`
@@ -38,37 +38,33 @@ type GroupPolicies struct {
 
 // Add an Group to database if not exist
 func (api AuthAPI) AddGroup(authenticatedUser AuthenticatedUser, org string, name string, path string) (*Group, error) {
-	// Validate name
+	// Validate fields
 	if !IsValidName(name) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: Name %v", name),
 		}
 	}
-	// Validate org
 	if !IsValidOrg(org) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: org %v", org),
 		}
 	}
-	// Validate path
 	if !IsValidPath(path) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: Path %v", path),
 		}
 	}
-	// Create group
+
 	group := createGroup(org, name, path)
 
 	// Check restrictions
-	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, group.Urn, GROUP_ACTION_CREATE_GROUP, []Group{group})
+	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, group.Urn, GROUP_ACTION_CREATE_GROUP, []Group{group})
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if we have our user authorized
 	if len(groupsFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -77,7 +73,7 @@ func (api AuthAPI) AddGroup(authenticatedUser AuthenticatedUser, org string, nam
 		}
 	}
 
-	// Check if group already exist
+	// Check if group already exists
 	_, err = api.GroupRepo.GetGroupByName(org, name)
 
 	// Check if group could be retrieved
@@ -85,10 +81,10 @@ func (api AuthAPI) AddGroup(authenticatedUser AuthenticatedUser, org string, nam
 		//Transform to DB error
 		dbError := err.(*database.Error)
 		switch dbError.Code {
-		// Group doesn't exist in DB
+		// Group doesn't exist in DB, so we can create it
 		case database.GROUP_NOT_FOUND:
 			// Create group
-			groupCreated, err := api.GroupRepo.AddGroup(group)
+			createdGroup, err := api.GroupRepo.AddGroup(group)
 
 			// Check if there is an unexpected error in DB
 			if err != nil {
@@ -100,8 +96,7 @@ func (api AuthAPI) AddGroup(authenticatedUser AuthenticatedUser, org string, nam
 				}
 			}
 
-			// Return group created
-			return groupCreated, nil
+			return createdGroup, nil
 		default: // Unexpected error
 			return nil, &Error{
 				Code:    UNKNOWN_API_ERROR,
@@ -111,29 +106,27 @@ func (api AuthAPI) AddGroup(authenticatedUser AuthenticatedUser, org string, nam
 	} else {
 		return nil, &Error{
 			Code:    GROUP_ALREADY_EXIST,
-			Message: fmt.Sprintf("Unable to create group, group with org %v and name %v already exist", org, name),
+			Message: fmt.Sprintf("Unable to create group, group with org %v and name %v already exists", org, name),
 		}
 	}
 
 }
 
-//  Add a new member into an existing group
+//  Add member to group
 func (api AuthAPI) AddMember(authenticatedUser AuthenticatedUser, userID string, groupName string, org string) error {
-	// Validate external ID
+	// Validate fields
 	if !IsValidUserExternalID(userID) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", userID),
 		}
 	}
-	// Validate org
 	if !IsValidName(org) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: org %v", org),
 		}
 	}
-	// Validate Name
 	if !IsValidName(groupName) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -148,12 +141,10 @@ func (api AuthAPI) AddMember(authenticatedUser AuthenticatedUser, userID string,
 	}
 
 	// Check restrictions
-	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, groupDB.Urn, GROUP_ACTION_ADD_MEMBER, []Group{*groupDB})
+	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, groupDB.Urn, GROUP_ACTION_ADD_MEMBER, []Group{*groupDB})
 	if err != nil {
 		return err
 	}
-
-	// Check if we have our user authorized
 	if len(groupsFiltered) < 1 {
 		return &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -203,23 +194,21 @@ func (api AuthAPI) AddMember(authenticatedUser AuthenticatedUser, userID string,
 	return nil
 }
 
-//  Remove a member from a group
+//  Remove member from group
 func (api AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, userID string, groupName string, org string) error {
-	// Validate external ID
+	// Validate fields
 	if !IsValidUserExternalID(userID) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", userID),
 		}
 	}
-	// Validate org
 	if !IsValidOrg(org) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: org %v", org),
 		}
 	}
-	// Validate GroupName
 	if !IsValidName(groupName) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -234,12 +223,10 @@ func (api AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, userID stri
 	}
 
 	// Check restrictions
-	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, groupDB.Urn, GROUP_ACTION_REMOVE_MEMBER, []Group{*groupDB})
+	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, groupDB.Urn, GROUP_ACTION_REMOVE_MEMBER, []Group{*groupDB})
 	if err != nil {
 		return err
 	}
-
-	// Check if we have our user authorized
 	if len(groupsFiltered) < 1 {
 		return &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -291,14 +278,13 @@ func (api AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, userID stri
 
 // List members of a group
 func (api AuthAPI) ListMembers(authenticatedUser AuthenticatedUser, org string, groupName string) ([]string, error) {
-	// Validate name
+	// Validate fields
 	if !IsValidName(groupName) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: Group name %v", groupName),
 		}
 	}
-	// Validate org
 	if !IsValidOrg(org) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -313,12 +299,10 @@ func (api AuthAPI) ListMembers(authenticatedUser AuthenticatedUser, org string, 
 	}
 
 	// Check restrictions
-	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, group.Urn, GROUP_ACTION_LIST_MEMBERS, []Group{*group})
+	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, group.Urn, GROUP_ACTION_LIST_MEMBERS, []Group{*group})
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if we have our user authorized
 	if len(groupsFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -350,14 +334,13 @@ func (api AuthAPI) ListMembers(authenticatedUser AuthenticatedUser, org string, 
 
 // Remove group
 func (api AuthAPI) RemoveGroup(authenticatedUser AuthenticatedUser, org string, name string) error {
-	// Validate name
+	// Validate fields
 	if !IsValidName(name) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: Group name %v", name),
 		}
 	}
-	// Validate org
 	if !IsValidOrg(org) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -372,12 +355,10 @@ func (api AuthAPI) RemoveGroup(authenticatedUser AuthenticatedUser, org string, 
 	}
 
 	// Check restrictions
-	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, group.Urn, GROUP_ACTION_DELETE_GROUP, []Group{*group})
+	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, group.Urn, GROUP_ACTION_DELETE_GROUP, []Group{*group})
 	if err != nil {
 		return err
 	}
-
-	// Check if we have our user authorized
 	if len(groupsFiltered) < 1 {
 		return &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -403,14 +384,13 @@ func (api AuthAPI) RemoveGroup(authenticatedUser AuthenticatedUser, org string, 
 }
 
 func (api AuthAPI) GetGroupByName(authenticatedUser AuthenticatedUser, org string, name string) (*Group, error) {
-	// Validate name
+	// Validate fields
 	if !IsValidName(name) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: Group name %v", name),
 		}
 	}
-	// Validate org
 	if !IsValidOrg(org) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -441,7 +421,7 @@ func (api AuthAPI) GetGroupByName(authenticatedUser AuthenticatedUser, org strin
 	}
 
 	// Check restrictions
-	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, group.Urn, GROUP_ACTION_GET_GROUP, []Group{*group})
+	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, group.Urn, GROUP_ACTION_GET_GROUP, []Group{*group})
 	if err != nil {
 		return nil, err
 	}
@@ -460,8 +440,8 @@ func (api AuthAPI) GetGroupByName(authenticatedUser AuthenticatedUser, org strin
 
 }
 
-func (api AuthAPI) GetListGroups(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]GroupIdentity, error) {
-	// Validate path
+func (api AuthAPI) GetGroupList(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]GroupIdentity, error) {
+	// Validate fields
 	if len(pathPrefix) > 0 && !IsValidPath(pathPrefix) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -488,40 +468,38 @@ func (api AuthAPI) GetListGroups(authenticatedUser AuthenticatedUser, org string
 
 	// Check restrictions to list
 	urnPrefix := GetUrnPrefix(org, RESOURCE_GROUP, pathPrefix)
-	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, urnPrefix, GROUP_ACTION_LIST_GROUPS, groups)
+	filteredGroups, err := api.GetAuthorizedGroups(authenticatedUser, urnPrefix, GROUP_ACTION_LIST_GROUPS, groups)
 	if err != nil {
 		return nil, err
 	}
 
 	// Transform to identifiers
-	groupReferenceIds := []GroupIdentity{}
-	for _, g := range groupsFiltered {
-		groupReferenceIds = append(groupReferenceIds, GroupIdentity{
+	groupIDs := []GroupIdentity{}
+	for _, g := range filteredGroups {
+		groupIDs = append(groupIDs, GroupIdentity{
 			Org:  g.Org,
 			Name: g.Name,
 		})
 	}
 
-	return groupReferenceIds, nil
+	return groupIDs, nil
 }
 
 // Update Group to database if exist
 func (api AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, groupName string, newName string, newPath string) (*Group, error) {
-	// Validate name
+	// Validate fields
 	if !IsValidName(newName) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: Name %v", newName),
 		}
 	}
-	// Validate org
 	if !IsValidOrg(org) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: org %v", org),
 		}
 	}
-	// Validate path
 	if !IsValidPath(newPath) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -536,12 +514,10 @@ func (api AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, 
 	}
 
 	// Check restrictions
-	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, group.Urn, GROUP_ACTION_UPDATE_GROUP, []Group{*group})
+	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, group.Urn, GROUP_ACTION_UPDATE_GROUP, []Group{*group})
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if we have our user authorized
 	if len(groupsFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -550,7 +526,7 @@ func (api AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, 
 		}
 	}
 
-	// Check if group with newName exist
+	// Check if a group with "newName" already exists
 	newGroup, err := api.GetGroupByName(authenticatedUser, org, newName)
 
 	if err == nil && group.ID != newGroup.ID {
@@ -571,12 +547,10 @@ func (api AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, 
 	groupToUpdate := createGroup(org, newName, newPath)
 
 	// Check restrictions
-	groupsFiltered, err = api.GetGroupsAuthorized(authenticatedUser, groupToUpdate.Urn, GROUP_ACTION_UPDATE_GROUP, []Group{groupToUpdate})
+	groupsFiltered, err = api.GetAuthorizedGroups(authenticatedUser, groupToUpdate.Urn, GROUP_ACTION_UPDATE_GROUP, []Group{groupToUpdate})
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if we have our user authorized
 	if len(groupsFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -588,7 +562,7 @@ func (api AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, 
 	// Update group
 	group, err = api.GroupRepo.UpdateGroup(*group, newName, newPath, groupToUpdate.Urn)
 
-	// Check if there is an unexpected error in DB
+	// Check unexpected DB error
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
@@ -603,40 +577,37 @@ func (api AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, 
 }
 
 func (api AuthAPI) AttachPolicyToGroup(authenticatedUser AuthenticatedUser, org string, groupName string, policyName string) error {
-	// Validate group name
+	// Validate fields
 	if !IsValidName(groupName) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: Group name %v", groupName),
 		}
 	}
-	// Validate org
 	if !IsValidOrg(org) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: org %v", org),
 		}
 	}
-	// Validate policy name
 	if !IsValidName(policyName) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: Policy name %v", policyName),
 		}
 	}
-	// Check if group exist
+
+	// Check if group exists
 	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {
 		return err
 	}
 
 	// Check restrictions
-	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, group.Urn, GROUP_ACTION_ATTACH_GROUP_POLICY, []Group{*group})
+	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, group.Urn, GROUP_ACTION_ATTACH_GROUP_POLICY, []Group{*group})
 	if err != nil {
 		return err
 	}
-
-	// Check if we have our user authorized
 	if len(groupsFiltered) < 1 {
 		return &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -645,13 +616,13 @@ func (api AuthAPI) AttachPolicyToGroup(authenticatedUser AuthenticatedUser, org 
 		}
 	}
 
-	// Check if policy exist
+	// Check if policy exists
 	policy, err := api.GetPolicyByName(authenticatedUser, org, policyName)
 	if err != nil {
 		return err
 	}
 
-	// Check if exist this relation
+	// Check existing relationship
 	isAttached, err := api.GroupRepo.IsAttachedToGroup(group.ID, policy.ID)
 	if err != nil {
 		dbError := err.(*database.Error)
@@ -684,40 +655,37 @@ func (api AuthAPI) AttachPolicyToGroup(authenticatedUser AuthenticatedUser, org 
 }
 
 func (api AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org string, groupName string, policyName string) error {
-	// Validate group name
+	// Validate fields
 	if !IsValidName(groupName) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: Group name %v", groupName),
 		}
 	}
-	// Validate org
 	if !IsValidOrg(org) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: org %v", org),
 		}
 	}
-	// Validate policy name
 	if !IsValidName(policyName) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: Policy name %v", policyName),
 		}
 	}
-	// Check if group exist
+
+	// Check if group exists
 	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {
 		return err
 	}
 
 	// Check restrictions
-	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, group.Urn, GROUP_ACTION_DETACH_GROUP_POLICY, []Group{*group})
+	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, group.Urn, GROUP_ACTION_DETACH_GROUP_POLICY, []Group{*group})
 	if err != nil {
 		return err
 	}
-
-	// Check if we have our user authorized
 	if len(groupsFiltered) < 1 {
 		return &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -726,13 +694,13 @@ func (api AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org 
 		}
 	}
 
-	// Check if policy exist
+	// Check if policy exists
 	policy, err := api.GetPolicyByName(authenticatedUser, org, policyName)
 	if err != nil {
 		return err
 	}
 
-	// Check if exist this relation
+	// Check existing relationship
 	isAttached, err := api.GroupRepo.IsAttachedToGroup(group.ID, policy.ID)
 	if err != nil {
 		dbError := err.(*database.Error)
@@ -766,14 +734,13 @@ func (api AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org 
 }
 
 func (api AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser, org string, groupName string) ([]PolicyIdentity, error) {
-	// Validate group name
+	// Validate fields
 	if !IsValidName(groupName) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: Group name %v", groupName),
 		}
 	}
-	// Validate org
 	if !IsValidOrg(org) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -781,19 +748,17 @@ func (api AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser
 		}
 	}
 
-	// Check if group exist
+	// Check if group exists
 	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check restrictions
-	groupsFiltered, err := api.GetGroupsAuthorized(authenticatedUser, group.Urn, GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES, []Group{*group})
+	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, group.Urn, GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES, []Group{*group})
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if we have our user authorized
 	if len(groupsFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
@@ -803,7 +768,7 @@ func (api AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser
 	}
 
 	// Call repo to retrieve the GroupPolicyRelations
-	attachedPolicies, err := api.GroupRepo.GetPoliciesAttached(group.ID)
+	attachedPolicies, err := api.GroupRepo.GetAttachedPolicies(group.ID)
 
 	// Error handling
 	if err != nil {
@@ -815,14 +780,14 @@ func (api AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser
 		}
 	}
 
-	policyReferenceId := []PolicyIdentity{}
+	policyIDs := []PolicyIdentity{}
 	for _, p := range attachedPolicies {
-		policyReferenceId = append(policyReferenceId, PolicyIdentity{
+		policyIDs = append(policyIDs, PolicyIdentity{
 			Org:  p.Org,
 			Name: p.Name,
 		})
 	}
-	return policyReferenceId, nil
+	return policyIDs, nil
 }
 
 // Private helper methods

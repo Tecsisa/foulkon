@@ -56,7 +56,7 @@ func (a *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Reques
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call policy API to retrieve policies
-	result, err := a.worker.PolicyApi.GetListPolicies(authenticatedUser, org, pathPrefix)
+	result, err := a.worker.PolicyApi.GetPolicyList(authenticatedUser, org, pathPrefix)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -77,7 +77,7 @@ func (a *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Reques
 		Policies: result,
 	}
 
-	// Return data
+	// Return policies
 	a.RespondOk(r, &authenticatedUser, w, response)
 }
 
@@ -125,7 +125,7 @@ func (a *WorkerHandler) HandleCreatePolicy(w http.ResponseWriter, r *http.Reques
 		Policy: storedPolicy,
 	}
 
-	// Write group to response
+	// Write policy to response
 	a.RespondCreated(r, &authenticatedUser, w, response)
 }
 
@@ -243,7 +243,7 @@ func (a *WorkerHandler) HandleGetPolicy(w http.ResponseWriter, r *http.Request, 
 		Policy: result,
 	}
 
-	// Return data
+	// Return policy
 	a.RespondOk(r, &authethicatedUser, w, response)
 }
 
@@ -255,7 +255,7 @@ func (a *WorkerHandler) HandleGetPolicyAttachedGroups(w http.ResponseWriter, r *
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call policies API to retrieve attached groups
-	result, err := a.worker.PolicyApi.GetPolicyAttachedGroups(autheticatedUser, orgId, policyName)
+	result, err := a.worker.PolicyApi.GetAttachedGroups(autheticatedUser, orgId, policyName)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -278,7 +278,7 @@ func (a *WorkerHandler) HandleGetPolicyAttachedGroups(w http.ResponseWriter, r *
 		Groups: result,
 	}
 
-	// Return data
+	// Return groups
 	a.RespondOk(r, &autheticatedUser, w, response)
 }
 
@@ -290,7 +290,7 @@ func (a *WorkerHandler) HandleListAllPolicies(w http.ResponseWriter, r *http.Req
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call policies API to retrieve policies
-	result, err := a.worker.PolicyApi.GetListPolicies(autheticatedUser, org, pathPrefix)
+	result, err := a.worker.PolicyApi.GetPolicyList(autheticatedUser, org, pathPrefix)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -311,6 +311,6 @@ func (a *WorkerHandler) HandleListAllPolicies(w http.ResponseWriter, r *http.Req
 		Policies: result,
 	}
 
-	// Return data
+	// Return policies
 	a.RespondOk(r, &autheticatedUser, w, response)
 }

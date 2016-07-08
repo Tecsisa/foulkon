@@ -5,11 +5,12 @@ import (
 	"os"
 
 	"errors"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/pelletier/go-toml"
 )
 
-// Proxy authorize resources according to definitions in proxy file
+// Proxy - Authorize resources using definitions in proxy config file
 type Proxy struct {
 	// Server config
 	Host string
@@ -29,19 +30,16 @@ type Proxy struct {
 	APIResources []APIResource
 }
 
-// Representation of resources with its correspondence resource and action for authorizr server
+// Representation of external API resources to authorize
 type APIResource struct {
-	// API definition
 	Id     string
 	Host   string
 	Url    string
 	Method string
-	// Authorization relationship
 	Urn    string
 	Action string
 }
 
-// Create a Proxy using configuration values
 func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 	// Create logger
 	var logOut io.Writer
@@ -55,7 +53,7 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 		}
 		logOut = file
 	}
-	// Logger level
+	// Loglevel. defaults to INFO
 	loglevel, err := log.ParseLevel(getDefaultValue(config, "logger.level", "info"))
 	if err != nil {
 		loglevel = log.InfoLevel
@@ -71,6 +69,7 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 
 	// API Resources
 	resources := []APIResource{}
+	// Retrieve resource tree from toml config file
 	tree, ok := config.Get("resources").([]*toml.TomlTree)
 	if !ok {
 		return nil, errors.New("No resources retrieved from file")

@@ -63,7 +63,7 @@ func (a *WorkerHandler) HandleCreateGroup(w http.ResponseWriter, r *http.Request
 	}
 
 	org := ps.ByName(ORG_NAME)
-	// Call group API to create an group
+	// Call group API to create a group
 	result, err := a.worker.GroupApi.AddGroup(authenticatedUser, org, request.Name, request.Path)
 
 	// Error handling
@@ -118,7 +118,7 @@ func (a *WorkerHandler) HandleDeleteGroup(w http.ResponseWriter, r *http.Request
 			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
-	} else { // a.Respond without content
+	} else {
 		a.RespondNoContent(r, &authenticatedUser, w)
 	}
 }
@@ -165,11 +165,11 @@ func (a *WorkerHandler) HandleListGroups(w http.ResponseWriter, r *http.Request,
 	// Retrieve group org from path
 	org := ps.ByName(ORG_NAME)
 
-	// Retrieve query param if exist
+	// Retrieve query param if exists
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call group API to retrieve groups
-	result, err := a.worker.GroupApi.GetListGroups(authenticatedUser, org, pathPrefix)
+	result, err := a.worker.GroupApi.GetGroupList(authenticatedUser, org, pathPrefix)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -190,7 +190,7 @@ func (a *WorkerHandler) HandleListGroups(w http.ResponseWriter, r *http.Request,
 		Groups: result,
 	}
 
-	// Return data
+	// Return groups
 	a.RespondOk(r, &authenticatedUser, w, response)
 
 }
@@ -313,7 +313,7 @@ func (a *WorkerHandler) HandleAddMember(w http.ResponseWriter, r *http.Request, 
 			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
-	} else { // a.Respond without content
+	} else {
 		a.RespondNoContent(r, &authenticatedUser, w)
 	}
 }
@@ -344,7 +344,7 @@ func (a *WorkerHandler) HandleRemoveMember(w http.ResponseWriter, r *http.Reques
 			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
-	} else { // a.Respond without content
+	} else {
 		a.RespondNoContent(r, &authenticatedUser, w)
 	}
 
@@ -380,7 +380,7 @@ func (a *WorkerHandler) HandleAttachGroupPolicy(w http.ResponseWriter, r *http.R
 		}
 		return
 
-	} else { // a.Respond without content
+	} else {
 		a.RespondNoContent(r, &authenticatedUser, w)
 	}
 
@@ -414,7 +414,7 @@ func (a *WorkerHandler) HandleDetachGroupPolicy(w http.ResponseWriter, r *http.R
 		}
 		return
 
-	} else { // a.Respond without content
+	} else {
 		a.RespondNoContent(r, &authenticatedUser, w)
 	}
 }
@@ -450,7 +450,7 @@ func (a *WorkerHandler) HandleListAttachedGroupPolicies(w http.ResponseWriter, r
 		AttachedPolicies: result,
 	}
 
-	// Return data
+	// Return group policies
 	a.RespondOk(r, &authenticatedUser, w, response)
 
 }
@@ -463,7 +463,7 @@ func (a *WorkerHandler) HandleListAllGroups(w http.ResponseWriter, r *http.Reque
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call group API to retrieve groups
-	result, err := a.worker.GroupApi.GetListGroups(authenticatedUser, org, pathPrefix)
+	result, err := a.worker.GroupApi.GetGroupList(authenticatedUser, org, pathPrefix)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -484,7 +484,7 @@ func (a *WorkerHandler) HandleListAllGroups(w http.ResponseWriter, r *http.Reque
 		Groups: result,
 	}
 
-	// Return data
+	// Return groups
 	a.RespondOk(r, &authenticatedUser, w, response)
 
 }

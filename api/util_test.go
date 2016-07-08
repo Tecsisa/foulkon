@@ -310,7 +310,7 @@ func TestIsValidEffect(t *testing.T) {
 		"ErrorCaseInvalidEffect": {
 			effect: "other",
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
 	}
@@ -445,7 +445,7 @@ func TestIsValidStatement(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
 		"ErrorCaseInvalidAction": {

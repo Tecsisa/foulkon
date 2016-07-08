@@ -16,7 +16,7 @@ const (
 	// USER API METHODS
 	AddUserMethod             = "AddUser"
 	GetUserByExternalIdMethod = "GetUserByExternalId"
-	GetListUsersMethod        = "GetListUsers"
+	GetUserListMethod         = "GetUserList"
 	UpdateUserMethod          = "UpdateUser"
 	RemoveUserByIdMethod      = "RemoveUserById"
 	GetGroupsByUserIdMethod   = "GetGroupsByUserId"
@@ -24,7 +24,7 @@ const (
 	// GROUP API METHODS
 	AddGroupMethod                  = "AddGroup"
 	GetGroupByNameMethod            = "GetGroupByName"
-	GetListGroupsMethod             = "GetListGroups"
+	GetGroupListMethod              = "GetGroupList"
 	UpdateGroupMethod               = "UpdateGroup"
 	RemoveGroupMethod               = "RemoveGroup"
 	AddMemberMethod                 = "AddMember"
@@ -35,17 +35,17 @@ const (
 	ListAttachedGroupPoliciesMethod = "ListAttachedGroupPolicies"
 
 	// POLICY API METHODS
-	AddPolicyMethod               = "AddPolicy"
-	GetPolicyByNameMethod         = "GetPolicyByName"
-	GetListPoliciesMethod         = "GetListPolicies"
-	UpdatePolicyMethod            = "UpdatePolicy"
-	DeletePolicyMethod            = "DeletePolicy"
-	GetPolicyAttachedGroupsMethod = "GetPolicyAttachedGroups"
+	AddPolicyMethod         = "AddPolicy"
+	GetPolicyByNameMethod   = "GetPolicyByName"
+	GetPolicyListMethod     = "GetPolicyList"
+	UpdatePolicyMethod      = "UpdatePolicy"
+	DeletePolicyMethod      = "DeletePolicy"
+	GetAttachedGroupsMethod = "GetAttachedGroups"
 
 	// AUTHZ API
 	GetUsersAuthorizedMethod             = "GetUsersAuthorized"
-	GetGroupsAuthorizedMethod            = "GetGroupsAuthorized"
-	GetPoliciesAuthorizedMethod          = "GetPoliciesAuthorized"
+	GetAuthorizedGroupsMethod            = "GetAuthorizedGroups"
+	GetAuthorizedPoliciesMethod          = "GetAuthorizedPolicies"
 	GetAuthorizedExternalResourcesMethod = "GetAuthorizedExternalResources"
 )
 
@@ -194,14 +194,14 @@ func makeTestApi() *TestAPI {
 
 	testApi.ArgsIn[AddUserMethod] = make([]interface{}, 3)
 	testApi.ArgsIn[GetUserByExternalIdMethod] = make([]interface{}, 2)
-	testApi.ArgsIn[GetListUsersMethod] = make([]interface{}, 2)
+	testApi.ArgsIn[GetUserListMethod] = make([]interface{}, 2)
 	testApi.ArgsIn[UpdateUserMethod] = make([]interface{}, 3)
 	testApi.ArgsIn[RemoveUserByIdMethod] = make([]interface{}, 2)
 	testApi.ArgsIn[GetGroupsByUserIdMethod] = make([]interface{}, 2)
 
 	testApi.ArgsIn[AddGroupMethod] = make([]interface{}, 4)
 	testApi.ArgsIn[GetGroupByNameMethod] = make([]interface{}, 3)
-	testApi.ArgsIn[GetListGroupsMethod] = make([]interface{}, 3)
+	testApi.ArgsIn[GetGroupListMethod] = make([]interface{}, 3)
 	testApi.ArgsIn[UpdateGroupMethod] = make([]interface{}, 5)
 	testApi.ArgsIn[RemoveGroupMethod] = make([]interface{}, 3)
 	testApi.ArgsIn[AddMemberMethod] = make([]interface{}, 4)
@@ -213,26 +213,26 @@ func makeTestApi() *TestAPI {
 
 	testApi.ArgsIn[AddPolicyMethod] = make([]interface{}, 5)
 	testApi.ArgsIn[GetPolicyByNameMethod] = make([]interface{}, 3)
-	testApi.ArgsIn[GetListPoliciesMethod] = make([]interface{}, 3)
+	testApi.ArgsIn[GetPolicyListMethod] = make([]interface{}, 3)
 	testApi.ArgsIn[UpdatePolicyMethod] = make([]interface{}, 6)
 	testApi.ArgsIn[DeletePolicyMethod] = make([]interface{}, 3)
-	testApi.ArgsIn[GetPolicyAttachedGroupsMethod] = make([]interface{}, 3)
+	testApi.ArgsIn[GetAttachedGroupsMethod] = make([]interface{}, 3)
 
 	testApi.ArgsIn[GetUsersAuthorizedMethod] = make([]interface{}, 4)
-	testApi.ArgsIn[GetGroupsAuthorizedMethod] = make([]interface{}, 4)
-	testApi.ArgsIn[GetPoliciesAuthorizedMethod] = make([]interface{}, 4)
+	testApi.ArgsIn[GetAuthorizedGroupsMethod] = make([]interface{}, 4)
+	testApi.ArgsIn[GetAuthorizedPoliciesMethod] = make([]interface{}, 4)
 	testApi.ArgsIn[GetAuthorizedExternalResourcesMethod] = make([]interface{}, 3)
 
 	testApi.ArgsOut[AddUserMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetUserByExternalIdMethod] = make([]interface{}, 2)
-	testApi.ArgsOut[GetListUsersMethod] = make([]interface{}, 2)
+	testApi.ArgsOut[GetUserListMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[UpdateUserMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[RemoveUserByIdMethod] = make([]interface{}, 1)
 	testApi.ArgsOut[GetGroupsByUserIdMethod] = make([]interface{}, 2)
 
 	testApi.ArgsOut[AddGroupMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetGroupByNameMethod] = make([]interface{}, 2)
-	testApi.ArgsOut[GetListGroupsMethod] = make([]interface{}, 2)
+	testApi.ArgsOut[GetGroupListMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[UpdateGroupMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[RemoveGroupMethod] = make([]interface{}, 1)
 	testApi.ArgsOut[AddMemberMethod] = make([]interface{}, 1)
@@ -244,14 +244,14 @@ func makeTestApi() *TestAPI {
 
 	testApi.ArgsOut[AddPolicyMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetPolicyByNameMethod] = make([]interface{}, 2)
-	testApi.ArgsOut[GetListPoliciesMethod] = make([]interface{}, 2)
+	testApi.ArgsOut[GetPolicyListMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[UpdatePolicyMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[DeletePolicyMethod] = make([]interface{}, 1)
-	testApi.ArgsOut[GetPolicyAttachedGroupsMethod] = make([]interface{}, 2)
+	testApi.ArgsOut[GetAttachedGroupsMethod] = make([]interface{}, 2)
 
 	testApi.ArgsOut[GetUsersAuthorizedMethod] = make([]interface{}, 2)
-	testApi.ArgsOut[GetGroupsAuthorizedMethod] = make([]interface{}, 2)
-	testApi.ArgsOut[GetPoliciesAuthorizedMethod] = make([]interface{}, 2)
+	testApi.ArgsOut[GetAuthorizedGroupsMethod] = make([]interface{}, 2)
+	testApi.ArgsOut[GetAuthorizedPoliciesMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetAuthorizedExternalResourcesMethod] = make([]interface{}, 2)
 
 	return testApi
@@ -288,16 +288,16 @@ func (t TestAPI) GetUserByExternalId(authenticatedUser api.AuthenticatedUser, id
 	return user, err
 }
 
-func (t TestAPI) GetListUsers(authenticatedUser api.AuthenticatedUser, pathPrefix string) ([]string, error) {
-	t.ArgsIn[GetListUsersMethod][0] = authenticatedUser
-	t.ArgsIn[GetListUsersMethod][1] = pathPrefix
+func (t TestAPI) GetUserList(authenticatedUser api.AuthenticatedUser, pathPrefix string) ([]string, error) {
+	t.ArgsIn[GetUserListMethod][0] = authenticatedUser
+	t.ArgsIn[GetUserListMethod][1] = pathPrefix
 	var externalIDs []string
-	if t.ArgsOut[GetListUsersMethod][0] != nil {
-		externalIDs = t.ArgsOut[GetListUsersMethod][0].([]string)
+	if t.ArgsOut[GetUserListMethod][0] != nil {
+		externalIDs = t.ArgsOut[GetUserListMethod][0].([]string)
 	}
 	var err error
-	if t.ArgsOut[GetListUsersMethod][1] != nil {
-		err = t.ArgsOut[GetListUsersMethod][1].(error)
+	if t.ArgsOut[GetUserListMethod][1] != nil {
+		err = t.ArgsOut[GetUserListMethod][1].(error)
 	}
 	return externalIDs, err
 }
@@ -374,17 +374,17 @@ func (t TestAPI) GetGroupByName(authenticatedUser api.AuthenticatedUser, org str
 	return group, err
 }
 
-func (t TestAPI) GetListGroups(authenticatedUser api.AuthenticatedUser, org string, pathPrefix string) ([]api.GroupIdentity, error) {
-	t.ArgsIn[GetListGroupsMethod][0] = authenticatedUser
-	t.ArgsIn[GetListGroupsMethod][1] = org
-	t.ArgsIn[GetListGroupsMethod][2] = pathPrefix
+func (t TestAPI) GetGroupList(authenticatedUser api.AuthenticatedUser, org string, pathPrefix string) ([]api.GroupIdentity, error) {
+	t.ArgsIn[GetGroupListMethod][0] = authenticatedUser
+	t.ArgsIn[GetGroupListMethod][1] = org
+	t.ArgsIn[GetGroupListMethod][2] = pathPrefix
 	var groups []api.GroupIdentity
-	if t.ArgsOut[GetListGroupsMethod][0] != nil {
-		groups = t.ArgsOut[GetListGroupsMethod][0].([]api.GroupIdentity)
+	if t.ArgsOut[GetGroupListMethod][0] != nil {
+		groups = t.ArgsOut[GetGroupListMethod][0].([]api.GroupIdentity)
 	}
 	var err error
-	if t.ArgsOut[GetListGroupsMethod][1] != nil {
-		err = t.ArgsOut[GetListGroupsMethod][1].(error)
+	if t.ArgsOut[GetGroupListMethod][1] != nil {
+		err = t.ArgsOut[GetGroupListMethod][1].(error)
 	}
 	return groups, err
 }
@@ -529,17 +529,17 @@ func (t TestAPI) GetPolicyByName(authenticatedUser api.AuthenticatedUser, org st
 	return policy, err
 }
 
-func (t TestAPI) GetListPolicies(authenticatedUser api.AuthenticatedUser, org string, pathPrefix string) ([]api.PolicyIdentity, error) {
-	t.ArgsIn[GetListPoliciesMethod][0] = authenticatedUser
-	t.ArgsIn[GetListPoliciesMethod][1] = org
-	t.ArgsIn[GetListPoliciesMethod][2] = pathPrefix
+func (t TestAPI) GetPolicyList(authenticatedUser api.AuthenticatedUser, org string, pathPrefix string) ([]api.PolicyIdentity, error) {
+	t.ArgsIn[GetPolicyListMethod][0] = authenticatedUser
+	t.ArgsIn[GetPolicyListMethod][1] = org
+	t.ArgsIn[GetPolicyListMethod][2] = pathPrefix
 	var policies []api.PolicyIdentity
-	if t.ArgsOut[GetListPoliciesMethod][0] != nil {
-		policies = t.ArgsOut[GetListPoliciesMethod][0].([]api.PolicyIdentity)
+	if t.ArgsOut[GetPolicyListMethod][0] != nil {
+		policies = t.ArgsOut[GetPolicyListMethod][0].([]api.PolicyIdentity)
 	}
 	var err error
-	if t.ArgsOut[GetListPoliciesMethod][1] != nil {
-		err = t.ArgsOut[GetListPoliciesMethod][1].(error)
+	if t.ArgsOut[GetPolicyListMethod][1] != nil {
+		err = t.ArgsOut[GetPolicyListMethod][1].(error)
 	}
 	return policies, err
 }
@@ -575,32 +575,32 @@ func (t TestAPI) DeletePolicy(authenticatedUser api.AuthenticatedUser, org strin
 	return err
 }
 
-func (t TestAPI) GetPolicyAttachedGroups(authenticatedUser api.AuthenticatedUser, org string, policyName string) ([]api.GroupIdentity, error) {
-	t.ArgsIn[GetPolicyAttachedGroupsMethod][0] = authenticatedUser
-	t.ArgsIn[GetPolicyAttachedGroupsMethod][1] = org
-	t.ArgsIn[GetPolicyAttachedGroupsMethod][2] = policyName
+func (t TestAPI) GetAttachedGroups(authenticatedUser api.AuthenticatedUser, org string, policyName string) ([]api.GroupIdentity, error) {
+	t.ArgsIn[GetAttachedGroupsMethod][0] = authenticatedUser
+	t.ArgsIn[GetAttachedGroupsMethod][1] = org
+	t.ArgsIn[GetAttachedGroupsMethod][2] = policyName
 	var groups []api.GroupIdentity
-	if t.ArgsOut[GetPolicyAttachedGroupsMethod][0] != nil {
-		groups = t.ArgsOut[GetPolicyAttachedGroupsMethod][0].([]api.GroupIdentity)
+	if t.ArgsOut[GetAttachedGroupsMethod][0] != nil {
+		groups = t.ArgsOut[GetAttachedGroupsMethod][0].([]api.GroupIdentity)
 	}
 	var err error
-	if t.ArgsOut[GetPolicyAttachedGroupsMethod][1] != nil {
-		err = t.ArgsOut[GetPolicyAttachedGroupsMethod][1].(error)
+	if t.ArgsOut[GetAttachedGroupsMethod][1] != nil {
+		err = t.ArgsOut[GetAttachedGroupsMethod][1].(error)
 	}
 	return groups, err
 }
 
 // AUTHZ API
 
-func (t TestAPI) GetUsersAuthorized(authenticatedUser api.AuthenticatedUser, resourceUrn string, action string, users []api.User) ([]api.User, error) {
+func (t TestAPI) GetAuthorizedUsers(authenticatedUser api.AuthenticatedUser, resourceUrn string, action string, users []api.User) ([]api.User, error) {
 	return nil, nil
 }
 
-func (t TestAPI) GetGroupsAuthorized(authenticatedUser api.AuthenticatedUser, resourceUrn string, action string, groups []api.Group) ([]api.Group, error) {
+func (t TestAPI) GetAuthorizedGroups(authenticatedUser api.AuthenticatedUser, resourceUrn string, action string, groups []api.Group) ([]api.Group, error) {
 	return nil, nil
 }
 
-func (t TestAPI) GetPoliciesAuthorized(authenticatedUser api.AuthenticatedUser, resourceUrn string, action string, policies []api.Policy) ([]api.Policy, error) {
+func (t TestAPI) GetAuthorizedPolicies(authenticatedUser api.AuthenticatedUser, resourceUrn string, action string, policies []api.Policy) ([]api.Policy, error) {
 	return nil, nil
 }
 

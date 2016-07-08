@@ -13,7 +13,7 @@ const (
 	IsMemberOfGroupMethod           = "IsMemberOfGroup"
 	GetGroupMembersMethod           = "GetGroupMembers"
 	IsAttachedToGroupMethod         = "IsAttachedToGroup"
-	GetPoliciesAttachedMethod       = "GetPoliciesAttached"
+	GetAttachedPoliciesMethod       = "GetAttachedPolicies"
 	GetGroupsFilteredMethod         = "GetGroupsFiltered"
 	RemoveGroupMethod               = "RemoveGroup"
 	AddGroupMethod                  = "AddGroup"
@@ -27,7 +27,7 @@ const (
 	UpdatePolicyMethod              = "UpdatePolicy"
 	RemovePolicyMethod              = "RemovePolicy"
 	GetPoliciesFilteredMethod       = "GetPoliciesFiltered"
-	GetAllPolicyGroupRelationMethod = "GetAllPolicyGroupRelation"
+	GetAttachedGroupsMethod = "GetAttachedGroups"
 )
 
 // Test repo that implements all repo manager interfaces
@@ -54,7 +54,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[IsMemberOfGroupMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[GetGroupMembersMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[IsAttachedToGroupMethod] = make([]interface{}, 2)
-	testRepo.ArgsIn[GetPoliciesAttachedMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[GetAttachedPoliciesMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetGroupsFilteredMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[RemoveGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[AddGroupMethod] = make([]interface{}, 1)
@@ -68,7 +68,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[UpdatePolicyMethod] = make([]interface{}, 5)
 	testRepo.ArgsIn[RemovePolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetPoliciesFilteredMethod] = make([]interface{}, 2)
-	testRepo.ArgsIn[GetAllPolicyGroupRelationMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[GetAttachedGroupsMethod] = make([]interface{}, 1)
 
 	testRepo.ArgsOut[GetUserByExternalIDMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AddUserMethod] = make([]interface{}, 2)
@@ -80,7 +80,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[IsMemberOfGroupMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[GetGroupMembersMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[IsAttachedToGroupMethod] = make([]interface{}, 2)
-	testRepo.ArgsOut[GetPoliciesAttachedMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[GetAttachedPoliciesMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[GetGroupsFilteredMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[RemoveGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[AddGroupMethod] = make([]interface{}, 2)
@@ -94,7 +94,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[UpdatePolicyMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[RemovePolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[GetPoliciesFilteredMethod] = make([]interface{}, 2)
-	testRepo.ArgsOut[GetAllPolicyGroupRelationMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[GetAttachedGroupsMethod] = make([]interface{}, 2)
 
 	return testRepo
 }
@@ -250,15 +250,15 @@ func (t TestRepo) IsAttachedToGroup(groupID string, policyID string) (bool, erro
 	return isAttached, err
 }
 
-func (t TestRepo) GetPoliciesAttached(groupID string) ([]Policy, error) {
-	t.ArgsIn[GetPoliciesAttachedMethod][0] = groupID
+func (t TestRepo) GetAttachedPolicies(groupID string) ([]Policy, error) {
+	t.ArgsIn[GetAttachedPoliciesMethod][0] = groupID
 	var policies []Policy
-	if t.ArgsOut[GetPoliciesAttachedMethod][0] != nil {
-		policies = t.ArgsOut[GetPoliciesAttachedMethod][0].([]Policy)
+	if t.ArgsOut[GetAttachedPoliciesMethod][0] != nil {
+		policies = t.ArgsOut[GetAttachedPoliciesMethod][0].([]Policy)
 	}
 	var err error
-	if t.ArgsOut[GetPoliciesAttachedMethod][1] != nil {
-		err = t.ArgsOut[GetPoliciesAttachedMethod][1].(error)
+	if t.ArgsOut[GetAttachedPoliciesMethod][1] != nil {
+		err = t.ArgsOut[GetAttachedPoliciesMethod][1].(error)
 	}
 	return policies, err
 }
@@ -431,16 +431,16 @@ func (t TestRepo) GetPoliciesFiltered(org string, pathPrefix string) ([]Policy, 
 	return policies, err
 }
 
-func (t TestRepo) GetAllPolicyGroupRelation(policyID string) ([]Group, error) {
-	t.ArgsIn[GetAllPolicyGroupRelationMethod][0] = policyID
+func (t TestRepo) GetAttachedGroups(policyID string) ([]Group, error) {
+	t.ArgsIn[GetAttachedGroupsMethod][0] = policyID
 
 	var groups []Group
-	if t.ArgsOut[GetAllPolicyGroupRelationMethod][0] != nil {
-		groups = t.ArgsOut[GetAllPolicyGroupRelationMethod][0].([]Group)
+	if t.ArgsOut[GetAttachedGroupsMethod][0] != nil {
+		groups = t.ArgsOut[GetAttachedGroupsMethod][0].([]Group)
 	}
 	var err error
-	if t.ArgsOut[GetAllPolicyGroupRelationMethod][1] != nil {
-		err = t.ArgsOut[GetAllPolicyGroupRelationMethod][1].(error)
+	if t.ArgsOut[GetAttachedGroupsMethod][1] != nil {
+		err = t.ArgsOut[GetAttachedGroupsMethod][1].(error)
 	}
 	return groups, err
 }

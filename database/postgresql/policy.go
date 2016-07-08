@@ -14,7 +14,7 @@ func (p PostgresRepo) GetPolicyById(id string) (*api.Policy, error) {
 	policy := &Policy{}
 	query := p.Dbmap.Where("id like ?", id).First(&policy)
 
-	// Check if policy exist
+	// Check if policy exists
 	if query.RecordNotFound() {
 		return nil, &database.Error{
 			Code:    database.POLICY_NOT_FOUND,
@@ -42,10 +42,9 @@ func (p PostgresRepo) GetPolicyById(id string) (*api.Policy, error) {
 	}
 
 	// Create API policy
-	policyApi := policyDBToPolicyAPI(policy)
-	policyApi.Statements = statementsDBToStatetmentsAPI(statements)
+	policyApi := dbPolicyToAPIPolicy(policy)
+	policyApi.Statements = dbStatementsToAPIStatements(statements)
 
-	// Return group
 	return policyApi, nil
 }
 
@@ -53,7 +52,7 @@ func (p PostgresRepo) GetPolicyByName(org string, name string) (*api.Policy, err
 	policy := &Policy{}
 	query := p.Dbmap.Where("org like ? AND name like ?", org, name).First(policy)
 
-	// Check if policy exist
+	// Check if policy exists
 	if query.RecordNotFound() {
 		return nil, &database.Error{
 			Code:    database.POLICY_NOT_FOUND,
@@ -81,10 +80,9 @@ func (p PostgresRepo) GetPolicyByName(org string, name string) (*api.Policy, err
 	}
 
 	// Create API policy
-	policyApi := policyDBToPolicyAPI(policy)
-	policyApi.Statements = statementsDBToStatetmentsAPI(statements)
+	policyApi := dbPolicyToAPIPolicy(policy)
+	policyApi.Statements = dbStatementsToAPIStatements(statements)
 
-	// Return policy
 	return policyApi, nil
 }
 
@@ -111,8 +109,8 @@ func (p PostgresRepo) AddPolicy(policy api.Policy) (*api.Policy, error) {
 			ID:        uuid.NewV4().String(),
 			PolicyID:  policy.ID,
 			Effect:    statementApi.Effect,
-			Action:    stringArrayToSplitedString(statementApi.Action),
-			Resources: stringArrayToSplitedString(statementApi.Resources),
+			Action:    stringArrayToString(statementApi.Action),
+			Resources: stringArrayToString(statementApi.Resources),
 		}
 		transaction.Create(statementDB)
 	}
@@ -129,7 +127,7 @@ func (p PostgresRepo) AddPolicy(policy api.Policy) (*api.Policy, error) {
 	}
 
 	// Create API policy
-	policyApi := policyDBToPolicyAPI(policyDB)
+	policyApi := dbPolicyToAPIPolicy(policyDB)
 	policyApi.Statements = policy.Statements
 
 	return policyApi, nil
@@ -158,7 +156,7 @@ func (p PostgresRepo) GetPoliciesFiltered(org string, pathPrefix string) ([]api.
 		apiPolicies := make([]api.Policy, len(policies), cap(policies))
 
 		for i, pol := range policies {
-			policy := policyDBToPolicyAPI(&pol)
+			policy := dbPolicyToAPIPolicy(&pol)
 
 			// Retrieve associated statements
 			statements := []Statement{}
@@ -171,7 +169,7 @@ func (p PostgresRepo) GetPoliciesFiltered(org string, pathPrefix string) ([]api.
 				}
 			}
 
-			policy.Statements = statementsDBToStatetmentsAPI(statements)
+			policy.Statements = dbStatementsToAPIStatements(statements)
 
 			// Assign policy
 			apiPolicies[i] = *policy
@@ -224,8 +222,8 @@ func (p PostgresRepo) UpdatePolicy(policy api.Policy, name string, path string, 
 			ID:        uuid.NewV4().String(),
 			PolicyID:  policy.ID,
 			Effect:    s.Effect,
-			Action:    stringArrayToSplitedString(s.Action),
-			Resources: stringArrayToSplitedString(s.Resources),
+			Action:    stringArrayToString(s.Action),
+			Resources: stringArrayToString(s.Resources),
 		}
 		transaction.Create(statementDB)
 	}
@@ -242,7 +240,7 @@ func (p PostgresRepo) UpdatePolicy(policy api.Policy, name string, path string, 
 	transaction.Commit()
 
 	// Create API policy
-	policyApi := policyDBToPolicyAPI(&policyDB)
+	policyApi := dbPolicyToAPIPolicy(&policyDB)
 	policyApi.Statements = &statements
 
 	return policyApi, nil
@@ -284,7 +282,7 @@ func (p PostgresRepo) RemovePolicy(id string) error {
 	return nil
 }
 
-func (p PostgresRepo) GetAllPolicyGroupRelation(policyID string) ([]api.Group, error) {
+func (p PostgresRepo) GetAttachedGroups(policyID string) ([]api.Group, error) {
 	relations := []GroupPolicyRelation{}
 	query := p.Dbmap.Where("policy_id like ?", policyID).Find(&relations)
 
@@ -321,7 +319,7 @@ func (p PostgresRepo) GetAllPolicyGroupRelation(policyID string) ([]api.Group, e
 // Private helper methods
 
 // Transform a policy retrieved from db into a policy for API
-func policyDBToPolicyAPI(policydb *Policy) *api.Policy {
+func dbPolicyToAPIPolicy(policydb *Policy) *api.Policy {
 	return &api.Policy{
 		ID:       policydb.ID,
 		Name:     policydb.Name,
@@ -333,7 +331,7 @@ func policyDBToPolicyAPI(policydb *Policy) *api.Policy {
 }
 
 // Transform a list of statements from db into API statements
-func statementsDBToStatetmentsAPI(statements []Statement) *[]api.Statement {
+func dbStatementsToAPIStatements(statements []Statement) *[]api.Statement {
 	statementsApi := make([]api.Statement, len(statements), cap(statements))
 	for i, s := range statements {
 		statementsApi[i] = api.Statement{
@@ -346,8 +344,8 @@ func statementsDBToStatetmentsAPI(statements []Statement) *[]api.Statement {
 	return &statementsApi
 }
 
-// Transform an array of strings into a separated string values
-func stringArrayToSplitedString(array []string) string {
+// Transform an array of strings into a semicolon-separated string
+func stringArrayToString(array []string) string {
 	stringVal := ""
 	for _, s := range array {
 		if len(stringVal) == 0 {
