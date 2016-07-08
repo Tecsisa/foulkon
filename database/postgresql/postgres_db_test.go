@@ -15,7 +15,7 @@ func TestMain(m *testing.M) {
 	// Wait for DB
 	time.Sleep(5 * time.Second)
 	// Retrieve db connector to run test
-	dbmap, err := InitDb("postgres://postgres:password@localhost:5432/postgres?sslmode=disable")
+	dbmap, err := InitDb("postgres://postgres:password@localhost:54320/postgres?sslmode=disable")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "There was an error starting connector", err)
 		os.Exit(1)
