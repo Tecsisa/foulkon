@@ -38,8 +38,6 @@ func (h *ProxyHandler) HandleRequest(resource authorizr.APIResource) httprouter.
 			urn = strings.Replace(urn, p[0], ps.ByName(p[1]), -1)
 		}
 		if workerRequestID, err := h.checkAuthorization(r, urn, resource.Action); err == nil {
-			// Clean request URI because net/http send method force this
-			r.RequestURI = ""
 			destURL, err := url.Parse(resource.Host)
 			if err != nil {
 				h.TransactionErrorLog(r, requestID, workerRequestID, fmt.Sprintf("Error creating destination host URL: %v", err.Error()))
@@ -48,6 +46,8 @@ func (h *ProxyHandler) HandleRequest(resource authorizr.APIResource) httprouter.
 			}
 			r.URL.Host = destURL.Host
 			r.URL.Scheme = destURL.Scheme
+			// Clean request URI because net/http send method force this
+			r.RequestURI = ""
 			// Retrieve requested resource
 			res, err := h.client.Do(r)
 			if err != nil {
@@ -55,6 +55,18 @@ func (h *ProxyHandler) HandleRequest(resource authorizr.APIResource) httprouter.
 				h.RespondForbidden(w, getErrorMessage(DESTINATION_HOST_RESOURCE_CALL_ERROR))
 				return
 			}
+
+			// Copy the response cookies
+			for _, cookie := range res.Cookies() {
+				http.SetCookie(w, cookie)
+			}
+			// Copy the response headers from the target server to the proxy response
+			for key, values := range res.Header {
+				for _, v := range values {
+					w.Header().Add(key, v)
+				}
+			}
+
 			buffer := new(bytes.Buffer)
 			buffer.ReadFrom(res.Body)
 			w.Write(buffer.Bytes())
