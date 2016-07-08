@@ -358,6 +358,7 @@ func createUser(externalID string, path string) User {
 		ID:         uuid.NewV4().String(),
 		ExternalID: externalID,
 		Path:       path,
+		CreateAt:   time.Now().UTC(),
 		Urn:        urn,
 	}
 

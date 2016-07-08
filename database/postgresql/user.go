@@ -63,7 +63,7 @@ func (u PostgresRepo) AddUser(user api.User) (*api.User, error) {
 		ID:         user.ID,
 		ExternalID: user.ExternalID,
 		Path:       user.Path,
-		CreateAt:   time.Now().UTC().UnixNano(),
+		CreateAt:   user.CreateAt.UnixNano(),
 		Urn:        user.Urn,
 	}
 
