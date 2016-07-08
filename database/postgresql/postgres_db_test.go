@@ -13,7 +13,7 @@ var repoDB PostgresRepo
 
 func TestMain(m *testing.M) {
 	// Wait for DB
-	time.Sleep(5 * time.Second)
+	time.Sleep(3 * time.Second)
 	// Retrieve db connector to run test
 	dbmap, err := InitDb("postgres://postgres:password@localhost:54320/postgres?sslmode=disable")
 	if err != nil {
@@ -29,7 +29,8 @@ func TestMain(m *testing.M) {
 	os.Exit(result)
 }
 
-// User Table aux methods
+// Aux methods
+
 func insertUser(id string, externalID string, path string, createAt int64, urn string) error {
 	err := repoDB.Dbmap.Exec("INSERT INTO public.users (id, external_id, path, create_at, urn) VALUES (?, ?, ?, ?, ?)",
 		id, externalID, path, createAt, urn).Error
