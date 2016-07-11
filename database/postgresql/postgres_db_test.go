@@ -50,6 +50,9 @@ func getUsersCountFiltered(id string, externalID string, path string, createAt i
 	if id != "" {
 		query = query.Where("id = ?", id)
 	}
+	if externalID != "" {
+		query = query.Where("external_id = ?", externalID)
+	}
 	if path != "" {
 		query = query.Where("path = ?", path)
 	}

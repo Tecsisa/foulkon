@@ -90,8 +90,8 @@ func TestPostgresRepo_AddUser(t *testing.T) {
 				continue
 			}
 			// Check database
-			userNumber, err := getUsersCountFiltered(test.userToCreate.ID, test.userToCreate.ExternalID, test.userToCreate.Path,
-				test.userToCreate.CreateAt.UnixNano(), test.userToCreate.Urn)
+			userNumber, err := getUsersCountFiltered(test.expectedResponse.ID, test.expectedResponse.ExternalID, test.expectedResponse.Path,
+				test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.Urn)
 			if err != nil {
 				t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
 				continue
@@ -273,13 +273,101 @@ func TestPostgresRepo_GetUserByID(t *testing.T) {
 				continue
 			}
 			// Check database
-			userNumber, err := getUsersCountFiltered("", test.userID, "", 0, "")
+			userNumber, err := getUsersCountFiltered(test.userID, "", "", 0, "")
 			if err != nil {
 				t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
 				continue
 			}
 			if userNumber != 1 {
 				t.Errorf("Test %v failed. Received different user number: %v", n, userNumber)
+				continue
+			}
+
+		}
+
+	}
+}
+
+func TestPostgresRepo_UpdateUser(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		// Previous data
+		previousUser *api.User
+		// Postgres Repo Args
+		userToUpdate *api.User
+		newPath      string
+		newUrn       string
+		// Expected result
+		expectedResponse *api.User
+		expectedError    *database.Error
+	}{
+		"OkCase": {
+			previousUser: &api.User{
+				ID:         "UserID",
+				ExternalID: "ExternalID",
+				Path:       "OldPath",
+				Urn:        "Oldurn",
+				CreateAt:   now,
+			},
+			userToUpdate: &api.User{
+				ID:         "UserID",
+				ExternalID: "ExternalID",
+				Path:       "OldPath",
+				Urn:        "Oldurn",
+				CreateAt:   now,
+			},
+			newPath: "NewPath",
+			newUrn:  "NewUrn",
+			expectedResponse: &api.User{
+				ID:         "UserID",
+				ExternalID: "ExternalID",
+				Path:       "NewPath",
+				Urn:        "NewUrn",
+				CreateAt:   now,
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean user database
+		cleanUserTable()
+
+		// Insert previous data
+		if test.previousUser != nil {
+			insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
+				test.previousUser.CreateAt.UnixNano(), test.previousUser.Urn)
+		}
+		// Call to repository to store an user
+		updatedUser, err := repoDB.UpdateUser(*test.userToUpdate, test.newPath, test.newUrn)
+		if test.expectedError != nil {
+			dbError, ok := err.(*database.Error)
+			if !ok || dbError == nil {
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
+				continue
+			}
+			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+				continue
+			}
+			// Check response
+			if diff := pretty.Compare(updatedUser, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+				continue
+			}
+			// Check database
+			userNumber, err := getUsersCountFiltered(test.expectedResponse.ID, test.expectedResponse.ExternalID, test.expectedResponse.Path,
+				test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.Urn)
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
+				continue
+			}
+			if userNumber != 1 {
+				t.Fatalf("Test %v failed. Received different user number: %v", n, userNumber)
 				continue
 			}
 
