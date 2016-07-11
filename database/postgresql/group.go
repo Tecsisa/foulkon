@@ -81,7 +81,7 @@ func (g PostgresRepo) AddGroup(group api.Group) (*api.Group, error) {
 		ID:       group.ID,
 		Name:     group.Name,
 		Path:     group.Path,
-		CreateAt: time.Now().UTC().UnixNano(),
+		CreateAt: group.CreateAt.UnixNano(),
 		Urn:      group.Urn,
 		Org:      group.Org,
 	}

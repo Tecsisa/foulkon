@@ -795,11 +795,12 @@ func (api AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser
 func createGroup(org string, name string, path string) Group {
 	urn := CreateUrn(org, RESOURCE_GROUP, path, name)
 	group := Group{
-		ID:   uuid.NewV4().String(),
-		Name: name,
-		Path: path,
-		Urn:  urn,
-		Org:  org,
+		ID:       uuid.NewV4().String(),
+		Name:     name,
+		Path:     path,
+		CreateAt: time.Now().UTC(),
+		Urn:      urn,
+		Org:      org,
 	}
 
 	return group
