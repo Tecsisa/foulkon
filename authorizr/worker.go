@@ -10,6 +10,8 @@ import (
 
 	"fmt"
 
+	"database/sql"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/pelletier/go-toml"
 	"github.com/tecsisa/authorizr/api"
@@ -19,6 +21,9 @@ import (
 
 // aux var for ${OS_ENV_VAR} regex
 var rEnvVar, _ = regexp.Compile(`^\$\{(\w+)\}$`)
+var db *sql.DB
+var worker_logfile *os.File
+var logger *log.Logger
 
 // Worker is the Authorization server.
 type Worker struct {
@@ -48,15 +53,16 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 
 	// Create logger
 	var logOut io.Writer
+	var err error
 	logOut = os.Stdout
 	loggerType := getDefaultValue(config, "logger.type", "Stdout")
 	if loggerType == "file" {
 		logFileDir := getDefaultValue(config, "logger.file.dir", "/tmp/authorizr.log")
-		file, err := os.OpenFile(logFileDir, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+		worker_logfile, err = os.OpenFile(logFileDir, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
 		if err != nil {
 			return nil, err
 		}
-		logOut = file
+		logOut = worker_logfile
 	}
 	// Logger level. Defaults to INFO
 	loglevel, err := log.ParseLevel(getDefaultValue(config, "logger.level", "info"))
@@ -64,7 +70,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		loglevel = log.InfoLevel
 	}
 
-	logger := &log.Logger{
+	logger = &log.Logger{
 		Out:       logOut,
 		Formatter: &log.JSONFormatter{},
 		Hooks:     make(log.LevelHooks),
@@ -78,16 +84,17 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 	switch getMandatoryValue(config, "database.type") {
 	case "postgres": // PostgreSQL DB
 		logger.Info("Connecting to postgres database")
-		db, err := postgresql.InitDb(getMandatoryValue(config, "database.postgres.datasourcename"))
+		gormDB, err := postgresql.InitDb(getMandatoryValue(config, "database.postgres.datasourcename"))
 		if err != nil {
 			logger.Error(err)
 			return nil, err
 		}
+		db = gormDB.DB()
 		logger.Info("Connected to postgres database")
 
 		// Create repository
 		repoDB := postgresql.PostgresRepo{
-			Dbmap: db,
+			Dbmap: gormDB,
 		}
 		authApi = api.AuthAPI{
 			GroupRepo:  repoDB,
@@ -145,6 +152,19 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		PolicyApi:     authApi,
 		AuthzApi:      authApi,
 	}, nil
+}
+
+func CloseWorker() {
+	status := 0
+	if err := db.Close(); err != nil {
+		logger.Errorf("Couldn't close DB connection: %v", err)
+		status = 1
+	}
+	if err := worker_logfile.Close(); err != nil {
+		fmt.Fprintf(os.Stderr, "Couldn't close logfile: %v", err)
+		status = 1
+	}
+	os.Exit(status)
 }
 
 // This aux method returns mandatory config value or finishes program execution

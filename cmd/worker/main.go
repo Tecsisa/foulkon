@@ -7,6 +7,9 @@ import (
 
 	"os"
 
+	"os/signal"
+	"syscall"
+
 	"github.com/pelletier/go-toml"
 	"github.com/tecsisa/authorizr/authorizr"
 	internalhttp "github.com/tecsisa/authorizr/http"
@@ -36,10 +39,32 @@ func main() {
 		return
 	}
 
-	core.Logger.Printf("Server running in %v:%v", core.Host, core.Port)
+	sig := make(chan os.Signal, 1)
+	defer close(sig)
+	signal.Notify(sig,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+
+	go func() {
+		sigrecv := <-sig
+		switch sigrecv {
+		case syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT:
+			core.Logger.Infof("Signal '%v' received, closing server...", sigrecv.String())
+			authorizr.CloseWorker()
+		default:
+			core.Logger.Warnf("Unknown OS signal received, ignoring...")
+		}
+	}()
+
+	core.Logger.Infof("Server running in %v:%v", core.Host, core.Port)
 	if core.CertFile != "" && core.KeyFile != "" {
-		core.Logger.Fatal(http.ListenAndServeTLS(core.Host+":"+core.Port, core.CertFile, core.KeyFile, internalhttp.WorkerHandlerRouter(core)).Error())
+		core.Logger.Error(http.ListenAndServeTLS(core.Host+":"+core.Port, core.CertFile, core.KeyFile, internalhttp.WorkerHandlerRouter(core)).Error())
 	} else {
-		core.Logger.Fatal(http.ListenAndServe(core.Host+":"+core.Port, internalhttp.WorkerHandlerRouter(core)).Error())
+		core.Logger.Error(http.ListenAndServe(core.Host+":"+core.Port, internalhttp.WorkerHandlerRouter(core)).Error())
 	}
+
+	authorizr.CloseWorker()
+
 }
