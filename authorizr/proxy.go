@@ -6,9 +6,13 @@ import (
 
 	"errors"
 
+	"fmt"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/pelletier/go-toml"
 )
+
+var proxy_logfile *os.File
 
 // Proxy - Authorize resources using definitions in proxy config file
 type Proxy struct {
@@ -43,15 +47,16 @@ type APIResource struct {
 func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 	// Create logger
 	var logOut io.Writer
+	var err error
 	logOut = os.Stdout
 	loggerType := getDefaultValue(config, "logger.type", "Stdout")
 	if loggerType == "file" {
 		logFileDir := getDefaultValue(config, "logger.file.dir", "/tmp/authorizr.log")
-		file, err := os.OpenFile(logFileDir, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+		proxy_logfile, err = os.OpenFile(logFileDir, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
 		if err != nil {
 			return nil, err
 		}
-		logOut = file
+		logOut = proxy_logfile
 	}
 	// Loglevel. defaults to INFO
 	loglevel, err := log.ParseLevel(getDefaultValue(config, "logger.level", "info"))
@@ -96,4 +101,13 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 		Logger:       logger,
 		APIResources: resources,
 	}, nil
+}
+
+func CloseProxy() {
+	status := 0
+	if err := proxy_logfile.Close(); err != nil {
+		fmt.Fprintf(os.Stderr, "Couldn't close logfile: %v", err)
+		status = 1
+	}
+	os.Exit(status)
 }

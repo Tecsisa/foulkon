@@ -3,11 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/pelletier/go-toml"
 	"github.com/tecsisa/authorizr/authorizr"
 	internalhttp "github.com/tecsisa/authorizr/http"
-	"net/http"
-	"os"
 )
 
 func main() {
@@ -34,10 +37,32 @@ func main() {
 		return
 	}
 
-	proxy.Logger.Printf("Server running in %v:%v", proxy.Host, proxy.Port)
+	sig := make(chan os.Signal, 1)
+	defer close(sig)
+	signal.Notify(sig,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+
+	go func() {
+		sigrecv := <-sig
+		switch sigrecv {
+		case syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT:
+			proxy.Logger.Infof("Signal '%v' received, closing server...", sigrecv.String())
+			authorizr.CloseProxy()
+		default:
+			proxy.Logger.Warnf("Unknown OS signal received, ignoring...")
+		}
+	}()
+
+	proxy.Logger.Infof("Server running in %v:%v", proxy.Host, proxy.Port)
 	if proxy.CertFile != "" && proxy.KeyFile != "" {
-		proxy.Logger.Fatal(http.ListenAndServeTLS(proxy.Host+":"+proxy.Port, proxy.CertFile, proxy.KeyFile, internalhttp.ProxyHandlerRouter(proxy)).Error())
+		proxy.Logger.Error(http.ListenAndServeTLS(proxy.Host+":"+proxy.Port, proxy.CertFile, proxy.KeyFile, internalhttp.ProxyHandlerRouter(proxy)).Error())
 	} else {
-		proxy.Logger.Fatal(http.ListenAndServe(proxy.Host+":"+proxy.Port, internalhttp.ProxyHandlerRouter(proxy)).Error())
+		proxy.Logger.Error(http.ListenAndServe(proxy.Host+":"+proxy.Port, internalhttp.ProxyHandlerRouter(proxy)).Error())
 	}
+
+	authorizr.CloseProxy()
+
 }
