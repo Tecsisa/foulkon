@@ -237,7 +237,7 @@ func (h *ProxyHandler) TransactionErrorLog(r *http.Request, requestID string, wo
 	h.proxy.Logger.WithFields(logrus.Fields{
 		"requestID":       requestID,
 		"method":          r.Method,
-		"URI":             r.RequestURI,
+		"URI":             r.URL.EscapedPath(),
 		"address":         r.RemoteAddr,
 		"workerRequestID": workerRequestID,
 	}).Error(msg)
@@ -253,7 +253,7 @@ func (h *ProxyHandler) TransactionLog(r *http.Request, requestID string, workerR
 	h.proxy.Logger.WithFields(logrus.Fields{
 		"requestID":       requestID,
 		"method":          r.Method,
-		"URI":             r.RequestURI,
+		"URI":             r.URL.EscapedPath(),
 		"address":         r.RemoteAddr,
 		"workerRequestID": workerRequestID,
 	}).Info(msg)
