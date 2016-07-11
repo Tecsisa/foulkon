@@ -91,20 +91,12 @@ func (u PostgresRepo) UpdateUser(user api.User, newPath string, newUrn string) (
 		ID:         user.ID,
 		ExternalID: user.ExternalID,
 		Path:       user.Path,
-		CreateAt:   user.CreateAt.UTC().UnixNano(),
+		CreateAt:   user.CreateAt.UnixNano(),
 		Urn:        user.Urn,
 	}
 
 	// Update user
 	query := u.Dbmap.Model(&userDB).Update(userUpdated)
-
-	// Check if user exists
-	if query.RecordNotFound() {
-		return nil, &database.Error{
-			Code:    database.USER_NOT_FOUND,
-			Message: fmt.Sprintf("User with externalID %v not found", user.ExternalID),
-		}
-	}
 
 	// Error Handling
 	if err := query.Error; err != nil {
