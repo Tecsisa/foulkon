@@ -206,3 +206,56 @@ func insertStatements(id string, policyId string, action string, effect string, 
 
 	return nil
 }
+
+func getPoliciesCountFiltered(id string, org string, name string, path string, createAt int64, urn string) (int, error) {
+	query := repoDB.Dbmap.Table(Policy{}.TableName())
+	if id != "" {
+		query = query.Where("id = ?", id)
+	}
+	if org != "" {
+		query = query.Where("org = ?", org)
+	}
+	if path != "" {
+		query = query.Where("path = ?", path)
+	}
+	if name != "" {
+		query = query.Where("name = ?", name)
+	}
+	if createAt != 0 {
+		query = query.Where("create_at = ?", createAt)
+	}
+	if urn != "" {
+		query = query.Where("urn = ?", urn)
+	}
+	var number int
+	if err := query.Count(&number).Error; err != nil {
+		return 0, err
+	}
+
+	return number, nil
+}
+
+func getStatementsCountFiltered(id string, policyId string, effect string, action string, resources string) (int, error) {
+	query := repoDB.Dbmap.Table(Statement{}.TableName())
+	if id != "" {
+		query = query.Where("id = ?", id)
+	}
+	if policyId != "" {
+		query = query.Where("policy_id = ?", policyId)
+	}
+	if effect != "" {
+		query = query.Where("effect = ?", effect)
+	}
+	if action != "" {
+		query = query.Where("action = ?", action)
+	}
+	if resources != "" {
+		query = query.Where("resources = ?", resources)
+	}
+	var number int
+	if err := query.Count(&number).Error; err != nil {
+		return 0, err
+	}
+
+	return number, nil
+}

@@ -211,7 +211,8 @@ func TestPostgresRepo_GetPolicyByName(t *testing.T) {
 func TestPostgresRepo_AddPolicy(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {
-		policy api.Policy
+		previousPolicy *api.Policy
+		policy         api.Policy
 		// Expected result
 		expectedResponse *api.Policy
 		expectedError    *database.Error
@@ -236,7 +237,6 @@ func TestPostgresRepo_AddPolicy(t *testing.T) {
 					},
 				},
 			},
-
 			expectedResponse: &api.Policy{
 				ID:       "test1",
 				Name:     "test",
@@ -257,6 +257,50 @@ func TestPostgresRepo_AddPolicy(t *testing.T) {
 				},
 			},
 		},
+		"ErrorCaseAlreadyExists": {
+			previousPolicy: &api.Policy{
+				ID:       "test1",
+				Name:     "test",
+				Org:      "123",
+				Path:     "/path/",
+				CreateAt: now,
+				Urn:      api.CreateUrn("123", api.RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]api.Statement{
+					api.Statement{
+						Effect: "allow",
+						Action: []string{
+							api.USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			policy: api.Policy{
+				ID:       "test1",
+				Name:     "test",
+				Org:      "123",
+				Path:     "/path/",
+				CreateAt: now,
+				Urn:      api.CreateUrn("123", api.RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]api.Statement{
+					api.Statement{
+						Effect: "allow",
+						Action: []string{
+							api.USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			expectedError: &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: "pq: duplicate key value violates unique constraint \"policies_pkey\"",
+			},
+		},
 	}
 
 	for n, test := range testcases {
@@ -265,6 +309,13 @@ func TestPostgresRepo_AddPolicy(t *testing.T) {
 		cleanStatementTable()
 
 		// Call to repository to add a policy
+		if test.previousPolicy != nil {
+			_, err := repoDB.AddPolicy(*test.previousPolicy)
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+				continue
+			}
+		}
 		receivedPolicy, err := repoDB.AddPolicy(test.policy)
 		if test.expectedError != nil {
 			dbError, ok := err.(*database.Error)
@@ -285,6 +336,32 @@ func TestPostgresRepo_AddPolicy(t *testing.T) {
 			if diff := pretty.Compare(receivedPolicy, test.expectedResponse); diff != "" {
 				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
+			}
+			// Check database
+			policyNumber, err := getPoliciesCountFiltered(test.policy.ID, test.policy.Org, test.policy.Name, test.policy.Path, test.policy.CreateAt.UnixNano(), test.policy.Urn)
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error counting policies: %v", n, err)
+				continue
+			}
+			if policyNumber != 1 {
+				t.Fatalf("Test %v failed. Received different policies number: %v", n, policyNumber)
+				continue
+			}
+			for _, statement := range *test.policy.Statements {
+				statementNumber, err := getStatementsCountFiltered(
+					"",
+					"",
+					statement.Effect,
+					stringArrayToString(statement.Action),
+					stringArrayToString(statement.Resources))
+				if err != nil {
+					t.Errorf("Test %v failed. Unexpected error counting statements: %v", n, err)
+					continue
+				}
+				if statementNumber != 1 {
+					t.Fatalf("Test %v failed. Received different statements number: %v", n, statementNumber)
+					continue
+				}
 			}
 		}
 

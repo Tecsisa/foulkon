@@ -100,7 +100,14 @@ func (p PostgresRepo) AddPolicy(policy api.Policy) (*api.Policy, error) {
 	transaction := p.Dbmap.Begin()
 
 	// Create policy
-	transaction.Create(policyDB)
+
+	if err := transaction.Create(policyDB).Error; err != nil {
+		transaction.Rollback()
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
 
 	// Create statements
 	for _, statementApi := range *policy.Statements {
@@ -112,19 +119,16 @@ func (p PostgresRepo) AddPolicy(policy api.Policy) (*api.Policy, error) {
 			Action:    stringArrayToString(statementApi.Action),
 			Resources: stringArrayToString(statementApi.Resources),
 		}
-		transaction.Create(statementDB)
+		if err := transaction.Create(statementDB).Error; err != nil {
+			transaction.Rollback()
+			return nil, &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: err.Error(),
+			}
+		}
 	}
 
-	// Error handling
-	if err := transaction.Error; err != nil {
-		transaction.Rollback()
-		return nil, &database.Error{
-			Code:    database.INTERNAL_ERROR,
-			Message: err.Error(),
-		}
-	} else {
-		transaction.Commit()
-	}
+	transaction.Commit()
 
 	// Create API policy
 	policyApi := dbPolicyToAPIPolicy(policyDB)
