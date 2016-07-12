@@ -1,12 +1,12 @@
 package postgresql
 
 import (
-	"fmt"
+	"testing"
+	"time"
+
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/database"
-	"testing"
-	"time"
 )
 
 func TestPostgresRepo_AddGroup(t *testing.T) {
@@ -159,7 +159,7 @@ func TestPostgresRepo_GetGroupByName(t *testing.T) {
 			name: "NotExist",
 			expectedError: &database.Error{
 				Code:    database.GROUP_NOT_FOUND,
-				Message: fmt.Sprintf("Group with organization Org and name NotExist not found"),
+				Message: "Group with organization Org and name NotExist not found",
 			},
 		},
 	}

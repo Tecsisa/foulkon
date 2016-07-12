@@ -45,6 +45,20 @@ func insertUser(id string, externalID string, path string, createAt int64, urn s
 	return nil
 }
 
+func insertGroupUserRelation(userID string, groupID string) error {
+	err := repoDB.Dbmap.Exec("INSERT INTO public.group_user_relations (user_id, group_id) VALUES (?, ?)",
+		userID, groupID).Error
+
+	// Error handling
+	if err != nil {
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+	return nil
+}
+
 func getUsersCountFiltered(id string, externalID string, path string, createAt int64, urn string, pathPrefix string) (int, error) {
 	query := repoDB.Dbmap.Table(User{}.TableName())
 	if id != "" {
@@ -75,6 +89,13 @@ func getUsersCountFiltered(id string, externalID string, path string, createAt i
 
 func cleanUserTable() error {
 	if err := repoDB.Dbmap.Delete(&User{}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func cleanGroupUserRelationTable() error {
+	if err := repoDB.Dbmap.Delete(&GroupUserRelation{}).Error; err != nil {
 		return err
 	}
 	return nil
