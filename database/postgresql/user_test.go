@@ -1,12 +1,12 @@
 package postgresql
 
 import (
-	"fmt"
+	"testing"
+	"time"
+
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/database"
-	"testing"
-	"time"
 )
 
 func TestPostgresRepo_AddUser(t *testing.T) {
@@ -64,8 +64,11 @@ func TestPostgresRepo_AddUser(t *testing.T) {
 
 		// Insert previous data
 		if test.previousUser != nil {
-			insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
-				test.previousUser.CreateAt.Unix(), test.previousUser.Urn)
+			if err := insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
+				test.previousUser.CreateAt.Unix(), test.previousUser.Urn); err != nil {
+				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
+				continue
+			}
 		}
 		// Call to repository to store an user
 		storedUser, err := repoDB.AddUser(*test.userToCreate)
@@ -145,7 +148,7 @@ func TestPostgresRepo_GetUserByExternalID(t *testing.T) {
 			externalID: "NotExist",
 			expectedError: &database.Error{
 				Code:    database.USER_NOT_FOUND,
-				Message: fmt.Sprint("User with ExternalID NotExist not found"),
+				Message: "User with ExternalID NotExist not found",
 			},
 		},
 	}
@@ -156,8 +159,11 @@ func TestPostgresRepo_GetUserByExternalID(t *testing.T) {
 
 		// Insert previous data
 		if test.previousUser != nil {
-			insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
-				test.previousUser.CreateAt.UnixNano(), test.previousUser.Urn)
+			if err := insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
+				test.previousUser.CreateAt.UnixNano(), test.previousUser.Urn); err != nil {
+				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
+				continue
+			}
 		}
 		// Call to repository to get an user
 		receivedUser, err := repoDB.GetUserByExternalID(test.externalID)
@@ -181,17 +187,6 @@ func TestPostgresRepo_GetUserByExternalID(t *testing.T) {
 				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
-			// Check database
-			userNumber, err := getUsersCountFiltered("", test.externalID, "", 0, "", "")
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
-				continue
-			}
-			if userNumber != 1 {
-				t.Errorf("Test %v failed. Received different user number: %v", n, userNumber)
-				continue
-			}
-
 		}
 
 	}
@@ -236,7 +231,7 @@ func TestPostgresRepo_GetUserByID(t *testing.T) {
 			userID: "NotExist",
 			expectedError: &database.Error{
 				Code:    database.USER_NOT_FOUND,
-				Message: fmt.Sprint("User with id NotExist not found"),
+				Message: "User with id NotExist not found",
 			},
 		},
 	}
@@ -247,8 +242,11 @@ func TestPostgresRepo_GetUserByID(t *testing.T) {
 
 		// Insert previous data
 		if test.previousUser != nil {
-			insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
-				test.previousUser.CreateAt.UnixNano(), test.previousUser.Urn)
+			if err := insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
+				test.previousUser.CreateAt.UnixNano(), test.previousUser.Urn); err != nil {
+				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
+				continue
+			}
 		}
 		// Call to repository to get an user
 		receivedUser, err := repoDB.GetUserByID(test.userID)
@@ -270,16 +268,6 @@ func TestPostgresRepo_GetUserByID(t *testing.T) {
 			// Check response
 			if diff := pretty.Compare(receivedUser, test.expectedResponse); diff != "" {
 				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
-			// Check database
-			userNumber, err := getUsersCountFiltered(test.userID, "", "", 0, "", "")
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
-				continue
-			}
-			if userNumber != 1 {
-				t.Errorf("Test %v failed. Received different user number: %v", n, userNumber)
 				continue
 			}
 
@@ -333,10 +321,13 @@ func TestPostgresRepo_UpdateUser(t *testing.T) {
 
 		// Insert previous data
 		if test.previousUser != nil {
-			insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
-				test.previousUser.CreateAt.UnixNano(), test.previousUser.Urn)
+			if err := insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
+				test.previousUser.CreateAt.UnixNano(), test.previousUser.Urn); err != nil {
+				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
+				continue
+			}
 		}
-		// Call to repository to store an user
+		// Call to repository to update an user
 		updatedUser, err := repoDB.UpdateUser(*test.userToUpdate, test.newPath, test.newUrn)
 
 		if err != nil {
@@ -465,11 +456,14 @@ func TestPostgresRepo_GetUsersFiltered(t *testing.T) {
 		// Insert previous data
 		if test.previousUsers != nil {
 			for _, previousUser := range test.previousUsers {
-				insertUser(previousUser.ID, previousUser.ExternalID, previousUser.Path,
-					previousUser.CreateAt.UnixNano(), previousUser.Urn)
+				if err := insertUser(previousUser.ID, previousUser.ExternalID, previousUser.Path,
+					previousUser.CreateAt.UnixNano(), previousUser.Urn); err != nil {
+					t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
+					continue
+				}
 			}
 		}
-		// Call to repository to get an user
+		// Call to repository to get users
 		receivedUsers, err := repoDB.GetUsersFiltered(test.pathPrefix)
 		if err != nil {
 			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
@@ -479,6 +473,141 @@ func TestPostgresRepo_GetUsersFiltered(t *testing.T) {
 		if diff := pretty.Compare(receivedUsers, test.expectedResponse); diff != "" {
 			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 			continue
+		}
+
+	}
+}
+
+func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		// Previous data
+		relation *struct {
+			user_id       string
+			groups        []api.Group
+			groupNotFound bool
+		}
+		// Postgres Repo Args
+		userID string
+		// Expected result
+		expectedResponse []api.Group
+		expectedError    *database.Error
+	}{
+		"OkCase": {
+			relation: &struct {
+				user_id       string
+				groups        []api.Group
+				groupNotFound bool
+			}{
+				user_id: "UserID",
+				groups: []api.Group{
+					api.Group{
+						ID:       "GroupID1",
+						Name:     "Name1",
+						Path:     "Path1",
+						Urn:      "urn1",
+						CreateAt: now,
+						Org:      "Org",
+					},
+					api.Group{
+						ID:       "GroupID2",
+						Name:     "Name2",
+						Path:     "Path2",
+						Urn:      "urn2",
+						CreateAt: now,
+						Org:      "Org",
+					},
+				},
+			},
+			userID: "UserID",
+			expectedResponse: []api.Group{
+				api.Group{
+					ID:       "GroupID1",
+					Name:     "Name1",
+					Path:     "Path1",
+					Urn:      "urn1",
+					CreateAt: now,
+					Org:      "Org",
+				},
+				api.Group{
+					ID:       "GroupID2",
+					Name:     "Name2",
+					Path:     "Path2",
+					Urn:      "urn2",
+					CreateAt: now,
+					Org:      "Org",
+				},
+			},
+		},
+		"ErrorCase": {
+			relation: &struct {
+				user_id       string
+				groups        []api.Group
+				groupNotFound bool
+			}{
+				user_id: "UserID",
+				groups: []api.Group{
+					api.Group{
+						ID: "GroupID1",
+					},
+					api.Group{
+						ID: "GroupID2",
+					},
+				},
+				groupNotFound: true,
+			},
+			userID: "UserID",
+			expectedError: &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: "Code: GroupNotFound, Message: Group with id GroupID1 not found",
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean database
+		cleanUserTable()
+		cleanGroupTable()
+		cleanGroupUserRelationTable()
+
+		// Insert previous data
+		if test.relation != nil {
+			for _, group := range test.relation.groups {
+				if err := insertGroupUserRelation(test.relation.user_id, group.ID); err != nil {
+					t.Errorf("Test %v failed. Unexpected error inserting prevoius group user relations: %v", n, err)
+					continue
+				}
+				if !test.relation.groupNotFound {
+					if err := insertGroup(group.ID, group.Name, group.Path,
+						group.CreateAt.UnixNano(), group.Urn, group.Org); err != nil {
+						t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
+						continue
+					}
+				}
+			}
+		}
+		// Call to repository to get groups associated
+		receivedUsers, err := repoDB.GetGroupsByUserID(test.userID)
+		if test.expectedError != nil {
+			dbError, ok := err.(*database.Error)
+			if !ok || dbError == nil {
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
+				continue
+			}
+			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+				continue
+			}
+			// Check response
+			if diff := pretty.Compare(receivedUsers, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+				continue
+			}
 		}
 
 	}
