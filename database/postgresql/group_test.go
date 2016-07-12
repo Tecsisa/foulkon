@@ -200,3 +200,139 @@ func TestPostgresRepo_GetGroupByName(t *testing.T) {
 
 	}
 }
+
+func TestPostgresRepo_UpdateGroup(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		// Previous data
+		previousGroups []api.Group
+		// Postgres Repo Args
+		groupToUpdate *api.Group
+		newName       string
+		newPath       string
+		newUrn        string
+		// Expected result
+		expectedResponse *api.Group
+		expectedError    *database.Error
+	}{
+		"OkCase": {
+			previousGroups: []api.Group{
+				api.Group{
+					ID:       "GroupID",
+					Name:     "Name",
+					Path:     "Path",
+					Urn:      "Urn",
+					CreateAt: now,
+					Org:      "Org",
+				},
+			},
+			groupToUpdate: &api.Group{
+				ID:       "GroupID",
+				Name:     "Name",
+				Path:     "Path",
+				Urn:      "Urn",
+				CreateAt: now,
+				Org:      "Org",
+			},
+			newName: "NewName",
+			newPath: "NewPath",
+			newUrn:  "NewUrn",
+			expectedResponse: &api.Group{
+				ID:       "GroupID",
+				Name:     "NewName",
+				Path:     "NewPath",
+				Urn:      "NewUrn",
+				CreateAt: now,
+				Org:      "Org",
+			},
+		},
+		"ErrorCaseDuplicateUrn": {
+			previousGroups: []api.Group{
+				api.Group{
+					ID:       "GroupID",
+					Name:     "Name",
+					Path:     "Path",
+					Urn:      "Urn",
+					CreateAt: now,
+					Org:      "Org",
+				},
+				api.Group{
+					ID:       "GroupID2",
+					Name:     "Name2",
+					Path:     "Path2",
+					Urn:      "Fail",
+					CreateAt: now,
+					Org:      "Org2",
+				},
+			},
+			groupToUpdate: &api.Group{
+				ID:       "GroupID",
+				Name:     "Name",
+				Path:     "Path",
+				Urn:      "Urn",
+				CreateAt: now,
+				Org:      "Org",
+			},
+			newName: "NewName",
+			newPath: "NewPath",
+			newUrn:  "Fail",
+			expectedError: &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: "pq: duplicate key value violates unique constraint \"groups_urn_key\"",
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean group database
+		cleanGroupTable()
+
+		// Insert previous data
+		if test.previousGroups != nil {
+			for _, previousGroup := range test.previousGroups {
+				err := insertGroup(previousGroup.ID, previousGroup.Name, previousGroup.Path,
+					previousGroup.CreateAt.UnixNano(), previousGroup.Urn, previousGroup.Org)
+				if err != nil {
+					t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
+					continue
+				}
+			}
+		}
+
+		// Call to repository to update group
+		updatedGroup, err := repoDB.UpdateGroup(*test.groupToUpdate, test.newName, test.newPath, test.newUrn)
+		if test.expectedError != nil {
+			dbError, ok := err.(*database.Error)
+			if !ok || dbError == nil {
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
+				continue
+			}
+			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+				continue
+			}
+			// Check response
+			if diff := pretty.Compare(updatedGroup, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+				continue
+			}
+			// Check database
+			groupNumber, err := getGroupsCountFiltered(test.expectedResponse.ID, test.expectedResponse.Name, test.expectedResponse.Path,
+				test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.Urn, test.expectedResponse.Org)
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
+				continue
+			}
+			if groupNumber != 1 {
+				t.Fatalf("Test %v failed. Received different user number: %v", n, groupNumber)
+				continue
+			}
+		}
+	}
+
+}
