@@ -5,7 +5,7 @@ go list ./... | grep -v '/vendor/' | grep -v '/database/' | PATH=$TEMPDIR:$PATH 
 echo -e '\n############################\n# Starting connectors test #\n############################\n'
 
 # Postgres
-echo -e '########################\n# PostgreSQL connector #\n########################'
+echo -e '   ########################\n   # PostgreSQL connector #\n   ########################\n'
 echo $(echo -e 'Starting PostgreSQL container postgrestest with id ') \
 $(docker run --name postgrestest -p 54320:5432 -e POSTGRES_PASSWORD=password -d postgres) \
 $(echo -e '\n')
