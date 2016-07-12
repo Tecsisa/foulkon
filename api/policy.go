@@ -442,6 +442,7 @@ func createPolicy(name string, path string, org string, statements *[]Statement)
 		Path:       path,
 		Org:        org,
 		Urn:        urn,
+		CreateAt:   time.Now().UTC(),
 		Statements: statements,
 	}
 

@@ -92,7 +92,7 @@ func (p PostgresRepo) AddPolicy(policy api.Policy) (*api.Policy, error) {
 		ID:       policy.ID,
 		Name:     policy.Name,
 		Path:     policy.Path,
-		CreateAt: time.Now().UTC().UnixNano(),
+		CreateAt: policy.CreateAt.UnixNano(),
 		Urn:      policy.Urn,
 		Org:      policy.Org,
 	}

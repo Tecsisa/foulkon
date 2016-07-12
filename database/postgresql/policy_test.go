@@ -207,3 +207,86 @@ func TestPostgresRepo_GetPolicyByName(t *testing.T) {
 
 	}
 }
+
+func TestPostgresRepo_AddPolicy(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		policy api.Policy
+		// Expected result
+		expectedResponse *api.Policy
+		expectedError    *database.Error
+	}{
+		"OkCase": {
+			policy: api.Policy{
+				ID:       "test1",
+				Name:     "test",
+				Org:      "123",
+				Path:     "/path/",
+				CreateAt: now,
+				Urn:      api.CreateUrn("123", api.RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]api.Statement{
+					api.Statement{
+						Effect: "allow",
+						Action: []string{
+							api.USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+
+			expectedResponse: &api.Policy{
+				ID:       "test1",
+				Name:     "test",
+				Org:      "123",
+				Path:     "/path/",
+				CreateAt: now,
+				Urn:      api.CreateUrn("123", api.RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]api.Statement{
+					api.Statement{
+						Effect: "allow",
+						Action: []string{
+							api.USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean policy database
+		cleanPolicyTable()
+		cleanStatementTable()
+
+		// Call to repository to add a policy
+		receivedPolicy, err := repoDB.AddPolicy(test.policy)
+		if test.expectedError != nil {
+			dbError, ok := err.(*database.Error)
+			if !ok || dbError == nil {
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
+				continue
+			}
+			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+				continue
+			}
+			// Check response
+			if diff := pretty.Compare(receivedPolicy, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+				continue
+			}
+		}
+
+	}
+}
