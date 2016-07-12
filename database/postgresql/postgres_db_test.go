@@ -45,7 +45,7 @@ func insertUser(id string, externalID string, path string, createAt int64, urn s
 	return nil
 }
 
-func getUsersCountFiltered(id string, externalID string, path string, createAt int64, urn string) (int, error) {
+func getUsersCountFiltered(id string, externalID string, path string, createAt int64, urn string, pathPrefix string) (int, error) {
 	query := repoDB.Dbmap.Table(User{}.TableName())
 	if id != "" {
 		query = query.Where("id = ?", id)
@@ -55,6 +55,9 @@ func getUsersCountFiltered(id string, externalID string, path string, createAt i
 	}
 	if path != "" {
 		query = query.Where("path = ?", path)
+	}
+	if pathPrefix != "" {
+		query = query.Where("path like ?", pathPrefix+"%")
 	}
 	if createAt != 0 {
 		query = query.Where("create_at = ?", createAt)
