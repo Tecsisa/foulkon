@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/tecsisa/authorizr/database"
-	"time"
 )
 
 var repoDB PostgresRepo
@@ -149,5 +149,60 @@ func cleanGroupTable() error {
 	if err := repoDB.Dbmap.Delete(&Group{}).Error; err != nil {
 		return err
 	}
+	return nil
+}
+
+func cleanPolicyTable() error {
+	if err := repoDB.Dbmap.Delete(&Policy{}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func cleanStatementTable() error {
+	if err := repoDB.Dbmap.Delete(&Statement{}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func insertPolicy(id string, name string, org string, path string, createAt int64, urn string, statements []Statement) error {
+	err := repoDB.Dbmap.Exec("INSERT INTO public.policies (id, name, org, path, create_at, urn) VALUES (?, ?, ?, ?, ?, ?)",
+		id, name, org, path, createAt, urn).Error
+
+	// Error handling
+	if err != nil {
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	for _, v := range statements {
+		err = insertStatements(v.ID, v.PolicyID, v.Action, v.Effect, v.Resources)
+		// Error handling
+		if err != nil {
+			return &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: err.Error(),
+			}
+		}
+	}
+
+	return nil
+}
+
+func insertStatements(id string, policyId string, action string, effect string, resources string) error {
+	err := repoDB.Dbmap.Exec("INSERT INTO public.statements (id, policy_id, effect, action, resources) VALUES (?, ?, ?, ?, ?)",
+		id, policyId, effect, action, resources).Error
+
+	// Error handling
+	if err != nil {
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
 	return nil
 }
