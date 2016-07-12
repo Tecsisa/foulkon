@@ -10,40 +10,29 @@ import (
 
 // Requests
 type CreatePolicyRequest struct {
-	Name       string          `json:"Name, omitempty"`
-	Path       string          `json:"Path, omitempty"`
-	Statements []api.Statement `json:"Statements, omitempty"`
+	Name       string          `json:"name, omitempty"`
+	Path       string          `json:"path, omitempty"`
+	Statements []api.Statement `json:"statements, omitempty"`
 }
 
 type UpdatePolicyRequest struct {
-	Name       string          `json:"Name, omitempty"`
-	Path       string          `json:"Path, omitempty"`
-	Statements []api.Statement `json:"Statements, omitempty"`
+	Name       string          `json:"name, omitempty"`
+	Path       string          `json:"path, omitempty"`
+	Statements []api.Statement `json:"statements, omitempty"`
 }
 
 // Responses
-type CreatePolicyResponse struct {
-	Policy *api.Policy
-}
-
-type UpdatePolicyResponse struct {
-	Policy *api.Policy
-}
-
-type GetPolicyResponse struct {
-	Policy *api.Policy
-}
 
 type ListPoliciesResponse struct {
-	Policies []api.PolicyIdentity
+	Policies []api.PolicyIdentity `json:"policies, omitempty"`
 }
 
 type ListAllPoliciesResponse struct {
-	Policies []api.PolicyIdentity
+	Policies []api.PolicyIdentity `json:"policies, omitempty"`
 }
 
 type GetPolicyGroupsResponse struct {
-	Groups []api.GroupIdentity
+	Groups []api.GroupIdentity `json:"groups, omitempty"`
 }
 
 func (a *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -101,7 +90,7 @@ func (a *WorkerHandler) HandleCreatePolicy(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Store this policy
-	storedPolicy, err := a.worker.PolicyApi.AddPolicy(authenticatedUser, request.Name, request.Path, org, request.Statements)
+	response, err := a.worker.PolicyApi.AddPolicy(authenticatedUser, request.Name, request.Path, org, request.Statements)
 
 	// Error handling
 	if err != nil {
@@ -119,10 +108,6 @@ func (a *WorkerHandler) HandleCreatePolicy(w http.ResponseWriter, r *http.Reques
 			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
-	}
-
-	response := &CreatePolicyResponse{
-		Policy: storedPolicy,
 	}
 
 	// Write policy to response
@@ -181,7 +166,7 @@ func (a *WorkerHandler) HandleUpdatePolicy(w http.ResponseWriter, r *http.Reques
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call policy API to update policy
-	result, err := a.worker.PolicyApi.UpdatePolicy(authenticatedUser, org, policyName, request.Name, request.Path, request.Statements)
+	response, err := a.worker.PolicyApi.UpdatePolicy(authenticatedUser, org, policyName, request.Name, request.Path, request.Statements)
 
 	// Check errors
 	if err != nil {
@@ -201,11 +186,6 @@ func (a *WorkerHandler) HandleUpdatePolicy(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Create response
-	response := &UpdatePolicyResponse{
-		Policy: result,
-	}
-
 	// Write policy to response
 	a.RespondOk(r, &authenticatedUser, w, response)
 }
@@ -218,7 +198,7 @@ func (a *WorkerHandler) HandleGetPolicy(w http.ResponseWriter, r *http.Request, 
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call policies API to retrieve policy
-	result, err := a.worker.PolicyApi.GetPolicyByName(authethicatedUser, orgId, policyName)
+	response, err := a.worker.PolicyApi.GetPolicyByName(authethicatedUser, orgId, policyName)
 
 	// Check errors
 	if err != nil {
@@ -236,11 +216,6 @@ func (a *WorkerHandler) HandleGetPolicy(w http.ResponseWriter, r *http.Request, 
 			a.RespondInternalServerError(r, &authethicatedUser, w)
 		}
 		return
-	}
-
-	// Create response
-	response := &GetPolicyResponse{
-		Policy: result,
 	}
 
 	// Return policy

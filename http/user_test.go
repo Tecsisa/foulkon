@@ -136,7 +136,7 @@ func TestWorkerHandler_HandlePostUsers(t *testing.T) {
 		request *CreateUserRequest
 		// Expected result
 		expectedStatusCode int
-		expectedResponse   CreateUserResponse
+		expectedResponse   *api.User
 		expectedError      api.Error
 		// Manager Results
 		addUserResult *api.User
@@ -149,14 +149,12 @@ func TestWorkerHandler_HandlePostUsers(t *testing.T) {
 				Path:       "Path",
 			},
 			expectedStatusCode: http.StatusCreated,
-			expectedResponse: CreateUserResponse{
-				User: &api.User{
-					ID:         "UserID",
-					ExternalID: "ExternalID",
-					Path:       "Path",
-					Urn:        "urn",
-					CreateAt:   now,
-				},
+			expectedResponse: &api.User{
+				ID:         "UserID",
+				ExternalID: "ExternalID",
+				Path:       "Path",
+				Urn:        "urn",
+				CreateAt:   now,
 			},
 			addUserResult: &api.User{
 				ID:         "UserID",
@@ -284,14 +282,14 @@ func TestWorkerHandler_HandlePostUsers(t *testing.T) {
 
 		switch res.StatusCode {
 		case http.StatusCreated:
-			createUserResponse := CreateUserResponse{}
-			err = json.NewDecoder(res.Body).Decode(&createUserResponse)
+			response := api.User{}
+			err = json.NewDecoder(res.Body).Decode(&response)
 			if err != nil {
 				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
 				continue
 			}
 			// Check result
-			if diff := pretty.Compare(createUserResponse, test.expectedResponse); diff != "" {
+			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
 				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
 					n, diff)
 				continue
@@ -324,7 +322,7 @@ func TestWorkerHandler_HandlePutUser(t *testing.T) {
 		request *UpdateUserRequest
 		// Expected result
 		expectedStatusCode int
-		expectedResponse   UpdateUserResponse
+		expectedResponse   *api.User
 		expectedError      api.Error
 		// Manager Results
 		updateUserResult *api.User
@@ -336,14 +334,12 @@ func TestWorkerHandler_HandlePutUser(t *testing.T) {
 				Path: "NewPath",
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: UpdateUserResponse{
-				User: &api.User{
-					ID:         "UserID",
-					ExternalID: "ExternalID",
-					Path:       "Path",
-					Urn:        "urn",
-					CreateAt:   now,
-				},
+			expectedResponse: &api.User{
+				ID:         "UserID",
+				ExternalID: "ExternalID",
+				Path:       "Path",
+				Urn:        "urn",
+				CreateAt:   now,
 			},
 			updateUserResult: &api.User{
 				ID:         "UserID",
@@ -467,14 +463,14 @@ func TestWorkerHandler_HandlePutUser(t *testing.T) {
 
 		switch res.StatusCode {
 		case http.StatusOK:
-			updateUserResponse := UpdateUserResponse{}
-			err = json.NewDecoder(res.Body).Decode(&updateUserResponse)
+			response := api.User{}
+			err = json.NewDecoder(res.Body).Decode(&response)
 			if err != nil {
 				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
 				continue
 			}
 			// Check result
-			if diff := pretty.Compare(updateUserResponse, test.expectedResponse); diff != "" {
+			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
 				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
 					n, diff)
 				continue
@@ -507,7 +503,7 @@ func TestWorkerHandler_HandleGetUserId(t *testing.T) {
 		externalID string
 		// Expected result
 		expectedStatusCode int
-		expectedResponse   GetUserByIdResponse
+		expectedResponse   *api.User
 		expectedError      api.Error
 		// Manager Results
 		getUserByExternalIdResult *api.User
@@ -517,14 +513,12 @@ func TestWorkerHandler_HandleGetUserId(t *testing.T) {
 		"OkCase": {
 			externalID:         "UserID",
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: GetUserByIdResponse{
-				User: &api.User{
-					ID:         "UserID",
-					ExternalID: "ExternalID",
-					Path:       "Path",
-					Urn:        "urn",
-					CreateAt:   now,
-				},
+			expectedResponse: &api.User{
+				ID:         "UserID",
+				ExternalID: "ExternalID",
+				Path:       "Path",
+				Urn:        "urn",
+				CreateAt:   now,
 			},
 			getUserByExternalIdResult: &api.User{
 				ID:         "UserID",
@@ -614,14 +608,14 @@ func TestWorkerHandler_HandleGetUserId(t *testing.T) {
 
 		switch res.StatusCode {
 		case http.StatusOK:
-			getUserByIdResponse := GetUserByIdResponse{}
-			err = json.NewDecoder(res.Body).Decode(&getUserByIdResponse)
+			response := api.User{}
+			err = json.NewDecoder(res.Body).Decode(&response)
 			if err != nil {
 				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
 				continue
 			}
 			// Check result
-			if diff := pretty.Compare(getUserByIdResponse, test.expectedResponse); diff != "" {
+			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
 				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
 					n, diff)
 				continue

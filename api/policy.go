@@ -10,13 +10,13 @@ import (
 
 // Policy domain
 type Policy struct {
-	ID         string       `json:"ID, omitempty"`
-	Name       string       `json:"Name, omitempty"`
-	Path       string       `json:"Path, omitempty"`
-	Org        string       `json:"Org, omitempty"`
-	CreateAt   time.Time    `json:"CreateAt, omitempty"`
-	Urn        string       `json:"Urn, omitempty"`
-	Statements *[]Statement `json:"Statements, omitempty"`
+	ID         string       `json:"id, omitempty"`
+	Name       string       `json:"name, omitempty"`
+	Path       string       `json:"path, omitempty"`
+	Org        string       `json:"org, omitempty"`
+	CreateAt   time.Time    `json:"createAt, omitempty"`
+	Urn        string       `json:"urn, omitempty"`
+	Statements *[]Statement `json:"statements, omitempty"`
 }
 
 func (p Policy) GetUrn() string {
@@ -25,14 +25,14 @@ func (p Policy) GetUrn() string {
 
 // Policy identifier to retrieve them from DB
 type PolicyIdentity struct {
-	Org  string `json:"Org, omitempty"`
-	Name string `json:"Name, omitempty"`
+	Org  string `json:"org, omitempty"`
+	Name string `json:"name, omitempty"`
 }
 
 type Statement struct {
-	Effect    string   `json:"Effect, omitempty"`
-	Action    []string `json:"Action, omitempty"`
-	Resources []string `json:"Resources, omitempty"`
+	Effect    string   `json:"effect, omitempty"`
+	Action    []string `json:"action, omitempty"`
+	Resources []string `json:"resources, omitempty"`
 }
 
 func (api AuthAPI) GetPolicyByName(authenticatedUser AuthenticatedUser, org string, policyName string) (*Policy, error) {

@@ -22,7 +22,7 @@ func TestWorkerHandler_HandleGetGroup(t *testing.T) {
 		name string
 		// Expected result
 		expectedStatusCode int
-		expectedResponse   GetGroupNameResponse
+		expectedResponse   *api.Group
 		expectedError      api.Error
 		// Manager Results
 		getGroupByNameResult *api.Group
@@ -33,15 +33,13 @@ func TestWorkerHandler_HandleGetGroup(t *testing.T) {
 			org:                "org1",
 			name:               "group1",
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: GetGroupNameResponse{
-				Group: &api.Group{
-					ID:       "groupID",
-					Name:     "group1",
-					Path:     "Path",
-					Urn:      "Urn",
-					Org:      "Org",
-					CreateAt: now,
-				},
+			expectedResponse: &api.Group{
+				ID:       "groupID",
+				Name:     "group1",
+				Path:     "Path",
+				Urn:      "Urn",
+				Org:      "Org",
+				CreateAt: now,
 			},
 			getGroupByNameResult: &api.Group{
 				ID:       "groupID",
@@ -136,14 +134,14 @@ func TestWorkerHandler_HandleGetGroup(t *testing.T) {
 
 		switch res.StatusCode {
 		case http.StatusOK:
-			getGroupNameResponse := GetGroupNameResponse{}
-			err = json.NewDecoder(res.Body).Decode(&getGroupNameResponse)
+			response := api.Group{}
+			err = json.NewDecoder(res.Body).Decode(&response)
 			if err != nil {
 				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
 				continue
 			}
 			// Check result
-			if diff := pretty.Compare(getGroupNameResponse, test.expectedResponse); diff != "" {
+			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
 				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
@@ -175,7 +173,7 @@ func TestWorkerHandler_HandleCreateGroup(t *testing.T) {
 		request *CreateGroupRequest
 		// Expected result
 		expectedStatusCode int
-		expectedResponse   CreateGroupResponse
+		expectedResponse   *api.Group
 		expectedError      api.Error
 		// Manager Results
 		addGroupResult *api.Group
@@ -189,15 +187,13 @@ func TestWorkerHandler_HandleCreateGroup(t *testing.T) {
 				Path: "Path",
 			},
 			expectedStatusCode: http.StatusCreated,
-			expectedResponse: CreateGroupResponse{
-				Group: &api.Group{
-					ID:       "GroupID",
-					Name:     "group1",
-					Path:     "Path",
-					Urn:      "Urn",
-					Org:      "org1",
-					CreateAt: now,
-				},
+			expectedResponse: &api.Group{
+				ID:       "GroupID",
+				Name:     "group1",
+				Path:     "Path",
+				Urn:      "Urn",
+				Org:      "org1",
+				CreateAt: now,
 			},
 			addGroupResult: &api.Group{
 				ID:       "GroupID",
@@ -334,14 +330,14 @@ func TestWorkerHandler_HandleCreateGroup(t *testing.T) {
 
 		switch res.StatusCode {
 		case http.StatusCreated:
-			createGroupResponse := CreateGroupResponse{}
-			err = json.NewDecoder(res.Body).Decode(&createGroupResponse)
+			response := api.Group{}
+			err = json.NewDecoder(res.Body).Decode(&response)
 			if err != nil {
 				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
 				continue
 			}
 			// Check result
-			if diff := pretty.Compare(createGroupResponse, test.expectedResponse); diff != "" {
+			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
 				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
@@ -640,7 +636,7 @@ func TestWorkerHandler_HandleUpdateGroup(t *testing.T) {
 		request *UpdateGroupRequest
 		// Expected result
 		expectedStatusCode int
-		expectedResponse   UpdateGroupResponse
+		expectedResponse   *api.Group
 		expectedError      api.Error
 		// Manager Results
 		updateGroupResult *api.Group
@@ -654,14 +650,12 @@ func TestWorkerHandler_HandleUpdateGroup(t *testing.T) {
 				Path: "NewPath",
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: UpdateGroupResponse{
-				Group: &api.Group{
-					ID:       "GroupID",
-					Name:     "group1",
-					Path:     "Path",
-					Urn:      "urn",
-					CreateAt: now,
-				},
+			expectedResponse: &api.Group{
+				ID:       "GroupID",
+				Name:     "group1",
+				Path:     "Path",
+				Urn:      "urn",
+				CreateAt: now,
 			},
 			updateGroupResult: &api.Group{
 				ID:       "GroupID",
@@ -813,14 +807,14 @@ func TestWorkerHandler_HandleUpdateGroup(t *testing.T) {
 
 		switch res.StatusCode {
 		case http.StatusOK:
-			updateGroupResponse := UpdateGroupResponse{}
-			err = json.NewDecoder(res.Body).Decode(&updateGroupResponse)
+			response := api.Group{}
+			err = json.NewDecoder(res.Body).Decode(&response)
 			if err != nil {
 				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
 				continue
 			}
 			// Check result
-			if diff := pretty.Compare(updateGroupResponse, test.expectedResponse); diff != "" {
+			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
 				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}

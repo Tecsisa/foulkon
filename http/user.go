@@ -11,34 +11,22 @@ import (
 // Requests
 
 type CreateUserRequest struct {
-	ExternalID string `json:"ExternalID, omitempty"`
-	Path       string `json:"Path, omitempty"`
+	ExternalID string `json:"externalId, omitempty"`
+	Path       string `json:"path, omitempty"`
 }
 
 type UpdateUserRequest struct {
-	Path string `json:"Path, omitempty"`
+	Path string `json:"path, omitempty"`
 }
 
 // Responses
 
-type CreateUserResponse struct {
-	User *api.User
-}
-
-type UpdateUserResponse struct {
-	User *api.User
-}
-
 type GetUserExternalIDsResponse struct {
-	ExternalIDs []string
-}
-
-type GetUserByIdResponse struct {
-	User *api.User
+	ExternalIDs []string `json:"users, omitempty"`
 }
 
 type GetGroupsByUserIdResponse struct {
-	Groups []api.GroupIdentity
+	Groups []api.GroupIdentity `json:"groups, omitempty"`
 }
 
 // This method returns a list of users that belongs to Org param and have PathPrefix
@@ -90,7 +78,7 @@ func (h *WorkerHandler) HandlePostUsers(w http.ResponseWriter, r *http.Request, 
 	}
 
 	// Call user API to create an user
-	result, err := h.worker.UserApi.AddUser(authenticatedUser, request.ExternalID, request.Path)
+	response, err := h.worker.UserApi.AddUser(authenticatedUser, request.ExternalID, request.Path)
 
 	// Error handling
 	if err != nil {
@@ -108,10 +96,6 @@ func (h *WorkerHandler) HandlePostUsers(w http.ResponseWriter, r *http.Request, 
 			h.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
-	}
-
-	response := &CreateUserResponse{
-		User: result,
 	}
 
 	// Write user to response
@@ -138,7 +122,7 @@ func (h *WorkerHandler) HandlePutUser(w http.ResponseWriter, r *http.Request, ps
 	id := ps.ByName(USER_ID)
 
 	// Call user API to update user
-	result, err := h.worker.UserApi.UpdateUser(authenticatedUser, id, request.Path)
+	response, err := h.worker.UserApi.UpdateUser(authenticatedUser, id, request.Path)
 
 	// Error handling
 	if err != nil {
@@ -156,11 +140,6 @@ func (h *WorkerHandler) HandlePutUser(w http.ResponseWriter, r *http.Request, ps
 			h.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
-	}
-
-	// Create response
-	response := &UpdateUserResponse{
-		User: result,
 	}
 
 	// Write user to response
@@ -174,7 +153,7 @@ func (h *WorkerHandler) HandleGetUserId(w http.ResponseWriter, r *http.Request, 
 	id := ps.ByName(USER_ID)
 
 	// Call user API to retrieve user
-	result, err := h.worker.UserApi.GetUserByExternalId(authenticatedUser, id)
+	response, err := h.worker.UserApi.GetUserByExternalId(authenticatedUser, id)
 
 	// Error handling
 	if err != nil {
@@ -192,10 +171,6 @@ func (h *WorkerHandler) HandleGetUserId(w http.ResponseWriter, r *http.Request, 
 			h.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
-	}
-
-	response := GetUserByIdResponse{
-		User: result,
 	}
 
 	// Write user to response

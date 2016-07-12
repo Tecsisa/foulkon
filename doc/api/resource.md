@@ -7,7 +7,7 @@ Authorize API
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **ResourcesAllowed** | *array* | List of resources allowed | `["urn:ews:product:instance:example/resource1"]` |
+| **resourcesAllowed** | *array* | List of allowed resources | `["urn:ews:product:instance:example/resource1"]` |
 
 ### Authorize resources
 
@@ -21,8 +21,8 @@ POST /api/v1/authorize
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **Action** | *string* | Action applied over the resources | `"example:Read"` |
-| **Resources** | *array* | List of resources | `["urn:ews:product:instance:example/resource1"]` |
+| **action** | *string* | Action applied over the resources | `"example:Read"` |
+| **resources** | *array* | List of resources | `["urn:ews:product:instance:example/resource1"]` |
 
 
 
@@ -31,8 +31,8 @@ POST /api/v1/authorize
 ```bash
 $ curl -n -X POST /api/v1/authorize \
   -d '{
-  "Action": "example:Read",
-  "Resources": [
+  "action": "example:Read",
+  "resources": [
     "urn:ews:product:instance:example/resource1"
   ]
 }' \
@@ -49,7 +49,7 @@ HTTP/1.1 200 OK
 
 ```json
 {
-  "ResourcesAllowed": [
+  "resourcesAllowed": [
     "urn:ews:product:instance:example/resource1"
   ]
 }

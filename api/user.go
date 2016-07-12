@@ -10,11 +10,11 @@ import (
 
 // User domain
 type User struct {
-	ID         string    `json:"ID, omitempty"`
-	ExternalID string    `json:"ExternalID, omitempty"`
-	Path       string    `json:"Path, omitempty"`
-	CreateAt   time.Time `json:"CreateAt, omitempty"`
-	Urn        string    `json:"Urn, omitempty"`
+	ID         string    `json:"id, omitempty"`
+	ExternalID string    `json:"externalId, omitempty"`
+	Path       string    `json:"path, omitempty"`
+	CreateAt   time.Time `json:"createAt, omitempty"`
+	Urn        string    `json:"urn, omitempty"`
 }
 
 func (u User) GetUrn() string {

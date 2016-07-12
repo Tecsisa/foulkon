@@ -10,12 +10,12 @@ import (
 
 // Group domain
 type Group struct {
-	ID       string    `json:"ID, omitempty"`
-	Name     string    `json:"Name, omitempty"`
-	Path     string    `json:"Path, omitempty"`
-	CreateAt time.Time `json:"CreateAt, omitempty"`
-	Urn      string    `json:"Urn, omitempty"`
-	Org      string    `json:"Org, omitempty"`
+	ID       string    `json:"id, omitempty"`
+	Name     string    `json:"name, omitempty"`
+	Path     string    `json:"path, omitempty"`
+	CreateAt time.Time `json:"createAt, omitempty"`
+	Urn      string    `json:"urn, omitempty"`
+	Org      string    `json:"org, omitempty"`
 }
 
 func (g Group) GetUrn() string {
@@ -24,16 +24,16 @@ func (g Group) GetUrn() string {
 
 // Group identifier to retrieve them from DB
 type GroupIdentity struct {
-	Org  string `json:"Org, omitempty"`
-	Name string `json:"Name, omitempty"`
+	Org  string `json:"org, omitempty"`
+	Name string `json:"name, omitempty"`
 }
 
 type GroupMembers struct {
-	Users []User `json:"Users, omitempty"`
+	Users []User `json:"users, omitempty"`
 }
 
 type GroupPolicies struct {
-	Policies []PolicyIdentity `json:"Policies, omitempty"`
+	Policies []PolicyIdentity `json:"policies, omitempty"`
 }
 
 // Add an Group to database if not exist

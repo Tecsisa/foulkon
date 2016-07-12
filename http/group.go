@@ -11,39 +11,27 @@ import (
 // Requests
 
 type CreateGroupRequest struct {
-	Name string `json:"Name, omitempty"`
-	Path string `json:"Path, omitempty"`
+	Name string `json:"name, omitempty"`
+	Path string `json:"path, omitempty"`
 }
 
 type UpdateGroupRequest struct {
-	Name string `json:"Name, omitempty"`
-	Path string `json:"Path, omitempty"`
+	Name string `json:"name, omitempty"`
+	Path string `json:"path, omitempty"`
 }
 
 // Responses
 
-type CreateGroupResponse struct {
-	Group *api.Group
-}
-
-type UpdateGroupResponse struct {
-	Group *api.Group
-}
-
-type GetGroupNameResponse struct {
-	Group *api.Group
-}
-
 type GetGroupsResponse struct {
-	Groups []api.GroupIdentity
+	Groups []api.GroupIdentity `json:"groups, omitempty"`
 }
 
 type GetGroupMembersResponse struct {
-	Members []string
+	Members []string `json:"members, omitempty"`
 }
 
 type GetGroupPoliciesResponse struct {
-	AttachedPolicies []api.PolicyIdentity
+	AttachedPolicies []api.PolicyIdentity `json:"attachedPolicies, omitempty"`
 }
 
 func (a *WorkerHandler) HandleCreateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -64,7 +52,7 @@ func (a *WorkerHandler) HandleCreateGroup(w http.ResponseWriter, r *http.Request
 
 	org := ps.ByName(ORG_NAME)
 	// Call group API to create a group
-	result, err := a.worker.GroupApi.AddGroup(authenticatedUser, org, request.Name, request.Path)
+	response, err := a.worker.GroupApi.AddGroup(authenticatedUser, org, request.Name, request.Path)
 
 	// Error handling
 	if err != nil {
@@ -82,10 +70,6 @@ func (a *WorkerHandler) HandleCreateGroup(w http.ResponseWriter, r *http.Request
 			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
-	}
-
-	response := &CreateGroupResponse{
-		Group: result,
 	}
 
 	// Write group to response
@@ -131,7 +115,7 @@ func (a *WorkerHandler) HandleGetGroup(w http.ResponseWriter, r *http.Request, p
 	name := ps.ByName(GROUP_NAME)
 
 	// Call group API to retrieve group
-	result, err := a.worker.GroupApi.GetGroupByName(authenticatedUser, org, name)
+	response, err := a.worker.GroupApi.GetGroupByName(authenticatedUser, org, name)
 
 	// Error handling
 	if err != nil {
@@ -149,10 +133,6 @@ func (a *WorkerHandler) HandleGetGroup(w http.ResponseWriter, r *http.Request, p
 			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
-	}
-
-	response := GetGroupNameResponse{
-		Group: result,
 	}
 
 	// Write group to response
@@ -216,7 +196,7 @@ func (a *WorkerHandler) HandleUpdateGroup(w http.ResponseWriter, r *http.Request
 	groupName := ps.ByName(GROUP_NAME)
 
 	// Call group API to update group
-	result, err := a.worker.GroupApi.UpdateGroup(authenticatedUser, org, groupName, request.Name, request.Path)
+	response, err := a.worker.GroupApi.UpdateGroup(authenticatedUser, org, groupName, request.Name, request.Path)
 
 	// Check errors
 	if err != nil {
@@ -236,11 +216,6 @@ func (a *WorkerHandler) HandleUpdateGroup(w http.ResponseWriter, r *http.Request
 			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
-	}
-
-	// Create response
-	response := &UpdateGroupResponse{
-		Group: result,
 	}
 
 	// Write group to response
