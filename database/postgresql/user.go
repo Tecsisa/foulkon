@@ -196,10 +196,9 @@ func (u PostgresRepo) RemoveUser(id string) error {
 			Code:    database.INTERNAL_ERROR,
 			Message: err.Error(),
 		}
-	} else {
-		transaction.Commit()
 	}
 
+	transaction.Commit()
 	return nil
 }
 
