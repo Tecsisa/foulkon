@@ -19,12 +19,12 @@
           },
           "schema": {
             "properties": {
-              "Action": {
+              "action": {
                 "description": "Action applied over the resources",
                 "example": "example:Read",
                 "type": "string"
               },
-              "Resources": {
+              "resources": {
                 "description": "List of resources",
                 "example": ["urn:ews:product:instance:example/resource1"],
                 "type": "array",
@@ -34,8 +34,8 @@
               }
             },
             "required": [
-              "Action",
-              "Resources"
+              "action",
+              "resources"
             ],
             "type": "object"
           },
@@ -43,7 +43,7 @@
         }
       ],
       "properties": {
-        "ResourcesAllowed": {
+        "resourcesAllowed": {
           "description": "List of allowed resources",
           "example": ["urn:ews:product:instance:example/resource1"],
           "type": "array",

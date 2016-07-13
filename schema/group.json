@@ -9,33 +9,33 @@
       "strictProperties": true,
       "type": "object",
       "definitions": {
-        "ID": {
+        "id": {
           "description": "Unique group identifier",
           "readOnly": true,
           "format": "uuid",
           "type": "string"
         },
-        "Name": {
+        "name": {
           "description": "Group name",
           "example": "group1",
           "type": "string"
         },
-        "Path": {
+        "path": {
           "description": "Group location",
           "example": "/example/admin/",
           "type": "string"
         },
-        "CreatedAt": {
+        "createdAt": {
           "description": "Group creation date",
           "format": "date-time",
           "type": "string"
         },
-        "Urn": {
+        "urn": {
           "description": "Group's Uniform Resource Name",
           "example": "urn:iws:iam:tecsisa:group/example/admin/group1",
           "type": "string"
         },
-        "Org": {
+        "org": {
           "description": "Group's organization",
           "example": "tecsisa",
           "type": "string"
@@ -52,16 +52,16 @@
           },
           "schema": {
             "properties": {
-              "Name": {
-                "$ref": "#/definitions/order1_group/definitions/Name"
+              "name": {
+                "$ref": "#/definitions/order1_group/definitions/name"
               },
-              "Path": {
-                "$ref": "#/definitions/order1_group/definitions/Path"
+              "path": {
+                "$ref": "#/definitions/order1_group/definitions/path"
               }
             },
             "required": [
-              "Name",
-              "Path"
+              "name",
+              "path"
             ],
             "type": "object"
           },
@@ -77,16 +77,16 @@
           },
           "schema": {
             "properties": {
-              "Name": {
-                "$ref": "#/definitions/order1_group/definitions/Name"
+              "name": {
+                "$ref": "#/definitions/order1_group/definitions/name"
               },
-              "Path": {
-                "$ref": "#/definitions/order1_group/definitions/Path"
+              "path": {
+                "$ref": "#/definitions/order1_group/definitions/path"
               }
             },
             "required": [
-              "Name",
-              "Path"
+              "name",
+              "path"
             ],
             "type": "object"
           },
@@ -114,23 +114,23 @@
         }
       ],
       "properties": {
-        "ID": {
-          "$ref": "#/definitions/order1_group/definitions/ID"
+        "id": {
+          "$ref": "#/definitions/order1_group/definitions/id"
         },
-        "Name": {
-          "$ref": "#/definitions/order1_group/definitions/Name"
+        "name": {
+          "$ref": "#/definitions/order1_group/definitions/name"
         },
-        "Path": {
-          "$ref": "#/definitions/order1_group/definitions/Path"
+        "path": {
+          "$ref": "#/definitions/order1_group/definitions/path"
         },
-        "CreatedAt": {
-          "$ref": "#/definitions/order1_group/definitions/CreatedAt"
+        "createdAt": {
+          "$ref": "#/definitions/order1_group/definitions/createdAt"
         },
-        "Urn": {
-          "$ref": "#/definitions/order1_group/definitions/Urn"
+        "urn": {
+          "$ref": "#/definitions/order1_group/definitions/urn"
         },
-        "Org": {
-          "$ref": "#/definitions/order1_group/definitions/Org"
+        "org": {
+          "$ref": "#/definitions/order1_group/definitions/org"
         }
       }
     },
@@ -155,11 +155,11 @@
         }
       ],
       "properties": {
-        "Org": {
-          "$ref": "#/definitions/order1_group/definitions/Org"
+        "org": {
+          "$ref": "#/definitions/order1_group/definitions/org"
         },
-        "Name": {
-          "$ref": "#/definitions/order1_group/definitions/Name"
+        "name": {
+          "$ref": "#/definitions/order1_group/definitions/name"
         }
       }
     },
@@ -251,12 +251,12 @@
         }
       ],
       "properties": {
-        "Org": {
+        "org": {
           "description": "Organization of policy",
           "example": "tecsisa",
           "type": "string"
         },
-        "Name": {
+        "name": {
           "description": "Name of policy",
           "example": "policy1",
           "type": "string"

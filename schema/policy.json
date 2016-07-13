@@ -50,38 +50,38 @@
       "strictProperties": true,
       "type": "object",
       "definitions": {
-        "ID": {
+        "id": {
           "description": "Unique policy identifier",
           "readOnly": true,
           "format": "uuid",
           "type": "string"
         },
-        "Name": {
+        "name": {
           "description": "Policy name",
           "example": "policy1",
           "type": "string"
         },
-        "Path": {
+        "path": {
           "description": "Policy's location",
           "example": "/example/admin/",
           "type": "string"
         },
-        "CreatedAt": {
+        "createdAt": {
           "description": "Policy creation date",
           "format": "date-time",
           "type": "string"
         },
-        "Urn": {
+        "urn": {
           "description": "Policy's Uniform Resource Name",
           "example": "urn:iws:iam:org1:policy/example/admin/policy1",
           "type": "string"
         },
-        "Org": {
+        "org": {
           "description": "Policy's organization",
           "example": "tecsisa",
           "type": "string"
         },
-        "Statements": {
+        "statements": {
           "description": "Policy statements",
           "type": "array",
           "items": {
@@ -100,20 +100,20 @@
           },
           "schema": {
             "properties": {
-              "Name": {
-                "$ref": "#/definitions/order2_policy/definitions/Name"
+              "name": {
+                "$ref": "#/definitions/order2_policy/definitions/name"
               },
-              "Path": {
-                "$ref": "#/definitions/order2_policy/definitions/Path"
+              "path": {
+                "$ref": "#/definitions/order2_policy/definitions/path"
               },
-              "Statements": {
-                "$ref": "#/definitions/order2_policy/definitions/Statements"
+              "statements": {
+                "$ref": "#/definitions/order2_policy/definitions/statements"
               }
             },
             "required": [
-              "Name",
-              "Path",
-              "Statements"
+              "name",
+              "path",
+              "statements"
             ],
             "type": "object"
           },
@@ -129,20 +129,20 @@
           },
           "schema": {
             "properties": {
-              "Name": {
-                "$ref": "#/definitions/order2_policy/definitions/Name"
+              "name": {
+                "$ref": "#/definitions/order2_policy/definitions/name"
               },
-              "Path": {
-                "$ref": "#/definitions/order2_policy/definitions/Path"
+              "path": {
+                "$ref": "#/definitions/order2_policy/definitions/path"
               },
-              "Statements": {
-                "$ref": "#/definitions/order2_policy/definitions/Statements"
+              "statements": {
+                "$ref": "#/definitions/order2_policy/definitions/statements"
               }
             },
             "required": [
-              "Name",
-              "Path",
-              "Statements"
+              "name",
+              "path",
+              "statements"
             ],
             "type": "object"
           },
@@ -170,26 +170,26 @@
         }
       ],
       "properties": {
-        "ID": {
-          "$ref": "#/definitions/order2_policy/definitions/ID"
+        "id": {
+          "$ref": "#/definitions/order2_policy/definitions/id"
         },
-        "Name": {
-          "$ref": "#/definitions/order2_policy/definitions/Name"
+        "name": {
+          "$ref": "#/definitions/order2_policy/definitions/name"
         },
-        "Path": {
-          "$ref": "#/definitions/order2_policy/definitions/Path"
+        "path": {
+          "$ref": "#/definitions/order2_policy/definitions/path"
         },
-        "CreatedAt": {
-          "$ref": "#/definitions/order2_policy/definitions/CreatedAt"
+        "createdAt": {
+          "$ref": "#/definitions/order2_policy/definitions/createdAt"
         },
-        "Urn": {
-          "$ref": "#/definitions/order2_policy/definitions/Urn"
+        "urn": {
+          "$ref": "#/definitions/order2_policy/definitions/urn"
         },
-        "Org": {
-          "$ref": "#/definitions/order2_policy/definitions/Org"
+        "org": {
+          "$ref": "#/definitions/order2_policy/definitions/org"
         },
-        "Statements": {
-          "$ref": "#/definitions/order2_policy/definitions/Statements"
+        "statements": {
+          "$ref": "#/definitions/order2_policy/definitions/statements"
         }
       }
     },
@@ -212,11 +212,11 @@
         }
       ],
       "properties": {
-        "Org": {
-          "$ref": "#/definitions/order2_policy/definitions/Org"
+        "org": {
+          "$ref": "#/definitions/order2_policy/definitions/org"
         },
-        "Name": {
-          "$ref": "#/definitions/order2_policy/definitions/Name"
+        "name": {
+          "$ref": "#/definitions/order2_policy/definitions/name"
         }
       }
     },
@@ -239,12 +239,12 @@
         }
       ],
       "properties": {
-        "Org": {
+        "org": {
           "description": "Group's organization",
           "example": "tecsisa",
           "type": "string"
         },
-        "Name": {
+        "name": {
           "description": "Group's name",
           "example": "group1",
           "type": "string"

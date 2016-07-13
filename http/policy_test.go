@@ -161,7 +161,7 @@ func TestWorkerHandler_HandleCreatePolicy(t *testing.T) {
 		request *CreatePolicyRequest
 		// Expected result
 		expectedStatusCode int
-		expectedResponse   CreatePolicyResponse
+		expectedResponse   *api.Policy
 		expectedError      api.Error
 		// Manager Results
 		createPolicyResult *api.Policy
@@ -205,23 +205,21 @@ func TestWorkerHandler_HandleCreatePolicy(t *testing.T) {
 				},
 			},
 			expectedStatusCode: http.StatusCreated,
-			expectedResponse: CreatePolicyResponse{
-				Policy: &api.Policy{
-					ID:       "test1",
-					Name:     "test",
-					Org:      "org1",
-					CreateAt: now,
-					Path:     "/path/",
-					Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
-					Statements: &[]api.Statement{
-						api.Statement{
-							Effect: "allow",
-							Action: []string{
-								api.USER_ACTION_GET_USER,
-							},
-							Resources: []string{
-								api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
-							},
+			expectedResponse: &api.Policy{
+				ID:       "test1",
+				Name:     "test",
+				Org:      "org1",
+				CreateAt: now,
+				Path:     "/path/",
+				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]api.Statement{
+					api.Statement{
+						Effect: "allow",
+						Action: []string{
+							api.USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
 						},
 					},
 				},
@@ -398,14 +396,14 @@ func TestWorkerHandler_HandleCreatePolicy(t *testing.T) {
 
 		switch res.StatusCode {
 		case http.StatusCreated:
-			createPolicyResponse := CreatePolicyResponse{}
-			err = json.NewDecoder(res.Body).Decode(&createPolicyResponse)
+			response := api.Policy{}
+			err = json.NewDecoder(res.Body).Decode(&response)
 			if err != nil {
 				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
 				continue
 			}
 			// Check result
-			if diff := pretty.Compare(createPolicyResponse, test.expectedResponse); diff != "" {
+			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
 				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
@@ -555,7 +553,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 		request *UpdatePolicyRequest
 		// Expected result
 		expectedStatusCode int
-		expectedResponse   UpdatePolicyResponse
+		expectedResponse   *api.Policy
 		expectedError      api.Error
 		// Manager Results
 		updatePolicyResult *api.Policy
@@ -580,23 +578,21 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				},
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: UpdatePolicyResponse{
-				Policy: &api.Policy{
-					ID:       "test1",
-					Name:     "policy1",
-					Path:     "/path/",
-					Org:      "org1",
-					CreateAt: now,
-					Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
-					Statements: &[]api.Statement{
-						api.Statement{
-							Effect: "allow",
-							Action: []string{
-								api.USER_ACTION_GET_USER,
-							},
-							Resources: []string{
-								api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
-							},
+			expectedResponse: &api.Policy{
+				ID:       "test1",
+				Name:     "policy1",
+				Path:     "/path/",
+				Org:      "org1",
+				CreateAt: now,
+				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]api.Statement{
+					api.Statement{
+						Effect: "allow",
+						Action: []string{
+							api.USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
 						},
 					},
 				},
@@ -798,14 +794,14 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 
 		switch res.StatusCode {
 		case http.StatusOK:
-			updatePolicyResponse := UpdatePolicyResponse{}
-			err = json.NewDecoder(res.Body).Decode(&updatePolicyResponse)
+			response := api.Policy{}
+			err = json.NewDecoder(res.Body).Decode(&response)
 			if err != nil {
 				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
 				continue
 			}
 			// Check result
-			if diff := pretty.Compare(updatePolicyResponse, test.expectedResponse); diff != "" {
+			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
 				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
@@ -835,7 +831,7 @@ func TestWorkerHandler_HandleGetPolicy(t *testing.T) {
 		policyName string
 		// Expected result
 		expectedStatusCode int
-		expectedResponse   GetPolicyResponse
+		expectedResponse   *api.Policy
 		expectedError      *api.Error
 		// Manager Results
 		getPolicyByNameResult *api.Policy
@@ -846,23 +842,21 @@ func TestWorkerHandler_HandleGetPolicy(t *testing.T) {
 			org:                "org1",
 			policyName:         "p1",
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: GetPolicyResponse{
-				&api.Policy{
-					ID:       "test1",
-					Name:     "test",
-					Org:      "org1",
-					Path:     "/path/",
-					CreateAt: now,
-					Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
-					Statements: &[]api.Statement{
-						api.Statement{
-							Effect: "allow",
-							Action: []string{
-								api.USER_ACTION_GET_USER,
-							},
-							Resources: []string{
-								api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
-							},
+			expectedResponse: &api.Policy{
+				ID:       "test1",
+				Name:     "test",
+				Org:      "org1",
+				Path:     "/path/",
+				CreateAt: now,
+				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]api.Statement{
+					api.Statement{
+						Effect: "allow",
+						Action: []string{
+							api.USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
 						},
 					},
 				},
@@ -971,14 +965,14 @@ func TestWorkerHandler_HandleGetPolicy(t *testing.T) {
 
 		switch res.StatusCode {
 		case http.StatusOK:
-			GetPolicyByNameMethodResponse := GetPolicyResponse{}
-			err = json.NewDecoder(res.Body).Decode(&GetPolicyByNameMethodResponse)
+			response := api.Policy{}
+			err = json.NewDecoder(res.Body).Decode(&response)
 			if err != nil {
 				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
 				continue
 			}
 			// Check result
-			if diff := pretty.Compare(GetPolicyByNameMethodResponse, test.expectedResponse); diff != "" {
+			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
 				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}

@@ -39,8 +39,8 @@ const (
 )
 
 type Error struct {
-	Code    string
-	Message string
+	Code    string `json:"code, omitempty"`
+	Message string `json:"message, omitempty"`
 }
 
 func (e Error) Error() string {

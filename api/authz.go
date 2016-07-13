@@ -19,19 +19,19 @@ type AuthenticatedUser struct {
 }
 
 type EffectRestriction struct {
-	Effect       string        `json:"Effect, omitempty"`
-	Restrictions *Restrictions `json:"Restrictions, omitempty"`
+	Effect       string        `json:"effect, omitempty"`
+	Restrictions *Restrictions `json:"restrictions, omitempty"`
 }
 
 type Restrictions struct {
-	AllowedUrnPrefixes []string
-	AllowedFullUrns    []string
-	DeniedUrnPrefixes  []string
-	DeniedFullUrns     []string
+	AllowedUrnPrefixes []string `json:"allowedUrnPrefixes, omitempty"`
+	AllowedFullUrns    []string `json:"allowedFullUrns, omitempty"`
+	DeniedUrnPrefixes  []string `json:"deniedUrnPrefixes, omitempty"`
+	DeniedFullUrns     []string `json:"deniedFullUrns, omitempty"`
 }
 
 type ExternalResource struct {
-	Urn string
+	Urn string `json:"urn, omitempty"`
 }
 
 func (e ExternalResource) GetUrn() string {

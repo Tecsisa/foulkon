@@ -21,13 +21,13 @@ Policy API
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **CreatedAt** | *date-time* | when policy was created | `"2015-01-01T12:00:00Z"` |
-| **ID** | *uuid* | Unique identifier of policy | `"01234567-89ab-cdef-0123-456789abcdef"` |
-| **Name** | *string* | Name of policy | `"policy1"` |
-| **Org** | *string* | Organization of policy | `"tecsisa"` |
-| **Path** | *string* | Policy's location | `"/example/admin/"` |
-| **Statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:*"],"resources":["urn:everything:*"]}]` |
-| **Urn** | *string* | Uniform Resource Name of policy | `"urn:iws:iam:org1:policy/example/admin/policy1"` |
+| **createdAt** | *date-time* | Policy creation date | `"2015-01-01T12:00:00Z"` |
+| **id** | *uuid* | Unique policy identifier | `"01234567-89ab-cdef-0123-456789abcdef"` |
+| **name** | *string* | Policy name | `"policy1"` |
+| **org** | *string* | Policy's organization | `"tecsisa"` |
+| **path** | *string* | Policy's location | `"/example/admin/"` |
+| **statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:*"],"resources":["urn:everything:*"]}]` |
+| **urn** | *string* | Policy's Uniform Resource Name | `"urn:iws:iam:org1:policy/example/admin/policy1"` |
 
 ### Policy Create
 
@@ -41,9 +41,9 @@ POST /api/v1/organizations/{organization_id}/policies
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **Name** | *string* | Name of policy | `"policy1"` |
-| **Path** | *string* | Policy's location | `"/example/admin/"` |
-| **Statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:*"],"resources":["urn:everything:*"]}]` |
+| **name** | *string* | Policy name | `"policy1"` |
+| **path** | *string* | Policy's location | `"/example/admin/"` |
+| **statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:*"],"resources":["urn:everything:*"]}]` |
 
 
 
@@ -52,9 +52,9 @@ POST /api/v1/organizations/{organization_id}/policies
 ```bash
 $ curl -n -X POST /api/v1/organizations/$ORGANIZATION_ID/policies \
   -d '{
-  "Name": "policy1",
-  "Path": "/example/admin/",
-  "Statements": [
+  "name": "policy1",
+  "path": "/example/admin/",
+  "statements": [
     {
       "effect": "allow",
       "action": [
@@ -79,13 +79,13 @@ HTTP/1.1 201 Created
 
 ```json
 {
-  "ID": "01234567-89ab-cdef-0123-456789abcdef",
-  "Name": "policy1",
-  "Path": "/example/admin/",
-  "CreatedAt": "2015-01-01T12:00:00Z",
-  "Urn": "urn:iws:iam:org1:policy/example/admin/policy1",
-  "Org": "tecsisa",
-  "Statements": [
+  "id": "01234567-89ab-cdef-0123-456789abcdef",
+  "name": "policy1",
+  "path": "/example/admin/",
+  "createdAt": "2015-01-01T12:00:00Z",
+  "urn": "urn:iws:iam:org1:policy/example/admin/policy1",
+  "org": "tecsisa",
+  "statements": [
     {
       "effect": "allow",
       "action": [
@@ -111,9 +111,9 @@ PUT /api/v1/organizations/{organization_id}/policies/{policy_name}
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **Name** | *string* | Name of policy | `"policy1"` |
-| **Path** | *string* | Policy's location | `"/example/admin/"` |
-| **Statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:*"],"resources":["urn:everything:*"]}]` |
+| **name** | *string* | Policy name | `"policy1"` |
+| **path** | *string* | Policy's location | `"/example/admin/"` |
+| **statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:*"],"resources":["urn:everything:*"]}]` |
 
 
 
@@ -122,9 +122,9 @@ PUT /api/v1/organizations/{organization_id}/policies/{policy_name}
 ```bash
 $ curl -n -X PUT /api/v1/organizations/$ORGANIZATION_ID/policies/$POLICY_NAME \
   -d '{
-  "Name": "policy1",
-  "Path": "/example/admin/",
-  "Statements": [
+  "name": "policy1",
+  "path": "/example/admin/",
+  "statements": [
     {
       "effect": "allow",
       "action": [
@@ -149,13 +149,13 @@ HTTP/1.1 200 OK
 
 ```json
 {
-  "ID": "01234567-89ab-cdef-0123-456789abcdef",
-  "Name": "policy1",
-  "Path": "/example/admin/",
-  "CreatedAt": "2015-01-01T12:00:00Z",
-  "Urn": "urn:iws:iam:org1:policy/example/admin/policy1",
-  "Org": "tecsisa",
-  "Statements": [
+  "id": "01234567-89ab-cdef-0123-456789abcdef",
+  "name": "policy1",
+  "path": "/example/admin/",
+  "createdAt": "2015-01-01T12:00:00Z",
+  "urn": "urn:iws:iam:org1:policy/example/admin/policy1",
+  "org": "tecsisa",
+  "statements": [
     {
       "effect": "allow",
       "action": [
@@ -219,13 +219,13 @@ HTTP/1.1 200 OK
 
 ```json
 {
-  "ID": "01234567-89ab-cdef-0123-456789abcdef",
-  "Name": "policy1",
-  "Path": "/example/admin/",
-  "CreatedAt": "2015-01-01T12:00:00Z",
-  "Urn": "urn:iws:iam:org1:policy/example/admin/policy1",
-  "Org": "tecsisa",
-  "Statements": [
+  "id": "01234567-89ab-cdef-0123-456789abcdef",
+  "name": "policy1",
+  "path": "/example/admin/",
+  "createdAt": "2015-01-01T12:00:00Z",
+  "urn": "urn:iws:iam:org1:policy/example/admin/policy1",
+  "org": "tecsisa",
+  "statements": [
     {
       "effect": "allow",
       "action": [
@@ -249,8 +249,8 @@ HTTP/1.1 200 OK
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **[Name](#resource-order2_policy)** | *string* | Name of policy | `"policy1"` |
-| **[Org](#resource-order2_policy)** | *string* | Organization of policy | `"tecsisa"` |
+| **[name](#resource-order2_policy)** | *string* | Policy name | `"policy1"` |
+| **[org](#resource-order2_policy)** | *string* | Policy's organization | `"tecsisa"` |
 
 ###  Policy List
 
@@ -278,8 +278,8 @@ HTTP/1.1 200 OK
 ```json
 [
   {
-    "Org": "tecsisa",
-    "Name": "policy1"
+    "org": "tecsisa",
+    "name": "policy1"
   }
 ]
 ```
@@ -294,8 +294,8 @@ List attached groups
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **Name** | *string* | Name of group | `"group1"` |
-| **Org** | *string* | Organization of group | `"tecsisa"` |
+| **name** | *string* | Group's name | `"group1"` |
+| **org** | *string* | Group's organization | `"tecsisa"` |
 
 ###  Policy Groups List
 
@@ -323,8 +323,8 @@ HTTP/1.1 200 OK
 ```json
 [
   {
-    "Org": "tecsisa",
-    "Name": "group1"
+    "org": "tecsisa",
+    "name": "group1"
   }
 ]
 ```

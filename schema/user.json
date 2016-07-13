@@ -9,7 +9,7 @@
       "strictProperties": true,
       "type": "object",
       "definitions": {
-        "ID": {
+        "id": {
           "description": "Unique user identifier",
           "readOnly": true,
           "format": "uuid",
@@ -17,22 +17,22 @@
             "string"
           ]
         },
-        "ExternalID": {
+        "externalId": {
           "description": "User's external identifier",
           "example": "user1",
           "type": "string"
         },
-        "Path": {
+        "path": {
           "description": "User location",
           "example": "/example/admin/",
           "type": "string"
         },
-        "CreatedAt": {
+        "createdAt": {
           "description": "User creation date",
           "format": "date-time",
           "type": "string"
         },
-        "Urn": {
+        "urn": {
           "description": "User's Uniform Resource Name",
           "example": "urn:iws:iam::user/example/admin/user1",
           "type": "string"
@@ -49,16 +49,16 @@
           },
           "schema": {
             "properties": {
-              "ExternalID": {
-                "$ref": "#/definitions/order1_user/definitions/ExternalID"
+              "externalId": {
+                "$ref": "#/definitions/order1_user/definitions/externalId"
               },
-              "Path": {
-                "$ref": "#/definitions/order1_user/definitions/Path"
+              "path": {
+                "$ref": "#/definitions/order1_user/definitions/path"
               }
             },
             "required": [
-              "ExternalID",
-              "Path"
+              "externalId",
+              "path"
             ],
             "type": "object"
           },
@@ -74,12 +74,12 @@
           },
           "schema": {
             "properties": {
-              "Path": {
-                "$ref": "#/definitions/order1_user/definitions/Path"
+              "path": {
+                "$ref": "#/definitions/order1_user/definitions/path"
               }
             },
             "required": [
-              "Path"
+              "path"
             ],
             "type": "object"
           },
@@ -107,20 +107,20 @@
         }
       ],
       "properties": {
-        "ID": {
-          "$ref": "#/definitions/order1_user/definitions/ID"
+        "id": {
+          "$ref": "#/definitions/order1_user/definitions/id"
         },
-        "ExternalID": {
-          "$ref": "#/definitions/order1_user/definitions/ExternalID"
+        "externalId": {
+          "$ref": "#/definitions/order1_user/definitions/externalId"
         },
-        "Path": {
-          "$ref": "#/definitions/order1_user/definitions/Path"
+        "path": {
+          "$ref": "#/definitions/order1_user/definitions/path"
         },
-        "CreatedAt": {
-          "$ref": "#/definitions/order1_user/definitions/CreatedAt"
+        "createdAt": {
+          "$ref": "#/definitions/order1_user/definitions/createdAt"
         },
-        "Urn": {
-          "$ref": "#/definitions/order1_user/definitions/Urn"
+        "urn": {
+          "$ref": "#/definitions/order1_user/definitions/urn"
         }
       }
     },
@@ -143,7 +143,7 @@
         }
       ],
       "properties": {
-        "ExternalID": {
+        "externalId": {
           "description": "User identifier",
           "example": ["User1"],
           "type": "array",
@@ -162,7 +162,7 @@
       "links": [
         {
           "description": "List all groups that a user is a member.",
-          "href": "/api/v1/users/{user_externalID}/groups",
+          "href": "/api/v1/users/{user_externalId}/groups",
           "method": "GET",
           "rel": "instances",
           "http_header": {
@@ -172,12 +172,12 @@
         }
       ],
       "properties": {
-        "Org": {
+        "org": {
           "description": "Group's organization",
           "example": "tecsisa",
           "type": "string"
         },
-        "Name": {
+        "name": {
           "description": "Group name",
           "example": "group1",
           "type": "string"

@@ -17,7 +17,7 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 	testcases := map[string]struct {
 		expectedStatusCode int
 		expectedError      api.Error
-		expectedResponse   GetUserByIdResponse
+		expectedResponse   api.User
 		resource           string
 		// Manager Results
 		getListUsersResult                   []string
@@ -33,14 +33,12 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 		"OkCaseAdmin": {
 			expectedStatusCode: http.StatusOK,
 			resource:           USER_ROOT_URL + "/user",
-			expectedResponse: GetUserByIdResponse{
-				User: &api.User{
-					ID:         "UserID",
-					ExternalID: "ExternalID",
-					Path:       "Path",
-					Urn:        "urn",
-					CreateAt:   now,
-				},
+			expectedResponse: api.User{
+				ID:         "UserID",
+				ExternalID: "ExternalID",
+				Path:       "Path",
+				Urn:        "urn",
+				CreateAt:   now,
 			},
 			getUserByExternalIdResult: &api.User{
 				ID:         "UserID",
@@ -166,14 +164,14 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 		}
 		switch res.StatusCode {
 		case http.StatusOK:
-			getUserByIdResponse := GetUserByIdResponse{}
-			err = json.NewDecoder(res.Body).Decode(&getUserByIdResponse)
+			response := api.User{}
+			err = json.NewDecoder(res.Body).Decode(&response)
 			if err != nil {
 				t.Fatalf("Test case %v. Unexpected error parsing response %v", n, err)
 				continue
 			}
 			// Check result
-			if diff := pretty.Compare(getUserByIdResponse, test.expectedResponse); diff != "" {
+			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
 				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
 					n, diff)
 				continue

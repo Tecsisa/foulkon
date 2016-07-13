@@ -7,16 +7,16 @@ Group API
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **CreatedAt** | *date-time* | When group was created | `"2015-01-01T12:00:00Z"` |
-| **ID** | *uuid* | Unique identifier of group | `"01234567-89ab-cdef-0123-456789abcdef"` |
-| **Name** | *string* | Name of group | `"group1"` |
-| **Org** | *string* | Organization of group | `"tecsisa"` |
-| **Path** | *string* | Group's location | `"/example/admin/"` |
-| **Urn** | *string* | Uniform Resource Name of group | `"urn:iws:iam:tecsisa:group/example/admin/group1"` |
+| **createdAt** | *date-time* | Group creation date | `"2015-01-01T12:00:00Z"` |
+| **id** | *uuid* | Unique group identifier | `"01234567-89ab-cdef-0123-456789abcdef"` |
+| **name** | *string* | Group name | `"group1"` |
+| **org** | *string* | Group's organization | `"tecsisa"` |
+| **path** | *string* | Group location | `"/example/admin/"` |
+| **urn** | *string* | Group's Uniform Resource Name | `"urn:iws:iam:tecsisa:group/example/admin/group1"` |
 
 ### Group Create
 
-Create a new group.
+Create a new group
 
 ```
 POST /api/v1/organizations/{organization_id}/groups
@@ -26,8 +26,8 @@ POST /api/v1/organizations/{organization_id}/groups
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **Name** | *string* | Name of group | `"group1"` |
-| **Path** | *string* | Group's location | `"/example/admin/"` |
+| **name** | *string* | Group name | `"group1"` |
+| **path** | *string* | Group location | `"/example/admin/"` |
 
 
 
@@ -36,8 +36,8 @@ POST /api/v1/organizations/{organization_id}/groups
 ```bash
 $ curl -n -X POST /api/v1/organizations/$ORGANIZATION_ID/groups \
   -d '{
-  "Name": "group1",
-  "Path": "/example/admin/"
+  "name": "group1",
+  "path": "/example/admin/"
 }' \
   -H "Content-Type: application/json" \
   -H "Authorization: Basic or Bearer XXX"
@@ -52,18 +52,18 @@ HTTP/1.1 201 Created
 
 ```json
 {
-  "ID": "01234567-89ab-cdef-0123-456789abcdef",
-  "Name": "group1",
-  "Path": "/example/admin/",
-  "CreatedAt": "2015-01-01T12:00:00Z",
-  "Urn": "urn:iws:iam:tecsisa:group/example/admin/group1",
-  "Org": "tecsisa"
+  "id": "01234567-89ab-cdef-0123-456789abcdef",
+  "name": "group1",
+  "path": "/example/admin/",
+  "createdAt": "2015-01-01T12:00:00Z",
+  "urn": "urn:iws:iam:tecsisa:group/example/admin/group1",
+  "org": "tecsisa"
 }
 ```
 
 ### Group Update
 
-Update an existing group.
+Update an existing group
 
 ```
 PUT /api/v1/organizations/{organization_id}/groups/{group_name}
@@ -73,8 +73,8 @@ PUT /api/v1/organizations/{organization_id}/groups/{group_name}
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **Name** | *string* | Name of group | `"group1"` |
-| **Path** | *string* | Group's location | `"/example/admin/"` |
+| **name** | *string* | Group name | `"group1"` |
+| **path** | *string* | Group location | `"/example/admin/"` |
 
 
 
@@ -83,8 +83,8 @@ PUT /api/v1/organizations/{organization_id}/groups/{group_name}
 ```bash
 $ curl -n -X PUT /api/v1/organizations/$ORGANIZATION_ID/groups/$GROUP_NAME \
   -d '{
-  "Name": "group1",
-  "Path": "/example/admin/"
+  "name": "group1",
+  "path": "/example/admin/"
 }' \
   -H "Content-Type: application/json" \
   -H "Authorization: Basic or Bearer XXX"
@@ -99,18 +99,18 @@ HTTP/1.1 200 OK
 
 ```json
 {
-  "ID": "01234567-89ab-cdef-0123-456789abcdef",
-  "Name": "group1",
-  "Path": "/example/admin/",
-  "CreatedAt": "2015-01-01T12:00:00Z",
-  "Urn": "urn:iws:iam:tecsisa:group/example/admin/group1",
-  "Org": "tecsisa"
+  "id": "01234567-89ab-cdef-0123-456789abcdef",
+  "name": "group1",
+  "path": "/example/admin/",
+  "createdAt": "2015-01-01T12:00:00Z",
+  "urn": "urn:iws:iam:tecsisa:group/example/admin/group1",
+  "org": "tecsisa"
 }
 ```
 
 ### Group Delete
 
-Delete an existing group.
+Delete an existing group
 
 ```
 DELETE /api/v1/organizations/{organization_id}/groups/{group_name}
@@ -135,7 +135,7 @@ HTTP/1.1 202 Accepted
 
 ### Group Get
 
-Get an existing group.
+Get an existing group
 
 ```
 GET /api/v1/organizations/{organization_id}/groups/{group_name}
@@ -158,12 +158,12 @@ HTTP/1.1 200 OK
 
 ```json
 {
-  "ID": "01234567-89ab-cdef-0123-456789abcdef",
-  "Name": "group1",
-  "Path": "/example/admin/",
-  "CreatedAt": "2015-01-01T12:00:00Z",
-  "Urn": "urn:iws:iam:tecsisa:group/example/admin/group1",
-  "Org": "tecsisa"
+  "id": "01234567-89ab-cdef-0123-456789abcdef",
+  "name": "group1",
+  "path": "/example/admin/",
+  "createdAt": "2015-01-01T12:00:00Z",
+  "urn": "urn:iws:iam:tecsisa:group/example/admin/group1",
+  "org": "tecsisa"
 }
 ```
 
@@ -177,8 +177,8 @@ HTTP/1.1 200 OK
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **[Name](#resource-order1_group)** | *string* | Name of group | `"group1"` |
-| **[Org](#resource-order1_group)** | *string* | Organization of group | `"tecsisa"` |
+| **[name](#resource-order1_group)** | *string* | Group name | `"group1"` |
+| **[org](#resource-order1_group)** | *string* | Group's organization | `"tecsisa"` |
 
 ###  Group List All
 
@@ -206,8 +206,8 @@ HTTP/1.1 200 OK
 ```json
 [
   {
-    "Org": "tecsisa",
-    "Name": "group1"
+    "org": "tecsisa",
+    "name": "group1"
   }
 ]
 ```
@@ -216,7 +216,7 @@ HTTP/1.1 200 OK
 ## <a name="resource-order3_members">Member</a>
 
 
-Members of a group.
+Group members
 
 ### Attributes
 
@@ -226,7 +226,7 @@ Members of a group.
 
 ### Member Add
 
-Add member to a group
+Add member to a group.
 
 ```
 POST /api/v1/organizations/{organization_id}/groups/{group_name}/users/{user_id}
@@ -315,8 +315,8 @@ Attached Policies
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **Name** | *string* | Name of policy | `"policy1"` |
-| **Org** | *string* | Organization of policy | `"tecsisa"` |
+| **name** | *string* | Name of policy | `"policy1"` |
+| **org** | *string* | Organization of policy | `"tecsisa"` |
 
 ### Group Policies Attach
 
@@ -345,7 +345,7 @@ HTTP/1.1 202 Accepted
 
 ### Group Policies Detach
 
-Detach policy to group
+Detach policy from group
 
 ```
 DELETE /api/v1/organizations/{organization_id}/groups/{group_name}/policies/{policy_id}
@@ -394,8 +394,8 @@ HTTP/1.1 200 OK
 ```json
 [
   {
-    "Org": "tecsisa",
-    "Name": "policy1"
+    "org": "tecsisa",
+    "name": "policy1"
   }
 ]
 ```

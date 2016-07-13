@@ -10,14 +10,14 @@ import (
 // Requests
 
 type AuthorizeResourcesRequest struct {
-	Action    string   `json:", omitempty"`
-	Resources []string `json:", omitempty"`
+	Action    string   `json:"action, omitempty"`
+	Resources []string `json:"resources, omitempty"`
 }
 
 // Responses
 
 type AuthorizeResourcesResponse struct {
-	ResourcesAllowed []string `json:"ResourcesAllowed, omitempty"`
+	ResourcesAllowed []string `json:"resourcesAllowed, omitempty"`
 }
 
 func (a *WorkerHandler) HandleAuthorizeResources(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
