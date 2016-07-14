@@ -241,7 +241,7 @@ func (g PostgresRepo) GetGroupMembers(groupID string) ([]api.User, error) {
 
 func (g PostgresRepo) RemoveGroup(id string) error {
 	transaction := g.Dbmap.Begin()
-	// Go to delete group
+	// Delete group
 	transaction.Where("id like ?", id).Delete(&Group{})
 
 	// Error handling
@@ -253,7 +253,7 @@ func (g PostgresRepo) RemoveGroup(id string) error {
 		}
 	}
 
-	// delete all group relations
+	// Delete all group relations
 	transaction.Where("group_id like ?", id).Delete(&GroupUserRelation{})
 
 	// Error handling
@@ -263,10 +263,9 @@ func (g PostgresRepo) RemoveGroup(id string) error {
 			Code:    database.INTERNAL_ERROR,
 			Message: err.Error(),
 		}
-	} else {
-		transaction.Commit()
 	}
 
+	transaction.Commit()
 	return nil
 }
 

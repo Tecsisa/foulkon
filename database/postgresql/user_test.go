@@ -662,12 +662,12 @@ func TestPostgresRepo_RemoveUser(t *testing.T) {
 		if test.relation != nil {
 			for _, id := range test.relation.group_ids {
 				if err := insertGroupUserRelation(test.relation.user_id, id); err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting prevoius group user relations: %v", n, err)
+					t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
 					continue
 				}
 			}
 		}
-		// Call to repository to store an user
+		// Call to repository to remove user
 		err := repoDB.RemoveUser(test.userToDelete)
 
 		// Check database
