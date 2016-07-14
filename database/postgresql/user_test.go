@@ -682,5 +682,15 @@ func TestPostgresRepo_RemoveUser(t *testing.T) {
 			continue
 		}
 
+		relations, err := getGroupUserRelations("", test.previousUser.ID)
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error counting relations: %v", n, err)
+			continue
+		}
+		if relations != 0 {
+			t.Errorf("Test %v failed. Received different relations number: %v", n, relations)
+			continue
+		}
+
 	}
 }

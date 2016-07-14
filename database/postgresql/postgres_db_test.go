@@ -145,12 +145,31 @@ func getGroupsCountFiltered(id string, name string, path string, createAt int64,
 	return number, nil
 }
 
+func getGroupUserRelations(groupID string, userID string) (int, error) {
+	query := repoDB.Dbmap.Table(GroupUserRelation{}.TableName())
+	if groupID != "" {
+		query = query.Where("group_id = ?", groupID)
+	}
+	if userID != "" {
+		query = query.Where("user_id = ?", userID)
+	}
+
+	var number int
+	if err := query.Count(&number).Error; err != nil {
+		return 0, err
+	}
+
+	return number, nil
+}
+
 func cleanGroupTable() error {
 	if err := repoDB.Dbmap.Delete(&Group{}).Error; err != nil {
 		return err
 	}
 	return nil
 }
+
+// POLICY
 
 func cleanPolicyTable() error {
 	if err := repoDB.Dbmap.Delete(&Policy{}).Error; err != nil {

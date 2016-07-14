@@ -365,7 +365,7 @@ func TestPostgresRepo_RemoveGroup(t *testing.T) {
 				groupNotFound bool
 			}{
 				user_id:   "UserID",
-				group_ids: []string{"GroupID", "GroupID2"},
+				group_ids: []string{"GroupID"},
 			},
 			groupToDelete: "GroupID",
 		},
@@ -403,6 +403,16 @@ func TestPostgresRepo_RemoveGroup(t *testing.T) {
 		}
 		if groupNumber != 0 {
 			t.Errorf("Test %v failed. Received different group number: %v", n, groupNumber)
+			continue
+		}
+
+		relations, err := getGroupUserRelations(test.previousGroup.ID, "")
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error counting relations: %v", n, err)
+			continue
+		}
+		if relations != 0 {
+			t.Errorf("Test %v failed. Received different relations number: %v", n, relations)
 			continue
 		}
 	}
