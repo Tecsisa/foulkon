@@ -101,11 +101,11 @@ func TestPostgresRepo_AddGroup(t *testing.T) {
 			groupNumber, err := getGroupsCountFiltered(test.groupToCreate.ID, test.groupToCreate.Name, test.groupToCreate.Path,
 				test.groupToCreate.CreateAt.UnixNano(), test.groupToCreate.Urn, test.groupToCreate.Org)
 			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
+				t.Errorf("Test %v failed. Unexpected error counting groups: %v", n, err)
 				continue
 			}
 			if groupNumber != 1 {
-				t.Errorf("Test %v failed. Received different user number: %v", n, groupNumber)
+				t.Errorf("Test %v failed. Received different group number: %v", n, groupNumber)
 				continue
 			}
 
@@ -217,7 +217,7 @@ func TestPostgresRepo_UpdateGroup(t *testing.T) {
 	}{
 		"OkCase": {
 			previousGroups: []api.Group{
-				api.Group{
+				{
 					ID:       "GroupID",
 					Name:     "Name",
 					Path:     "Path",
@@ -248,7 +248,7 @@ func TestPostgresRepo_UpdateGroup(t *testing.T) {
 		},
 		"ErrorCaseDuplicateUrn": {
 			previousGroups: []api.Group{
-				api.Group{
+				{
 					ID:       "GroupID",
 					Name:     "Name",
 					Path:     "Path",
@@ -256,7 +256,7 @@ func TestPostgresRepo_UpdateGroup(t *testing.T) {
 					CreateAt: now,
 					Org:      "Org",
 				},
-				api.Group{
+				{
 					ID:       "GroupID2",
 					Name:     "Name2",
 					Path:     "Path2",
@@ -325,14 +325,85 @@ func TestPostgresRepo_UpdateGroup(t *testing.T) {
 			groupNumber, err := getGroupsCountFiltered(test.expectedResponse.ID, test.expectedResponse.Name, test.expectedResponse.Path,
 				test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.Urn, test.expectedResponse.Org)
 			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
+				t.Errorf("Test %v failed. Unexpected error counting groups: %v", n, err)
 				continue
 			}
 			if groupNumber != 1 {
-				t.Fatalf("Test %v failed. Received different user number: %v", n, groupNumber)
+				t.Fatalf("Test %v failed. Received different group number: %v", n, groupNumber)
 				continue
 			}
 		}
 	}
 
+}
+
+func TestPostgresRepo_RemoveGroup(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		// Previous data
+		previousGroup *api.Group
+		relation      *struct {
+			user_id       string
+			group_ids     []string
+			groupNotFound bool
+		}
+		// Postgres Repo Args
+		groupToDelete string
+	}{
+		"OkCase": {
+			previousGroup: &api.Group{
+				ID:       "GroupID",
+				Name:     "Name",
+				Path:     "Path",
+				Urn:      "Urn",
+				CreateAt: now,
+				Org:      "Org",
+			},
+			relation: &struct {
+				user_id       string
+				group_ids     []string
+				groupNotFound bool
+			}{
+				user_id:   "UserID",
+				group_ids: []string{"GroupID", "GroupID2"},
+			},
+			groupToDelete: "GroupID",
+		},
+	}
+
+	for n, test := range testcases {
+		cleanGroupTable()
+		cleanGroupUserRelationTable()
+
+		// Insert previous data
+		if test.previousGroup != nil {
+			if err := insertGroup(test.previousGroup.ID, test.previousGroup.Name, test.previousGroup.Path,
+				test.previousGroup.CreateAt.Unix(), test.previousGroup.Urn, test.previousGroup.Org); err != nil {
+				t.Errorf("Test %v failed. Unexpected error inserting previous group: %v", n, err)
+				continue
+			}
+		}
+		if test.relation != nil {
+			for _, id := range test.relation.group_ids {
+				if err := insertGroupUserRelation(test.relation.user_id, id); err != nil {
+					t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
+					continue
+				}
+			}
+		}
+		// Call to repository to remove group
+		err := repoDB.RemoveGroup(test.groupToDelete)
+
+		// Check database
+		groupNumber, err := getGroupsCountFiltered(test.groupToDelete, "", "",
+			0, "", "")
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error counting groups: %v", n, err)
+			continue
+		}
+		if groupNumber != 0 {
+			t.Errorf("Test %v failed. Received different group number: %v", n, groupNumber)
+			continue
+		}
+	}
 }
