@@ -139,6 +139,7 @@ func (p PostgresRepo) AddPolicy(policy api.Policy) (*api.Policy, error) {
 
 func (p PostgresRepo) GetPoliciesFiltered(org string, pathPrefix string) ([]api.Policy, error) {
 	policies := []Policy{}
+	var apiPolicies []api.Policy
 	query := p.Dbmap
 	if len(org) > 0 {
 		query = query.Where("org like ?", org)
@@ -157,7 +158,7 @@ func (p PostgresRepo) GetPoliciesFiltered(org string, pathPrefix string) ([]api.
 
 	// Transform policies for API
 	if policies != nil {
-		apiPolicies := make([]api.Policy, len(policies), cap(policies))
+		apiPolicies = make([]api.Policy, len(policies), cap(policies))
 
 		for i, pol := range policies {
 			policy := dbPolicyToAPIPolicy(&pol)
@@ -179,11 +180,9 @@ func (p PostgresRepo) GetPoliciesFiltered(org string, pathPrefix string) ([]api.
 			apiPolicies[i] = *policy
 		}
 
-		return apiPolicies, nil
 	}
 
-	// No data to return
-	return nil, nil
+	return apiPolicies, nil
 }
 
 func (p PostgresRepo) UpdatePolicy(policy api.Policy, name string, path string, urn string, statements []api.Statement) (*api.Policy, error) {
