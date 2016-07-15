@@ -133,7 +133,7 @@ func TestMain(m *testing.M) {
 				Action: "example:user",
 			},
 			{
-				Id:     "invalidResource",
+				Id:     "hostUnreachable",
 				Host:   "fail",
 				Url:    "/fail",
 				Method: "GET",

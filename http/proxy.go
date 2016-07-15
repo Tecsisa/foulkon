@@ -1,12 +1,11 @@
 package http
 
 import (
-	"net/http"
-	"net/url"
-
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -17,12 +16,11 @@ import (
 )
 
 const (
-
 	// Proxy error codes
-	INVALID_DEST_HOST_URL                = "InvalidDestinationHostURL"
-	DESTINATION_HOST_RESOURCE_CALL_ERROR = "DestinationHostResourceCallError"
-	AUTHORIZATION_ERROR                  = "AuthorizationError"
-	FORBIDDEN_ERROR                      = "ForbiddenError"
+	INVALID_DEST_HOST_URL = "InvalidDestinationHostURL"
+	HOST_UNREACHABLE      = "HostUnreachableError"
+	INTERNAL_SERVER_ERROR = "InternalServerError"
+	FORBIDDEN_ERROR       = "ForbiddenError"
 )
 
 var rUrnParam, _ = regexp.Compile(`\{(\w+)\}`)
@@ -41,7 +39,7 @@ func (h *ProxyHandler) HandleRequest(resource authorizr.APIResource) httprouter.
 			destURL, err := url.Parse(resource.Host)
 			if err != nil {
 				h.TransactionErrorLog(r, requestID, workerRequestID, fmt.Sprintf("Error creating destination host URL: %v", err.Error()))
-				h.RespondForbidden(w, getErrorMessage(INVALID_DEST_HOST_URL))
+				h.RespondInternalServerError(w, getErrorMessage(INVALID_DEST_HOST_URL, "Invalid destination host"))
 				return
 			}
 			r.URL.Host = destURL.Host
@@ -52,7 +50,7 @@ func (h *ProxyHandler) HandleRequest(resource authorizr.APIResource) httprouter.
 			res, err := h.client.Do(r)
 			if err != nil {
 				h.TransactionErrorLog(r, requestID, workerRequestID, fmt.Sprintf("Error calling to destination host resource: %v", err.Error()))
-				h.RespondForbidden(w, getErrorMessage(DESTINATION_HOST_RESOURCE_CALL_ERROR))
+				h.RespondInternalServerError(w, getErrorMessage(HOST_UNREACHABLE, "Error calling destination resource"))
 				return
 			}
 
@@ -68,12 +66,24 @@ func (h *ProxyHandler) HandleRequest(resource authorizr.APIResource) httprouter.
 			}
 
 			buffer := new(bytes.Buffer)
-			buffer.ReadFrom(res.Body)
+			if _, err := buffer.ReadFrom(res.Body); err != nil {
+				h.TransactionErrorLog(r, requestID, workerRequestID, fmt.Sprintf("Error reading response from destination: %v", err.Error()))
+				h.RespondInternalServerError(w, getErrorMessage(INTERNAL_SERVER_ERROR, "Error reading response from destination"))
+				return
+			}
 			w.Write(buffer.Bytes())
 			h.TransactionLog(r, requestID, workerRequestID, "Request accepted")
 		} else {
 			h.TransactionErrorLog(r, requestID, workerRequestID, fmt.Sprintf("Error in authorization: %v", err.Error()))
-			h.RespondForbidden(w, getErrorMessage(AUTHORIZATION_ERROR))
+			apiError := err.(*api.Error)
+			switch apiError.Code {
+			case FORBIDDEN_ERROR:
+				h.RespondForbidden(w, getErrorMessage(FORBIDDEN_ERROR, ""))
+			case api.INVALID_PARAMETER_ERROR, api.REGEX_NO_MATCH:
+				h.RespondBadRequest(w, getErrorMessage(api.INVALID_PARAMETER_ERROR, "Bad request"))
+			default:
+				h.RespondInternalServerError(w, getErrorMessage(INTERNAL_SERVER_ERROR, "Internal server error. Contact the administrator"))
+			}
 			return
 		}
 	}
@@ -82,10 +92,8 @@ func (h *ProxyHandler) HandleRequest(resource authorizr.APIResource) httprouter.
 func (h *ProxyHandler) checkAuthorization(r *http.Request, urn string, action string) (string, error) {
 	workerRequestID := "None"
 	if !isFullUrn(urn) {
-		return workerRequestID, &api.Error{
-			Code:    api.INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Urn %v is a prefix, it would be a full urn resource", urn),
-		}
+		return workerRequestID,
+			getErrorMessage(api.INVALID_PARAMETER_ERROR, fmt.Sprintf("Urn %v is a prefix, it would be a full urn resource", urn))
 	}
 	if err := api.IsValidResources([]string{urn}); err != nil {
 		return workerRequestID, err
@@ -99,58 +107,38 @@ func (h *ProxyHandler) checkAuthorization(r *http.Request, urn string, action st
 		Resources: []string{urn},
 	})
 	if err != nil {
-		return workerRequestID, &api.Error{
-			Code:    api.UNKNOWN_API_ERROR,
-			Message: err.Error(),
-		}
+		return workerRequestID, getErrorMessage(api.UNKNOWN_API_ERROR, err.Error())
 	}
 
-	req, err := http.NewRequest(http.MethodPost, h.proxy.WorkerHost+ RESOURCE_URL, bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodPost, h.proxy.WorkerHost+RESOURCE_URL, bytes.NewBuffer(body))
 	if err != nil {
-		return workerRequestID, &api.Error{
-			Code:    api.UNKNOWN_API_ERROR,
-			Message: err.Error(),
-		}
+		return workerRequestID, getErrorMessage(api.UNKNOWN_API_ERROR, err.Error())
 	}
 	// Add all headers from original request
 	req.Header = r.Header
 	// Call worker to retrieve authorization
 	res, err := h.client.Do(req)
 	if err != nil {
-		return workerRequestID, &api.Error{
-			Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
-			Message: err.Error(),
-		}
+		return workerRequestID, getErrorMessage(HOST_UNREACHABLE, err.Error())
 	}
 
 	workerRequestID = res.Header.Get(REQUEST_ID_HEADER)
 
 	switch res.StatusCode {
 	case http.StatusUnauthorized:
-		return workerRequestID, &api.Error{
-			Code:    FORBIDDEN_ERROR,
-			Message: "Unauthenticated user",
-		}
+		return workerRequestID, getErrorMessage(FORBIDDEN_ERROR, "Unauthenticated user")
 	case http.StatusForbidden:
-		return workerRequestID, &api.Error{
-			Code:    FORBIDDEN_ERROR,
-			Message: fmt.Sprintf("Restricted access to urn %v", urn),
-		}
+		return workerRequestID, getErrorMessage(FORBIDDEN_ERROR, fmt.Sprintf("Restricted access to urn %v", urn))
 	case http.StatusOK:
 		authzResponse := AuthorizeResourcesResponse{}
 		err = json.NewDecoder(res.Body).Decode(&authzResponse)
 		if err != nil {
-			return workerRequestID, &api.Error{
-				Code:    api.UNKNOWN_API_ERROR,
-				Message: fmt.Sprintf("Error parsing authorizr response %v", err.Error()),
-			}
+			return workerRequestID, getErrorMessage(api.UNKNOWN_API_ERROR, fmt.Sprintf("Error parsing authorizr response %v", err.Error()))
 		}
 
 		if len(authzResponse.ResourcesAllowed) < 1 {
-			return workerRequestID, &api.Error{
-				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
-				Message: fmt.Sprintf("Restricted access to urn %v", urn),
-			}
+			return workerRequestID,
+				getErrorMessage(FORBIDDEN_ERROR, fmt.Sprintf("Restricted access to urn %v", urn))
 		}
 
 		// Check urns allowed to find target urn
@@ -163,18 +151,14 @@ func (h *ProxyHandler) checkAuthorization(r *http.Request, urn string, action st
 		}
 
 		if !allowed {
-			return workerRequestID, &api.Error{
-				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
-				Message: fmt.Sprintf("No access for urn %v received from server", urn),
-			}
+			return workerRequestID,
+				getErrorMessage(FORBIDDEN_ERROR, fmt.Sprintf("No access for urn %v received from server", urn))
 		}
 
 		return workerRequestID, nil
 	default:
-		return workerRequestID, &api.Error{
-			Code:    AUTHORIZATION_ERROR,
-			Message: fmt.Sprintf("There was a problem calling authorization, status code %v", res.StatusCode),
-		}
+		return workerRequestID,
+			getErrorMessage(INTERNAL_SERVER_ERROR, fmt.Sprintf("There was a problem retrieving authorization, status code %v", res.StatusCode))
 	}
 }
 
@@ -197,9 +181,16 @@ func isFullUrn(resource string) bool {
 	}
 }
 
-func getErrorMessage(errorCode string) *api.Error {
-	return &api.Error{
-		Code:    errorCode,
-		Message: "Forbidden resource. If you need access, contact the administrators.",
+func getErrorMessage(errorCode string, message string) *api.Error {
+	if message == "" {
+		return &api.Error{
+			Code:    errorCode,
+			Message: "Forbidden resource. If you need access, contact the administrator",
+		}
+	} else {
+		return &api.Error{
+			Code:    errorCode,
+			Message: message,
+		}
 	}
 }

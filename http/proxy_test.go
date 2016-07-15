@@ -3,13 +3,12 @@ package http
 import (
 	"encoding/json"
 	"net/http"
-	"testing"
-
 	"reflect"
+	"testing"
+	"time"
 
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/tecsisa/authorizr/api"
-	"time"
 )
 
 func TestProxyHandler_HandleRequest(t *testing.T) {
@@ -50,63 +49,63 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 			getAuthorizedExternalResourcesResult: []string{"urn:ews:example:instance1:resource/user"},
 		},
 		"ErrorCaseInvalidParameter": {
-			expectedStatusCode: http.StatusForbidden,
+			expectedStatusCode: http.StatusBadRequest,
 			resource:           "/urnPrefix",
 			expectedError: api.Error{
-				Code:    AUTHORIZATION_ERROR,
-				Message: "Forbidden resource. If you need access, contact the administrators.",
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Bad request",
 			},
 		},
 		"ErrorCaseInvalidResources": {
-			expectedStatusCode: http.StatusForbidden,
+			expectedStatusCode: http.StatusBadRequest,
 			resource:           "/invalidUrn",
 			expectedError: api.Error{
-				Code:    AUTHORIZATION_ERROR,
-				Message: "Forbidden resource. If you need access, contact the administrators.",
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Bad request",
 			},
 		},
 		"ErrorCaseInvalidAction": {
-			expectedStatusCode: http.StatusForbidden,
+			expectedStatusCode: http.StatusBadRequest,
 			resource:           "/invalidAction",
 			expectedError: api.Error{
-				Code:    AUTHORIZATION_ERROR,
-				Message: "Forbidden resource. If you need access, contact the administrators.",
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Bad request",
 			},
 		},
 		"ErrorCaseInvalidHost": {
-			expectedStatusCode: http.StatusForbidden,
+			expectedStatusCode: http.StatusInternalServerError,
 			resource:           "/invalid",
 			expectedError: api.Error{
 				Code:    INVALID_DEST_HOST_URL,
-				Message: "Forbidden resource. If you need access, contact the administrators.",
+				Message: "Error calling destination host",
 			},
 			getAuthorizedExternalResourcesResult: []string{"urn:ews:example:instance1:resource/invalid"},
 		},
-		"ErrorCaseInvalidResource": {
-			expectedStatusCode: http.StatusForbidden,
+		"ErrorCaseHostUnreachable": {
+			expectedStatusCode: http.StatusInternalServerError,
 			resource:           "/fail",
 			expectedError: api.Error{
-				Code:    DESTINATION_HOST_RESOURCE_CALL_ERROR,
-				Message: "Forbidden resource. If you need access, contact the administrators.",
+				Code:    HOST_UNREACHABLE,
+				Message: "Error calling destination resource",
 			},
 			getAuthorizedExternalResourcesResult: []string{"urn:ews:example:instance1:resource/fail"},
 		},
-		"ErrorCaseWorkedsa": {
+		"ErrorCaseUnauthenticated": {
 			expectedStatusCode: http.StatusForbidden,
 			resource:           USER_ROOT_URL + "/user",
 			expectedError: api.Error{
-				Code:    AUTHORIZATION_ERROR,
-				Message: "Forbidden resource. If you need access, contact the administrators.",
+				Code:    FORBIDDEN_ERROR,
+				Message: "Forbidden resource. If you need access, contact the administrator",
 			},
 			getAuthorizedExternalResourcesResult: []string{"urn:ews:example:instance1:resource/user"},
 			unauthenticated:                      true,
 		},
 		"ErrorCaseWorkerError": {
-			expectedStatusCode: http.StatusForbidden,
+			expectedStatusCode: http.StatusInternalServerError,
 			resource:           USER_ROOT_URL + "/user",
 			expectedError: api.Error{
-				Code:    AUTHORIZATION_ERROR,
-				Message: "Forbidden resource. If you need access, contact the administrators.",
+				Code:    INTERNAL_SERVER_ERROR,
+				Message: "There was a problem retrieving authorization, status code 500",
 			},
 			getAuthorizedExternalResourcesErr: &api.Error{
 				Code: api.UNKNOWN_API_ERROR,
@@ -116,16 +115,16 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 			expectedStatusCode: http.StatusForbidden,
 			resource:           USER_ROOT_URL + "/user",
 			expectedError: api.Error{
-				Code:    AUTHORIZATION_ERROR,
-				Message: "Forbidden resource. If you need access, contact the administrators.",
+				Code:    FORBIDDEN_ERROR,
+				Message: "Forbidden resource. If you need access, contact the administrator",
 			},
 		},
 		"ErrorCaseUnauthorized": {
 			expectedStatusCode: http.StatusForbidden,
 			resource:           USER_ROOT_URL + "/user",
 			expectedError: api.Error{
-				Code:    AUTHORIZATION_ERROR,
-				Message: "Forbidden resource. If you need access, contact the administrators.",
+				Code:    FORBIDDEN_ERROR,
+				Message: "Forbidden resource. If you need access, contact the administrator",
 			},
 		},
 	}

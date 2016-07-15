@@ -262,11 +262,33 @@ func (h *ProxyHandler) TransactionLog(r *http.Request, requestID string, workerR
 func (h *ProxyHandler) RespondForbidden(w http.ResponseWriter, proxyErr *api.Error) {
 	b, err := json.Marshal(proxyErr)
 	if err != nil {
-		w.WriteHeader(http.StatusForbidden)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusForbidden)
+	w.Write(b)
+}
+
+func (h *ProxyHandler) RespondBadRequest(w http.ResponseWriter, proxyErr *api.Error) {
+	b, err := json.Marshal(proxyErr)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusBadRequest)
+	w.Write(b)
+}
+
+func (h *ProxyHandler) RespondInternalServerError(w http.ResponseWriter, proxyErr *api.Error) {
+	b, err := json.Marshal(proxyErr)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusInternalServerError)
 	w.Write(b)
 }
 
