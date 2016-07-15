@@ -566,3 +566,80 @@ func TestPostgresRepo_UpdatePolicy(t *testing.T) {
 		}
 	}
 }
+
+func TestPostgresRepo_RemovePolicy(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		previousPolicy *api.Policy
+		id             string
+	}{
+		"OkCase": {
+			previousPolicy: &api.Policy{
+				ID:       "test1",
+				Name:     "test",
+				Org:      "123",
+				Path:     "/path/",
+				CreateAt: now,
+				Urn:      api.CreateUrn("123", api.RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]api.Statement{
+					{
+						Effect: "allow",
+						Action: []string{
+							api.USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			id: "123",
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean policy database
+		cleanPolicyTable()
+		cleanStatementTable()
+
+		// Call to repository to add a policy
+		if test.previousPolicy != nil {
+			_, err := repoDB.AddPolicy(*test.previousPolicy)
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+				continue
+			}
+		}
+		err := repoDB.RemovePolicy(test.id)
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+			continue
+		}
+		// Check database
+		policyNumber, err := getPoliciesCountFiltered(test.id, "", "", "", 0, "")
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error counting policies: %v", n, err)
+			continue
+		}
+		if policyNumber != 0 {
+			t.Fatalf("Test %v failed. Received different policies number: %v", n, policyNumber)
+			continue
+		}
+		for _, _ = range *test.previousPolicy.Statements {
+			statementNumber, err := getStatementsCountFiltered(
+				"",
+				test.id,
+				"",
+				"",
+				"")
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error counting statements: %v", n, err)
+				continue
+			}
+			if statementNumber != 0 {
+				t.Fatalf("Test %v failed. Received different statements number: %v", n, statementNumber)
+				continue
+			}
+		}
+	}
+}
