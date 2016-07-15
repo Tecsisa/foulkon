@@ -169,6 +169,13 @@ func cleanGroupTable() error {
 	return nil
 }
 
+func cleanGroupPolicyRelationTable() error {
+	if err := repoDB.Dbmap.Delete(&GroupPolicyRelation{}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 // POLICY
 
 func cleanPolicyTable() error {
@@ -252,6 +259,36 @@ func getPoliciesCountFiltered(id string, org string, name string, path string, c
 	}
 
 	return number, nil
+}
+
+func getGroupPolicyRelationCount(policyID string, groupID string) (int, error) {
+	query := repoDB.Dbmap.Table(GroupPolicyRelation{}.TableName())
+	if policyID != "" {
+		query = query.Where("policy_id = ?", policyID)
+	}
+	if groupID != "" {
+		query = query.Where("group_id = ?", groupID)
+	}
+	var number int
+	if err := query.Count(&number).Error; err != nil {
+		return 0, err
+	}
+
+	return number, nil
+}
+
+func insertGroupPolicyRelation(groupID string, policyID string) error {
+	err := repoDB.Dbmap.Exec("INSERT INTO public.group_policy_relations (group_id, policy_id) VALUES (?, ?)",
+		groupID, policyID).Error
+
+	// Error handling
+	if err != nil {
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+	return nil
 }
 
 func getStatementsCountFiltered(id string, policyId string, effect string, action string, resources string) (int, error) {
