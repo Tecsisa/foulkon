@@ -288,7 +288,7 @@ func (p PostgresRepo) RemovePolicy(id string) error {
 func (p PostgresRepo) GetAttachedGroups(policyID string) ([]api.Group, error) {
 	relations := []GroupPolicyRelation{}
 	query := p.Dbmap.Where("policy_id like ?", policyID).Find(&relations)
-
+	var groups []api.Group
 	// Error Handling
 	if err := query.Error; err != nil {
 		return nil, &database.Error{
@@ -299,7 +299,7 @@ func (p PostgresRepo) GetAttachedGroups(policyID string) ([]api.Group, error) {
 
 	// Transform relations to API domain
 	if relations != nil {
-		groups := make([]api.Group, len(relations), cap(relations))
+		groups = make([]api.Group, len(relations), cap(relations))
 		for i, r := range relations {
 			group, err := p.GetGroupById(r.GroupID)
 			// Error handling
@@ -312,11 +312,9 @@ func (p PostgresRepo) GetAttachedGroups(policyID string) ([]api.Group, error) {
 
 			groups[i] = *group
 		}
-
-		return groups, nil
 	}
 
-	return nil, nil
+	return groups, nil
 }
 
 // Private helper methods

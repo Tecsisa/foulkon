@@ -344,7 +344,7 @@ func TestPostgresRepo_AddPolicy(t *testing.T) {
 				continue
 			}
 			if policyNumber != 1 {
-				t.Fatalf("Test %v failed. Received different policies number: %v", n, policyNumber)
+				t.Errorf("Test %v failed. Received different policies number: %v", n, policyNumber)
 				continue
 			}
 			for _, statement := range *test.policy.Statements {
@@ -359,7 +359,7 @@ func TestPostgresRepo_AddPolicy(t *testing.T) {
 					continue
 				}
 				if statementNumber != 1 {
-					t.Fatalf("Test %v failed. Received different statements number: %v", n, statementNumber)
+					t.Errorf("Test %v failed. Received different statements number: %v", n, statementNumber)
 					continue
 				}
 			}
@@ -572,6 +572,7 @@ func TestPostgresRepo_RemovePolicy(t *testing.T) {
 	testcases := map[string]struct {
 		previousPolicy *api.Policy
 		id             string
+		group          *api.Group
 	}{
 		"OkCase": {
 			previousPolicy: &api.Policy{
@@ -593,7 +594,15 @@ func TestPostgresRepo_RemovePolicy(t *testing.T) {
 					},
 				},
 			},
-			id: "123",
+			id: "test1",
+			group: &api.Group{
+				ID:       "GroupID",
+				Name:     "Name",
+				Path:     "Path",
+				Urn:      "urn",
+				CreateAt: now,
+				Org:      "Org",
+			},
 		},
 	}
 
@@ -601,12 +610,27 @@ func TestPostgresRepo_RemovePolicy(t *testing.T) {
 		// Clean policy database
 		cleanPolicyTable()
 		cleanStatementTable()
+		cleanGroupTable()
+		cleanGroupPolicyRelationTable()
 
 		// Call to repository to add a policy
 		if test.previousPolicy != nil {
 			_, err := repoDB.AddPolicy(*test.previousPolicy)
 			if err != nil {
 				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+				continue
+			}
+		}
+		if test.group != nil {
+			err := insertGroup(test.group.ID, test.group.Name, test.group.Path,
+				test.group.CreateAt.UnixNano(), test.group.Urn, test.group.Org)
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error inserting group: %v", n, err)
+				continue
+			}
+			err = insertGroupPolicyRelation(test.group.ID, test.previousPolicy.ID)
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error inserting group relation: %v", n, err)
 				continue
 			}
 		}
@@ -622,7 +646,7 @@ func TestPostgresRepo_RemovePolicy(t *testing.T) {
 			continue
 		}
 		if policyNumber != 0 {
-			t.Fatalf("Test %v failed. Received different policies number: %v", n, policyNumber)
+			t.Errorf("Test %v failed. Received different policies number: %v", n, policyNumber)
 			continue
 		}
 		for _, _ = range *test.previousPolicy.Statements {
@@ -637,9 +661,107 @@ func TestPostgresRepo_RemovePolicy(t *testing.T) {
 				continue
 			}
 			if statementNumber != 0 {
-				t.Fatalf("Test %v failed. Received different statements number: %v", n, statementNumber)
+				t.Errorf("Test %v failed. Received different statements number: %v", n, statementNumber)
 				continue
 			}
+		}
+		groupPolicyRelationNumber, err := getGroupPolicyRelationCount(test.previousPolicy.ID, "")
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error counting relations: %v", n, err)
+			continue
+		}
+		if groupPolicyRelationNumber != 0 {
+			t.Errorf("Test %v failed. Received different relations number: %v", n, groupPolicyRelationNumber)
+			continue
+		}
+
+	}
+}
+
+func TestPostgresRepo_GetAttachedGroups(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		previousPolicy   *api.Policy
+		group            *api.Group
+		expectedResponse []api.Group
+	}{
+		"OkCase": {
+			previousPolicy: &api.Policy{
+				ID:       "test1",
+				Name:     "test",
+				Org:      "123",
+				Path:     "/path/",
+				CreateAt: now,
+				Urn:      api.CreateUrn("123", api.RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]api.Statement{
+					{
+						Effect: "allow",
+						Action: []string{
+							api.USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			group: &api.Group{
+				ID:       "GroupID",
+				Name:     "Name",
+				Path:     "Path",
+				Urn:      "urn",
+				CreateAt: now,
+				Org:      "Org",
+			},
+			expectedResponse: []api.Group{
+				{
+					ID:       "GroupID",
+					Name:     "Name",
+					Path:     "Path",
+					Urn:      "urn",
+					CreateAt: now,
+					Org:      "Org",
+				},
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean database
+		cleanPolicyTable()
+		cleanStatementTable()
+		cleanGroupTable()
+		cleanGroupPolicyRelationTable()
+
+		// Call to repository to add a policy
+		_, err := repoDB.AddPolicy(*test.previousPolicy)
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+			continue
+		}
+		if test.group != nil {
+			err := insertGroup(test.group.ID, test.group.Name, test.group.Path,
+				test.group.CreateAt.UnixNano(), test.group.Urn, test.group.Org)
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error inserting group: %v", n, err)
+				continue
+			}
+			err = insertGroupPolicyRelation(test.group.ID, test.previousPolicy.ID)
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error inserting group relation: %v", n, err)
+				continue
+			}
+		}
+
+		groups, err := repoDB.GetAttachedGroups(test.previousPolicy.ID)
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+			continue
+		}
+		// Check response
+		if diff := pretty.Compare(groups, test.expectedResponse); diff != "" {
+			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+			continue
 		}
 	}
 }
