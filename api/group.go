@@ -42,7 +42,7 @@ func (api AuthAPI) AddGroup(authenticatedUser AuthenticatedUser, org string, nam
 	if !IsValidName(name) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Name %v", name),
+			Message: fmt.Sprintf("Invalid parameter: name %v", name),
 		}
 	}
 	if !IsValidOrg(org) {
@@ -54,7 +54,7 @@ func (api AuthAPI) AddGroup(authenticatedUser AuthenticatedUser, org string, nam
 	if !IsValidPath(path) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Path %v", path),
+			Message: fmt.Sprintf("Invalid parameter: path %v", path),
 		}
 	}
 
@@ -68,7 +68,7 @@ func (api AuthAPI) AddGroup(authenticatedUser AuthenticatedUser, org string, nam
 	if len(groupsFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, group.Urn),
 		}
 	}
@@ -118,7 +118,7 @@ func (api AuthAPI) AddMember(authenticatedUser AuthenticatedUser, userID string,
 	if !IsValidUserExternalID(userID) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", userID),
+			Message: fmt.Sprintf("Invalid parameter: externalId %v", userID),
 		}
 	}
 	if !IsValidName(org) {
@@ -130,7 +130,7 @@ func (api AuthAPI) AddMember(authenticatedUser AuthenticatedUser, userID string,
 	if !IsValidName(groupName) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Name %v", groupName),
+			Message: fmt.Sprintf("Invalid parameter: name %v", groupName),
 		}
 	}
 
@@ -148,7 +148,7 @@ func (api AuthAPI) AddMember(authenticatedUser AuthenticatedUser, userID string,
 	if len(groupsFiltered) < 1 {
 		return &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, groupDB.Urn),
 		}
 	}
@@ -200,7 +200,7 @@ func (api AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, userID stri
 	if !IsValidUserExternalID(userID) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", userID),
+			Message: fmt.Sprintf("Invalid parameter: externalId %v", userID),
 		}
 	}
 	if !IsValidOrg(org) {
@@ -212,7 +212,7 @@ func (api AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, userID stri
 	if !IsValidName(groupName) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Name %v", groupName),
+			Message: fmt.Sprintf("Invalid parameter: name %v", groupName),
 		}
 	}
 
@@ -230,7 +230,7 @@ func (api AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, userID stri
 	if len(groupsFiltered) < 1 {
 		return &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, groupDB.Urn),
 		}
 	}
@@ -255,7 +255,7 @@ func (api AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, userID stri
 	if !isMember {
 		return &Error{
 			Code: USER_IS_NOT_A_MEMBER_OF_GROUP,
-			Message: fmt.Sprintf("User with external ID %v is not a member of group with org %v and name %v",
+			Message: fmt.Sprintf("User with externalId %v is not a member of group with org %v and name %v",
 				userDB.ExternalID, groupDB.Org, groupDB.Name),
 		}
 	}
@@ -282,7 +282,7 @@ func (api AuthAPI) ListMembers(authenticatedUser AuthenticatedUser, org string, 
 	if !IsValidName(groupName) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Group name %v", groupName),
+			Message: fmt.Sprintf("Invalid parameter: name %v", groupName),
 		}
 	}
 	if !IsValidOrg(org) {
@@ -306,7 +306,7 @@ func (api AuthAPI) ListMembers(authenticatedUser AuthenticatedUser, org string, 
 	if len(groupsFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, group.Urn),
 		}
 	}
@@ -338,7 +338,7 @@ func (api AuthAPI) RemoveGroup(authenticatedUser AuthenticatedUser, org string, 
 	if !IsValidName(name) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Group name %v", name),
+			Message: fmt.Sprintf("Invalid parameter: name %v", name),
 		}
 	}
 	if !IsValidOrg(org) {
@@ -362,7 +362,7 @@ func (api AuthAPI) RemoveGroup(authenticatedUser AuthenticatedUser, org string, 
 	if len(groupsFiltered) < 1 {
 		return &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, group.Urn),
 		}
 	}
@@ -388,7 +388,7 @@ func (api AuthAPI) GetGroupByName(authenticatedUser AuthenticatedUser, org strin
 	if !IsValidName(name) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Group name %v", name),
+			Message: fmt.Sprintf("Invalid parameter: name %v", name),
 		}
 	}
 	if !IsValidOrg(org) {
@@ -433,7 +433,7 @@ func (api AuthAPI) GetGroupByName(authenticatedUser AuthenticatedUser, org strin
 	} else {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, group.Urn),
 		}
 	}
@@ -491,7 +491,7 @@ func (api AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, 
 	if !IsValidName(newName) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Name %v", newName),
+			Message: fmt.Sprintf("Invalid parameter: name %v", newName),
 		}
 	}
 	if !IsValidOrg(org) {
@@ -503,7 +503,7 @@ func (api AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, 
 	if !IsValidPath(newPath) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Path %v", newPath),
+			Message: fmt.Sprintf("Invalid parameter: path %v", newPath),
 		}
 	}
 
@@ -521,7 +521,7 @@ func (api AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, 
 	if len(groupsFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, group.Urn),
 		}
 	}
@@ -554,7 +554,7 @@ func (api AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, 
 	if len(groupsFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, groupToUpdate.Urn),
 		}
 	}
@@ -611,7 +611,7 @@ func (api AuthAPI) AttachPolicyToGroup(authenticatedUser AuthenticatedUser, org 
 	if len(groupsFiltered) < 1 {
 		return &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, group.Urn),
 		}
 	}
@@ -636,7 +636,7 @@ func (api AuthAPI) AttachPolicyToGroup(authenticatedUser AuthenticatedUser, org 
 		// Unexpected error
 		return &Error{
 			Code:    POLICY_IS_ALREADY_ATTACHED_TO_GROUP,
-			Message: fmt.Sprintf("Policy: %v is already attached to Group: %v", policy.ID, group.ID),
+			Message: fmt.Sprintf("Policy: %v is already attached to Group: %v", policy.Name, group.Name),
 		}
 	}
 
@@ -689,7 +689,7 @@ func (api AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org 
 	if len(groupsFiltered) < 1 {
 		return &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, group.Urn),
 		}
 	}
@@ -713,7 +713,7 @@ func (api AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org 
 	if !isAttached {
 		return &Error{
 			Code: POLICY_IS_NOT_ATTACHED_TO_GROUP,
-			Message: fmt.Sprintf("Policy with Org %v and name %v is not attached to group with org %v and name %v",
+			Message: fmt.Sprintf("Policy with org %v and name %v is not attached to group with org %v and name %v",
 				policy.Org, policy.Name, group.Org, group.Name),
 		}
 
@@ -738,7 +738,7 @@ func (api AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser
 	if !IsValidName(groupName) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Group name %v", groupName),
+			Message: fmt.Sprintf("Invalid parameter: name %v", groupName),
 		}
 	}
 	if !IsValidOrg(org) {
@@ -762,7 +762,7 @@ func (api AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser
 	if len(groupsFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, group.Urn),
 		}
 	}

@@ -4,13 +4,13 @@
   "definitions": {
     "authorize": {
       "$schema": "",
-      "title": "Authorize",
-      "description": "Authorize API",
+      "title": "Resource",
+      "description": "Resource API",
       "strictProperties": true,
       "type": "object",
       "links": [
         {
-          "description": "Authorize user to access resources",
+          "description": "Get authorized resources according selected action and resources",
           "href": "/api/v1/authorize",
           "method": "POST",
           "rel": "self",
@@ -39,7 +39,7 @@
             ],
             "type": "object"
           },
-          "title": "resources"
+          "title": "authorized"
         }
       ],
       "properties": {

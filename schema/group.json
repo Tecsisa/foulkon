@@ -36,7 +36,7 @@
           "type": "string"
         },
         "org": {
-          "description": "Group's organization",
+          "description": "Group organization",
           "example": "tecsisa",
           "type": "string"
         }
@@ -139,27 +139,43 @@
       "title": "",
       "description": "",
       "strictProperties": true,
-      "type": [
-        "object"
-      ],
+      "type": "object",
       "links": [
         {
           "description": "List all groups by organization.",
-          "href": "/api/v1/organizations/{organization_id}/groups",
+          "href": "/api/v1/organizations/{organization_id}/groups?PathPrefix={optional_path_prefix}",
           "method": "GET",
-          "rel": "instances",
+          "rel": "self",
           "http_header": {
             "Authorization": "Basic or Bearer XXX"
           },
-          "title": "Group List All"
+          "title": "List all organization's groups"
+        },
+        {
+          "description": "List all groups.",
+          "href": "/api/v1/groups?PathPrefix={optional_path_prefix}",
+          "method": "GET",
+          "rel": "self",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "List all groups"
         }
       ],
       "properties": {
-        "org": {
-          "$ref": "#/definitions/order1_group/definitions/org"
-        },
-        "name": {
-          "$ref": "#/definitions/order1_group/definitions/name"
+        "groups": {
+          "description": "List of groups",
+          "type": "array",
+          "items": {
+            "properties": {
+              "org": {
+                "$ref": "#/definitions/order1_group/definitions/org"
+              },
+              "name": {
+                "$ref": "#/definitions/order1_group/definitions/name"
+              }
+            }
+          }
         }
       }
     },
@@ -202,7 +218,7 @@
         }
       ],
       "properties": {
-        "ExternalID": {
+        "members": {
           "description": "Identifier of user",
           "example": ["member1"],
           "type": "array",
@@ -243,7 +259,7 @@
           "description": "List attach policies",
           "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/policies",
           "method": "GET",
-          "rel": "instances",
+          "rel": "self",
           "http_header": {
             "Authorization": "Basic or Bearer XXX"
           },
@@ -251,15 +267,23 @@
         }
       ],
       "properties": {
-        "org": {
-          "description": "Organization of policy",
-          "example": "tecsisa",
-          "type": "string"
-        },
-        "name": {
-          "description": "Name of policy",
-          "example": "policy1",
-          "type": "string"
+        "policies": {
+          "description": "Policies attached to this group",
+          "type": "array",
+          "items": {
+            "properties": {
+              "org": {
+                "description": "Organization of policy",
+                "example": "tecsisa",
+                "type": "string"
+              },
+              "name": {
+                "description": "Name of policy",
+                "example": "policy1",
+                "type": "string"
+              }
+            }
+          }
         }
       }
     }

@@ -10,7 +10,7 @@ Group API
 | **createdAt** | *date-time* | Group creation date | `"2015-01-01T12:00:00Z"` |
 | **id** | *uuid* | Unique group identifier | `"01234567-89ab-cdef-0123-456789abcdef"` |
 | **name** | *string* | Group name | `"group1"` |
-| **org** | *string* | Group's organization | `"tecsisa"` |
+| **org** | *string* | Group organization | `"tecsisa"` |
 | **path** | *string* | Group location | `"/example/admin/"` |
 | **urn** | *string* | Group's Uniform Resource Name | `"urn:iws:iam:tecsisa:group/example/admin/group1"` |
 
@@ -177,22 +177,22 @@ HTTP/1.1 200 OK
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **[name](#resource-order1_group)** | *string* | Group name | `"group1"` |
-| **[org](#resource-order1_group)** | *string* | Group's organization | `"tecsisa"` |
+| **[groups/name](#resource-order1_group)** | *string* | Group name | `"group1"` |
+| **[groups/org](#resource-order1_group)** | *string* | Group organization | `"tecsisa"` |
 
-###  Group List All
+###  List all organization's groups
 
 List all groups by organization.
 
 ```
-GET /api/v1/organizations/{organization_id}/groups
+GET /api/v1/organizations/{organization_id}/groups?PathPrefix={optional_path_prefix}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/organizations/$ORGANIZATION_ID/groups \
+$ curl -n /api/v1/organizations/$ORGANIZATION_ID/groups?PathPrefix=$OPTIONAL_PATH_PREFIX \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -204,12 +204,48 @@ HTTP/1.1 200 OK
 ```
 
 ```json
-[
-  {
-    "org": "tecsisa",
-    "name": "group1"
-  }
-]
+{
+  "groups": [
+    {
+      "org": "tecsisa",
+      "name": "group1"
+    }
+  ]
+}
+```
+
+###  List all groups
+
+List all groups.
+
+```
+GET /api/v1/groups?PathPrefix={optional_path_prefix}
+```
+
+
+#### Curl Example
+
+```bash
+$ curl -n /api/v1/groups?PathPrefix=$OPTIONAL_PATH_PREFIX \
+  -H "Authorization: Basic or Bearer XXX"
+```
+
+
+#### Response Example
+
+```
+HTTP/1.1 200 OK
+```
+
+```json
+{
+  "groups": [
+    {
+      "org": "tecsisa",
+      "name": "group1"
+    }
+  ]
+}
 ```
 
 
@@ -222,7 +258,7 @@ Group members
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **ExternalID** | *array* | Identifier of user | `["member1"]` |
+| **members** | *array* | Identifier of user | `["member1"]` |
 
 ### Member Add
 
@@ -299,7 +335,7 @@ HTTP/1.1 200 OK
 
 ```json
 {
-  "ExternalID": [
+  "members": [
     "member1"
   ]
 }
@@ -315,8 +351,8 @@ Attached Policies
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **name** | *string* | Name of policy | `"policy1"` |
-| **org** | *string* | Organization of policy | `"tecsisa"` |
+| **policies/name** | *string* | Name of policy | `"policy1"` |
+| **policies/org** | *string* | Organization of policy | `"tecsisa"` |
 
 ### Group Policies Attach
 
@@ -392,12 +428,14 @@ HTTP/1.1 200 OK
 ```
 
 ```json
-[
-  {
-    "org": "tecsisa",
-    "name": "policy1"
-  }
-]
+{
+  "policies": [
+    {
+      "org": "tecsisa",
+      "name": "policy1"
+    }
+  ]
+}
 ```
 
 

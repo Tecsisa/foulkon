@@ -1,7 +1,7 @@
-## <a name="resource-authorize">Authorize</a>
+## <a name="resource-authorize">Resource</a>
 
 
-Authorize API
+Resource API
 
 ### Attributes
 
@@ -9,9 +9,9 @@ Authorize API
 | ------- | ------- | ------- | ------- |
 | **resourcesAllowed** | *array* | List of allowed resources | `["urn:ews:product:instance:example/resource1"]` |
 
-### Authorize resources
+### Resource authorized
 
-Authorize user to access resources
+Get authorized resources according selected action and resources
 
 ```
 POST /api/v1/authorize

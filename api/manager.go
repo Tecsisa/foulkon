@@ -70,6 +70,7 @@ type UserRepo interface {
 
 // Group repository that contains all user operations for this domain
 type GroupRepo interface {
+	AddGroup(group Group) (*Group, error)
 	GetGroupByName(org string, name string) (*Group, error)
 	IsMemberOfGroup(userID string, groupID string) (bool, error)
 	GetGroupMembers(groupID string) ([]User, error)
@@ -78,7 +79,6 @@ type GroupRepo interface {
 	GetGroupsFiltered(org string, pathPrefix string) ([]Group, error)
 	RemoveGroup(id string) error
 
-	AddGroup(group Group) (*Group, error)
 	AddMember(userID string, groupID string) error
 	RemoveMember(userID string, groupID string) error
 	UpdateGroup(group Group, newName string, newPath string, newUrn string) (*Group, error)

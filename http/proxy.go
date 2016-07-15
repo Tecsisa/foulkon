@@ -105,7 +105,7 @@ func (h *ProxyHandler) checkAuthorization(r *http.Request, urn string, action st
 		}
 	}
 
-	req, err := http.NewRequest(http.MethodPost, h.proxy.WorkerHost+AUTHORIZE_URL, bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodPost, h.proxy.WorkerHost+ RESOURCE_URL, bytes.NewBuffer(body))
 	if err != nil {
 		return workerRequestID, &api.Error{
 			Code:    api.UNKNOWN_API_ERROR,

@@ -16,7 +16,7 @@ func (u PostgresRepo) GetUserByExternalID(id string) (*api.User, error) {
 	if query.RecordNotFound() {
 		return nil, &database.Error{
 			Code:    database.USER_NOT_FOUND,
-			Message: fmt.Sprintf("User with ExternalID %v not found", id),
+			Message: fmt.Sprintf("User with externalId %v not found", id),
 		}
 	}
 

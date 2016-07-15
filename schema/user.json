@@ -133,7 +133,7 @@
       "links": [
         {
           "description": "List all users filtered by PathPrefix.",
-          "href": "/api/v1/users?PathPrefix={OptionalPath}",
+          "href": "/api/v1/users?PathPrefix={optional_path_prefix}",
           "method": "GET",
           "rel": "self",
           "http_header": {
@@ -143,9 +143,9 @@
         }
       ],
       "properties": {
-        "externalId": {
-          "description": "User identifier",
-          "example": ["User1"],
+        "users": {
+          "description": "User identifiers",
+          "example": ["User1", "User2"],
           "type": "array",
           "items": {
             "type": "string"
@@ -164,7 +164,7 @@
           "description": "List all groups that a user is a member.",
           "href": "/api/v1/users/{user_externalId}/groups",
           "method": "GET",
-          "rel": "instances",
+          "rel": "self",
           "http_header": {
             "Authorization": "Basic or Bearer XXX"
           },
@@ -172,15 +172,23 @@
         }
       ],
       "properties": {
-        "org": {
-          "description": "Group's organization",
-          "example": "tecsisa",
-          "type": "string"
-        },
-        "name": {
-          "description": "Group name",
-          "example": "group1",
-          "type": "string"
+        "groups": {
+          "description": "List of groups",
+          "type": "array",
+          "items": {
+            "properties": {
+              "org": {
+                "description": "Group organization",
+                "example": "tecsisa",
+                "type": "string"
+              },
+              "name": {
+                "description": "Group name",
+                "example": "group1",
+                "type": "string"
+              }
+            }
+          }
         }
       }
     }

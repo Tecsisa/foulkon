@@ -1784,7 +1784,6 @@ func TestWorkerHandler_HandleListAttachedGroupPolicies(t *testing.T) {
 func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		org        string
 		pathPrefix string
 		// Expected result
 		expectedStatusCode int
@@ -1796,7 +1795,6 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 		getListAllGroupErr error
 	}{
 		"OkCase": {
-			org:                "org1",
 			pathPrefix:         "/path/",
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: GetGroupsResponse{
@@ -1815,7 +1813,6 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedError": {
-			org:                "org1",
 			pathPrefix:         "/path/",
 			expectedStatusCode: http.StatusForbidden,
 			expectedError: api.Error{
@@ -1828,7 +1825,6 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidParameterError": {
-			org:                "org1",
 			pathPrefix:         "Invalid",
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
@@ -1841,7 +1837,6 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnknownApiError": {
-			org:                "org1",
 			pathPrefix:         "/path/",
 			expectedStatusCode: http.StatusInternalServerError,
 			getListAllGroupErr: &api.Error{
@@ -1858,7 +1853,7 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 		testApi.ArgsOut[GetGroupListMethod][0] = test.getListAllGroupResult
 		testApi.ArgsOut[GetGroupListMethod][1] = test.getListAllGroupErr
 
-		url := fmt.Sprintf(server.URL+API_VERSION_1+"/groups?Org=%v&PathPrefix=%v", test.org, test.pathPrefix)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/groups?PathPrefix=%v", "", test.pathPrefix)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
@@ -1872,9 +1867,8 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 		}
 
 		// Check received parameter
-		// Check received parameter
-		if testApi.ArgsIn[GetGroupListMethod][1] != test.org {
-			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[GetGroupListMethod][1])
+		if testApi.ArgsIn[GetGroupListMethod][1] != "" {
+			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, "", testApi.ArgsIn[GetGroupListMethod][1])
 			continue
 		}
 		if testApi.ArgsIn[GetGroupListMethod][2] != test.pathPrefix {

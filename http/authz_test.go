@@ -103,7 +103,7 @@ func TestWorkerHandler_HandleAuthorizeResources(t *testing.T) {
 		if body == nil {
 			body = bytes.NewBuffer([]byte{})
 		}
-		req, err := http.NewRequest(http.MethodPost, server.URL+AUTHORIZE_URL, body)
+		req, err := http.NewRequest(http.MethodPost, server.URL+ RESOURCE_URL, body)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue

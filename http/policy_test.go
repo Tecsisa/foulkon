@@ -644,11 +644,26 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 			expectedStatusCode: http.StatusNotFound,
 			expectedError: api.Error{
 				Code:    api.POLICY_BY_ORG_AND_NAME_NOT_FOUND,
-				Message: "Group not found",
+				Message: "Policy not found",
 			},
 			updatePolicyErr: &api.Error{
 				Code:    api.POLICY_BY_ORG_AND_NAME_NOT_FOUND,
-				Message: "Group not found",
+				Message: "Policy not found",
+			},
+		},
+		"ErrorCasePolicyAlreadyExistError": {
+			request: &UpdatePolicyRequest{
+				Name: "policy1",
+				Path: "path2",
+			},
+			expectedStatusCode: http.StatusConflict,
+			expectedError: api.Error{
+				Code:    api.POLICY_ALREADY_EXIST,
+				Message: "Policy already exist",
+			},
+			updatePolicyErr: &api.Error{
+				Code:    api.POLICY_ALREADY_EXIST,
+				Message: "Policy already exist",
 			},
 		},
 		"ErrorCaseInvalidParameterError": {
@@ -1155,7 +1170,6 @@ func TestWorkerHandler_HandleGetAttachedGroups(t *testing.T) {
 func TestWorkerHandler_HandleListAllPolicies(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		org        string
 		pathPrefix string
 		// Expected result
 		expectedStatusCode int
@@ -1167,7 +1181,6 @@ func TestWorkerHandler_HandleListAllPolicies(t *testing.T) {
 		getPolicyListErr error
 	}{
 		"OkCase": {
-			org:                "org1",
 			pathPrefix:         "path",
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: ListAllPoliciesResponse{
@@ -1194,7 +1207,6 @@ func TestWorkerHandler_HandleListAllPolicies(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidParameterError": {
-			org:                "org1",
 			pathPrefix:         "path",
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
@@ -1207,7 +1219,6 @@ func TestWorkerHandler_HandleListAllPolicies(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedError": {
-			org:                "org1",
 			pathPrefix:         "path",
 			expectedStatusCode: http.StatusForbidden,
 			expectedError: api.Error{
@@ -1220,7 +1231,6 @@ func TestWorkerHandler_HandleListAllPolicies(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnknownApiError": {
-			org:                "org1",
 			pathPrefix:         "path",
 			expectedStatusCode: http.StatusInternalServerError,
 			getPolicyListErr: &api.Error{
@@ -1237,7 +1247,7 @@ func TestWorkerHandler_HandleListAllPolicies(t *testing.T) {
 		testApi.ArgsOut[GetPolicyListMethod][0] = test.getPolicyListResult
 		testApi.ArgsOut[GetPolicyListMethod][1] = test.getPolicyListErr
 
-		url := fmt.Sprintf(server.URL+API_VERSION_1+"/policies?Org=%v&&PathPrefix=%v", test.org, test.pathPrefix)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/policies?PathPrefix=%v", test.pathPrefix)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
@@ -1255,8 +1265,8 @@ func TestWorkerHandler_HandleListAllPolicies(t *testing.T) {
 			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
 			continue
 		}
-		if testApi.ArgsIn[GetPolicyListMethod][1] != test.org {
-			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[GetPolicyListMethod][1])
+		if testApi.ArgsIn[GetPolicyListMethod][1] != "" {
+			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, "", testApi.ArgsIn[GetPolicyListMethod][1])
 			continue
 		}
 		if testApi.ArgsIn[GetPolicyListMethod][2] != test.pathPrefix {
