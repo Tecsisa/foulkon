@@ -1853,7 +1853,7 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 		testApi.ArgsOut[GetGroupListMethod][0] = test.getListAllGroupResult
 		testApi.ArgsOut[GetGroupListMethod][1] = test.getListAllGroupErr
 
-		url := fmt.Sprintf(server.URL+API_VERSION_1+"/groups?PathPrefix=%v", "", test.pathPrefix)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/groups?PathPrefix=%v", test.pathPrefix)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
