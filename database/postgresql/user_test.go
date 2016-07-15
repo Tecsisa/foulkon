@@ -148,7 +148,7 @@ func TestPostgresRepo_GetUserByExternalID(t *testing.T) {
 			externalID: "NotExist",
 			expectedError: &database.Error{
 				Code:    database.USER_NOT_FOUND,
-				Message: "User with ExternalID NotExist not found",
+				Message: "User with externalId NotExist not found",
 			},
 		},
 	}

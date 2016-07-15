@@ -171,21 +171,21 @@ HTTP/1.1 200 OK
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **externalId** | *array* | User identifier | `["User1"]` |
+| **users** | *array* | User identifiers | `["User1","User2"]` |
 
 ###  User List All
 
 List all users filtered by PathPrefix.
 
 ```
-GET /api/v1/users?PathPrefix={OptionalPath}
+GET /api/v1/users?PathPrefix={optional_path_prefix}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/users?PathPrefix=$OPTIONALPATH \
+$ curl -n /api/v1/users?PathPrefix=$OPTIONAL_PATH_PREFIX \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -198,8 +198,9 @@ HTTP/1.1 200 OK
 
 ```json
 {
-  "externalId": [
-    "User1"
+  "users": [
+    "User1",
+    "User2"
   ]
 }
 ```
@@ -214,8 +215,8 @@ HTTP/1.1 200 OK
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **name** | *string* | Group name | `"group1"` |
-| **org** | *string* | Group's organization | `"tecsisa"` |
+| **groups/name** | *string* | Group name | `"group1"` |
+| **groups/org** | *string* | Group organization | `"tecsisa"` |
 
 ###  List user groups
 
@@ -241,12 +242,14 @@ HTTP/1.1 200 OK
 ```
 
 ```json
-[
-  {
-    "org": "tecsisa",
-    "name": "group1"
-  }
-]
+{
+  "groups": [
+    {
+      "org": "tecsisa",
+      "name": "group1"
+    }
+  ]
+}
 ```
 
 

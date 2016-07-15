@@ -2040,7 +2040,7 @@ func TestAuthAPI_GetPolicyList(t *testing.T) {
 				Identifier: "123456",
 				Admin:      true,
 			},
-			org:        "123",
+			org:        "",
 			pathPrefix: "/path/",
 			getPoliciesFilteredMethodErr: &database.Error{
 				Code: database.INTERNAL_ERROR,

@@ -176,6 +176,8 @@ func (a *WorkerHandler) HandleUpdatePolicy(w http.ResponseWriter, r *http.Reques
 		switch apiError.Code {
 		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
 			a.RespondNotFound(r, &authenticatedUser, w, apiError)
+		case api.POLICY_ALREADY_EXIST:
+			a.RespondConflict(r, &authenticatedUser, w, apiError)
 		case api.INVALID_PARAMETER_ERROR:
 			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
@@ -261,11 +263,10 @@ func (a *WorkerHandler) HandleListAllPolicies(w http.ResponseWriter, r *http.Req
 	autheticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	// get Org and PathPrefix from request, so the query can be filtered
-	org := r.URL.Query().Get("Org")
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call policies API to retrieve policies
-	result, err := a.worker.PolicyApi.GetPolicyList(autheticatedUser, org, pathPrefix)
+	result, err := a.worker.PolicyApi.GetPolicyList(autheticatedUser, "", pathPrefix)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)

@@ -8,6 +8,32 @@ import (
 	"github.com/tecsisa/authorizr/database"
 )
 
+func (g PostgresRepo) AddGroup(group api.Group) (*api.Group, error) {
+
+	// Create group model
+	groupDB := &Group{
+		ID:       group.ID,
+		Name:     group.Name,
+		Path:     group.Path,
+		CreateAt: group.CreateAt.UnixNano(),
+		Urn:      group.Urn,
+		Org:      group.Org,
+	}
+
+	// Store group
+	err := g.Dbmap.Create(groupDB).Error
+
+	// Error handling
+	if err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	return dbGroupToAPIGroup(groupDB), nil
+}
+
 func (g PostgresRepo) GetGroupByName(org string, name string) (*api.Group, error) {
 	group := &Group{}
 	query := g.Dbmap.Where("org like ? AND name like ?", org, name).First(group)
@@ -72,32 +98,6 @@ func (g PostgresRepo) GetGroupById(id string) (*api.Group, error) {
 	}
 
 	return dbGroupToAPIGroup(group), nil
-}
-
-func (g PostgresRepo) AddGroup(group api.Group) (*api.Group, error) {
-
-	// Create group model
-	groupDB := &Group{
-		ID:       group.ID,
-		Name:     group.Name,
-		Path:     group.Path,
-		CreateAt: group.CreateAt.UnixNano(),
-		Urn:      group.Urn,
-		Org:      group.Org,
-	}
-
-	// Store group
-	err := g.Dbmap.Create(groupDB).Error
-
-	// Error handling
-	if err != nil {
-		return nil, &database.Error{
-			Code:    database.INTERNAL_ERROR,
-			Message: err.Error(),
-		}
-	}
-
-	return dbGroupToAPIGroup(groupDB), nil
 }
 
 func (g PostgresRepo) AddMember(userID string, groupID string) error {

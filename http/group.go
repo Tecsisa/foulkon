@@ -31,7 +31,7 @@ type GetGroupMembersResponse struct {
 }
 
 type GetGroupPoliciesResponse struct {
-	AttachedPolicies []api.PolicyIdentity `json:"attachedPolicies, omitempty"`
+	AttachedPolicies []api.PolicyIdentity `json:"policies, omitempty"`
 }
 
 func (a *WorkerHandler) HandleCreateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -433,12 +433,11 @@ func (a *WorkerHandler) HandleListAttachedGroupPolicies(w http.ResponseWriter, r
 func (a *WorkerHandler) HandleListAllGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
-	// get Org and PathPrefix from request, so the query can be filtered
-	org := r.URL.Query().Get("Org")
+	// get PathPrefix from request, so the query can be filtered
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call group API to retrieve groups
-	result, err := a.worker.GroupApi.GetGroupList(authenticatedUser, org, pathPrefix)
+	result, err := a.worker.GroupApi.GetGroupList(authenticatedUser, "", pathPrefix)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)

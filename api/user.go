@@ -26,7 +26,7 @@ func (api AuthAPI) GetUserByExternalId(authenticatedUser AuthenticatedUser, id s
 	if !IsValidUserExternalID(id) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", id),
+			Message: fmt.Sprintf("Invalid parameter: externalId %v", id),
 		}
 	}
 	// Retrieve user from DB
@@ -61,7 +61,7 @@ func (api AuthAPI) GetUserByExternalId(authenticatedUser AuthenticatedUser, id s
 	} else {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, user.Urn),
 		}
 	}
@@ -115,13 +115,13 @@ func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalID strin
 	if !IsValidUserExternalID(externalID) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", externalID),
+			Message: fmt.Sprintf("Invalid parameter: externalId %v", externalID),
 		}
 	}
 	if !IsValidPath(path) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Path %v", path),
+			Message: fmt.Sprintf("Invalid parameter: path %v", path),
 		}
 	}
 
@@ -135,7 +135,7 @@ func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalID strin
 	if len(usersFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, user.Urn),
 		}
 	}
@@ -174,7 +174,7 @@ func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalID strin
 	} else {
 		return nil, &Error{
 			Code:    USER_ALREADY_EXIST,
-			Message: fmt.Sprintf("Unable to create user, user with ExternalID %v already exist", externalID),
+			Message: fmt.Sprintf("Unable to create user, user with externalId %v already exist", externalID),
 		}
 	}
 
@@ -185,13 +185,13 @@ func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalID st
 	if !IsValidUserExternalID(externalID) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: ExternalID %v", externalID),
+			Message: fmt.Sprintf("Invalid parameter: externalId %v", externalID),
 		}
 	}
 	if !IsValidPath(newPath) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Path %v", newPath),
+			Message: fmt.Sprintf("Invalid parameter: path %v", newPath),
 		}
 	}
 
@@ -209,7 +209,7 @@ func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalID st
 	if len(usersFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, userDB.Urn),
 		}
 	}
@@ -224,7 +224,7 @@ func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalID st
 	if len(usersFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, userToUpdate.Urn),
 		}
 	}
@@ -261,7 +261,7 @@ func (api AuthAPI) RemoveUserById(authenticatedUser AuthenticatedUser, id string
 	if len(usersFiltered) < 1 {
 		return &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, user.Urn),
 		}
 	}
@@ -297,7 +297,7 @@ func (api AuthAPI) GetGroupsByUserId(authenticatedUser AuthenticatedUser, id str
 	if len(usersFiltered) < 1 {
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v",
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				authenticatedUser.Identifier, user.Urn),
 		}
 	}

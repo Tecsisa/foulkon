@@ -47,7 +47,7 @@ const (
 	POLICY_ID_GROUPS_URL = POLICY_ROOT_URL + URI_PATH_PREFIX + POLICY_NAME + "/groups"
 
 	// Authorization URLs
-	AUTHORIZE_URL = API_VERSION_1 + "/authorize"
+	RESOURCE_URL = API_VERSION_1 + "/resource"
 
 	// HTTP Header
 	REQUEST_ID_HEADER = "Request-ID"
@@ -127,8 +127,8 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 	// Special endpoint without organization URI for policies
 	router.GET(API_VERSION_1+"/policies", workerHandler.HandleListAllPolicies)
 
-	// Get effect endpoint
-	router.POST(AUTHORIZE_URL, workerHandler.HandleAuthorizeResources)
+	// Resources authorized endpoint
+	router.POST(RESOURCE_URL, workerHandler.HandleAuthorizeResources)
 
 	// Return handler with request logging
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

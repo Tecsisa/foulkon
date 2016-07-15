@@ -7,7 +7,7 @@ Policy statement
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **action** | *array* | CRUD functions | `["iam:*"]` |
+| **action** | *array* | Operations over resources | `["iam:getUser","iam:*"]` |
 | **effect** | *string* | allow/deny resources | `"allow"` |
 | **resources** | *array* | resources | `["urn:everything:*"]` |
 
@@ -24,9 +24,9 @@ Policy API
 | **createdAt** | *date-time* | Policy creation date | `"2015-01-01T12:00:00Z"` |
 | **id** | *uuid* | Unique policy identifier | `"01234567-89ab-cdef-0123-456789abcdef"` |
 | **name** | *string* | Policy name | `"policy1"` |
-| **org** | *string* | Policy's organization | `"tecsisa"` |
-| **path** | *string* | Policy's location | `"/example/admin/"` |
-| **statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:*"],"resources":["urn:everything:*"]}]` |
+| **org** | *string* | Policy organization | `"tecsisa"` |
+| **path** | *string* | Policy location | `"/example/admin/"` |
+| **statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:getUser","iam:*"],"resources":["urn:everything:*"]}]` |
 | **urn** | *string* | Policy's Uniform Resource Name | `"urn:iws:iam:org1:policy/example/admin/policy1"` |
 
 ### Policy Create
@@ -42,8 +42,8 @@ POST /api/v1/organizations/{organization_id}/policies
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
 | **name** | *string* | Policy name | `"policy1"` |
-| **path** | *string* | Policy's location | `"/example/admin/"` |
-| **statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:*"],"resources":["urn:everything:*"]}]` |
+| **path** | *string* | Policy location | `"/example/admin/"` |
+| **statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:getUser","iam:*"],"resources":["urn:everything:*"]}]` |
 
 
 
@@ -58,6 +58,7 @@ $ curl -n -X POST /api/v1/organizations/$ORGANIZATION_ID/policies \
     {
       "effect": "allow",
       "action": [
+        "iam:getUser",
         "iam:*"
       ],
       "resources": [
@@ -89,6 +90,7 @@ HTTP/1.1 201 Created
     {
       "effect": "allow",
       "action": [
+        "iam:getUser",
         "iam:*"
       ],
       "resources": [
@@ -112,8 +114,8 @@ PUT /api/v1/organizations/{organization_id}/policies/{policy_name}
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
 | **name** | *string* | Policy name | `"policy1"` |
-| **path** | *string* | Policy's location | `"/example/admin/"` |
-| **statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:*"],"resources":["urn:everything:*"]}]` |
+| **path** | *string* | Policy location | `"/example/admin/"` |
+| **statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:getUser","iam:*"],"resources":["urn:everything:*"]}]` |
 
 
 
@@ -128,6 +130,7 @@ $ curl -n -X PUT /api/v1/organizations/$ORGANIZATION_ID/policies/$POLICY_NAME \
     {
       "effect": "allow",
       "action": [
+        "iam:getUser",
         "iam:*"
       ],
       "resources": [
@@ -159,6 +162,7 @@ HTTP/1.1 200 OK
     {
       "effect": "allow",
       "action": [
+        "iam:getUser",
         "iam:*"
       ],
       "resources": [
@@ -229,6 +233,7 @@ HTTP/1.1 200 OK
     {
       "effect": "allow",
       "action": [
+        "iam:getUser",
         "iam:*"
       ],
       "resources": [
@@ -249,22 +254,22 @@ HTTP/1.1 200 OK
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **[name](#resource-order2_policy)** | *string* | Policy name | `"policy1"` |
-| **[org](#resource-order2_policy)** | *string* | Policy's organization | `"tecsisa"` |
+| **[policies/name](#resource-order2_policy)** | *string* | Policy name | `"policy1"` |
+| **[policies/org](#resource-order2_policy)** | *string* | Policy organization | `"tecsisa"` |
 
-###  Policy List
+###  List all organization's policies
 
 List all policies by organization.
 
 ```
-GET /api/v1/organizations/{organization_id}/policies
+GET /api/v1/organizations/{organization_id}/policies?PathPrefix={optional_path_prefix}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/organizations/$ORGANIZATION_ID/policies \
+$ curl -n /api/v1/organizations/$ORGANIZATION_ID/policies?PathPrefix=$OPTIONAL_PATH_PREFIX \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -276,12 +281,48 @@ HTTP/1.1 200 OK
 ```
 
 ```json
-[
-  {
-    "org": "tecsisa",
-    "name": "policy1"
-  }
-]
+{
+  "policies": [
+    {
+      "org": "tecsisa",
+      "name": "policy1"
+    }
+  ]
+}
+```
+
+###  List all policies
+
+List all policies.
+
+```
+GET /api/v1/policies?PathPrefix={optional_path_prefix}
+```
+
+
+#### Curl Example
+
+```bash
+$ curl -n /api/v1/policies?PathPrefix=$OPTIONAL_PATH_PREFIX \
+  -H "Authorization: Basic or Bearer XXX"
+```
+
+
+#### Response Example
+
+```
+HTTP/1.1 200 OK
+```
+
+```json
+{
+  "policies": [
+    {
+      "org": "tecsisa",
+      "name": "policy1"
+    }
+  ]
+}
 ```
 
 
@@ -294,8 +335,8 @@ List attached groups
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **name** | *string* | Group's name | `"group1"` |
-| **org** | *string* | Group's organization | `"tecsisa"` |
+| **groups/name** | *string* | Group name | `"group1"` |
+| **groups/org** | *string* | Group organization | `"tecsisa"` |
 
 ###  Policy Groups List
 
@@ -321,12 +362,14 @@ HTTP/1.1 200 OK
 ```
 
 ```json
-[
-  {
-    "org": "tecsisa",
-    "name": "group1"
-  }
-]
+{
+  "groups": [
+    {
+      "org": "tecsisa",
+      "name": "group1"
+    }
+  ]
+}
 ```
 
 

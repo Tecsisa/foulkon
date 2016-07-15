@@ -54,7 +54,10 @@ func (c OIDCAuthConnector) Authenticate(h http.Handler) http.Handler {
 
 // Retrieve user from OIDC token
 func (c OIDCAuthConnector) RetrieveUserID(r http.Request) string {
-	t, _ := jwt.ParseFromRequest(&r, nil)
+	t, err := jwt.ParseFromRequest(&r, nil)
+	if err != nil {
+		return ""
+	}
 	if sub := t.Claims["sub"]; sub != nil {
 		return sub.(string)
 	}

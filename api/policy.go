@@ -97,7 +97,7 @@ func (api AuthAPI) GetPolicyList(authenticatedUser AuthenticatedUser, org string
 			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", pathPrefix),
 		}
 	}
-	if !IsValidOrg(org) {
+	if len(org) > 0 && !IsValidOrg(org) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: org %v", org),
