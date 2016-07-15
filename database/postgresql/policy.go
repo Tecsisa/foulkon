@@ -205,19 +205,22 @@ func (p PostgresRepo) UpdatePolicy(policy api.Policy, name string, path string, 
 	transaction := p.Dbmap.Begin()
 
 	// Update policy
-	transaction.Model(&policyDB).Update(policyUpdated)
-
-	// Check if policy exist
-	if transaction.RecordNotFound() {
+	if err := transaction.Model(&policyDB).Update(policyUpdated).Error; err != nil {
 		transaction.Rollback()
 		return nil, &database.Error{
-			Code:    database.POLICY_NOT_FOUND,
-			Message: fmt.Sprintf("Policy with name %v not found", name),
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
 		}
 	}
 
 	// Clear old statements
-	transaction.Where("policy_id like ?", policy.ID).Delete(Statement{})
+	if err := transaction.Where("policy_id like ?", policy.ID).Delete(Statement{}).Error; err != nil {
+		transaction.Rollback()
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
 
 	// Create new statements
 	for _, s := range statements {
@@ -228,15 +231,12 @@ func (p PostgresRepo) UpdatePolicy(policy api.Policy, name string, path string, 
 			Action:    stringArrayToString(s.Action),
 			Resources: stringArrayToString(s.Resources),
 		}
-		transaction.Create(statementDB)
-	}
-
-	// Error Handling
-	if err := transaction.Error; err != nil {
-		transaction.Rollback()
-		return nil, &database.Error{
-			Code:    database.INTERNAL_ERROR,
-			Message: err.Error(),
+		if err := transaction.Create(statementDB).Error; err != nil {
+			transaction.Rollback()
+			return nil, &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: err.Error(),
+			}
 		}
 	}
 
