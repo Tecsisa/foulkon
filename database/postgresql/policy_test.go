@@ -765,3 +765,148 @@ func TestPostgresRepo_GetAttachedGroups(t *testing.T) {
 		}
 	}
 }
+
+func Test_dbPolicyToAPIPolicy(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		dbPolicy  *Policy
+		apiPolicy *api.Policy
+	}{
+		"OkCase": {
+			dbPolicy: &Policy{
+				ID:       "test1",
+				Name:     "test",
+				Org:      "123",
+				Path:     "/path/",
+				CreateAt: now.UnixNano(),
+				Urn:      api.CreateUrn("123", api.RESOURCE_POLICY, "/path/", "test"),
+			},
+			apiPolicy: &api.Policy{
+				ID:       "test1",
+				Name:     "test",
+				Org:      "123",
+				Path:     "/path/",
+				CreateAt: now,
+				Urn:      api.CreateUrn("123", api.RESOURCE_POLICY, "/path/", "test"),
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		receivedAPIPolicy := dbPolicyToAPIPolicy(test.dbPolicy)
+		// Check response
+		if diff := pretty.Compare(receivedAPIPolicy, test.apiPolicy); diff != "" {
+			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+			continue
+		}
+	}
+}
+
+func Test_dbStatementsToAPIStatements(t *testing.T) {
+	testcases := map[string]struct {
+		dbStatements  []Statement
+		apiStatements *[]api.Statement
+	}{
+		"OkCase": {
+			dbStatements: []Statement{
+				{
+					ID:        "0123",
+					Effect:    "allow",
+					PolicyID:  "1234",
+					Action:    api.USER_ACTION_GET_USER,
+					Resources: api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+				},
+			},
+			apiStatements: &[]api.Statement{
+				{
+					Effect: "allow",
+					Action: []string{
+						api.USER_ACTION_GET_USER,
+					},
+					Resources: []string{
+						api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+					},
+				},
+			},
+		},
+		"OkCase2": {
+			dbStatements: []Statement{
+				{
+					ID:        "0123",
+					Effect:    "allow",
+					PolicyID:  "1234",
+					Action:    api.USER_ACTION_GET_USER,
+					Resources: api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+				},
+				{
+					ID:        "4321",
+					Effect:    "deny",
+					PolicyID:  "1234",
+					Action:    api.GROUP_ACTION_GET_GROUP + ";" + api.GROUP_ACTION_CREATE_GROUP,
+					Resources: api.GetUrnPrefix("", api.RESOURCE_GROUP, "/xxx/") + ";" + api.GetUrnPrefix("", api.RESOURCE_GROUP, "/xxx2/"),
+				},
+			},
+			apiStatements: &[]api.Statement{
+				{
+					Effect: "allow",
+					Action: []string{
+						api.USER_ACTION_GET_USER,
+					},
+					Resources: []string{
+						api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+					},
+				},
+				{
+					Effect: "deny",
+					Action: []string{
+						api.GROUP_ACTION_GET_GROUP,
+						api.GROUP_ACTION_CREATE_GROUP,
+					},
+					Resources: []string{
+						api.GetUrnPrefix("", api.RESOURCE_GROUP, "/xxx/"),
+						api.GetUrnPrefix("", api.RESOURCE_GROUP, "/xxx2/"),
+					},
+				},
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		receivedAPIStatements := dbStatementsToAPIStatements(test.dbStatements)
+		// Check response
+		if diff := pretty.Compare(receivedAPIStatements, test.apiStatements); diff != "" {
+			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+			continue
+		}
+	}
+}
+
+func Test_stringArrayToString(t *testing.T) {
+	testcases := map[string]struct {
+		arrayString    []string
+		expectedString string
+	}{
+		"OkCase": {
+			arrayString: []string{
+				"asd",
+				"123",
+				"456",
+				"zxc",
+			},
+			expectedString: "asd;123;456;zxc",
+		},
+		"OkCase2": {
+			arrayString:    []string{},
+			expectedString: "",
+		},
+	}
+
+	for n, test := range testcases {
+		receivedString := stringArrayToString(test.arrayString)
+		// Check response
+		if diff := pretty.Compare(receivedString, test.expectedString); diff != "" {
+			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+			continue
+		}
+	}
+}
