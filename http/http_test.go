@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"bytes"
 	log "github.com/Sirupsen/logrus"
 	"github.com/tecsisa/authorizr/api"
 	"github.com/tecsisa/authorizr/auth"
@@ -88,7 +89,7 @@ func (tc TestConnector) RetrieveUserID(r http.Request) string {
 func TestMain(m *testing.M) {
 	// Create logger
 	logger := &log.Logger{
-		Out:       os.Stdout,
+		Out:       bytes.NewBuffer([]byte{}),
 		Formatter: &log.TextFormatter{},
 		Hooks:     make(log.LevelHooks),
 		Level:     log.DebugLevel,
