@@ -417,3 +417,61 @@ func TestPostgresRepo_RemoveGroup(t *testing.T) {
 		}
 	}
 }
+
+func TestPostgresRepo_IsMemberOfGroup(t *testing.T) {
+	testcases := map[string]struct {
+		// Previous data
+		relation *struct {
+			user_id  string
+			group_id string
+		}
+		// Postgres Repo Args
+		group  string
+		member string
+		// Expected result
+		isMember bool
+	}{
+		"OkCaseIsMember": {
+			relation: &struct {
+				user_id  string
+				group_id string
+			}{
+				user_id:  "UserID",
+				group_id: "GroupID",
+			},
+			group:    "GroupID",
+			member:   "UserID",
+			isMember: true,
+		},
+		"OkCaseIsNotMember": {
+			group:    "GroupID",
+			member:   "UserID",
+			isMember: false,
+		},
+	}
+
+	for n, test := range testcases {
+		cleanGroupUserRelationTable()
+
+		// Insert previous data
+		if test.relation != nil {
+			if err := insertGroupUserRelation(test.relation.user_id, test.relation.group_id); err != nil {
+				t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
+				continue
+			}
+		}
+
+		isMember, err := repoDB.IsMemberOfGroup(test.member, test.group)
+
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+			continue
+		}
+		// Check response
+		if diff := pretty.Compare(isMember, test.isMember); diff != "" {
+			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+			continue
+		}
+
+	}
+}
