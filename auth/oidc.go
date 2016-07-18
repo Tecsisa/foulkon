@@ -4,9 +4,13 @@ import (
 	"net/http"
 
 	"fmt"
+
 	log "github.com/Sirupsen/logrus"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/emanoelxavier/openid2go/openid"
+)
+
+const (
+	USER_ID_HEADER = "USER-ID"
 )
 
 // This struct represents an OIDC connector that implements interface of auth connector
@@ -49,17 +53,16 @@ func InitOIDCConnector(logger *log.Logger, provider string, clientids []string) 
 
 // This method retrieves data from request an checks if user is correctly authenticated
 func (c OIDCAuthConnector) Authenticate(h http.Handler) http.Handler {
-	return openid.Authenticate(&c.configuration, h)
+	userHandler := func(u *openid.User, w http.ResponseWriter, r *http.Request) {
+		r.Header.Add(USER_ID_HEADER, u.ID)
+		h.ServeHTTP(w, r)
+	}
+	return openid.AuthenticateUser(&c.configuration, openid.UserHandlerFunc(userHandler))
 }
 
 // Retrieve user from OIDC token
 func (c OIDCAuthConnector) RetrieveUserID(r http.Request) string {
-	t, err := jwt.ParseFromRequest(&r, nil)
-	if err != nil {
-		return ""
-	}
-	if sub := t.Claims["sub"]; sub != nil {
-		return sub.(string)
-	}
-	return ""
+	userID := r.Header.Get(USER_ID_HEADER)
+	r.Header.Del(USER_ID_HEADER)
+	return userID
 }
