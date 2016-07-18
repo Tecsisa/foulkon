@@ -1,9 +1,9 @@
 package api
 
 import (
-	"reflect"
 	"testing"
 
+	"github.com/kylelemons/godebug/pretty"
 	"github.com/tecsisa/authorizr/database"
 )
 
@@ -138,7 +138,7 @@ func TestAddGroup(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/path/",
@@ -146,13 +146,13 @@ func TestAddGroup(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_CREATE_GROUP,
@@ -161,7 +161,7 @@ func TestAddGroup(t *testing.T) {
 								GetUrnPrefix("org1", RESOURCE_GROUP, "/test/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								GROUP_ACTION_CREATE_GROUP,
@@ -240,8 +240,8 @@ func TestAddGroup(t *testing.T) {
 				t.Errorf("Test %v failed: %v", x, err)
 				continue
 			} else {
-				if !reflect.DeepEqual(testcase.expectedGroup, group) {
-					t.Errorf("Test %v failed. Received different groups", x)
+				if diff := pretty.Compare(group, testcase.expectedGroup); diff != "" {
+					t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
 					continue
 				}
 			}
@@ -309,14 +309,14 @@ func TestRemoveGroup(t *testing.T) {
 				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "org1",
 					Path: "/example/",
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_DELETE_GROUP,
@@ -330,7 +330,7 @@ func TestRemoveGroup(t *testing.T) {
 				},
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/example/",
@@ -396,7 +396,7 @@ func TestRemoveGroup(t *testing.T) {
 				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/example/",
@@ -405,14 +405,14 @@ func TestRemoveGroup(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "org1",
 					Path: "/example/",
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -449,7 +449,7 @@ func TestRemoveGroup(t *testing.T) {
 				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/example/",
@@ -458,14 +458,14 @@ func TestRemoveGroup(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "org1",
 					Path: "/example/",
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_DELETE_GROUP,
@@ -475,7 +475,7 @@ func TestRemoveGroup(t *testing.T) {
 								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								GROUP_ACTION_DELETE_GROUP,
@@ -688,7 +688,7 @@ func TestGetGroupByName(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/path/",
@@ -696,13 +696,13 @@ func TestGetGroupByName(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -711,7 +711,7 @@ func TestGetGroupByName(t *testing.T) {
 								GetUrnPrefix("org1", RESOURCE_GROUP, "/test/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -759,8 +759,8 @@ func TestGetGroupByName(t *testing.T) {
 				t.Errorf("Test %v failed: %v", x, err)
 				continue
 			} else {
-				if !reflect.DeepEqual(testcase.expectedGroup, group) {
-					t.Errorf("Test %v failed. Received different groups", x)
+				if diff := pretty.Compare(group, testcase.expectedGroup); diff != "" {
+					t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
 					continue
 				}
 			}
@@ -794,23 +794,44 @@ func TestGetGroupList(t *testing.T) {
 			org:        "org1",
 			pathPrefix: "/",
 			expectedGroups: []GroupIdentity{
-				GroupIdentity{
+				{
 					Org:  "org1",
 					Name: "group1",
 				},
-				GroupIdentity{
-					Org:  "org2",
-					Name: "group2",
-				},
 			},
 			getGroupsFilteredMethodResult: []Group{
-				Group{
+				{
 					Name: "group1",
 					Org:  "org1",
 					Path: "/path/",
 					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "group1"),
 				},
-				Group{
+			},
+		},
+		"OkCaseAdminNoGroup": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			pathPrefix: "/",
+			expectedGroups: []GroupIdentity{
+				{
+					Org:  "org1",
+					Name: "group1",
+				},
+				{
+					Org:  "org2",
+					Name: "group2",
+				},
+			},
+			getGroupsFilteredMethodResult: []Group{
+				{
+					Name: "group1",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "group1"),
+				},
+				{
 					Name: "group2",
 					Org:  "org2",
 					Path: "/path2/",
@@ -825,19 +846,19 @@ func TestGetGroupList(t *testing.T) {
 			},
 			org: "org1",
 			expectedGroups: []GroupIdentity{
-				GroupIdentity{
+				{
 					Org:  "org1",
 					Name: "group1",
 				},
 			},
 			getGroupsFilteredMethodResult: []Group{
-				Group{
+				{
 					Name: "group1",
 					Org:  "org1",
 					Path: "/path/",
 					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "group1"),
 				},
-				Group{
+				{
 					Name: "group2",
 					Org:  "org2",
 					Path: "/path2/",
@@ -845,7 +866,7 @@ func TestGetGroupList(t *testing.T) {
 				},
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/path/1/",
@@ -853,14 +874,14 @@ func TestGetGroupList(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "org1",
 					Path: "/path/",
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_LIST_GROUPS,
@@ -877,6 +898,17 @@ func TestGetGroupList(t *testing.T) {
 				ExternalID: "1234",
 				Path:       "/path/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "%org1",
+			pathPrefix: "/example/das/",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
 		"ErrorCaseInvalidPath": {
@@ -915,7 +947,7 @@ func TestGetGroupList(t *testing.T) {
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
 			},
 			getGroupsFilteredMethodResult: []Group{
-				Group{
+				{
 					Name: "group1",
 					Org:  "org1",
 					Path: "/path/",
@@ -956,9 +988,8 @@ func TestGetGroupList(t *testing.T) {
 				t.Errorf("Test %v failed. Error: %v", x, err)
 				continue
 			} else {
-				if !reflect.DeepEqual(groups, testcase.expectedGroups) {
-					t.Errorf("Test %v failed. Received different policies (wanted:%v / received:%v)",
-						x, testcase.expectedGroups, groups)
+				if diff := pretty.Compare(groups, testcase.expectedGroups); diff != "" {
+					t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
 					continue
 				}
 			}
@@ -1069,7 +1100,7 @@ func TestAddMember(t *testing.T) {
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Org:  "org1",
@@ -1077,14 +1108,14 @@ func TestAddMember(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "org1",
 					Path: "/path/",
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								GROUP_ACTION_ADD_MEMBER,
@@ -1093,7 +1124,7 @@ func TestAddMember(t *testing.T) {
 								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
 							},
 						},
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -1131,7 +1162,7 @@ func TestAddMember(t *testing.T) {
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Org:  "org1",
@@ -1140,14 +1171,14 @@ func TestAddMember(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "org1",
 					Path: "/path/",
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								GROUP_ACTION_ADD_MEMBER,
@@ -1156,7 +1187,7 @@ func TestAddMember(t *testing.T) {
 								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
 							},
 						},
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								"iam:*",
@@ -1356,12 +1387,12 @@ func TestListMembers(t *testing.T) {
 				Path: "/test/",
 			},
 			getGroupMembersResult: []User{
-				User{
+				{
 					ID:         "12345",
 					ExternalID: "member1",
 					Path:       "/test/",
 				},
-				User{
+				{
 					ID:         "123456",
 					ExternalID: "member2",
 					Path:       "/test/",
@@ -1422,7 +1453,7 @@ func TestListMembers(t *testing.T) {
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Org:  "org1",
@@ -1454,7 +1485,7 @@ func TestListMembers(t *testing.T) {
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Org:  "org1",
@@ -1462,14 +1493,14 @@ func TestListMembers(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "org1",
 					Path: "/path/",
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -1506,7 +1537,7 @@ func TestListMembers(t *testing.T) {
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Org:  "org1",
@@ -1514,14 +1545,14 @@ func TestListMembers(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "org1",
 					Path: "/path/",
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								GROUP_ACTION_LIST_MEMBERS,
@@ -1530,7 +1561,7 @@ func TestListMembers(t *testing.T) {
 								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
 							},
 						},
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_LIST_MEMBERS,
@@ -1585,7 +1616,7 @@ func TestListMembers(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 
-		groups, err := testAPI.ListMembers(testcase.authUser, testcase.org, testcase.groupName)
+		members, err := testAPI.ListMembers(testcase.authUser, testcase.org, testcase.groupName)
 		if testcase.wantError != nil {
 			apiError, ok := err.(*Error)
 			if !ok || apiError == nil {
@@ -1601,9 +1632,8 @@ func TestListMembers(t *testing.T) {
 				t.Errorf("Test %v failed. Error: %v", x, err)
 				continue
 			} else {
-				if !reflect.DeepEqual(groups, testcase.expectedMembers) {
-					t.Errorf("Test %v failed. Received different members (wanted:%v / received:%v)",
-						x, testcase.expectedMembers, groups)
+				if diff := pretty.Compare(members, testcase.expectedMembers); diff != "" {
+					t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
 					continue
 				}
 			}
@@ -1723,7 +1753,7 @@ func TestRemoveMember(t *testing.T) {
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Org:  "org1",
@@ -1731,14 +1761,14 @@ func TestRemoveMember(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "org1",
 					Path: "/path/",
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -1776,7 +1806,7 @@ func TestRemoveMember(t *testing.T) {
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Org:  "org1",
@@ -1784,14 +1814,14 @@ func TestRemoveMember(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "org1",
 					Path: "/path/",
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -1801,7 +1831,7 @@ func TestRemoveMember(t *testing.T) {
 								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								GROUP_ACTION_REMOVE_MEMBER,
@@ -1861,7 +1891,7 @@ func TestRemoveMember(t *testing.T) {
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Org:  "org1",
@@ -1869,14 +1899,14 @@ func TestRemoveMember(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "org1",
 					Path: "/path/",
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -1886,7 +1916,7 @@ func TestRemoveMember(t *testing.T) {
 								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								USER_ACTION_GET_USER,
@@ -2148,7 +2178,7 @@ func TestUpdateGroup(t *testing.T) {
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Org:  "org1",
@@ -2182,7 +2212,7 @@ func TestUpdateGroup(t *testing.T) {
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Org:  "org1",
@@ -2190,14 +2220,14 @@ func TestUpdateGroup(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "org1",
 					Path: "/path/",
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -2236,7 +2266,7 @@ func TestUpdateGroup(t *testing.T) {
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Org:  "org1",
@@ -2244,14 +2274,14 @@ func TestUpdateGroup(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "org1",
 					Path: "/path/",
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -2261,7 +2291,7 @@ func TestUpdateGroup(t *testing.T) {
 								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								GROUP_ACTION_UPDATE_GROUP,
@@ -2368,7 +2398,7 @@ func TestUpdateGroup(t *testing.T) {
 				}
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "group1",
 					Org:  "123",
@@ -2376,14 +2406,14 @@ func TestUpdateGroup(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "123",
 					Path: "/path/",
 					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -2431,7 +2461,7 @@ func TestUpdateGroup(t *testing.T) {
 				}
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "group1",
 					Org:  "123",
@@ -2439,14 +2469,14 @@ func TestUpdateGroup(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "123",
 					Path: "/path/",
 					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -2456,7 +2486,7 @@ func TestUpdateGroup(t *testing.T) {
 								GetUrnPrefix("123", RESOURCE_GROUP, ""),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								GROUP_ACTION_UPDATE_GROUP,
@@ -2529,9 +2559,8 @@ func TestUpdateGroup(t *testing.T) {
 				t.Errorf("Test %v failed. Error: %v", x, err)
 				continue
 			} else {
-				if !reflect.DeepEqual(group, testcase.expectedGroup) {
-					t.Errorf("Test %v failed. Received different groups (wanted:%v / received:%v)",
-						x, testcase.expectedGroup, group)
+				if diff := pretty.Compare(group, testcase.expectedGroup); diff != "" {
+					t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
 					continue
 				}
 			}
@@ -2583,7 +2612,7 @@ func TestAttachPolicyToGroup(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -2664,7 +2693,7 @@ func TestAttachPolicyToGroup(t *testing.T) {
 				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", ""),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "group1",
 					Org:  "123",
@@ -2672,14 +2701,14 @@ func TestAttachPolicyToGroup(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "123",
 					Path: "/path/",
 					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -2717,7 +2746,7 @@ func TestAttachPolicyToGroup(t *testing.T) {
 				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", ""),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "group1",
 					Org:  "123",
@@ -2725,14 +2754,14 @@ func TestAttachPolicyToGroup(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "123",
 					Path: "/path/",
 					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -2742,7 +2771,7 @@ func TestAttachPolicyToGroup(t *testing.T) {
 								GetUrnPrefix("123", RESOURCE_GROUP, ""),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								GROUP_ACTION_ATTACH_GROUP_POLICY,
@@ -2786,7 +2815,7 @@ func TestAttachPolicyToGroup(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -2826,7 +2855,7 @@ func TestAttachPolicyToGroup(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -2886,7 +2915,7 @@ func TestAttachPolicyToGroup(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -2984,7 +3013,7 @@ func TestDetachPolicyToGroup(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -3065,7 +3094,7 @@ func TestDetachPolicyToGroup(t *testing.T) {
 				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", ""),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "group1",
 					Org:  "123",
@@ -3073,14 +3102,14 @@ func TestDetachPolicyToGroup(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "123",
 					Path: "/path/",
 					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -3118,7 +3147,7 @@ func TestDetachPolicyToGroup(t *testing.T) {
 				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", ""),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "group1",
 					Org:  "123",
@@ -3126,14 +3155,14 @@ func TestDetachPolicyToGroup(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "123",
 					Path: "/path/",
 					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -3143,7 +3172,7 @@ func TestDetachPolicyToGroup(t *testing.T) {
 								GetUrnPrefix("123", RESOURCE_GROUP, ""),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								GROUP_ACTION_DETACH_GROUP_POLICY,
@@ -3209,7 +3238,7 @@ func TestDetachPolicyToGroup(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -3249,7 +3278,7 @@ func TestDetachPolicyToGroup(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -3287,7 +3316,7 @@ func TestDetachPolicyToGroup(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -3348,7 +3377,7 @@ func TestListAttachedGroupPolicies(t *testing.T) {
 		name     string
 		org      string
 		// Expected result
-		expectedPolicies []PolicyIdentity
+		expectedPolicies []string
 		wantError        *Error
 		// Manager Results
 		getUserByExternalIDResult  *User
@@ -3378,7 +3407,7 @@ func TestListAttachedGroupPolicies(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
 			},
-			expectedPolicies: []PolicyIdentity{},
+			expectedPolicies: []string{},
 		},
 		"OkCaseRegularUser": {
 			authUser: AuthenticatedUser{
@@ -3401,14 +3430,14 @@ func TestListAttachedGroupPolicies(t *testing.T) {
 				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "org1",
 					Path: "/example/",
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES,
@@ -3422,7 +3451,7 @@ func TestListAttachedGroupPolicies(t *testing.T) {
 				},
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/example/",
@@ -3430,12 +3459,7 @@ func TestListAttachedGroupPolicies(t *testing.T) {
 					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
 				},
 			},
-			expectedPolicies: []PolicyIdentity{
-				PolicyIdentity{
-					Name: "policyUser",
-					Org:  "org1",
-				},
-			},
+			expectedPolicies: []string{"policyUser"},
 		},
 		"ErrorCaseInvalidName": {
 			authUser: AuthenticatedUser{
@@ -3494,7 +3518,7 @@ func TestListAttachedGroupPolicies(t *testing.T) {
 				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/example/",
@@ -3503,14 +3527,14 @@ func TestListAttachedGroupPolicies(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "org1",
 					Path: "/example/",
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -3547,7 +3571,7 @@ func TestListAttachedGroupPolicies(t *testing.T) {
 				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/example/",
@@ -3556,14 +3580,14 @@ func TestListAttachedGroupPolicies(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "org1",
 					Path: "/example/",
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES,
@@ -3573,7 +3597,7 @@ func TestListAttachedGroupPolicies(t *testing.T) {
 								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES,
@@ -3610,7 +3634,7 @@ func TestListAttachedGroupPolicies(t *testing.T) {
 				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/example/",
@@ -3651,9 +3675,8 @@ func TestListAttachedGroupPolicies(t *testing.T) {
 				t.Errorf("Test %v failed. Error: %v", x, err)
 				continue
 			} else {
-				if !reflect.DeepEqual(policies, testcase.expectedPolicies) {
-					t.Errorf("Test %v failed. Received different policies (wanted:%v / received:%v)",
-						x, testcase.expectedPolicies, policies)
+				if diff := pretty.Compare(policies, testcase.expectedPolicies); diff != "" {
+					t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
 					continue
 				}
 			}

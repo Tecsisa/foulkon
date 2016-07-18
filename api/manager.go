@@ -34,7 +34,7 @@ type GroupAPI interface {
 
 	AttachPolicyToGroup(authenticatedUser AuthenticatedUser, org string, groupName string, policyName string) error
 	DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org string, groupName string, policyName string) error
-	ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser, org string, groupName string) ([]PolicyIdentity, error)
+	ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser, org string, groupName string) ([]string, error)
 }
 
 type PolicyAPI interface {
@@ -44,7 +44,7 @@ type PolicyAPI interface {
 	UpdatePolicy(authenticatedUser AuthenticatedUser, org string, policyName string, newName string, newPath string,
 		newStatements []Statement) (*Policy, error)
 	DeletePolicy(authenticatedUser AuthenticatedUser, org string, name string) error
-	GetAttachedGroups(authenticatedUser AuthenticatedUser, org string, policyName string) ([]GroupIdentity, error)
+	GetAttachedGroups(authenticatedUser AuthenticatedUser, org string, policyName string) ([]string, error)
 }
 
 type AuthzAPI interface {

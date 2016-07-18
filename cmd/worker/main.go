@@ -36,7 +36,7 @@ func main() {
 	core, err := authorizr.NewWorker(config)
 	if err != nil {
 		fmt.Fprint(os.Stderr, err.Error())
-		return
+		os.Exit(1)
 	}
 
 	sig := make(chan os.Signal, 1)
@@ -51,7 +51,7 @@ func main() {
 		sigrecv := <-sig
 		switch sigrecv {
 		case syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT:
-			core.Logger.Infof("Signal '%v' received, closing server...", sigrecv.String())
+			core.Logger.Infof("Signal '%v' received, closing worker...", sigrecv.String())
 			authorizr.CloseWorker()
 		default:
 			core.Logger.Warnf("Unknown OS signal received, ignoring...")

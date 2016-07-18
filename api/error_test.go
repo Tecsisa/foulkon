@@ -1,30 +1,37 @@
 package api
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+
+	"github.com/Sirupsen/logrus"
+	"github.com/kylelemons/godebug/pretty"
+	"strings"
+)
 
 func TestError(t *testing.T) {
 	testcases := map[string]struct {
-		error           Error
+		err             Error
 		expectedMessage string
 	}{
 		"EmptyValues": {
-			error:           Error{},
+			err:             Error{},
 			expectedMessage: "Code: , Message: ",
 		},
 		"EmptyCode": {
-			error: Error{
+			err: Error{
 				Message: "This is a message",
 			},
 			expectedMessage: "Code: , Message: This is a message",
 		},
 		"EmptyMessage": {
-			error: Error{
+			err: Error{
 				Code: "CODE",
 			},
 			expectedMessage: "Code: CODE, Message: ",
 		},
 		"NormalCase": {
-			error: Error{
+			err: Error{
 				Code:    UNKNOWN_API_ERROR,
 				Message: "Unknown error",
 			},
@@ -33,9 +40,43 @@ func TestError(t *testing.T) {
 	}
 
 	for x, testcase := range testcases {
-		if testcase.error.Error() != testcase.expectedMessage {
+		if testcase.err.Error() != testcase.expectedMessage {
 			t.Errorf("Test %v failed. Received different messages (wanted:%v / received:%v)",
-				x, testcase.expectedMessage, testcase.error.Error())
+				x, testcase.expectedMessage, testcase.err.Error())
+			continue
+		}
+	}
+}
+
+func TestLogErrorMessage(t *testing.T) {
+	// Logger
+	testOut := bytes.NewBuffer([]byte{})
+	logger := logrus.Logger{
+		Out:       testOut,
+		Formatter: &logrus.JSONFormatter{},
+		Hooks:     make(logrus.LevelHooks),
+		Level:     logrus.ErrorLevel,
+	}
+	testcases := map[string]struct {
+		err             *Error
+		expectedMessage string
+	}{
+		"OkCase": {
+			err: &Error{
+				Code:    "Code Error",
+				Message: "Error Message",
+			},
+			expectedMessage: "{\"Code\":\"Code Error\",\"RequestID\":\"RequestID\",\"level\":\"error\",\"msg\":\"Error Message\",\"time\"",
+		},
+	}
+
+	for x, testcase := range testcases {
+		LogErrorMessage(&logger, "RequestID", testcase.err)
+		logMessage := testOut.String()
+		diff := pretty.Compare(logMessage, testcase.expectedMessage)
+		if !strings.Contains(logMessage, testcase.expectedMessage) {
+			t.Errorf("Test %v failed. Received different messages (wanted / received) %v",
+				x, diff)
 			continue
 		}
 	}

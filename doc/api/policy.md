@@ -245,7 +245,7 @@ HTTP/1.1 200 OK
 ```
 
 
-## <a name="resource-order3_policyReference"></a>
+## <a name="resource-order3_policyReference">Organization's policies</a>
 
 
 
@@ -254,10 +254,9 @@ HTTP/1.1 200 OK
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **[policies/name](#resource-order2_policy)** | *string* | Policy name | `"policy1"` |
-| **[policies/org](#resource-order2_policy)** | *string* | Policy organization | `"tecsisa"` |
+| **policies** | *array* | List of policies | `["policyName1, policyName2"]` |
 
-###  List all organization's policies
+### Organization's policies List
 
 List all policies by organization.
 
@@ -283,15 +282,25 @@ HTTP/1.1 200 OK
 ```json
 {
   "policies": [
-    {
-      "org": "tecsisa",
-      "name": "policy1"
-    }
+    "policyName1, policyName2"
   ]
 }
 ```
 
-###  List all policies
+
+## <a name="resource-order4_policyAllReference">All policies</a>
+
+
+
+
+### Attributes
+
+| Name | Type | Description | Example |
+| ------- | ------- | ------- | ------- |
+| **[policies/name](#resource-order2_policy)** | *string* | Policy name | `"policy1"` |
+| **[policies/org](#resource-order2_policy)** | *string* | Policy organization | `"tecsisa"` |
+
+### All policies List
 
 List all policies.
 
@@ -326,7 +335,7 @@ HTTP/1.1 200 OK
 ```
 
 
-## <a name="resource-order4_attachedGroups"></a>
+## <a name="resource-order5_attachedGroups">Attached group</a>
 
 
 List attached groups
@@ -335,12 +344,11 @@ List attached groups
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **groups/name** | *string* | Group name | `"group1"` |
-| **groups/org** | *string* | Group organization | `"tecsisa"` |
+| **groups** | *array* | Groups attached to this policy | `["groupName1, groupName2"]` |
 
-###  Policy Groups List
+### Attached group List
 
-List attached groups
+List attached groups to this policy
 
 ```
 GET /api/v1/organizations/{organization_id}/policies/{policy_name}/groups
@@ -364,10 +372,7 @@ HTTP/1.1 200 OK
 ```json
 {
   "groups": [
-    {
-      "org": "tecsisa",
-      "name": "group1"
-    }
+    "groupName1, groupName2"
   ]
 }
 ```

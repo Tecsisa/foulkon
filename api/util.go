@@ -27,7 +27,6 @@ const (
 	USER_ACTION_LIST_USERS           = "iam:ListUsers"
 	USER_ACTION_UPDATE_USER          = "iam:UpdateUser"
 	USER_ACTION_LIST_GROUPS_FOR_USER = "iam:ListGroupsForUser"
-	USER_ACTION_LIST_ORG_USERS       = "iam:ListOrgUsers"
 
 	// Group actions
 	GROUP_ACTION_CREATE_GROUP                 = "iam:CreateGroup"
@@ -41,7 +40,6 @@ const (
 	GROUP_ACTION_ATTACH_GROUP_POLICY          = "iam:AttachGroupPolicy"
 	GROUP_ACTION_DETACH_GROUP_POLICY          = "iam:DetachGroupPolicy"
 	GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES = "iam:ListAttachedGroupPolicies"
-	GROUP_ACTION_LIST_ALL_GROUPS              = "iam:ListAllGroups"
 
 	// Policy actions
 	POLICY_ACTION_CREATE_POLICY        = "iam:CreatePolicy"
@@ -50,7 +48,6 @@ const (
 	POLICY_ACTION_GET_POLICY           = "iam:GetPolicy"
 	POLICY_ACTION_LIST_ATTACHED_GROUPS = "iam:ListAttachedGroups"
 	POLICY_ACTION_LIST_POLICIES        = "iam:ListPolicies"
-	POLICY_ACTION_LIST_ALL_POLICIES    = "iam:ListAllPolicies"
 )
 
 var (

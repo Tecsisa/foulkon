@@ -22,9 +22,8 @@ type UpdatePolicyRequest struct {
 }
 
 // Responses
-
 type ListPoliciesResponse struct {
-	Policies []api.PolicyIdentity `json:"policies, omitempty"`
+	Policies []string `json:"policies, omitempty"`
 }
 
 type ListAllPoliciesResponse struct {
@@ -32,7 +31,7 @@ type ListAllPoliciesResponse struct {
 }
 
 type GetPolicyGroupsResponse struct {
-	Groups []api.GroupIdentity `json:"groups, omitempty"`
+	Groups []string `json:"groups, omitempty"`
 }
 
 func (a *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -62,8 +61,12 @@ func (a *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Create response
+	policies := []string{}
+	for _, policy := range result {
+		policies = append(policies, policy.Name)
+	}
 	response := &ListPoliciesResponse{
-		Policies: result,
+		Policies: policies,
 	}
 
 	// Return policies

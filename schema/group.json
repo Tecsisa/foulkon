@@ -136,30 +136,49 @@
     },
     "order2_groupReference": {
       "$schema": "",
-      "title": "",
+      "title": "Organization's groups",
       "description": "",
       "strictProperties": true,
       "type": "object",
       "links": [
         {
-          "description": "List all groups by organization.",
+          "description": "List all organization's groups",
           "href": "/api/v1/organizations/{organization_id}/groups?PathPrefix={optional_path_prefix}",
           "method": "GET",
           "rel": "self",
           "http_header": {
             "Authorization": "Basic or Bearer XXX"
           },
-          "title": "List all organization's groups"
-        },
+          "title": "List"
+        }
+      ],
+      "properties": {
+        "groups": {
+          "description": "List of groups",
+          "example": ["groupName1, groupName2"],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "order3_groupAllReference": {
+      "$schema": "",
+      "title": "All groups",
+      "description": "",
+      "strictProperties": true,
+      "type": "object",
+      "links": [
         {
-          "description": "List all groups.",
+          "description": "List all groups",
           "href": "/api/v1/groups?PathPrefix={optional_path_prefix}",
           "method": "GET",
           "rel": "self",
           "http_header": {
             "Authorization": "Basic or Bearer XXX"
           },
-          "title": "List all groups"
+          "title": "List"
         }
       ],
       "properties": {
@@ -179,7 +198,7 @@
         }
       }
     },
-    "order3_members": {
+    "order4_members": {
       "$schema": "",
       "title": "Member",
       "description": "Group members",
@@ -228,7 +247,7 @@
         }
       }
     },
-    "order4_attachedPolicies": {
+    "order5_attachedPolicies": {
       "$schema": "",
       "title": "Group Policies",
       "description": "Attached Policies",
@@ -269,20 +288,10 @@
       "properties": {
         "policies": {
           "description": "Policies attached to this group",
+          "example": ["policyName1, policyName2"],
           "type": "array",
           "items": {
-            "properties": {
-              "org": {
-                "description": "Organization of policy",
-                "example": "tecsisa",
-                "type": "string"
-              },
-              "name": {
-                "description": "Name of policy",
-                "example": "policy1",
-                "type": "string"
-              }
-            }
+            "type": "string"
           }
         }
       }
@@ -295,11 +304,14 @@
     "order2_groupReference": {
       "$ref": "#/definitions/order2_groupReference"
     },
-    "order3_members": {
-      "$ref": "#/definitions/order3_members"
+    "order3_groupAllReference": {
+      "$ref": "#/definitions/order3_groupAllReference"
     },
-    "order4_attachedPolicies": {
-      "$ref": "#/definitions/order4_attachedPolicies"
+    "order4_members": {
+      "$ref": "#/definitions/order4_members"
+    },
+    "order5_attachedPolicies": {
+      "$ref": "#/definitions/order5_attachedPolicies"
     }
   }
 }

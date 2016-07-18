@@ -36,7 +36,7 @@ func TestGetPolicyByName(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -112,7 +112,7 @@ func TestGetPolicyByName(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "deny",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -130,7 +130,7 @@ func TestGetPolicyByName(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/path/1/",
@@ -155,7 +155,7 @@ func TestGetPolicyByName(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "deny",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -173,7 +173,7 @@ func TestGetPolicyByName(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/path/1/",
@@ -181,14 +181,14 @@ func TestGetPolicyByName(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "example",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -197,7 +197,7 @@ func TestGetPolicyByName(t *testing.T) {
 								GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -291,7 +291,7 @@ func TestAddPolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -311,7 +311,7 @@ func TestAddPolicy(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -332,7 +332,7 @@ func TestAddPolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -349,7 +349,7 @@ func TestAddPolicy(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -373,7 +373,7 @@ func TestAddPolicy(t *testing.T) {
 			policyName: "**!^#~",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -396,7 +396,7 @@ func TestAddPolicy(t *testing.T) {
 			policyName: "p1",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -419,7 +419,7 @@ func TestAddPolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/**!^#~path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -442,7 +442,7 @@ func TestAddPolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "idufhefmfcasfluhf",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -465,7 +465,7 @@ func TestAddPolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -482,7 +482,7 @@ func TestAddPolicy(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/path/1/",
@@ -505,7 +505,7 @@ func TestAddPolicy(t *testing.T) {
 				Code: database.POLICY_NOT_FOUND,
 			},
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -522,7 +522,7 @@ func TestAddPolicy(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/path/1/",
@@ -530,14 +530,14 @@ func TestAddPolicy(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policy",
 					Org:  "example",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -546,7 +546,7 @@ func TestAddPolicy(t *testing.T) {
 								GetUrnPrefix("example", RESOURCE_POLICY, "/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_CREATE_POLICY,
@@ -555,7 +555,7 @@ func TestAddPolicy(t *testing.T) {
 								GetUrnPrefix("example", RESOURCE_POLICY, "/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								POLICY_ACTION_CREATE_POLICY,
@@ -580,7 +580,7 @@ func TestAddPolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -609,7 +609,7 @@ func TestAddPolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -699,7 +699,7 @@ func TestUpdatePolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -712,7 +712,7 @@ func TestUpdatePolicy(t *testing.T) {
 			newPolicyName: "test2",
 			newPath:       "/path2/",
 			newStatements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -729,7 +729,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -747,7 +747,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Path: "/path2/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path2/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -768,7 +768,7 @@ func TestUpdatePolicy(t *testing.T) {
 			policyName: "**!~#",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -781,7 +781,7 @@ func TestUpdatePolicy(t *testing.T) {
 			newPolicyName: "test2",
 			newPath:       "/path2/",
 			newStatements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -804,7 +804,7 @@ func TestUpdatePolicy(t *testing.T) {
 			policyName: "p1",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -817,7 +817,7 @@ func TestUpdatePolicy(t *testing.T) {
 			newPolicyName: "test2",
 			newPath:       "/path2/",
 			newStatements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -840,7 +840,7 @@ func TestUpdatePolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -853,7 +853,7 @@ func TestUpdatePolicy(t *testing.T) {
 			newPolicyName: "**!~#",
 			newPath:       "/path2/",
 			newStatements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -876,7 +876,7 @@ func TestUpdatePolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -889,7 +889,7 @@ func TestUpdatePolicy(t *testing.T) {
 			newPolicyName: "test2",
 			newPath:       "/**~#!/",
 			newStatements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -912,7 +912,7 @@ func TestUpdatePolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -925,7 +925,7 @@ func TestUpdatePolicy(t *testing.T) {
 			newPolicyName: "test2",
 			newPath:       "/path2/",
 			newStatements: []Statement{
-				Statement{
+				{
 					Effect: "jblkasdjgp",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -948,7 +948,7 @@ func TestUpdatePolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -961,7 +961,7 @@ func TestUpdatePolicy(t *testing.T) {
 			newPolicyName: "test2",
 			newPath:       "/path2/",
 			newStatements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -987,7 +987,7 @@ func TestUpdatePolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1000,7 +1000,7 @@ func TestUpdatePolicy(t *testing.T) {
 			newPolicyName: "test2",
 			newPath:       "/path2/",
 			newStatements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1026,7 +1026,7 @@ func TestUpdatePolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1039,7 +1039,7 @@ func TestUpdatePolicy(t *testing.T) {
 			newPolicyName: "test2",
 			newPath:       "/path2/",
 			newStatements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1056,7 +1056,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -1074,7 +1074,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Path: "/path2/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path2/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -1101,7 +1101,7 @@ func TestUpdatePolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1114,7 +1114,7 @@ func TestUpdatePolicy(t *testing.T) {
 			newPolicyName: "test2",
 			newPath:       "/path2/",
 			newStatements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1131,7 +1131,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -1149,7 +1149,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/path/",
@@ -1157,13 +1157,13 @@ func TestUpdatePolicy(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -1172,7 +1172,7 @@ func TestUpdatePolicy(t *testing.T) {
 								GetUrnPrefix("123", RESOURCE_POLICY, "/path/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_UPDATE_POLICY,
@@ -1181,7 +1181,7 @@ func TestUpdatePolicy(t *testing.T) {
 								GetUrnPrefix("123", RESOURCE_POLICY, "/path/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								POLICY_ACTION_UPDATE_POLICY,
@@ -1206,7 +1206,7 @@ func TestUpdatePolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1219,7 +1219,7 @@ func TestUpdatePolicy(t *testing.T) {
 			newPolicyName: "test2",
 			newPath:       "/path2/",
 			newStatements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1236,7 +1236,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -1254,7 +1254,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/path/",
@@ -1262,13 +1262,13 @@ func TestUpdatePolicy(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -1293,7 +1293,7 @@ func TestUpdatePolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1306,7 +1306,7 @@ func TestUpdatePolicy(t *testing.T) {
 			newPolicyName: "test2",
 			newPath:       "/path2/",
 			newStatements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1325,7 +1325,7 @@ func TestUpdatePolicy(t *testing.T) {
 						Path: "/path/",
 						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 						Statements: &[]Statement{
-							Statement{
+							{
 								Effect: "allow",
 								Action: []string{
 									USER_ACTION_GET_USER,
@@ -1344,7 +1344,7 @@ func TestUpdatePolicy(t *testing.T) {
 						Path: "/path/",
 						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 						Statements: &[]Statement{
-							Statement{
+							{
 								Effect: "allow",
 								Action: []string{
 									USER_ACTION_GET_USER,
@@ -1364,7 +1364,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/path/",
@@ -1372,13 +1372,13 @@ func TestUpdatePolicy(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -1387,7 +1387,7 @@ func TestUpdatePolicy(t *testing.T) {
 								GetUrnPrefix("123", RESOURCE_POLICY, "/path/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_UPDATE_POLICY,
@@ -1412,7 +1412,7 @@ func TestUpdatePolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1425,7 +1425,7 @@ func TestUpdatePolicy(t *testing.T) {
 			newPolicyName: "test2",
 			newPath:       "/path2/",
 			newStatements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1444,7 +1444,7 @@ func TestUpdatePolicy(t *testing.T) {
 						Path: "/path/",
 						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 						Statements: &[]Statement{
-							Statement{
+							{
 								Effect: "allow",
 								Action: []string{
 									USER_ACTION_GET_USER,
@@ -1463,7 +1463,7 @@ func TestUpdatePolicy(t *testing.T) {
 						Path: "/path2/",
 						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path2/", "test"),
 						Statements: &[]Statement{
-							Statement{
+							{
 								Effect: "allow",
 								Action: []string{
 									USER_ACTION_GET_USER,
@@ -1483,7 +1483,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/path/",
@@ -1491,13 +1491,13 @@ func TestUpdatePolicy(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -1508,13 +1508,13 @@ func TestUpdatePolicy(t *testing.T) {
 						},
 					},
 				},
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_UPDATE_POLICY,
@@ -1539,7 +1539,7 @@ func TestUpdatePolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1552,7 +1552,7 @@ func TestUpdatePolicy(t *testing.T) {
 			newPolicyName: "test2",
 			newPath:       "/path2/",
 			newStatements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1571,7 +1571,7 @@ func TestUpdatePolicy(t *testing.T) {
 						Path: "/path/",
 						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 						Statements: &[]Statement{
-							Statement{
+							{
 								Effect: "allow",
 								Action: []string{
 									USER_ACTION_GET_USER,
@@ -1595,7 +1595,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/path/",
@@ -1603,13 +1603,13 @@ func TestUpdatePolicy(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -1620,13 +1620,13 @@ func TestUpdatePolicy(t *testing.T) {
 						},
 					},
 				},
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_UPDATE_POLICY,
@@ -1651,7 +1651,7 @@ func TestUpdatePolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1664,7 +1664,7 @@ func TestUpdatePolicy(t *testing.T) {
 			newPolicyName: "test2",
 			newPath:       "/path2/",
 			newStatements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1683,7 +1683,7 @@ func TestUpdatePolicy(t *testing.T) {
 						Path: "/path/",
 						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 						Statements: &[]Statement{
-							Statement{
+							{
 								Effect: "allow",
 								Action: []string{
 									USER_ACTION_GET_USER,
@@ -1707,7 +1707,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/path/",
@@ -1715,13 +1715,13 @@ func TestUpdatePolicy(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -1732,13 +1732,13 @@ func TestUpdatePolicy(t *testing.T) {
 						},
 					},
 				},
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_UPDATE_POLICY,
@@ -1749,13 +1749,13 @@ func TestUpdatePolicy(t *testing.T) {
 						},
 					},
 				},
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -1766,13 +1766,13 @@ func TestUpdatePolicy(t *testing.T) {
 						},
 					},
 				},
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_UPDATE_POLICY,
@@ -1783,13 +1783,13 @@ func TestUpdatePolicy(t *testing.T) {
 						},
 					},
 				},
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								POLICY_ACTION_UPDATE_POLICY,
@@ -1814,7 +1814,7 @@ func TestUpdatePolicy(t *testing.T) {
 			policyName: "test",
 			path:       "/path/",
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1827,7 +1827,7 @@ func TestUpdatePolicy(t *testing.T) {
 			newPolicyName: "test2",
 			newPath:       "/path2/",
 			newStatements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -1846,7 +1846,7 @@ func TestUpdatePolicy(t *testing.T) {
 						Path: "/path/",
 						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
 						Statements: &[]Statement{
-							Statement{
+							{
 								Effect: "allow",
 								Action: []string{
 									USER_ACTION_GET_USER,
@@ -1870,7 +1870,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/path/",
@@ -1878,13 +1878,13 @@ func TestUpdatePolicy(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -1895,13 +1895,13 @@ func TestUpdatePolicy(t *testing.T) {
 						},
 					},
 				},
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_UPDATE_POLICY,
@@ -1912,13 +1912,13 @@ func TestUpdatePolicy(t *testing.T) {
 						},
 					},
 				},
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -1929,13 +1929,13 @@ func TestUpdatePolicy(t *testing.T) {
 						},
 					},
 				},
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_UPDATE_POLICY,
@@ -2057,14 +2057,14 @@ func TestAuthAPI_GetPolicyList(t *testing.T) {
 			org:        "123",
 			pathPrefix: "/path/",
 			getPoliciesFilteredMethodResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "example",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -2091,24 +2091,24 @@ func TestAuthAPI_GetPolicyList(t *testing.T) {
 			org:        "123",
 			pathPrefix: "/",
 			expectedPolicies: []PolicyIdentity{
-				PolicyIdentity{
+				{
 					Org:  "example",
 					Name: "policyAllowed",
 				},
-				PolicyIdentity{
+				{
 					Org:  "example",
 					Name: "policyDenied",
 				},
 			},
 			getPoliciesFilteredMethodResult: []Policy{
-				Policy{
+				{
 					ID:   "PolicyAllowed",
 					Name: "policyAllowed",
 					Org:  "example",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyAllowed"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -2119,14 +2119,48 @@ func TestAuthAPI_GetPolicyList(t *testing.T) {
 						},
 					},
 				},
-				Policy{
+				{
 					ID:   "PolicyDenied",
 					Name: "policyDenied",
 					Org:  "example",
 					Path: "/path2/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path2/", "policyDenied"),
 					Statements: &[]Statement{
-						Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								POLICY_ACTION_GET_POLICY,
+							},
+							Resources: []string{
+								GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
+							},
+						},
+					},
+				},
+			},
+		},
+		"OkTestCaseAdminNoOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "",
+			pathPrefix: "/",
+			expectedPolicies: []PolicyIdentity{
+				{
+					Org:  "example",
+					Name: "policyAllowed",
+				},
+			},
+			getPoliciesFilteredMethodResult: []Policy{
+				{
+					ID:   "PolicyAllowed",
+					Name: "policyAllowed",
+					Org:  "example",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyAllowed"),
+					Statements: &[]Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -2146,20 +2180,20 @@ func TestAuthAPI_GetPolicyList(t *testing.T) {
 			},
 			org: "example",
 			expectedPolicies: []PolicyIdentity{
-				PolicyIdentity{
+				{
 					Org:  "example",
 					Name: "policyAllowed",
 				},
 			},
 			getPoliciesFilteredMethodResult: []Policy{
-				Policy{
+				{
 					ID:   "PolicyAllowed",
 					Name: "policyAllowed",
 					Org:  "example",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyAllowed"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -2170,14 +2204,14 @@ func TestAuthAPI_GetPolicyList(t *testing.T) {
 						},
 					},
 				},
-				Policy{
+				{
 					ID:   "PolicyDenied",
 					Name: "policyDenied",
 					Org:  "example",
 					Path: "/path2/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path2/", "policyDenied"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -2196,7 +2230,7 @@ func TestAuthAPI_GetPolicyList(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 					Path: "/path/1/",
@@ -2204,14 +2238,14 @@ func TestAuthAPI_GetPolicyList(t *testing.T) {
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Org:  "example",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_LIST_POLICIES,
@@ -2220,7 +2254,7 @@ func TestAuthAPI_GetPolicyList(t *testing.T) {
 								GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								POLICY_ACTION_LIST_POLICIES,
@@ -2353,7 +2387,7 @@ func TestDeletePolicy(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -2369,17 +2403,17 @@ func TestDeletePolicy(t *testing.T) {
 				ExternalID: "123456",
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -2409,7 +2443,7 @@ func TestDeletePolicy(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -2425,17 +2459,17 @@ func TestDeletePolicy(t *testing.T) {
 				ExternalID: "123456",
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -2444,7 +2478,7 @@ func TestDeletePolicy(t *testing.T) {
 								GetUrnPrefix("example", RESOURCE_POLICY, "/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_DELETE_POLICY,
@@ -2453,7 +2487,7 @@ func TestDeletePolicy(t *testing.T) {
 								GetUrnPrefix("example", RESOURCE_POLICY, "/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								POLICY_ACTION_DELETE_POLICY,
@@ -2483,7 +2517,7 @@ func TestDeletePolicy(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -2512,7 +2546,7 @@ func TestDeletePolicy(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -2575,7 +2609,7 @@ func TestAuthAPI_GetAttachedGroups(t *testing.T) {
 		authUser       AuthenticatedUser
 		org            string
 		policyName     string
-		expectedGroups []GroupIdentity
+		expectedGroups []string
 
 		getGroupsByUserIDResult   []Group
 		getAttachedPoliciesResult []Policy
@@ -2642,7 +2676,7 @@ func TestAuthAPI_GetAttachedGroups(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -2658,17 +2692,17 @@ func TestAuthAPI_GetAttachedGroups(t *testing.T) {
 				ExternalID: "123456",
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -2698,7 +2732,7 @@ func TestAuthAPI_GetAttachedGroups(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -2714,17 +2748,17 @@ func TestAuthAPI_GetAttachedGroups(t *testing.T) {
 				ExternalID: "123456",
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -2733,7 +2767,7 @@ func TestAuthAPI_GetAttachedGroups(t *testing.T) {
 								GetUrnPrefix("example", RESOURCE_POLICY, "/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_LIST_ATTACHED_GROUPS,
@@ -2742,7 +2776,7 @@ func TestAuthAPI_GetAttachedGroups(t *testing.T) {
 								GetUrnPrefix("example", RESOURCE_POLICY, "/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								POLICY_ACTION_LIST_ATTACHED_GROUPS,
@@ -2772,7 +2806,7 @@ func TestAuthAPI_GetAttachedGroups(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -2801,7 +2835,7 @@ func TestAuthAPI_GetAttachedGroups(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]Statement{
-					Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							USER_ACTION_GET_USER,
@@ -2813,27 +2847,18 @@ func TestAuthAPI_GetAttachedGroups(t *testing.T) {
 				},
 			},
 			getAttachedGroupsResult: []Group{
-				Group{
+				{
 					ID:   "Group1",
 					Org:  "org1",
 					Name: "group1",
 				},
-				Group{
+				{
 					ID:   "Group2",
 					Org:  "org2",
 					Name: "group2",
 				},
 			},
-			expectedGroups: []GroupIdentity{
-				GroupIdentity{
-					Org:  "org1",
-					Name: "group1",
-				},
-				GroupIdentity{
-					Org:  "org2",
-					Name: "group2",
-				},
-			},
+			expectedGroups: []string{"group1", "group2"},
 		},
 		// this has to be fixed (issue #68)
 		//"BadOrgName": {
