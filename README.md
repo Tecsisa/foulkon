@@ -97,6 +97,8 @@ password = "admin"
 
 [Resource API](doc/api/resource.md)
 
+[IAM Actions](doc/spec/actions.md)
+
 You can import this [Postman collection](schema/postman.json) file with all API methods.
 
 ## Testing
