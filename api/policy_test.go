@@ -48,7 +48,7 @@ func TestGetPolicyByName(t *testing.T) {
 				},
 			},
 		},
-		"InternalError": {
+		"ErrorCaseInternalError": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -62,7 +62,7 @@ func TestGetPolicyByName(t *testing.T) {
 				Code: UNKNOWN_API_ERROR,
 			},
 		},
-		"BadPolicyName": {
+		"ErrorCaseBadPolicyName": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -73,7 +73,7 @@ func TestGetPolicyByName(t *testing.T) {
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
-		"BadOrgName": {
+		"ErrorCaseBadOrgName": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -84,7 +84,7 @@ func TestGetPolicyByName(t *testing.T) {
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
-		"PolicyNotFound": {
+		"ErrorCasePolicyNotFound": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -98,7 +98,7 @@ func TestGetPolicyByName(t *testing.T) {
 				Code: POLICY_BY_ORG_AND_NAME_NOT_FOUND,
 			},
 		},
-		"NoPermissions": {
+		"ErrorCaseNoPermissions": {
 			authUser: AuthenticatedUser{
 				Identifier: "1234",
 				Admin:      false,
@@ -141,7 +141,7 @@ func TestGetPolicyByName(t *testing.T) {
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
 			},
 		},
-		"DenyResourceErr": {
+		"ErrorCaseDenyResourceErr": {
 			authUser: AuthenticatedUser{
 				Identifier: "1234",
 				Admin:      false,
@@ -323,7 +323,7 @@ func TestAddPolicy(t *testing.T) {
 				},
 			},
 		},
-		"PolicyAlreadyExists": {
+		"ErrorCasePolicyAlreadyExists": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -364,7 +364,7 @@ func TestAddPolicy(t *testing.T) {
 				Code: POLICY_ALREADY_EXIST,
 			},
 		},
-		"BadName": {
+		"ErrorCaseBadName": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -387,7 +387,7 @@ func TestAddPolicy(t *testing.T) {
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
-		"BadOrgName": {
+		"ErrorCaseBadOrgName": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -410,7 +410,7 @@ func TestAddPolicy(t *testing.T) {
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
-		"BadPath": {
+		"ErrorCaseBadPath": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -433,7 +433,7 @@ func TestAddPolicy(t *testing.T) {
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
-		"BadStatement": {
+		"ErrorCaseBadStatement": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -456,7 +456,7 @@ func TestAddPolicy(t *testing.T) {
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
-		"NoPermissions": {
+		"ErrorCaseNoPermissions": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
@@ -493,7 +493,7 @@ func TestAddPolicy(t *testing.T) {
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
 			},
 		},
-		"DenyResource": {
+		"ErrorCaseDenyResource": {
 			authUser: AuthenticatedUser{
 				Identifier: "1234",
 				Admin:      false,
@@ -571,7 +571,7 @@ func TestAddPolicy(t *testing.T) {
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
 			},
 		},
-		"AddPolicyDBErr": {
+		"ErrorCaseAddPolicyDBErr": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -600,7 +600,7 @@ func TestAddPolicy(t *testing.T) {
 				Code: UNKNOWN_API_ERROR,
 			},
 		},
-		"GetPolicyDBErr": {
+		"ErrorCaseGetPolicyDBErr": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -759,7 +759,7 @@ func TestUpdatePolicy(t *testing.T) {
 				},
 			},
 		},
-		"InvalidPolicyName": {
+		"ErrorCaseInvalidPolicyName": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -795,7 +795,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
-		"InvalidOrgName": {
+		"ErrorCaseInvalidOrgName": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -831,7 +831,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
-		"InvalidNewPolicyName": {
+		"ErrorCaseInvalidNewPolicyName": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -867,7 +867,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
-		"InvalidNewPath": {
+		"ErrorCaseInvalidNewPath": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -903,7 +903,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
-		"InvalidNewStatements": {
+		"ErrorCaseInvalidNewStatements": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -939,7 +939,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Code: INVALID_PARAMETER_ERROR,
 			},
 		},
-		"GetPolicyDBErr": {
+		"ErrorCaseGetPolicyDBErr": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -978,7 +978,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Code: UNKNOWN_API_ERROR,
 			},
 		},
-		"PolicyNotFound": {
+		"ErrorCasePolicyNotFound": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -1017,7 +1017,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Code: POLICY_BY_ORG_AND_NAME_NOT_FOUND,
 			},
 		},
-		"AuthUserNotFound": {
+		"ErrorCaseAuthUserNotFound": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
@@ -1092,7 +1092,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
 			},
 		},
-		"DenyResource": {
+		"ErrorCaseDenyResource": {
 			authUser: AuthenticatedUser{
 				Identifier: "1234",
 				Admin:      false,
@@ -1197,7 +1197,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
 			},
 		},
-		"NoPermissions": {
+		"ErrorCaseNoPermissions": {
 			authUser: AuthenticatedUser{
 				Identifier: "1234",
 				Admin:      false,
@@ -1284,7 +1284,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
 			},
 		},
-		"NewPolicyAlreadyExists": {
+		"ErrorCaseNewPolicyAlreadyExists": {
 			authUser: AuthenticatedUser{
 				Identifier: "1234",
 				Admin:      false,
@@ -1403,7 +1403,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Code: POLICY_ALREADY_EXIST,
 			},
 		},
-		"NoPermissionsToRetrieveTarget": {
+		"ErrorCaseNoPermissionsToRetrieveTarget": {
 			authUser: AuthenticatedUser{
 				Identifier: "1234",
 				Admin:      false,
@@ -1530,7 +1530,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
 			},
 		},
-		"NoPermissionsToUpdateTarget": {
+		"ErrorCaseNoPermissionsToUpdateTarget": {
 			authUser: AuthenticatedUser{
 				Identifier: "1234",
 				Admin:      false,
@@ -1642,7 +1642,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
 			},
 		},
-		"ExplicitDenyPermissionsToUpdateTarget": {
+		"ErrorCaseExplicitDenyPermissionsToUpdateTarget": {
 			authUser: AuthenticatedUser{
 				Identifier: "1234",
 				Admin:      false,
@@ -1805,7 +1805,7 @@ func TestUpdatePolicy(t *testing.T) {
 				Code: UNAUTHORIZED_RESOURCES_ERROR,
 			},
 		},
-		"ErrorUpdatingPolicy": {
+		"ErrorCaseErrorUpdatingPolicy": {
 			authUser: AuthenticatedUser{
 				Identifier: "1234",
 				Admin:      false,
@@ -2013,77 +2013,7 @@ func TestAuthAPI_GetPolicyList(t *testing.T) {
 
 		wantError *Error
 	}{
-		"ErrorCaseInvalidPath": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			org:        "123",
-			pathPrefix: "/path*/",
-			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
-			},
-		},
-		"ErrorCaseInvalidOrg": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			org:        "!#$$%**^",
-			pathPrefix: "/",
-			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
-			},
-		},
-		"ErrorCaseInternalErrorGetPoliciesFiltered": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			org:        "",
-			pathPrefix: "/path/",
-			getPoliciesFilteredMethodErr: &database.Error{
-				Code: database.INTERNAL_ERROR,
-			},
-			wantError: &Error{
-				Code: UNKNOWN_API_ERROR,
-			},
-		},
-		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      false,
-			},
-			org:        "123",
-			pathPrefix: "/path/",
-			getPoliciesFilteredMethodResult: []Policy{
-				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "example",
-					Path: "/path/",
-					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Action: []string{
-								POLICY_ACTION_GET_POLICY,
-							},
-							Resources: []string{
-								GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
-							},
-						},
-					},
-				},
-			},
-			getUserByExternalIDErr: &database.Error{
-				Code: database.USER_NOT_FOUND,
-			},
-			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
-			},
-		},
-		"OkTestCaseAdmin": {
+		"OkCaseAdmin": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -2139,7 +2069,7 @@ func TestAuthAPI_GetPolicyList(t *testing.T) {
 				},
 			},
 		},
-		"OkTestCaseAdminNoOrg": {
+		"OkCaseAdminNoOrg": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -2173,7 +2103,7 @@ func TestAuthAPI_GetPolicyList(t *testing.T) {
 				},
 			},
 		},
-		"OkTestCaseUser": {
+		"OkCaseUser": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
@@ -2267,6 +2197,76 @@ func TestAuthAPI_GetPolicyList(t *testing.T) {
 				},
 			},
 		},
+		"ErrorCaseInvalidPath": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "123",
+			pathPrefix: "/path*/",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "!#$$%**^",
+			pathPrefix: "/",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInternalErrorGetPoliciesFiltered": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "",
+			pathPrefix: "/path/",
+			getPoliciesFilteredMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:        "123",
+			pathPrefix: "/path/",
+			getPoliciesFilteredMethodResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "example",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								POLICY_ACTION_GET_POLICY,
+							},
+							Resources: []string{
+								GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDErr: &database.Error{
+				Code: database.USER_NOT_FOUND,
+			},
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+		},
 		// this has to be fixed (issue #68)
 		//"BadOrgName": {
 		//	authUser: AuthenticatedUser{
@@ -2334,6 +2334,32 @@ func TestDeletePolicy(t *testing.T) {
 
 		wantError *Error
 	}{
+		"OkCase": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:  "example",
+			name: "test",
+			getPolicyByNameMethodResult: &Policy{
+				ID:   "test1",
+				Name: "test",
+				Org:  "example",
+				Path: "/path/",
+				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]Statement{
+					{
+						Effect: "allow",
+						Action: []string{
+							USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							GetUrnPrefix("", RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+		},
 		"ErrorCaseInvalidName": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -2532,32 +2558,6 @@ func TestDeletePolicy(t *testing.T) {
 				Code: UNKNOWN_API_ERROR,
 			},
 		},
-		"OkTestCase": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			org:  "example",
-			name: "test",
-			getPolicyByNameMethodResult: &Policy{
-				ID:   "test1",
-				Name: "test",
-				Org:  "example",
-				Path: "/path/",
-				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "test"),
-				Statements: &[]Statement{
-					{
-						Effect: "allow",
-						Action: []string{
-							USER_ACTION_GET_USER,
-						},
-						Resources: []string{
-							GetUrnPrefix("", RESOURCE_USER, "/path/"),
-						},
-					},
-				},
-			},
-		},
 		// this has to be fixed (issue #68)
 		//"BadOrgName": {
 		//	authUser: AuthenticatedUser{
@@ -2623,6 +2623,45 @@ func TestAuthAPI_GetAttachedGroups(t *testing.T) {
 
 		getPolicyByNameMethodErr error
 	}{
+		"OkCase": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "example",
+			policyName: "test",
+			getPolicyByNameMethodResult: &Policy{
+				ID:   "test1",
+				Name: "test",
+				Org:  "example",
+				Path: "/path/",
+				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]Statement{
+					{
+						Effect: "allow",
+						Action: []string{
+							USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							GetUrnPrefix("", RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			getAttachedGroupsResult: []Group{
+				{
+					ID:   "Group1",
+					Org:  "org1",
+					Name: "group1",
+				},
+				{
+					ID:   "Group2",
+					Org:  "org2",
+					Name: "group2",
+				},
+			},
+			expectedGroups: []string{"group1", "group2"},
+		},
 		"ErrorCaseInvalidName": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -2820,45 +2859,6 @@ func TestAuthAPI_GetAttachedGroups(t *testing.T) {
 			getAttachedGroupsErr: &database.Error{
 				Code: database.INTERNAL_ERROR,
 			},
-		},
-		"OkTestCase": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			org:        "example",
-			policyName: "test",
-			getPolicyByNameMethodResult: &Policy{
-				ID:   "test1",
-				Name: "test",
-				Org:  "example",
-				Path: "/path/",
-				Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "test"),
-				Statements: &[]Statement{
-					{
-						Effect: "allow",
-						Action: []string{
-							USER_ACTION_GET_USER,
-						},
-						Resources: []string{
-							GetUrnPrefix("", RESOURCE_USER, "/path/"),
-						},
-					},
-				},
-			},
-			getAttachedGroupsResult: []Group{
-				{
-					ID:   "Group1",
-					Org:  "org1",
-					Name: "group1",
-				},
-				{
-					ID:   "Group2",
-					Org:  "org2",
-					Name: "group2",
-				},
-			},
-			expectedGroups: []string{"group1", "group2"},
 		},
 		// this has to be fixed (issue #68)
 		//"BadOrgName": {
