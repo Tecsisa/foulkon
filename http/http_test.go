@@ -124,7 +124,7 @@ func TestMain(m *testing.M) {
 		Logger:     logger,
 		WorkerHost: server.URL,
 		APIResources: []authorizr.APIResource{
-			authorizr.APIResource{
+			{
 				Id:     "resource1",
 				Host:   server.URL,
 				Url:    USER_ID_URL,
@@ -132,7 +132,7 @@ func TestMain(m *testing.M) {
 				Urn:    "urn:ews:example:instance1:resource/{userid}",
 				Action: "example:user",
 			},
-			authorizr.APIResource{
+			{
 				Id:     "invalidResource",
 				Host:   "fail",
 				Url:    "/fail",
@@ -140,7 +140,7 @@ func TestMain(m *testing.M) {
 				Urn:    "urn:ews:example:instance1:resource/fail",
 				Action: "example:fail",
 			},
-			authorizr.APIResource{
+			{
 				Id:     "invalidHost",
 				Host:   "%&",
 				Url:    "/invalid",
@@ -148,7 +148,7 @@ func TestMain(m *testing.M) {
 				Urn:    "urn:ews:example:instance1:resource/invalid",
 				Action: "example:invalid",
 			},
-			authorizr.APIResource{
+			{
 				Id:     "invalidUrn",
 				Host:   server.URL,
 				Url:    "/invalidUrn",
@@ -156,7 +156,7 @@ func TestMain(m *testing.M) {
 				Urn:    "%&",
 				Action: "example:invalid",
 			},
-			authorizr.APIResource{
+			{
 				Id:     "urnPrefix",
 				Host:   server.URL,
 				Url:    "/urnPrefix",
@@ -164,7 +164,7 @@ func TestMain(m *testing.M) {
 				Urn:    "urn:*",
 				Action: "&%",
 			},
-			authorizr.APIResource{
+			{
 				Id:     "invalidAction",
 				Host:   server.URL,
 				Url:    "/invalidAction",
@@ -480,13 +480,13 @@ func (t TestAPI) DetachPolicyToGroup(authenticatedUser api.AuthenticatedUser, or
 	return err
 }
 
-func (t TestAPI) ListAttachedGroupPolicies(authenticatedUser api.AuthenticatedUser, org string, groupName string) ([]api.PolicyIdentity, error) {
+func (t TestAPI) ListAttachedGroupPolicies(authenticatedUser api.AuthenticatedUser, org string, groupName string) ([]string, error) {
 	t.ArgsIn[ListAttachedGroupPoliciesMethod][0] = authenticatedUser
 	t.ArgsIn[ListAttachedGroupPoliciesMethod][1] = org
 	t.ArgsIn[ListAttachedGroupPoliciesMethod][2] = groupName
-	var policies []api.PolicyIdentity
+	var policies []string
 	if t.ArgsOut[ListAttachedGroupPoliciesMethod][0] != nil {
-		policies = t.ArgsOut[ListAttachedGroupPoliciesMethod][0].([]api.PolicyIdentity)
+		policies = t.ArgsOut[ListAttachedGroupPoliciesMethod][0].([]string)
 	}
 	var err error
 	if t.ArgsOut[ListAttachedGroupPoliciesMethod][1] != nil {
@@ -575,13 +575,13 @@ func (t TestAPI) DeletePolicy(authenticatedUser api.AuthenticatedUser, org strin
 	return err
 }
 
-func (t TestAPI) GetAttachedGroups(authenticatedUser api.AuthenticatedUser, org string, policyName string) ([]api.GroupIdentity, error) {
+func (t TestAPI) GetAttachedGroups(authenticatedUser api.AuthenticatedUser, org string, policyName string) ([]string, error) {
 	t.ArgsIn[GetAttachedGroupsMethod][0] = authenticatedUser
 	t.ArgsIn[GetAttachedGroupsMethod][1] = org
 	t.ArgsIn[GetAttachedGroupsMethod][2] = policyName
-	var groups []api.GroupIdentity
+	var groups []string
 	if t.ArgsOut[GetAttachedGroupsMethod][0] != nil {
-		groups = t.ArgsOut[GetAttachedGroupsMethod][0].([]api.GroupIdentity)
+		groups = t.ArgsOut[GetAttachedGroupsMethod][0].([]string)
 	}
 	var err error
 	if t.ArgsOut[GetAttachedGroupsMethod][1] != nil {

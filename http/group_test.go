@@ -491,7 +491,7 @@ func TestWorkerHandler_HandleListGroups(t *testing.T) {
 		pathPrefix string
 		// Expected result
 		expectedStatusCode int
-		expectedResponse   GetGroupsResponse
+		expectedResponse   ListGroupsResponse
 		expectedError      api.Error
 		// Manager Results
 		getListGroupResult []api.GroupIdentity
@@ -502,16 +502,11 @@ func TestWorkerHandler_HandleListGroups(t *testing.T) {
 			org:                "org1",
 			pathPrefix:         "path",
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: GetGroupsResponse{
-				[]api.GroupIdentity{
-					api.GroupIdentity{
-						Org:  "org1",
-						Name: "group1",
-					},
-				},
+			expectedResponse: ListGroupsResponse{
+				Groups: []string{"group1"},
 			},
 			getListGroupResult: []api.GroupIdentity{
-				api.GroupIdentity{
+				{
 					Org:  "org1",
 					Name: "group1",
 				},
@@ -598,14 +593,14 @@ func TestWorkerHandler_HandleListGroups(t *testing.T) {
 
 		switch res.StatusCode {
 		case http.StatusOK:
-			getGroupsResponse := GetGroupsResponse{}
-			err = json.NewDecoder(res.Body).Decode(&getGroupsResponse)
+			listGroupsResponse := ListGroupsResponse{}
+			err = json.NewDecoder(res.Body).Decode(&listGroupsResponse)
 			if err != nil {
 				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
 				continue
 			}
 			// Check result
-			if diff := pretty.Compare(getGroupsResponse, test.expectedResponse); diff != "" {
+			if diff := pretty.Compare(listGroupsResponse, test.expectedResponse); diff != "" {
 				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
@@ -1634,7 +1629,7 @@ func TestWorkerHandler_HandleListAttachedGroupPolicies(t *testing.T) {
 		expectedResponse   GetGroupPoliciesResponse
 		expectedError      api.Error
 		// Manager Results
-		getListAttachedGroupPoliciesResult []api.PolicyIdentity
+		getListAttachedGroupPoliciesResult []string
 		// Manager Errors
 		getListAttachedGroupPoliciesErr error
 	}{
@@ -1643,27 +1638,9 @@ func TestWorkerHandler_HandleListAttachedGroupPolicies(t *testing.T) {
 			name:               "group1",
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: GetGroupPoliciesResponse{
-				AttachedPolicies: []api.PolicyIdentity{
-					api.PolicyIdentity{
-						Org:  "org1",
-						Name: "policy1",
-					},
-					api.PolicyIdentity{
-						Org:  "org1",
-						Name: "policy2",
-					},
-				},
+				AttachedPolicies: []string{"policy1", "policy2"},
 			},
-			getListAttachedGroupPoliciesResult: []api.PolicyIdentity{
-				api.PolicyIdentity{
-					Org:  "org1",
-					Name: "policy1",
-				},
-				api.PolicyIdentity{
-					Org:  "org1",
-					Name: "policy2",
-				},
-			},
+			getListAttachedGroupPoliciesResult: []string{"policy1", "policy2"},
 		},
 		"ErrorCaseGroupNotFoundErr": {
 			org:                "org1",
@@ -1787,7 +1764,7 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 		pathPrefix string
 		// Expected result
 		expectedStatusCode int
-		expectedResponse   GetGroupsResponse
+		expectedResponse   ListAllGroupsResponse
 		expectedError      api.Error
 		// Manager Results
 		getListAllGroupResult []api.GroupIdentity
@@ -1797,16 +1774,16 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 		"OkCase": {
 			pathPrefix:         "/path/",
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: GetGroupsResponse{
+			expectedResponse: ListAllGroupsResponse{
 				[]api.GroupIdentity{
-					api.GroupIdentity{
+					{
 						Org:  "org1",
 						Name: "group1",
 					},
 				},
 			},
 			getListAllGroupResult: []api.GroupIdentity{
-				api.GroupIdentity{
+				{
 					Org:  "org1",
 					Name: "group1",
 				},
@@ -1884,14 +1861,14 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 
 		switch res.StatusCode {
 		case http.StatusOK:
-			getGroupsResponse := GetGroupsResponse{}
-			err = json.NewDecoder(res.Body).Decode(&getGroupsResponse)
+			listAllGroupsResponse := ListAllGroupsResponse{}
+			err = json.NewDecoder(res.Body).Decode(&listAllGroupsResponse)
 			if err != nil {
 				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
 				continue
 			}
 			// Check result
-			if diff := pretty.Compare(getGroupsResponse, test.expectedResponse); diff != "" {
+			if diff := pretty.Compare(listAllGroupsResponse, test.expectedResponse); diff != "" {
 				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}

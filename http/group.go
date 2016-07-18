@@ -22,7 +22,11 @@ type UpdateGroupRequest struct {
 
 // Responses
 
-type GetGroupsResponse struct {
+type ListGroupsResponse struct {
+	Groups []string `json:"groups, omitempty"`
+}
+
+type ListAllGroupsResponse struct {
 	Groups []api.GroupIdentity `json:"groups, omitempty"`
 }
 
@@ -31,7 +35,7 @@ type GetGroupMembersResponse struct {
 }
 
 type GetGroupPoliciesResponse struct {
-	AttachedPolicies []api.PolicyIdentity `json:"policies, omitempty"`
+	AttachedPolicies []string `json:"policies, omitempty"`
 }
 
 func (a *WorkerHandler) HandleCreateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -165,9 +169,14 @@ func (a *WorkerHandler) HandleListGroups(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
+	groups := []string{}
+	for _, group := range result {
+		groups = append(groups, group.Name)
+	}
+
 	// Create response
-	response := &GetGroupsResponse{
-		Groups: result,
+	response := &ListGroupsResponse{
+		Groups: groups,
 	}
 
 	// Return groups
@@ -454,7 +463,7 @@ func (a *WorkerHandler) HandleListAllGroups(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Create response
-	response := &GetGroupsResponse{
+	response := &ListAllGroupsResponse{
 		Groups: result,
 	}
 

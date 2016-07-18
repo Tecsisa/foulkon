@@ -34,7 +34,7 @@ func main() {
 	proxy, err := authorizr.NewProxy(config)
 	if err != nil {
 		fmt.Fprint(os.Stderr, err.Error())
-		return
+		os.Exit(1)
 	}
 
 	sig := make(chan os.Signal, 1)
@@ -49,7 +49,7 @@ func main() {
 		sigrecv := <-sig
 		switch sigrecv {
 		case syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT:
-			proxy.Logger.Infof("Signal '%v' received, closing server...", sigrecv.String())
+			proxy.Logger.Infof("Signal '%v' received, closing proxy...", sigrecv.String())
 			authorizr.CloseProxy()
 		default:
 			proxy.Logger.Warnf("Unknown OS signal received, ignoring...")

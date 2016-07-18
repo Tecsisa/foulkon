@@ -32,10 +32,6 @@ type GroupMembers struct {
 	Users []User `json:"users, omitempty"`
 }
 
-type GroupPolicies struct {
-	Policies []PolicyIdentity `json:"policies, omitempty"`
-}
-
 // Add an Group to database if not exist
 func (api AuthAPI) AddGroup(authenticatedUser AuthenticatedUser, org string, name string, path string) (*Group, error) {
 	// Validate fields
@@ -121,7 +117,7 @@ func (api AuthAPI) AddMember(authenticatedUser AuthenticatedUser, userID string,
 			Message: fmt.Sprintf("Invalid parameter: externalId %v", userID),
 		}
 	}
-	if !IsValidName(org) {
+	if !IsValidOrg(org) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: org %v", org),
@@ -442,6 +438,12 @@ func (api AuthAPI) GetGroupByName(authenticatedUser AuthenticatedUser, org strin
 
 func (api AuthAPI) GetGroupList(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]GroupIdentity, error) {
 	// Validate fields
+	if len(org) > 0 && !IsValidOrg(org) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+		}
+	}
 	if len(pathPrefix) > 0 && !IsValidPath(pathPrefix) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -467,7 +469,12 @@ func (api AuthAPI) GetGroupList(authenticatedUser AuthenticatedUser, org string,
 	}
 
 	// Check restrictions to list
-	urnPrefix := GetUrnPrefix(org, RESOURCE_GROUP, pathPrefix)
+	var urnPrefix string
+	if len(org) == 0 {
+		urnPrefix = "*"
+	} else {
+		urnPrefix = GetUrnPrefix(org, RESOURCE_GROUP, pathPrefix)
+	}
 	filteredGroups, err := api.GetAuthorizedGroups(authenticatedUser, urnPrefix, GROUP_ACTION_LIST_GROUPS, groups)
 	if err != nil {
 		return nil, err
@@ -733,7 +740,7 @@ func (api AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org 
 	return nil
 }
 
-func (api AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser, org string, groupName string) ([]PolicyIdentity, error) {
+func (api AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser, org string, groupName string) ([]string, error) {
 	// Validate fields
 	if !IsValidName(groupName) {
 		return nil, &Error{
@@ -780,12 +787,9 @@ func (api AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser
 		}
 	}
 
-	policyIDs := []PolicyIdentity{}
+	policyIDs := []string{}
 	for _, p := range attachedPolicies {
-		policyIDs = append(policyIDs, PolicyIdentity{
-			Org:  p.Org,
-			Name: p.Name,
-		})
+		policyIDs = append(policyIDs, p.Name)
 	}
 	return policyIDs, nil
 }

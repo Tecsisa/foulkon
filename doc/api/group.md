@@ -168,7 +168,7 @@ HTTP/1.1 200 OK
 ```
 
 
-## <a name="resource-order2_groupReference"></a>
+## <a name="resource-order2_groupReference">Organization's groups</a>
 
 
 
@@ -177,12 +177,11 @@ HTTP/1.1 200 OK
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **[groups/name](#resource-order1_group)** | *string* | Group name | `"group1"` |
-| **[groups/org](#resource-order1_group)** | *string* | Group organization | `"tecsisa"` |
+| **groups** | *array* | List of groups | `["groupName1, groupName2"]` |
 
-###  List all organization's groups
+### Organization's groups List
 
-List all groups by organization.
+List all organization's groups
 
 ```
 GET /api/v1/organizations/{organization_id}/groups?PathPrefix={optional_path_prefix}
@@ -206,17 +205,27 @@ HTTP/1.1 200 OK
 ```json
 {
   "groups": [
-    {
-      "org": "tecsisa",
-      "name": "group1"
-    }
+    "groupName1, groupName2"
   ]
 }
 ```
 
-###  List all groups
 
-List all groups.
+## <a name="resource-order3_groupAllReference">All groups</a>
+
+
+
+
+### Attributes
+
+| Name | Type | Description | Example |
+| ------- | ------- | ------- | ------- |
+| **[groups/name](#resource-order1_group)** | *string* | Group name | `"group1"` |
+| **[groups/org](#resource-order1_group)** | *string* | Group organization | `"tecsisa"` |
+
+### All groups List
+
+List all groups
 
 ```
 GET /api/v1/groups?PathPrefix={optional_path_prefix}
@@ -249,7 +258,7 @@ HTTP/1.1 200 OK
 ```
 
 
-## <a name="resource-order3_members">Member</a>
+## <a name="resource-order4_members">Member</a>
 
 
 Group members
@@ -342,7 +351,7 @@ HTTP/1.1 200 OK
 ```
 
 
-## <a name="resource-order4_attachedPolicies">Group Policies</a>
+## <a name="resource-order5_attachedPolicies">Group Policies</a>
 
 
 Attached Policies
@@ -351,8 +360,7 @@ Attached Policies
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **policies/name** | *string* | Name of policy | `"policy1"` |
-| **policies/org** | *string* | Organization of policy | `"tecsisa"` |
+| **policies** | *array* | Policies attached to this group | `["policyName1, policyName2"]` |
 
 ### Group Policies Attach
 
@@ -430,10 +438,7 @@ HTTP/1.1 200 OK
 ```json
 {
   "policies": [
-    {
-      "org": "tecsisa",
-      "name": "policy1"
-    }
+    "policyName1, policyName2"
   ]
 }
 ```

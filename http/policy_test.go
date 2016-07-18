@@ -22,9 +22,9 @@ func TestWorkerHandler_HandlePolicyList(t *testing.T) {
 		expectedStatusCode int
 		expectedResponse   ListPoliciesResponse
 		expectedError      api.Error
-		// Manager Results
+		// API Results
 		getPolicyListResult []api.PolicyIdentity
-		// Manager Errors
+		// API Errors
 		getPolicyListErr error
 	}{
 		"OkCase": {
@@ -32,17 +32,29 @@ func TestWorkerHandler_HandlePolicyList(t *testing.T) {
 			pathPrefix:         "path",
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: ListPoliciesResponse{
-				[]api.PolicyIdentity{
-					api.PolicyIdentity{
-						Org:  "org1",
-						Name: "policy1",
-					},
-				},
+				[]string{"policy1"},
 			},
 			getPolicyListResult: []api.PolicyIdentity{
-				api.PolicyIdentity{
+				{
 					Org:  "org1",
 					Name: "policy1",
+				},
+			},
+		},
+		"OkCaseNoOrg": {
+			pathPrefix:         "path",
+			expectedStatusCode: http.StatusOK,
+			expectedResponse: ListPoliciesResponse{
+				[]string{"policy1", "policy2"},
+			},
+			getPolicyListResult: []api.PolicyIdentity{
+				{
+					Org:  "org1",
+					Name: "policy1",
+				},
+				{
+					Org:  "org2",
+					Name: "policy2",
 				},
 			},
 		},
@@ -174,7 +186,7 @@ func TestWorkerHandler_HandleCreatePolicy(t *testing.T) {
 				Name: "test",
 				Path: "/path/",
 				Statements: []api.Statement{
-					api.Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							api.USER_ACTION_GET_USER,
@@ -193,7 +205,7 @@ func TestWorkerHandler_HandleCreatePolicy(t *testing.T) {
 				CreateAt: now,
 				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]api.Statement{
-					api.Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							api.USER_ACTION_GET_USER,
@@ -213,7 +225,7 @@ func TestWorkerHandler_HandleCreatePolicy(t *testing.T) {
 				Path:     "/path/",
 				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]api.Statement{
-					api.Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							api.USER_ACTION_GET_USER,
@@ -238,7 +250,7 @@ func TestWorkerHandler_HandleCreatePolicy(t *testing.T) {
 				Name: "test",
 				Path: "/path/",
 				Statements: []api.Statement{
-					api.Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							api.USER_ACTION_GET_USER,
@@ -263,7 +275,7 @@ func TestWorkerHandler_HandleCreatePolicy(t *testing.T) {
 				Name: "test",
 				Path: "/path/**",
 				Statements: []api.Statement{
-					api.Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							api.USER_ACTION_GET_USER,
@@ -288,7 +300,7 @@ func TestWorkerHandler_HandleCreatePolicy(t *testing.T) {
 				Name: "test",
 				Path: "/path/",
 				Statements: []api.Statement{
-					api.Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							api.USER_ACTION_GET_USER,
@@ -313,7 +325,7 @@ func TestWorkerHandler_HandleCreatePolicy(t *testing.T) {
 				Name: "test",
 				Path: "/path/**",
 				Statements: []api.Statement{
-					api.Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							api.USER_ACTION_GET_USER,
@@ -566,7 +578,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				Name: "policy1",
 				Path: "path1",
 				Statements: []api.Statement{
-					api.Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							api.USER_ACTION_GET_USER,
@@ -586,7 +598,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				CreateAt: now,
 				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]api.Statement{
-					api.Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							api.USER_ACTION_GET_USER,
@@ -605,7 +617,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				CreateAt: now,
 				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]api.Statement{
-					api.Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							api.USER_ACTION_GET_USER,
@@ -630,7 +642,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				Name: "policy1",
 				Path: "path1",
 				Statements: []api.Statement{
-					api.Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							api.USER_ACTION_GET_USER,
@@ -672,7 +684,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				Name: "policy1",
 				Path: "path1",
 				Statements: []api.Statement{
-					api.Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							api.USER_ACTION_GET_USER,
@@ -697,7 +709,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				Name: "policy1",
 				Path: "path1",
 				Statements: []api.Statement{
-					api.Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							api.USER_ACTION_GET_USER,
@@ -722,7 +734,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				Name: "policy1",
 				Path: "path1",
 				Statements: []api.Statement{
-					api.Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							api.USER_ACTION_GET_USER,
@@ -865,7 +877,7 @@ func TestWorkerHandler_HandleGetPolicy(t *testing.T) {
 				CreateAt: now,
 				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]api.Statement{
-					api.Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							api.USER_ACTION_GET_USER,
@@ -884,7 +896,7 @@ func TestWorkerHandler_HandleGetPolicy(t *testing.T) {
 				CreateAt: now,
 				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]api.Statement{
-					api.Statement{
+					{
 						Effect: "allow",
 						Action: []string{
 							api.USER_ACTION_GET_USER,
@@ -1020,9 +1032,9 @@ func TestWorkerHandler_HandleGetAttachedGroups(t *testing.T) {
 		expectedStatusCode int
 		expectedResponse   GetPolicyGroupsResponse
 		expectedError      *api.Error
-		// Manager Results
-		getPolicyGroupsResult []api.GroupIdentity
-		// Manager Errors
+		// API Results
+		getPolicyGroupsResult []string
+		// API Errors
 		getPolicyGroupsErr error
 	}{
 		"OkCase": {
@@ -1030,27 +1042,9 @@ func TestWorkerHandler_HandleGetAttachedGroups(t *testing.T) {
 			policyName:         "p1",
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: GetPolicyGroupsResponse{
-				Groups: []api.GroupIdentity{
-					api.GroupIdentity{
-						Org:  "org1",
-						Name: "group1",
-					},
-					api.GroupIdentity{
-						Org:  "org1",
-						Name: "group2",
-					},
-				},
+				Groups: []string{"group1", "group2"},
 			},
-			getPolicyGroupsResult: []api.GroupIdentity{
-				api.GroupIdentity{
-					Org:  "org1",
-					Name: "group1",
-				},
-				api.GroupIdentity{
-					Org:  "org1",
-					Name: "group2",
-				},
-			},
+			getPolicyGroupsResult: []string{"group1", "group2"},
 		},
 		"ErrorCaseNotFound": {
 			org:                "org1",
@@ -1185,22 +1179,22 @@ func TestWorkerHandler_HandleListAllPolicies(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: ListAllPoliciesResponse{
 				[]api.PolicyIdentity{
-					api.PolicyIdentity{
+					{
 						Org:  "org1",
 						Name: "policy1",
 					},
-					api.PolicyIdentity{
+					{
 						Org:  "org1",
 						Name: "policy2",
 					},
 				},
 			},
 			getPolicyListResult: []api.PolicyIdentity{
-				api.PolicyIdentity{
+				{
 					Org:  "org1",
 					Name: "policy1",
 				},
-				api.PolicyIdentity{
+				{
 					Org:  "org1",
 					Name: "policy2",
 				},

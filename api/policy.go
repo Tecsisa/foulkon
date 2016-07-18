@@ -91,16 +91,16 @@ func (api AuthAPI) GetPolicyByName(authenticatedUser AuthenticatedUser, org stri
 
 func (api AuthAPI) GetPolicyList(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]PolicyIdentity, error) {
 	// Validate fields
-	if len(pathPrefix) > 0 && !IsValidPath(pathPrefix) {
-		return nil, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", pathPrefix),
-		}
-	}
 	if len(org) > 0 && !IsValidOrg(org) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+		}
+	}
+	if len(pathPrefix) > 0 && !IsValidPath(pathPrefix) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", pathPrefix),
 		}
 	}
 	if len(pathPrefix) == 0 {
@@ -121,7 +121,12 @@ func (api AuthAPI) GetPolicyList(authenticatedUser AuthenticatedUser, org string
 	}
 
 	// Check restrictions to list
-	urnPrefix := GetUrnPrefix(org, RESOURCE_POLICY, pathPrefix)
+	var urnPrefix string
+	if len(org) == 0 {
+		urnPrefix = "*"
+	} else {
+		urnPrefix = GetUrnPrefix(org, RESOURCE_POLICY, pathPrefix)
+	}
 	policiesFiltered, err := api.GetAuthorizedPolicies(authenticatedUser, urnPrefix, POLICY_ACTION_LIST_POLICIES, policies)
 	if err != nil {
 		return nil, err
@@ -376,7 +381,7 @@ func (api AuthAPI) DeletePolicy(authenticatedUser AuthenticatedUser, org string,
 	return nil
 }
 
-func (api AuthAPI) GetAttachedGroups(authenticatedUser AuthenticatedUser, org string, policyName string) ([]GroupIdentity, error) {
+func (api AuthAPI) GetAttachedGroups(authenticatedUser AuthenticatedUser, org string, policyName string) ([]string, error) {
 	// Validate fields
 	if !IsValidName(policyName) {
 		return nil, &Error{
@@ -423,15 +428,12 @@ func (api AuthAPI) GetAttachedGroups(authenticatedUser AuthenticatedUser, org st
 		}
 	}
 
-	groupIDs := []GroupIdentity{}
+	groupNames := []string{}
 	for _, g := range groups {
-		groupIDs = append(groupIDs, GroupIdentity{
-			Org:  g.Org,
-			Name: g.Name,
-		})
+		groupNames = append(groupNames, g.Name)
 	}
 
-	return groupIDs, nil
+	return groupNames, nil
 }
 
 func createPolicy(name string, path string, org string, statements *[]Statement) Policy {
