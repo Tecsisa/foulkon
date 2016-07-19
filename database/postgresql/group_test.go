@@ -475,3 +475,87 @@ func TestPostgresRepo_IsMemberOfGroup(t *testing.T) {
 
 	}
 }
+
+func TestPostgresRepo_GetGroupById(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		// Previous data
+		previousGroup *api.Group
+		// Postgres Repo Args
+		groupID string
+		// Expected result
+		expectedResponse *api.Group
+		expectedError    *database.Error
+	}{
+		"OkCase": {
+			previousGroup: &api.Group{
+				ID:       "GroupID",
+				Name:     "Name",
+				Path:     "Path",
+				Urn:      "Urn",
+				CreateAt: now,
+				Org:      "Org",
+			},
+			groupID: "GroupID",
+			expectedResponse: &api.Group{
+				ID:       "GroupID",
+				Name:     "Name",
+				Path:     "Path",
+				Urn:      "Urn",
+				CreateAt: now,
+				Org:      "Org",
+			},
+		},
+		"ErrorCaseGroupNotExist": {
+			previousGroup: &api.Group{
+				ID:       "GroupID",
+				Name:     "Name",
+				Path:     "Path",
+				Urn:      "Urn",
+				CreateAt: now,
+				Org:      "Org",
+			},
+			groupID: "NotExist",
+			expectedError: &database.Error{
+				Code:    database.GROUP_NOT_FOUND,
+				Message: "Group with id NotExist not found",
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean group database
+		cleanGroupTable()
+
+		// Insert previous data
+		if test.previousGroup != nil {
+			err := insertGroup(test.previousGroup.ID, test.previousGroup.Name, test.previousGroup.Path,
+				test.previousGroup.CreateAt.UnixNano(), test.previousGroup.Urn, test.previousGroup.Org)
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
+				continue
+			}
+		}
+
+		// Call to repository to get group
+		receivedGroup, err := repoDB.GetGroupById(test.groupID)
+		if test.expectedError != nil {
+			dbError, ok := err.(*database.Error)
+			if !ok || dbError == nil {
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+				continue
+			}
+			// Check response
+			if diff := pretty.Compare(receivedGroup, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+				continue
+			}
+		}
+
+	}
+}
