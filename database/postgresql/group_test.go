@@ -612,3 +612,63 @@ func TestPostgresRepo_AddMember(t *testing.T) {
 		}
 	}
 }
+
+func TestPostgresRepo_RemoveMember(t *testing.T) {
+	testcases := map[string]struct {
+		// Previous data
+		relation *struct {
+			user_id  string
+			group_id string
+		}
+		// Postgres Repo Args
+		userID  string
+		groupID string
+		// Expected result
+		expectedError *database.Error
+	}{
+		"OkCase": {
+			relation: &struct {
+				user_id  string
+				group_id string
+			}{
+				user_id:  "UserID",
+				group_id: "GroupID",
+			},
+			userID:  "UserID",
+			groupID: "GroupID",
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean GroupUserRelation database
+		cleanGroupUserRelationTable()
+
+		// Insert previous data
+		if test.relation != nil {
+			if err := insertGroupUserRelation(test.relation.user_id, test.relation.group_id); err != nil {
+				t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
+				continue
+			}
+		}
+
+		// Call to repository to remove member
+		err := repoDB.RemoveMember(test.userID, test.groupID)
+
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+			continue
+		}
+
+		// Check database
+		relations, err := getGroupUserRelations(test.groupID, test.userID)
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error counting relations: %v", n, err)
+			continue
+		}
+		if relations != 0 {
+			t.Errorf("Test %v failed. Received different relations number: %v", n, relations)
+			continue
+		}
+
+	}
+}
