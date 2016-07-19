@@ -907,3 +907,129 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 
 	}
 }
+
+func TestPostgresRepo_GetGroupMembers(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		// Previous data
+		relations *struct {
+			users        []api.User
+			group_id     string
+			userNotFound bool
+		}
+		// Postgres Repo Args
+		groupID string
+		// Expected result
+		expectedResponse []api.User
+		expectedError    *database.Error
+	}{
+		"OkCase": {
+			relations: &struct {
+				users        []api.User
+				group_id     string
+				userNotFound bool
+			}{
+				users: []api.User{
+					{
+						ID:         "UserID1",
+						ExternalID: "ExternalID1",
+						Path:       "Path",
+						Urn:        "urn1",
+						CreateAt:   now,
+					},
+					{
+						ID:         "UserID2",
+						ExternalID: "ExternalID2",
+						Path:       "Path",
+						Urn:        "urn2",
+						CreateAt:   now,
+					},
+				},
+				group_id: "GroupID",
+			},
+			groupID: "GroupID",
+			expectedResponse: []api.User{
+				{
+					ID:         "UserID1",
+					ExternalID: "ExternalID1",
+					Path:       "Path",
+					Urn:        "urn1",
+					CreateAt:   now,
+				},
+				{
+					ID:         "UserID2",
+					ExternalID: "ExternalID2",
+					Path:       "Path",
+					Urn:        "urn2",
+					CreateAt:   now,
+				},
+			},
+		},
+		"ErrorCase": {
+			relations: &struct {
+				users        []api.User
+				group_id     string
+				userNotFound bool
+			}{
+				users: []api.User{
+					{
+						ID: "UserID1",
+					},
+				},
+				group_id:     "GroupID",
+				userNotFound: true,
+			},
+			groupID: "GroupID",
+			expectedError: &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: "Code: UserNotFound, Message: User with id UserID1 not found",
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		cleanUserTable()
+		cleanGroupUserRelationTable()
+
+		// Insert previous data
+		if test.relations != nil {
+			for _, user := range test.relations.users {
+				if err := insertGroupUserRelation(user.ID, test.relations.group_id); err != nil {
+					t.Errorf("Test %v failed. Unexpected error inserting prevoius group user relations: %v", n, err)
+					continue
+				}
+				if !test.relations.userNotFound {
+					if err := insertUser(user.ID, user.ExternalID, user.Path,
+						user.CreateAt.UnixNano(), user.Urn); err != nil {
+						t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
+						continue
+					}
+				}
+			}
+
+		}
+
+		receivedUsers, err := repoDB.GetGroupMembers(test.groupID)
+		if test.expectedError != nil {
+			dbError, ok := err.(*database.Error)
+			if !ok || dbError == nil {
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
+				continue
+			}
+			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+				continue
+			}
+			// Check response
+			if diff := pretty.Compare(receivedUsers, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+				continue
+			}
+		}
+	}
+}
