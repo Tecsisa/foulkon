@@ -1033,3 +1033,69 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 		}
 	}
 }
+
+func TestPostgresRepo_IsAttachedToGroup(t *testing.T) {
+	testcases := map[string]struct {
+		// Previous data
+		relation *struct {
+			group_id  string
+			policy_id string
+		}
+		// Postgres Repo Args
+		groupID  string
+		policyID string
+		// Expected result
+		expectedResult bool
+	}{
+		"OkCase": {
+			relation: &struct {
+				group_id  string
+				policy_id string
+			}{
+				group_id:  "GroupID",
+				policy_id: "PolicyID",
+			},
+			groupID:        "GroupID",
+			policyID:       "PolicyID",
+			expectedResult: true,
+		},
+		"OkCaseNotFound": {
+			relation: &struct {
+				group_id  string
+				policy_id string
+			}{
+				group_id:  "GroupID",
+				policy_id: "PolicyID",
+			},
+			groupID:        "GroupID",
+			policyID:       "PolicyIDXXXXXXX",
+			expectedResult: false,
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean GroupPolicyRelation database
+		cleanGroupPolicyRelationTable()
+
+		// Insert previous data
+		if test.relation != nil {
+			if err := insertGroupPolicyRelation(test.relation.group_id, test.relation.policy_id); err != nil {
+				t.Errorf("Test %v failed. Unexpected error inserting previous group policy relations: %v", n, err)
+				continue
+			}
+		}
+
+		// Call repository to check if policy is attached to group
+		result, err := repoDB.IsAttachedToGroup(test.groupID, test.policyID)
+
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+			continue
+		}
+
+		if result != test.expectedResult {
+			t.Errorf("Test %v failed. Received %v, expected %v", n, result, test.expectedResult)
+			continue
+		}
+	}
+}
