@@ -672,3 +672,238 @@ func TestPostgresRepo_RemoveMember(t *testing.T) {
 
 	}
 }
+
+func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		// Previous data
+		previousGroups []api.Group
+		// Postgres Repo Args
+		org        string
+		pathPrefix string
+		// Expected result
+		expectedResponse []api.Group
+	}{
+		"OkCasePathPrefix1": {
+			previousGroups: []api.Group{
+				{
+					ID:       "GroupID1",
+					Name:     "Name1",
+					Path:     "Path123",
+					Urn:      "urn1",
+					CreateAt: now,
+					Org:      "Org1",
+				},
+				{
+					ID:       "GroupID2",
+					Name:     "Name2",
+					Path:     "Path456",
+					Urn:      "urn2",
+					CreateAt: now,
+					Org:      "Org2",
+				},
+			},
+			pathPrefix: "Path",
+			expectedResponse: []api.Group{
+				{
+					ID:       "GroupID1",
+					Name:     "Name1",
+					Path:     "Path123",
+					Urn:      "urn1",
+					CreateAt: now,
+					Org:      "Org1",
+				},
+				{
+					ID:       "GroupID2",
+					Name:     "Name2",
+					Path:     "Path456",
+					Urn:      "urn2",
+					CreateAt: now,
+					Org:      "Org2",
+				},
+			},
+		},
+		"OkCasePathPrefix2": {
+			previousGroups: []api.Group{
+				{
+					ID:       "GroupID1",
+					Name:     "Name1",
+					Path:     "Path123",
+					Urn:      "urn1",
+					CreateAt: now,
+					Org:      "Org1",
+				},
+				{
+					ID:       "GroupID2",
+					Name:     "Name2",
+					Path:     "Path456",
+					Urn:      "urn2",
+					CreateAt: now,
+					Org:      "Org2",
+				},
+			},
+			pathPrefix: "Path123",
+			expectedResponse: []api.Group{
+				{
+					ID:       "GroupID1",
+					Name:     "Name1",
+					Path:     "Path123",
+					Urn:      "urn1",
+					CreateAt: now,
+					Org:      "Org1",
+				},
+			},
+		},
+		"OkCasePathPrefix3": {
+			previousGroups: []api.Group{
+				{
+					ID:       "GroupID1",
+					Name:     "Name1",
+					Path:     "Path123",
+					Urn:      "urn1",
+					CreateAt: now,
+					Org:      "Org1",
+				},
+				{
+					ID:       "GroupID2",
+					Name:     "Name2",
+					Path:     "Path456",
+					Urn:      "urn2",
+					CreateAt: now,
+					Org:      "Org2",
+				},
+			},
+			pathPrefix:       "NoPath",
+			expectedResponse: []api.Group{},
+		},
+		"OkCaseGetByOrg": {
+			previousGroups: []api.Group{
+				{
+					ID:       "GroupID1",
+					Name:     "Name1",
+					Path:     "Path123",
+					Urn:      "urn1",
+					CreateAt: now,
+					Org:      "Org1",
+				},
+				{
+					ID:       "GroupID2",
+					Name:     "Name2",
+					Path:     "Path456",
+					Urn:      "urn2",
+					CreateAt: now,
+					Org:      "Org2",
+				},
+			},
+			org: "Org1",
+			expectedResponse: []api.Group{
+				{
+					ID:       "GroupID1",
+					Name:     "Name1",
+					Path:     "Path123",
+					Urn:      "urn1",
+					CreateAt: now,
+					Org:      "Org1",
+				},
+			},
+		},
+		"OkCaseGetByOrgAndPathPrefix": {
+			previousGroups: []api.Group{
+				{
+					ID:       "GroupID1",
+					Name:     "Name1",
+					Path:     "Path123",
+					Urn:      "urn1",
+					CreateAt: now,
+					Org:      "Org1",
+				},
+				{
+					ID:       "GroupID2",
+					Name:     "Name2",
+					Path:     "Path456",
+					Urn:      "urn2",
+					CreateAt: now,
+					Org:      "Org2",
+				},
+			},
+			org:        "Org1",
+			pathPrefix: "Path123",
+			expectedResponse: []api.Group{
+				{
+					ID:       "GroupID1",
+					Name:     "Name1",
+					Path:     "Path123",
+					Urn:      "urn1",
+					CreateAt: now,
+					Org:      "Org1",
+				},
+			},
+		},
+		"OkCaseWithoutParams": {
+			previousGroups: []api.Group{
+				{
+					ID:       "GroupID1",
+					Name:     "Name1",
+					Path:     "Path123",
+					Urn:      "urn1",
+					CreateAt: now,
+					Org:      "Org1",
+				},
+				{
+					ID:       "GroupID2",
+					Name:     "Name2",
+					Path:     "Path456",
+					Urn:      "urn2",
+					CreateAt: now,
+					Org:      "Org2",
+				},
+			},
+			expectedResponse: []api.Group{
+				{
+					ID:       "GroupID1",
+					Name:     "Name1",
+					Path:     "Path123",
+					Urn:      "urn1",
+					CreateAt: now,
+					Org:      "Org1",
+				},
+				{
+					ID:       "GroupID2",
+					Name:     "Name2",
+					Path:     "Path456",
+					Urn:      "urn2",
+					CreateAt: now,
+					Org:      "Org2",
+				},
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean group database
+		cleanGroupTable()
+
+		// Insert previous data
+		if test.previousGroups != nil {
+			for _, previousGroup := range test.previousGroups {
+				if err := insertGroup(previousGroup.ID, previousGroup.Name, previousGroup.Path,
+					previousGroup.CreateAt.UnixNano(), previousGroup.Urn, previousGroup.Org); err != nil {
+					t.Errorf("Test %v failed. Unexpected error inserting previous groups: %v", n, err)
+					continue
+				}
+			}
+		}
+		// Call to repository to get groups
+		receivedGroups, err := repoDB.GetGroupsFiltered(test.org, test.pathPrefix)
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+			continue
+		}
+		// Check response
+		if diff := pretty.Compare(receivedGroups, test.expectedResponse); diff != "" {
+			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+			continue
+		}
+
+	}
+}
