@@ -559,3 +559,56 @@ func TestPostgresRepo_GetGroupById(t *testing.T) {
 
 	}
 }
+
+func TestPostgresRepo_AddMember(t *testing.T) {
+	testcases := map[string]struct {
+		// Postgres Repo Args
+		userID  string
+		groupID string
+		// Expected result
+		expectedError *database.Error
+	}{
+		"OkCase": {
+			userID:  "UserID",
+			groupID: "GroupID",
+		},
+		"ErrorCaseInternalError": {
+			groupID: "GroupID",
+			expectedError: &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: "pq: null value in column user_id violates not-null constraint",
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean GroupUserRelation database
+		cleanGroupUserRelationTable()
+
+		// Call to repository to store member
+		err := repoDB.AddMember(test.userID, test.groupID)
+		if test.expectedError != nil {
+			dbError, ok := err.(*database.Error)
+			if !ok || dbError == nil {
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+				continue
+			}
+
+			// Check database
+			relations, err := getGroupUserRelations(test.groupID, test.userID)
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error counting relations: %v", n, err)
+				continue
+			}
+			if relations != 1 {
+				t.Errorf("Test %v failed. Received different relations number: %v", n, relations)
+				continue
+			}
+		}
+	}
+}
