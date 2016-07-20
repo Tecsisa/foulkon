@@ -1121,7 +1121,7 @@ func TestPostgresRepo_AttachPolicy(t *testing.T) {
 	}
 
 	for n, test := range testcases {
-		// Clean GroupUserRelation database
+		// Clean GroupPolicyRelation database
 		cleanGroupPolicyRelationTable()
 
 		// Call to repository to attach policy
@@ -1149,5 +1149,65 @@ func TestPostgresRepo_AttachPolicy(t *testing.T) {
 				continue
 			}
 		}
+	}
+}
+
+func TestPostgresRepo_DetachPolicy(t *testing.T) {
+	testcases := map[string]struct {
+		// Previous data
+		relation *struct {
+			policy_id string
+			group_id  string
+		}
+		// Postgres Repo Args
+		policyID string
+		groupID  string
+		// Expected result
+		expectedError *database.Error
+	}{
+		"OkCase": {
+			relation: &struct {
+				policy_id string
+				group_id  string
+			}{
+				policy_id: "PolicyID",
+				group_id:  "GroupID",
+			},
+			policyID: "PolicyID",
+			groupID:  "GroupID",
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean GroupPolicyRelation database
+		cleanGroupPolicyRelationTable()
+
+		// Insert previous data
+		if test.relation != nil {
+			if err := insertGroupPolicyRelation(test.relation.group_id, test.relation.policy_id); err != nil {
+				t.Errorf("Test %v failed. Unexpected error inserting previous group policy relations: %v", n, err)
+				continue
+			}
+		}
+
+		// Call to repository to detach policy
+		err := repoDB.DetachPolicy(test.groupID, test.policyID)
+
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+			continue
+		}
+
+		// Check database
+		relations, err := getGroupPolicyRelationCount(test.policyID, test.groupID)
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error counting relations: %v", n, err)
+			continue
+		}
+		if relations != 0 {
+			t.Errorf("Test %v failed. Received different relations number: %v", n, relations)
+			continue
+		}
+
 	}
 }
