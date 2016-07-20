@@ -126,16 +126,16 @@ func (u PostgresRepo) GetUsersFiltered(pathPrefix string) ([]api.User, error) {
 		}
 	}
 
+	var apiUsers []api.User
 	// Transform users for API
 	if users != nil {
-		apiusers := make([]api.User, len(users), cap(users))
+		apiUsers = make([]api.User, len(users), cap(users))
 		for i, u := range users {
-			apiusers[i] = *dbUserToAPIUser(&u)
+			apiUsers[i] = *dbUserToAPIUser(&u)
 		}
-		return apiusers, nil
 	}
 
-	return nil, nil
+	return apiUsers, nil
 }
 
 func (u PostgresRepo) GetGroupsByUserID(id string) ([]api.Group, error) {
@@ -150,9 +150,10 @@ func (u PostgresRepo) GetGroupsByUserID(id string) ([]api.Group, error) {
 		}
 	}
 
+	var apiGroups []api.Group
 	// Transform relations to API domain
 	if relations != nil {
-		apiGroups := make([]api.Group, len(relations), cap(relations))
+		apiGroups = make([]api.Group, len(relations), cap(relations))
 		for i, r := range relations {
 			group, err := u.GetGroupById(r.GroupID)
 			// Error handling
@@ -162,14 +163,11 @@ func (u PostgresRepo) GetGroupsByUserID(id string) ([]api.Group, error) {
 					Message: err.Error(),
 				}
 			}
-
 			apiGroups[i] = *group
 		}
-
-		return apiGroups, nil
 	}
 
-	return nil, nil
+	return apiGroups, nil
 }
 
 func (u PostgresRepo) RemoveUser(id string) error {
