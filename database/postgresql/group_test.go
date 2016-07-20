@@ -1099,3 +1099,55 @@ func TestPostgresRepo_IsAttachedToGroup(t *testing.T) {
 		}
 	}
 }
+
+func TestPostgresRepo_AttachPolicy(t *testing.T) {
+	testcases := map[string]struct {
+		// Postgres Repo Args
+		policyID string
+		groupID  string
+		// Expected result
+		expectedError *database.Error
+	}{
+		"OkCase": {
+			policyID: "PolicyID",
+			groupID:  "GroupID",
+		},
+		"ErrorCaseInternalError": {
+			expectedError: &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: "pq: null value in column user_id violates not-null constraint",
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean GroupUserRelation database
+		cleanGroupPolicyRelationTable()
+
+		// Call to repository to attach policy
+		err := repoDB.AttachPolicy(test.groupID, test.policyID)
+		if test.expectedError != nil {
+			dbError, ok := err.(*database.Error)
+			if !ok || dbError == nil {
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+				continue
+			}
+
+			// Check database
+			relations, err := getGroupPolicyRelationCount(test.policyID, test.groupID)
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error counting relations: %v", n, err)
+				continue
+			}
+			if relations != 1 {
+				t.Errorf("Test %v failed. Received different relations number: %v", n, relations)
+				continue
+			}
+		}
+	}
+}
