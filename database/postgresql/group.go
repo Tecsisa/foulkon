@@ -192,17 +192,17 @@ func (g PostgresRepo) GetGroupsFiltered(org string, pathPrefix string) ([]api.Gr
 		}
 	}
 
+	var apiGroups []api.Group
 	// Transform users for API
 	if groups != nil {
-		apiGroups := make([]api.Group, len(groups), cap(groups))
+		apiGroups = make([]api.Group, len(groups), cap(groups))
 		for i, g := range groups {
 			apiGroups[i] = *dbGroupToAPIGroup(&g)
 		}
-		return apiGroups, nil
 	}
 
 	// No data to return
-	return nil, nil
+	return apiGroups, nil
 }
 
 func (g PostgresRepo) GetGroupMembers(groupID string) ([]api.User, error) {
@@ -217,9 +217,10 @@ func (g PostgresRepo) GetGroupMembers(groupID string) ([]api.User, error) {
 		}
 	}
 
+	var apiUsers []api.User
 	// Transform relations to API domain
 	if members != nil {
-		apiUsers := make([]api.User, len(members), cap(members))
+		apiUsers = make([]api.User, len(members), cap(members))
 		for i, m := range members {
 			user, err := g.GetUserByID(m.UserID)
 			// Error handling
@@ -232,11 +233,9 @@ func (g PostgresRepo) GetGroupMembers(groupID string) ([]api.User, error) {
 
 			apiUsers[i] = *user
 		}
-
-		return apiUsers, nil
 	}
 
-	return nil, nil
+	return apiUsers, nil
 }
 
 func (g PostgresRepo) RemoveGroup(id string) error {
@@ -336,10 +335,10 @@ func (g PostgresRepo) GetAttachedPolicies(groupID string) ([]api.Policy, error) 
 			Message: err.Error(),
 		}
 	}
-
+	var apiPolicies []api.Policy
 	// Transform relations to API domain
 	if relations != nil {
-		apiPolicies := make([]api.Policy, len(relations), cap(relations))
+		apiPolicies = make([]api.Policy, len(relations), cap(relations))
 		for i, r := range relations {
 			policy, err := g.GetPolicyById(r.PolicyID)
 			// Error handling
@@ -352,11 +351,9 @@ func (g PostgresRepo) GetAttachedPolicies(groupID string) ([]api.Policy, error) 
 
 			apiPolicies[i] = *policy
 		}
-
-		return apiPolicies, nil
 	}
 
-	return nil, nil
+	return apiPolicies, nil
 }
 
 // Transform a Group retrieved from db into a group for API

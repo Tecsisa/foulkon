@@ -995,7 +995,7 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 		if test.relations != nil {
 			for _, user := range test.relations.users {
 				if err := insertGroupUserRelation(user.ID, test.relations.group_id); err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting prevoius group user relations: %v", n, err)
+					t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
 					continue
 				}
 				if !test.relations.userNotFound {
@@ -1209,5 +1209,153 @@ func TestPostgresRepo_DetachPolicy(t *testing.T) {
 			continue
 		}
 
+	}
+}
+
+func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		// Previous data
+		relations *struct {
+			policies       []api.Policy
+			group_id       string
+			policyNotFound bool
+		}
+		statements []Statement
+		// Postgres Repo Args
+		groupID string
+		// Expected result
+		expectedResponse []api.Policy
+		expectedError    *database.Error
+	}{
+		"OkCase": {
+			relations: &struct {
+				policies       []api.Policy
+				group_id       string
+				policyNotFound bool
+			}{
+				policies: []api.Policy{
+					{
+						ID:       "PolicyID1",
+						Name:     "Name1",
+						Org:      "org1",
+						Path:     "/path/",
+						CreateAt: now,
+						Urn:      "Urn1",
+					},
+					{
+						ID:       "PolicyID2",
+						Name:     "Name2",
+						Org:      "org1",
+						Path:     "/path/",
+						CreateAt: now,
+						Urn:      "Urn2",
+					},
+				},
+				group_id: "GroupID",
+			},
+			statements: []Statement{},
+			groupID:    "GroupID",
+			expectedResponse: []api.Policy{
+				{
+					ID:         "PolicyID1",
+					Name:       "Name1",
+					Org:        "org1",
+					Path:       "/path/",
+					CreateAt:   now,
+					Urn:        "Urn1",
+					Statements: &[]api.Statement{},
+				},
+				{
+					ID:         "PolicyID2",
+					Name:       "Name2",
+					Org:        "org1",
+					Path:       "/path/",
+					CreateAt:   now,
+					Urn:        "Urn2",
+					Statements: &[]api.Statement{},
+				},
+			},
+		},
+		"ErrorCase": {
+			relations: &struct {
+				policies       []api.Policy
+				group_id       string
+				policyNotFound bool
+			}{
+				policies: []api.Policy{
+					{
+						ID:       "PolicyID1",
+						Name:     "Name1",
+						Org:      "org1",
+						Path:     "/path/",
+						CreateAt: now,
+						Urn:      "Urn1",
+					},
+					{
+						ID:       "PolicyID2",
+						Name:     "Name2",
+						Org:      "org1",
+						Path:     "/path/",
+						CreateAt: now,
+						Urn:      "Urn2",
+					},
+				},
+				group_id:       "GroupID",
+				policyNotFound: true,
+			},
+			statements: []Statement{},
+			groupID:    "GroupID",
+			expectedError: &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: "Code: PolicyNotFound, Message: Policy with id PolicyID1 not found",
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		cleanPolicyTable()
+		cleanGroupPolicyRelationTable()
+
+		// Insert previous data
+		if test.relations != nil {
+			for _, policy := range test.relations.policies {
+				if err := insertGroupPolicyRelation(test.relations.group_id, policy.ID); err != nil {
+					t.Errorf("Test %v failed. Unexpected error inserting previous group policy relations: %v", n, err)
+					continue
+				}
+				if !test.relations.policyNotFound {
+					if err := insertPolicy(policy.ID, policy.Name, policy.Org, policy.Path,
+						policy.CreateAt.UnixNano(), policy.Urn, test.statements); err != nil {
+						t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
+						continue
+					}
+				}
+			}
+
+		}
+
+		receivedPolicies, err := repoDB.GetAttachedPolicies(test.groupID)
+		if test.expectedError != nil {
+			dbError, ok := err.(*database.Error)
+			if !ok || dbError == nil {
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
+				continue
+			}
+			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+				continue
+			}
+			// Check response
+			if diff := pretty.Compare(receivedPolicies, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+				continue
+			}
+		}
 	}
 }
