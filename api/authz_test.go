@@ -1,13 +1,13 @@
 package api
 
 import (
-	"reflect"
 	"testing"
 
+	"github.com/kylelemons/godebug/pretty"
 	"github.com/tecsisa/authorizr/database"
 )
 
-func TestGetUsersAuthorized(t *testing.T) {
+func TestGetAuthorizedUsers(t *testing.T) {
 	testcases := map[string]struct {
 		// Authenticated user
 		authUser AuthenticatedUser
@@ -33,13 +33,13 @@ func TestGetUsersAuthorized(t *testing.T) {
 			resourceUrn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
 			action:      USER_ACTION_GET_USER,
 			usersToAuthorize: []User{
-				User{
+				{
 					ID:  "654321",
 					Urn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
 				},
 			},
 			usersAuthorized: []User{
-				User{
+				{
 					ID:  "654321",
 					Urn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
 				},
@@ -104,17 +104,15 @@ func TestGetUsersAuthorized(t *testing.T) {
 			}
 
 			// Check result
-			if !reflect.DeepEqual(authorizedUsers, test.usersAuthorized) {
-				t.Errorf("Test %v failed. Received different authorized users (wanted:%v / received:%v)",
-					test.usersAuthorized, authorizedUsers)
+			if diff := pretty.Compare(authorizedUsers, test.usersAuthorized); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
-
 		}
 	}
 }
 
-func TestGroupsAuthorized(t *testing.T) {
+func TestGetAuthorizedGroups(t *testing.T) {
 	testcases := map[string]struct {
 		// Authenticated user
 		authUser AuthenticatedUser
@@ -140,13 +138,13 @@ func TestGroupsAuthorized(t *testing.T) {
 			resourceUrn: CreateUrn("example", RESOURCE_GROUP, "/path/", "group1"),
 			action:      GROUP_ACTION_GET_GROUP,
 			groupsToAuthorize: []Group{
-				Group{
+				{
 					ID:  "654321",
 					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "group1"),
 				},
 			},
 			groupsAuthorized: []Group{
-				Group{
+				{
 					ID:  "654321",
 					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "group1"),
 				},
@@ -211,16 +209,15 @@ func TestGroupsAuthorized(t *testing.T) {
 			}
 
 			// Check result
-			if !reflect.DeepEqual(authorizedGroups, test.groupsAuthorized) {
-				t.Errorf("Test %v failed. Received different authorized groups (wanted:%v / received:%v)",
-					test.groupsAuthorized, authorizedGroups)
+			if diff := pretty.Compare(authorizedGroups, test.groupsAuthorized); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
 		}
 	}
 }
 
-func TestGetPoliciesAuthorized(t *testing.T) {
+func TestGetAuthorizedPolicies(t *testing.T) {
 	testcases := map[string]struct {
 		// Authenticated user
 		authUser AuthenticatedUser
@@ -246,13 +243,13 @@ func TestGetPoliciesAuthorized(t *testing.T) {
 			resourceUrn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policy1"),
 			action:      POLICY_ACTION_GET_POLICY,
 			policiesToAuthorize: []Policy{
-				Policy{
+				{
 					ID:  "654321",
 					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policy1"),
 				},
 			},
 			policiesAuthorized: []Policy{
-				Policy{
+				{
 					ID:  "654321",
 					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policy1"),
 				},
@@ -317,9 +314,8 @@ func TestGetPoliciesAuthorized(t *testing.T) {
 			}
 
 			// Check result
-			if !reflect.DeepEqual(authorizedPolicies, test.policiesAuthorized) {
-				t.Errorf("Test %v failed. Received different authorized policies (wanted:%v / received:%v)",
-					authorizedPolicies, test.policiesAuthorized)
+			if diff := pretty.Compare(authorizedPolicies, test.policiesAuthorized); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
 		}
@@ -419,17 +415,17 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:  "GROUP-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:  "POLICY-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -459,17 +455,17 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:  "GROUP-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:  "POLICY-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -478,7 +474,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 								GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								POLICY_ACTION_GET_POLICY,
@@ -512,17 +508,17 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:  "GROUP-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:  "POLICY-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								"product:DoAction",
@@ -534,7 +530,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 								"urn:ews:product:instance:resource/path2*",
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								"product:DoAction",
@@ -589,9 +585,8 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 			}
 
 			// Check result
-			if !reflect.DeepEqual(resources, test.expectedResources) {
-				t.Errorf("Test %v failed. Received different resources (wanted:%v / received:%v)",
-					n, test.expectedResources, resources)
+			if diff := pretty.Compare(resources, test.expectedResources); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
 		}
@@ -726,17 +721,17 @@ func TestGetAuthorizedResources(t *testing.T) {
 				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:  "GROUP-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:  "POLICY-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -774,17 +769,17 @@ func TestGetAuthorizedResources(t *testing.T) {
 				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID:  "GROUP-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:  "POLICY-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -836,9 +831,8 @@ func TestGetAuthorizedResources(t *testing.T) {
 			}
 
 			// Check result
-			if !reflect.DeepEqual(authorizedResources, test.resourcesAuthorized) {
-				t.Errorf("Test %v failed. Received different authorized resources (wanted:%v / received:%v)",
-					n, test.resourcesAuthorized, authorizedResources)
+			if diff := pretty.Compare(authorizedResources, test.resourcesAuthorized); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
 		}
@@ -914,7 +908,7 @@ func TestGetRestrictions(t *testing.T) {
 				ID: "UserID",
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID: "GroupID",
 				},
 			},
@@ -968,16 +962,16 @@ func TestGetRestrictions(t *testing.T) {
 				ID: "AuthUserID",
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID: "GROUP-USER-ID",
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:  "POLICY-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -989,7 +983,7 @@ func TestGetRestrictions(t *testing.T) {
 								GetUrnPrefix("example", RESOURCE_GROUP, "/path2/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -1031,16 +1025,16 @@ func TestGetRestrictions(t *testing.T) {
 				ID: "AuthUserID",
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID: "GROUP-USER-ID",
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID:  "POLICY-USER-ID",
 					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -1052,7 +1046,7 @@ func TestGetRestrictions(t *testing.T) {
 								GetUrnPrefix("example", RESOURCE_GROUP, "/path2/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -1116,9 +1110,8 @@ func TestGetRestrictions(t *testing.T) {
 			}
 
 			// Check result
-			if !reflect.DeepEqual(test.expectedRestrictions, restrictions) {
-				t.Errorf("Test %v failed. Received different restrictions (wanted:%v / received:%v)",
-					n, test.expectedRestrictions, restrictions)
+			if diff := pretty.Compare(restrictions, test.expectedRestrictions); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
 		}
@@ -1140,18 +1133,18 @@ func TestGetGroupsByUser(t *testing.T) {
 		"OktestCase": {
 			userID: "UserID",
 			expectedGroups: []Group{
-				Group{
+				{
 					ID: "GROUP-USER-ID1",
 				},
-				Group{
+				{
 					ID: "GROUP-USER-ID2",
 				},
 			},
 			getGroupsByUserIDResult: []Group{
-				Group{
+				{
 					ID: "GROUP-USER-ID1",
 				},
-				Group{
+				{
 					ID: "GROUP-USER-ID2",
 				},
 			},
@@ -1195,9 +1188,8 @@ func TestGetGroupsByUser(t *testing.T) {
 			}
 
 			// Check result
-			if !reflect.DeepEqual(test.expectedGroups, groups) {
-				t.Errorf("Test %v failed. Received different restrictions (wanted:%v / received:%v)",
-					n, test.expectedGroups, groups)
+			if diff := pretty.Compare(groups, test.expectedGroups); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
 		}
@@ -1220,10 +1212,10 @@ func TestGetPoliciesByGroups(t *testing.T) {
 		"OktestCaseNilGroups": {},
 		"OktestCaseNoPoliciesForGroups": {
 			groups: []Group{
-				Group{
+				{
 					ID: "GroupID1",
 				},
-				Group{
+				{
 					ID: "GroupID2",
 				},
 			},
@@ -1232,33 +1224,33 @@ func TestGetPoliciesByGroups(t *testing.T) {
 		},
 		"OktestCase": {
 			groups: []Group{
-				Group{
+				{
 					ID: "GroupID1",
 				},
-				Group{
+				{
 					ID: "GroupID2",
 				},
 			},
 			expectedPolicies: []Policy{
-				Policy{
+				{
 					ID: "PolicyID",
 				},
-				Policy{
+				{
 					ID: "PolicyID",
 				},
 			},
 			getAttachedPoliciesResult: []Policy{
-				Policy{
+				{
 					ID: "PolicyID",
 				},
 			},
 		},
 		"ErrortestCase": {
 			groups: []Group{
-				Group{
+				{
 					ID: "GroupID1",
 				},
-				Group{
+				{
 					ID: "GroupID2",
 				},
 			},
@@ -1300,9 +1292,8 @@ func TestGetPoliciesByGroups(t *testing.T) {
 			}
 
 			// Check result
-			if !reflect.DeepEqual(test.expectedPolicies, policies) {
-				t.Errorf("Test %v failed. Received different policies (wanted:%v / received:%v)",
-					n, test.expectedPolicies, policies)
+			if diff := pretty.Compare(policies, test.expectedPolicies); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
 		}
@@ -1326,10 +1317,10 @@ func TestGetStatementsByRequestedAction(t *testing.T) {
 		},
 		"OktestCaseFilteredStatements": {
 			policies: []Policy{
-				Policy{
+				{
 					ID: "PolicyID1Contained",
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								"act*", "noaction",
@@ -1341,7 +1332,7 @@ func TestGetStatementsByRequestedAction(t *testing.T) {
 								GetUrnPrefix("example", RESOURCE_GROUP, "/path2/"),
 							},
 						},
-						Statement{
+						{
 							Effect: "deny",
 							Action: []string{
 								"noaction", "action",
@@ -1350,7 +1341,7 @@ func TestGetStatementsByRequestedAction(t *testing.T) {
 								CreateUrn("example", RESOURCE_POLICY, "/pathdeny/", "policydeny"),
 							},
 						},
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								"noaction",
@@ -1361,10 +1352,10 @@ func TestGetStatementsByRequestedAction(t *testing.T) {
 						},
 					},
 				},
-				Policy{
+				{
 					ID: "PolicyID2NoContained",
 					Statements: &[]Statement{
-						Statement{
+						{
 							Effect: "allow",
 							Action: []string{
 								"noact*",
@@ -1381,7 +1372,7 @@ func TestGetStatementsByRequestedAction(t *testing.T) {
 			},
 			action: "action",
 			expectedStatements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						"act*", "noaction",
@@ -1393,7 +1384,7 @@ func TestGetStatementsByRequestedAction(t *testing.T) {
 						GetUrnPrefix("example", RESOURCE_GROUP, "/path2/"),
 					},
 				},
-				Statement{
+				{
 					Effect: "deny",
 					Action: []string{
 						"noaction", "action",
@@ -1411,12 +1402,10 @@ func TestGetStatementsByRequestedAction(t *testing.T) {
 		statements := getStatementsByRequestedAction(test.policies, test.action)
 
 		// Check result
-		if !reflect.DeepEqual(test.expectedStatements, statements) {
-			t.Errorf("Test %v failed. Received different statements (wanted:%v / received:%v)",
-				n, test.expectedStatements, statements)
+		if diff := pretty.Compare(statements, test.expectedStatements); diff != "" {
+			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 			continue
 		}
-
 	}
 }
 
@@ -1483,7 +1472,7 @@ func TestIsActionContained(t *testing.T) {
 
 		// Check result
 		if test.expectedResponse != isContained {
-			t.Errorf("Test %v failed. Received different values (wanted:%v / received:%v)",
+			t.Errorf("Test %v failed. Received different responses (wanted:%v / received:%v)",
 				n, test.expectedResponse, isContained)
 			continue
 		}
@@ -1543,12 +1532,12 @@ func TestIsFullUrn(t *testing.T) {
 
 	for n, test := range testcases {
 
-		isContained := isFullUrn(test.resource)
+		isFullUrn := isFullUrn(test.resource)
 
 		// Check result
-		if test.expectedResponse != isContained {
+		if test.expectedResponse != isFullUrn {
 			t.Errorf("Test %v failed. Received different values (wanted:%v / received:%v)",
-				n, test.expectedResponse, isContained)
+				n, test.expectedResponse, isFullUrn)
 			continue
 		}
 	}
@@ -1581,7 +1570,7 @@ func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
 		},
 		"OktestCaseStatementResourcePrefix": {
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER, USER_ACTION_CREATE_USER,
@@ -1593,7 +1582,7 @@ func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
 						GetUrnPrefix("", RESOURCE_USER, "/path"),
 					},
 				},
-				Statement{
+				{
 					Effect: "deny",
 					Action: []string{
 						USER_ACTION_DELETE_USER,
@@ -1626,7 +1615,7 @@ func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
 		},
 		"OktestCaseStatementResourceIsFull": {
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER, USER_ACTION_CREATE_USER,
@@ -1635,7 +1624,7 @@ func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
 						CreateUrn("", RESOURCE_USER, "/path/", "userAllowed"),
 					},
 				},
-				Statement{
+				{
 					Effect: "deny",
 					Action: []string{
 						USER_ACTION_DELETE_USER,
@@ -1664,9 +1653,8 @@ func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
 		restrictions := getRestrictionsWhenResourceRequestedIsPrefix(test.statements, test.resource)
 
 		// Check result
-		if !reflect.DeepEqual(test.expectedRestrictions, restrictions) {
-			t.Errorf("Test %v failed. Received different restrictions (wanted:%v / received:%v)",
-				n, test.expectedRestrictions, restrictions)
+		if diff := pretty.Compare(restrictions, test.expectedRestrictions); diff != "" {
+			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 			continue
 		}
 	}
@@ -1699,7 +1687,7 @@ func TestGetRestrictionsWhenResourceRequestedIsFullUrn(t *testing.T) {
 		},
 		"OktestCaseStatementResourcePrefix": {
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER, USER_ACTION_CREATE_USER,
@@ -1709,7 +1697,7 @@ func TestGetRestrictionsWhenResourceRequestedIsFullUrn(t *testing.T) {
 						GetUrnPrefix("", RESOURCE_USER, "/"),
 					},
 				},
-				Statement{
+				{
 					Effect: "deny",
 					Action: []string{
 						USER_ACTION_DELETE_USER,
@@ -1736,7 +1724,7 @@ func TestGetRestrictionsWhenResourceRequestedIsFullUrn(t *testing.T) {
 		},
 		"OktestCaseStatementResourceIsFull": {
 			statements: []Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER, USER_ACTION_CREATE_USER,
@@ -1746,7 +1734,7 @@ func TestGetRestrictionsWhenResourceRequestedIsFullUrn(t *testing.T) {
 						CreateUrn("", RESOURCE_USER, "/path/", "user2"),
 					},
 				},
-				Statement{
+				{
 					Effect: "deny",
 					Action: []string{
 						USER_ACTION_DELETE_USER,
@@ -1776,9 +1764,8 @@ func TestGetRestrictionsWhenResourceRequestedIsFullUrn(t *testing.T) {
 		restrictions := getRestrictionsWhenResourceRequestedIsFullUrn(test.statements, test.resource)
 
 		// Check result
-		if !reflect.DeepEqual(test.expectedRestrictions, restrictions) {
-			t.Errorf("Test %v failed. Received different restrictions (wanted:%v / received:%v)",
-				n, test.expectedRestrictions, restrictions)
+		if diff := pretty.Compare(restrictions, test.expectedRestrictions); diff != "" {
+			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 			continue
 		}
 	}
@@ -1845,9 +1832,8 @@ func TestFilterResources(t *testing.T) {
 		filteredResources := filterResources(test.resources, test.restrictions)
 
 		// Check result
-		if !reflect.DeepEqual(test.expectedResources, filteredResources) {
-			t.Errorf("Test %v failed. Received different resources (wanted:%v / received:%v)",
-				n, test.expectedResources, filteredResources)
+		if diff := pretty.Compare(filteredResources, test.expectedResources); diff != "" {
+			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 			continue
 		}
 	}
@@ -1966,9 +1952,8 @@ func TestIsAllowedResource(t *testing.T) {
 		response := isAllowedResource(test.resource, test.restrictions)
 
 		// Check result
-		if !reflect.DeepEqual(test.expectedData, response) {
-			t.Errorf("Test %v failed. Received different responses (wanted:%v / received:%v)",
-				n, test.expectedData, response)
+		if diff := pretty.Compare(response, test.expectedData); diff != "" {
+			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 			continue
 		}
 	}

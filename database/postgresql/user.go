@@ -8,6 +8,33 @@ import (
 	"github.com/tecsisa/authorizr/database"
 )
 
+// USER REPOSITORY IMPLEMENTATION
+
+func (u PostgresRepo) AddUser(user api.User) (*api.User, error) {
+
+	// Create user model
+	userDB := &User{
+		ID:         user.ID,
+		ExternalID: user.ExternalID,
+		Path:       user.Path,
+		CreateAt:   user.CreateAt.UnixNano(),
+		Urn:        user.Urn,
+	}
+
+	// Store user
+	err := u.Dbmap.Create(userDB).Error
+
+	// Error handling
+	if err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	return dbUserToAPIUser(userDB), nil
+}
+
 func (u PostgresRepo) GetUserByExternalID(id string) (*api.User, error) {
 	user := &User{}
 	query := u.Dbmap.Where("external_id like ?", id).First(user)
@@ -54,29 +81,33 @@ func (u PostgresRepo) GetUserByID(id string) (*api.User, error) {
 	return dbUserToAPIUser(user), nil
 }
 
-func (u PostgresRepo) AddUser(user api.User) (*api.User, error) {
+func (u PostgresRepo) GetUsersFiltered(pathPrefix string) ([]api.User, error) {
+	users := []User{}
+	query := u.Dbmap
 
-	// Create user model
-	userDB := &User{
-		ID:         user.ID,
-		ExternalID: user.ExternalID,
-		Path:       user.Path,
-		CreateAt:   user.CreateAt.UnixNano(),
-		Urn:        user.Urn,
+	// Check if path is filled, else it doesn't use it to filter
+	if len(pathPrefix) > 0 {
+		query = query.Where("path like ?", pathPrefix+"%")
 	}
 
-	// Store user
-	err := u.Dbmap.Create(userDB).Error
-
 	// Error handling
-	if err != nil {
+	if err := query.Find(&users).Error; err != nil {
 		return nil, &database.Error{
 			Code:    database.INTERNAL_ERROR,
 			Message: err.Error(),
 		}
 	}
 
-	return dbUserToAPIUser(userDB), nil
+	// Transform users for API
+	if users != nil {
+		apiusers := make([]api.User, len(users), cap(users))
+		for i, u := range users {
+			apiusers[i] = *dbUserToAPIUser(&u)
+		}
+		return apiusers, nil
+	}
+
+	return nil, nil
 }
 
 func (u PostgresRepo) UpdateUser(user api.User, newPath string, newUrn string) (*api.User, error) {
@@ -109,33 +140,34 @@ func (u PostgresRepo) UpdateUser(user api.User, newPath string, newUrn string) (
 	return dbUserToAPIUser(&userDB), nil
 }
 
-func (u PostgresRepo) GetUsersFiltered(pathPrefix string) ([]api.User, error) {
-	users := []User{}
-	query := u.Dbmap
-
-	// Check if path is filled, else it doesn't use it to filter
-	if len(pathPrefix) > 0 {
-		query = query.Where("path like ?", pathPrefix+"%")
-	}
+func (u PostgresRepo) RemoveUser(id string) error {
+	transaction := u.Dbmap.Begin()
+	// Delete user
+	transaction.Where("id like ?", id).Delete(&User{})
 
 	// Error handling
-	if err := query.Find(&users).Error; err != nil {
-		return nil, &database.Error{
+	if err := transaction.Error; err != nil {
+		transaction.Rollback()
+		return &database.Error{
 			Code:    database.INTERNAL_ERROR,
 			Message: err.Error(),
 		}
 	}
 
-	var apiUsers []api.User
-	// Transform users for API
-	if users != nil {
-		apiUsers = make([]api.User, len(users), cap(users))
-		for i, u := range users {
-			apiUsers[i] = *dbUserToAPIUser(&u)
+	//  delete all user relations
+	transaction.Where("user_id like ?", id).Delete(&GroupUserRelation{})
+
+	// Error handling
+	if err := transaction.Error; err != nil {
+		transaction.Rollback()
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
 		}
 	}
 
-	return apiUsers, nil
+	transaction.Commit()
+	return nil
 }
 
 func (u PostgresRepo) GetGroupsByUserID(id string) ([]api.Group, error) {
@@ -170,35 +202,7 @@ func (u PostgresRepo) GetGroupsByUserID(id string) ([]api.Group, error) {
 	return apiGroups, nil
 }
 
-func (u PostgresRepo) RemoveUser(id string) error {
-	transaction := u.Dbmap.Begin()
-	// Delete user
-	transaction.Where("id like ?", id).Delete(&User{})
-
-	// Error handling
-	if err := transaction.Error; err != nil {
-		transaction.Rollback()
-		return &database.Error{
-			Code:    database.INTERNAL_ERROR,
-			Message: err.Error(),
-		}
-	}
-
-	//  delete all user relations
-	transaction.Where("user_id like ?", id).Delete(&GroupUserRelation{})
-
-	// Error handling
-	if err := transaction.Error; err != nil {
-		transaction.Rollback()
-		return &database.Error{
-			Code:    database.INTERNAL_ERROR,
-			Message: err.Error(),
-		}
-	}
-
-	transaction.Commit()
-	return nil
-}
+// PRIVATE HELPER METHODS
 
 // Transform a user retrieved from db into a user for API
 func dbUserToAPIUser(userdb *User) *api.User {

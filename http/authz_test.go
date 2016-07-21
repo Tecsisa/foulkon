@@ -7,10 +7,11 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/kylelemons/godebug/pretty"
 	"github.com/tecsisa/authorizr/api"
 )
 
-func TestWorkerHandler_HandleAuthorizeResources(t *testing.T) {
+func TestWorkerHandler_HandleGetAuthorizedExternalResources(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
 		request *AuthorizeResourcesRequest
@@ -103,7 +104,7 @@ func TestWorkerHandler_HandleAuthorizeResources(t *testing.T) {
 		if body == nil {
 			body = bytes.NewBuffer([]byte{})
 		}
-		req, err := http.NewRequest(http.MethodPost, server.URL+ RESOURCE_URL, body)
+		req, err := http.NewRequest(http.MethodPost, server.URL+RESOURCE_URL, body)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
@@ -145,9 +146,8 @@ func TestWorkerHandler_HandleAuthorizeResources(t *testing.T) {
 				continue
 			}
 			// Check result
-			if !reflect.DeepEqual(apiError, test.expectedError) {
-				t.Errorf("Test %v failed. Received different error response (wanted:%v / received:%v)",
-					n, test.expectedError, apiError)
+			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
 				continue
 			}
 

@@ -83,21 +83,21 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 	workerHandler := WorkerHandler{worker: worker}
 
 	// User api
-	router.GET(USER_ROOT_URL, workerHandler.HandleGetUsers)
-	router.POST(USER_ROOT_URL, workerHandler.HandlePostUsers)
+	router.GET(USER_ROOT_URL, workerHandler.HandleListUsers)
+	router.POST(USER_ROOT_URL, workerHandler.HandleAddUser)
 
-	router.GET(USER_ID_URL, workerHandler.HandleGetUserId)
-	router.PUT(USER_ID_URL, workerHandler.HandlePutUser)
-	router.DELETE(USER_ID_URL, workerHandler.HandleDeleteUserId)
+	router.GET(USER_ID_URL, workerHandler.HandleGetUserByExternalID)
+	router.PUT(USER_ID_URL, workerHandler.HandleUpdateUser)
+	router.DELETE(USER_ID_URL, workerHandler.HandleRemoveUser)
 
-	router.GET(USER_ID_GROUPS_URL, workerHandler.HandleUserIdGroups)
+	router.GET(USER_ID_GROUPS_URL, workerHandler.HandleListGroupsByUser)
 
 	// Group api
-	router.POST(GROUP_ORG_ROOT_URL, workerHandler.HandleCreateGroup)
+	router.POST(GROUP_ORG_ROOT_URL, workerHandler.HandleAddGroup)
 	router.GET(GROUP_ORG_ROOT_URL, workerHandler.HandleListGroups)
 
-	router.DELETE(GROUP_ID_URL, workerHandler.HandleDeleteGroup)
-	router.GET(GROUP_ID_URL, workerHandler.HandleGetGroup)
+	router.DELETE(GROUP_ID_URL, workerHandler.HandleRemoveGroup)
+	router.GET(GROUP_ID_URL, workerHandler.HandleGetGroupByName)
 	router.PUT(GROUP_ID_URL, workerHandler.HandleUpdateGroup)
 
 	router.GET(GROUP_ID_USERS_URL, workerHandler.HandleListMembers)
@@ -107,28 +107,28 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 
 	router.GET(GROUP_ID_POLICIES_URL, workerHandler.HandleListAttachedGroupPolicies)
 
-	router.POST(GROUP_ID_POLICIES_ID_URL, workerHandler.HandleAttachGroupPolicy)
-	router.DELETE(GROUP_ID_POLICIES_ID_URL, workerHandler.HandleDetachGroupPolicy)
+	router.POST(GROUP_ID_POLICIES_ID_URL, workerHandler.HandleAttachPolicyToGroup)
+	router.DELETE(GROUP_ID_POLICIES_ID_URL, workerHandler.HandleDetachPolicyToGroup)
 
 	// Special endpoint without organization URI for groups
 	router.GET(API_VERSION_1+"/groups", workerHandler.HandleListAllGroups)
 
 	// Policy api
 	router.GET(POLICY_ROOT_URL, workerHandler.HandleListPolicies)
-	router.POST(POLICY_ROOT_URL, workerHandler.HandleCreatePolicy)
+	router.POST(POLICY_ROOT_URL, workerHandler.HandleAddPolicy)
 
-	router.DELETE(POLICY_ID_URL, workerHandler.HandleDeletePolicy)
+	router.DELETE(POLICY_ID_URL, workerHandler.HandleRemovePolicy)
 
-	router.GET(POLICY_ID_URL, workerHandler.HandleGetPolicy)
+	router.GET(POLICY_ID_URL, workerHandler.HandleGetPolicyByName)
 	router.PUT(POLICY_ID_URL, workerHandler.HandleUpdatePolicy)
 
-	router.GET(POLICY_ID_GROUPS_URL, workerHandler.HandleGetPolicyAttachedGroups)
+	router.GET(POLICY_ID_GROUPS_URL, workerHandler.HandleListAttachedGroups)
 
 	// Special endpoint without organization URI for policies
 	router.GET(API_VERSION_1+"/policies", workerHandler.HandleListAllPolicies)
 
 	// Resources authorized endpoint
-	router.POST(RESOURCE_URL, workerHandler.HandleAuthorizeResources)
+	router.POST(RESOURCE_URL, workerHandler.HandleGetAuthorizedExternalResources)
 
 	// Return handler with request logging
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

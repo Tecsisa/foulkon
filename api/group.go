@@ -8,6 +8,8 @@ import (
 	"github.com/tecsisa/authorizr/database"
 )
 
+// TYPE DEFINITIONS
+
 // Group domain
 type Group struct {
 	ID       string    `json:"id, omitempty"`
@@ -32,7 +34,8 @@ type GroupMembers struct {
 	Users []User `json:"users, omitempty"`
 }
 
-// Add an Group to database if not exist
+// GROUP API IMPLEMENTATION
+
 func (api AuthAPI) AddGroup(authenticatedUser AuthenticatedUser, org string, name string, path string) (*Group, error) {
 	// Validate fields
 	if !IsValidName(name) {
@@ -108,277 +111,6 @@ func (api AuthAPI) AddGroup(authenticatedUser AuthenticatedUser, org string, nam
 
 }
 
-//  Add member to group
-func (api AuthAPI) AddMember(authenticatedUser AuthenticatedUser, userID string, groupName string, org string) error {
-	// Validate fields
-	if !IsValidUserExternalID(userID) {
-		return &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: externalId %v", userID),
-		}
-	}
-	if !IsValidOrg(org) {
-		return &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: org %v", org),
-		}
-	}
-	if !IsValidName(groupName) {
-		return &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: name %v", groupName),
-		}
-	}
-
-	// Call repo to retrieve the group
-	groupDB, err := api.GetGroupByName(authenticatedUser, org, groupName)
-	if err != nil {
-		return err
-	}
-
-	// Check restrictions
-	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, groupDB.Urn, GROUP_ACTION_ADD_MEMBER, []Group{*groupDB})
-	if err != nil {
-		return err
-	}
-	if len(groupsFiltered) < 1 {
-		return &Error{
-			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, groupDB.Urn),
-		}
-	}
-
-	// Call repo to retrieve the user
-	userDB, err := api.GetUserByExternalId(authenticatedUser, userID)
-	if err != nil {
-		return err
-	}
-
-	// Call repo to retrieve the GroupUserRelation
-	isMember, err := api.GroupRepo.IsMemberOfGroup(userDB.ID, groupDB.ID)
-	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		return &Error{
-			Code:    UNKNOWN_API_ERROR,
-			Message: dbError.Message,
-		}
-	}
-
-	// Error handling
-	if isMember {
-		return &Error{
-			Code:    USER_IS_ALREADY_A_MEMBER_OF_GROUP,
-			Message: fmt.Sprintf("User: %v is already a member of Group: %v", userID, groupName),
-		}
-	}
-
-	// Add Member
-	err = api.GroupRepo.AddMember(userDB.ID, groupDB.ID)
-
-	// Check if there is an unexpected error in DB
-	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		return &Error{
-			Code:    UNKNOWN_API_ERROR,
-			Message: dbError.Message,
-		}
-	}
-
-	return nil
-}
-
-//  Remove member from group
-func (api AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, userID string, groupName string, org string) error {
-	// Validate fields
-	if !IsValidUserExternalID(userID) {
-		return &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: externalId %v", userID),
-		}
-	}
-	if !IsValidOrg(org) {
-		return &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: org %v", org),
-		}
-	}
-	if !IsValidName(groupName) {
-		return &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: name %v", groupName),
-		}
-	}
-
-	// Call repo to retrieve the group
-	groupDB, err := api.GetGroupByName(authenticatedUser, org, groupName)
-	if err != nil {
-		return err
-	}
-
-	// Check restrictions
-	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, groupDB.Urn, GROUP_ACTION_REMOVE_MEMBER, []Group{*groupDB})
-	if err != nil {
-		return err
-	}
-	if len(groupsFiltered) < 1 {
-		return &Error{
-			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, groupDB.Urn),
-		}
-	}
-
-	// Call repo to retrieve the user
-	userDB, err := api.GetUserByExternalId(authenticatedUser, userID)
-	if err != nil {
-		return err
-	}
-
-	// Call repo to check if user is a member of group
-	isMember, err := api.GroupRepo.IsMemberOfGroup(userDB.ID, groupDB.ID)
-	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		return &Error{
-			Code:    UNKNOWN_API_ERROR,
-			Message: dbError.Message,
-		}
-	}
-
-	if !isMember {
-		return &Error{
-			Code: USER_IS_NOT_A_MEMBER_OF_GROUP,
-			Message: fmt.Sprintf("User with externalId %v is not a member of group with org %v and name %v",
-				userDB.ExternalID, groupDB.Org, groupDB.Name),
-		}
-	}
-
-	// Remove Member
-	err = api.GroupRepo.RemoveMember(userDB.ID, groupDB.ID)
-
-	// Check if there is an unexpected error in DB
-	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		return &Error{
-			Code:    UNKNOWN_API_ERROR,
-			Message: dbError.Message,
-		}
-	}
-
-	return nil
-}
-
-// List members of a group
-func (api AuthAPI) ListMembers(authenticatedUser AuthenticatedUser, org string, groupName string) ([]string, error) {
-	// Validate fields
-	if !IsValidName(groupName) {
-		return nil, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: name %v", groupName),
-		}
-	}
-	if !IsValidOrg(org) {
-		return nil, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: org %v", org),
-		}
-	}
-
-	// Call repo to retrieve the group
-	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
-	if err != nil {
-		return nil, err
-	}
-
-	// Check restrictions
-	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, group.Urn, GROUP_ACTION_LIST_MEMBERS, []Group{*group})
-	if err != nil {
-		return nil, err
-	}
-	if len(groupsFiltered) < 1 {
-		return nil, &Error{
-			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, group.Urn),
-		}
-	}
-
-	// Get Members
-	members, err := api.GroupRepo.GetGroupMembers(group.ID)
-
-	// Error handling
-	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		return nil, &Error{
-			Code:    UNKNOWN_API_ERROR,
-			Message: dbError.Message,
-		}
-	}
-
-	externalIDs := []string{}
-	for _, m := range members {
-		externalIDs = append(externalIDs, m.ExternalID)
-	}
-
-	return externalIDs, nil
-}
-
-// Remove group
-func (api AuthAPI) RemoveGroup(authenticatedUser AuthenticatedUser, org string, name string) error {
-	// Validate fields
-	if !IsValidName(name) {
-		return &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: name %v", name),
-		}
-	}
-	if !IsValidOrg(org) {
-		return &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: org %v", org),
-		}
-	}
-
-	// Call repo to retrieve the group
-	group, err := api.GetGroupByName(authenticatedUser, org, name)
-	if err != nil {
-		return err
-	}
-
-	// Check restrictions
-	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, group.Urn, GROUP_ACTION_DELETE_GROUP, []Group{*group})
-	if err != nil {
-		return err
-	}
-	if len(groupsFiltered) < 1 {
-		return &Error{
-			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, group.Urn),
-		}
-	}
-
-	// Remove group with given org and name
-	err = api.GroupRepo.RemoveGroup(group.ID)
-
-	// Error handling
-	if err != nil {
-		//Transform to DB error
-		dbError := err.(*database.Error)
-		return &Error{
-			Code:    UNKNOWN_API_ERROR,
-			Message: dbError.Message,
-		}
-	}
-
-	return nil
-}
-
 func (api AuthAPI) GetGroupByName(authenticatedUser AuthenticatedUser, org string, name string) (*Group, error) {
 	// Validate fields
 	if !IsValidName(name) {
@@ -436,7 +168,7 @@ func (api AuthAPI) GetGroupByName(authenticatedUser AuthenticatedUser, org strin
 
 }
 
-func (api AuthAPI) GetGroupList(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]GroupIdentity, error) {
+func (api AuthAPI) ListGroups(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]GroupIdentity, error) {
 	// Validate fields
 	if len(org) > 0 && !IsValidOrg(org) {
 		return nil, &Error{
@@ -492,30 +224,23 @@ func (api AuthAPI) GetGroupList(authenticatedUser AuthenticatedUser, org string,
 	return groupIDs, nil
 }
 
-// Update Group to database if exist
-func (api AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, groupName string, newName string, newPath string) (*Group, error) {
+func (api AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, name string, newName string, newPath string) (*Group, error) {
 	// Validate fields
 	if !IsValidName(newName) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: name %v", newName),
-		}
-	}
-	if !IsValidOrg(org) {
-		return nil, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+			Message: fmt.Sprintf("Invalid parameter: new name %v", newName),
 		}
 	}
 	if !IsValidPath(newPath) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: path %v", newPath),
+			Message: fmt.Sprintf("Invalid parameter: new path %v", newPath),
 		}
 	}
 
 	// Call repo to retrieve the group
-	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
+	group, err := api.GetGroupByName(authenticatedUser, org, name)
 	if err != nil {
 		return nil, err
 	}
@@ -583,29 +308,213 @@ func (api AuthAPI) UpdateGroup(authenticatedUser AuthenticatedUser, org string, 
 
 }
 
-func (api AuthAPI) AttachPolicyToGroup(authenticatedUser AuthenticatedUser, org string, groupName string, policyName string) error {
-	// Validate fields
-	if !IsValidName(groupName) {
-		return &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Group name %v", groupName),
-		}
+func (api AuthAPI) RemoveGroup(authenticatedUser AuthenticatedUser, org string, name string) error {
+
+	// Call repo to retrieve the group
+	group, err := api.GetGroupByName(authenticatedUser, org, name)
+	if err != nil {
+		return err
 	}
-	if !IsValidOrg(org) {
-		return &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: org %v", org),
-		}
+
+	// Check restrictions
+	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, group.Urn, GROUP_ACTION_DELETE_GROUP, []Group{*group})
+	if err != nil {
+		return err
 	}
-	if !IsValidName(policyName) {
+	if len(groupsFiltered) < 1 {
 		return &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Policy name %v", policyName),
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, group.Urn),
 		}
 	}
 
+	// Remove group with given org and name
+	err = api.GroupRepo.RemoveGroup(group.ID)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	return nil
+}
+
+func (api AuthAPI) AddMember(authenticatedUser AuthenticatedUser, externalId string, name string, org string) error {
+
+	// Call repo to retrieve the group
+	groupDB, err := api.GetGroupByName(authenticatedUser, org, name)
+	if err != nil {
+		return err
+	}
+
+	// Check restrictions
+	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, groupDB.Urn, GROUP_ACTION_ADD_MEMBER, []Group{*groupDB})
+	if err != nil {
+		return err
+	}
+	if len(groupsFiltered) < 1 {
+		return &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, groupDB.Urn),
+		}
+	}
+
+	// Call repo to retrieve the user
+	userDB, err := api.GetUserByExternalID(authenticatedUser, externalId)
+	if err != nil {
+		return err
+	}
+
+	// Call repo to retrieve the GroupUserRelation
+	isMember, err := api.GroupRepo.IsMemberOfGroup(userDB.ID, groupDB.ID)
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	// Error handling
+	if isMember {
+		return &Error{
+			Code:    USER_IS_ALREADY_A_MEMBER_OF_GROUP,
+			Message: fmt.Sprintf("User: %v is already a member of Group: %v", externalId, name),
+		}
+	}
+
+	// Add Member
+	err = api.GroupRepo.AddMember(userDB.ID, groupDB.ID)
+
+	// Check if there is an unexpected error in DB
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	return nil
+}
+
+func (api AuthAPI) RemoveMember(authenticatedUser AuthenticatedUser, externalId string, name string, org string) error {
+
+	// Call repo to retrieve the group
+	groupDB, err := api.GetGroupByName(authenticatedUser, org, name)
+	if err != nil {
+		return err
+	}
+
+	// Check restrictions
+	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, groupDB.Urn, GROUP_ACTION_REMOVE_MEMBER, []Group{*groupDB})
+	if err != nil {
+		return err
+	}
+	if len(groupsFiltered) < 1 {
+		return &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, groupDB.Urn),
+		}
+	}
+
+	// Call repo to retrieve the user
+	userDB, err := api.GetUserByExternalID(authenticatedUser, externalId)
+	if err != nil {
+		return err
+	}
+
+	// Call repo to check if user is a member of group
+	isMember, err := api.GroupRepo.IsMemberOfGroup(userDB.ID, groupDB.ID)
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	if !isMember {
+		return &Error{
+			Code: USER_IS_NOT_A_MEMBER_OF_GROUP,
+			Message: fmt.Sprintf("User with externalId %v is not a member of group with org %v and name %v",
+				userDB.ExternalID, groupDB.Org, groupDB.Name),
+		}
+	}
+
+	// Remove Member
+	err = api.GroupRepo.RemoveMember(userDB.ID, groupDB.ID)
+
+	// Check if there is an unexpected error in DB
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	return nil
+}
+
+func (api AuthAPI) ListMembers(authenticatedUser AuthenticatedUser, org string, name string) ([]string, error) {
+
+	// Call repo to retrieve the group
+	group, err := api.GetGroupByName(authenticatedUser, org, name)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check restrictions
+	groupsFiltered, err := api.GetAuthorizedGroups(authenticatedUser, group.Urn, GROUP_ACTION_LIST_MEMBERS, []Group{*group})
+	if err != nil {
+		return nil, err
+	}
+	if len(groupsFiltered) < 1 {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, group.Urn),
+		}
+	}
+
+	// Get Members
+	members, err := api.GroupRepo.GetGroupMembers(group.ID)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return nil, &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	externalIDs := []string{}
+	for _, m := range members {
+		externalIDs = append(externalIDs, m.ExternalID)
+	}
+
+	return externalIDs, nil
+}
+
+func (api AuthAPI) AttachPolicyToGroup(authenticatedUser AuthenticatedUser, org string, name string, policyName string) error {
+
 	// Check if group exists
-	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
+	group, err := api.GetGroupByName(authenticatedUser, org, name)
 	if err != nil {
 		return err
 	}
@@ -661,29 +570,10 @@ func (api AuthAPI) AttachPolicyToGroup(authenticatedUser AuthenticatedUser, org 
 	return nil
 }
 
-func (api AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org string, groupName string, policyName string) error {
-	// Validate fields
-	if !IsValidName(groupName) {
-		return &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Group name %v", groupName),
-		}
-	}
-	if !IsValidOrg(org) {
-		return &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: org %v", org),
-		}
-	}
-	if !IsValidName(policyName) {
-		return &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Policy name %v", policyName),
-		}
-	}
+func (api AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org string, name string, policyName string) error {
 
 	// Check if group exists
-	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
+	group, err := api.GetGroupByName(authenticatedUser, org, name)
 	if err != nil {
 		return err
 	}
@@ -740,23 +630,10 @@ func (api AuthAPI) DetachPolicyToGroup(authenticatedUser AuthenticatedUser, org 
 	return nil
 }
 
-func (api AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser, org string, groupName string) ([]string, error) {
-	// Validate fields
-	if !IsValidName(groupName) {
-		return nil, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: name %v", groupName),
-		}
-	}
-	if !IsValidOrg(org) {
-		return nil, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: org %v", org),
-		}
-	}
+func (api AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser, org string, name string) ([]string, error) {
 
 	// Check if group exists
-	group, err := api.GetGroupByName(authenticatedUser, org, groupName)
+	group, err := api.GetGroupByName(authenticatedUser, org, name)
 	if err != nil {
 		return nil, err
 	}
@@ -794,7 +671,7 @@ func (api AuthAPI) ListAttachedGroupPolicies(authenticatedUser AuthenticatedUser
 	return policyIDs, nil
 }
 
-// Private helper methods
+// PRIVATE HELPER METHODS
 
 func createGroup(org string, name string, path string) Group {
 	urn := CreateUrn(org, RESOURCE_GROUP, path, name)

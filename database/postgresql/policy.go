@@ -10,40 +10,54 @@ import (
 	"github.com/tecsisa/authorizr/database"
 )
 
-func (p PostgresRepo) GetPolicyById(id string) (*api.Policy, error) {
-	policy := &Policy{}
-	query := p.Dbmap.Where("id like ?", id).First(&policy)
+// POLICY REPOSITORY IMPLEMENTATION
 
-	// Check if policy exists
-	if query.RecordNotFound() {
-		return nil, &database.Error{
-			Code:    database.POLICY_NOT_FOUND,
-			Message: fmt.Sprintf("Policy with id %v not found", id),
-		}
+func (p PostgresRepo) AddPolicy(policy api.Policy) (*api.Policy, error) {
+	// Create policy model
+	policyDB := &Policy{
+		ID:       policy.ID,
+		Name:     policy.Name,
+		Path:     policy.Path,
+		CreateAt: policy.CreateAt.UnixNano(),
+		Urn:      policy.Urn,
+		Org:      policy.Org,
 	}
 
-	// Error Handling
-	if err := query.Error; err != nil {
-		return nil, &database.Error{
-			Code:    database.INTERNAL_ERROR,
-			Message: err.Error(),
-		}
-	}
+	transaction := p.Dbmap.Begin()
 
-	// Retrieve associated statements
-	statements := []Statement{}
-	query = p.Dbmap.Where("policy_id like ?", policy.ID).Find(&statements)
-	// Error Handling
-	if err := query.Error; err != nil {
+	// Create policy
+	if err := transaction.Create(policyDB).Error; err != nil {
+		transaction.Rollback()
 		return nil, &database.Error{
 			Code:    database.INTERNAL_ERROR,
 			Message: err.Error(),
 		}
 	}
+
+	// Create statements
+	for _, statementApi := range *policy.Statements {
+		// Create statement model
+		statementDB := &Statement{
+			ID:        uuid.NewV4().String(),
+			PolicyID:  policy.ID,
+			Effect:    statementApi.Effect,
+			Action:    stringArrayToString(statementApi.Action),
+			Resources: stringArrayToString(statementApi.Resources),
+		}
+		if err := transaction.Create(statementDB).Error; err != nil {
+			transaction.Rollback()
+			return nil, &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: err.Error(),
+			}
+		}
+	}
+
+	transaction.Commit()
 
 	// Create API policy
-	policyApi := dbPolicyToAPIPolicy(policy)
-	policyApi.Statements = dbStatementsToAPIStatements(statements)
+	policyApi := dbPolicyToAPIPolicy(policyDB)
+	policyApi.Statements = policy.Statements
 
 	return policyApi, nil
 }
@@ -86,53 +100,40 @@ func (p PostgresRepo) GetPolicyByName(org string, name string) (*api.Policy, err
 	return policyApi, nil
 }
 
-func (p PostgresRepo) AddPolicy(policy api.Policy) (*api.Policy, error) {
-	// Create policy model
-	policyDB := &Policy{
-		ID:       policy.ID,
-		Name:     policy.Name,
-		Path:     policy.Path,
-		CreateAt: policy.CreateAt.UnixNano(),
-		Urn:      policy.Urn,
-		Org:      policy.Org,
+func (p PostgresRepo) GetPolicyById(id string) (*api.Policy, error) {
+	policy := &Policy{}
+	query := p.Dbmap.Where("id like ?", id).First(&policy)
+
+	// Check if policy exists
+	if query.RecordNotFound() {
+		return nil, &database.Error{
+			Code:    database.POLICY_NOT_FOUND,
+			Message: fmt.Sprintf("Policy with id %v not found", id),
+		}
 	}
 
-	transaction := p.Dbmap.Begin()
-
-	// Create policy
-
-	if err := transaction.Create(policyDB).Error; err != nil {
-		transaction.Rollback()
+	// Error Handling
+	if err := query.Error; err != nil {
 		return nil, &database.Error{
 			Code:    database.INTERNAL_ERROR,
 			Message: err.Error(),
 		}
 	}
 
-	// Create statements
-	for _, statementApi := range *policy.Statements {
-		// Create statement model
-		statementDB := &Statement{
-			ID:        uuid.NewV4().String(),
-			PolicyID:  policy.ID,
-			Effect:    statementApi.Effect,
-			Action:    stringArrayToString(statementApi.Action),
-			Resources: stringArrayToString(statementApi.Resources),
-		}
-		if err := transaction.Create(statementDB).Error; err != nil {
-			transaction.Rollback()
-			return nil, &database.Error{
-				Code:    database.INTERNAL_ERROR,
-				Message: err.Error(),
-			}
+	// Retrieve associated statements
+	statements := []Statement{}
+	query = p.Dbmap.Where("policy_id like ?", policy.ID).Find(&statements)
+	// Error Handling
+	if err := query.Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
 		}
 	}
 
-	transaction.Commit()
-
 	// Create API policy
-	policyApi := dbPolicyToAPIPolicy(policyDB)
-	policyApi.Statements = policy.Statements
+	policyApi := dbPolicyToAPIPolicy(policy)
+	policyApi.Statements = dbStatementsToAPIStatements(statements)
 
 	return policyApi, nil
 }
@@ -317,7 +318,7 @@ func (p PostgresRepo) GetAttachedGroups(policyID string) ([]api.Group, error) {
 	return groups, nil
 }
 
-// Private helper methods
+// PRIVATE HELPER METHODS
 
 // Transform a policy retrieved from db into a policy for API
 func dbPolicyToAPIPolicy(policydb *Policy) *api.Policy {

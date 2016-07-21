@@ -8,6 +8,8 @@ import (
 	"github.com/tecsisa/authorizr/database"
 )
 
+// TYPE DEFINITIONS
+
 // User domain
 type User struct {
 	ID         string    `json:"id, omitempty"`
@@ -21,16 +23,86 @@ func (u User) GetUrn() string {
 	return u.Urn
 }
 
-// Retrieve user by external id
-func (api AuthAPI) GetUserByExternalId(authenticatedUser AuthenticatedUser, id string) (*User, error) {
-	if !IsValidUserExternalID(id) {
+// USER API IMPLEMENTATION
+
+func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalId string, path string) (*User, error) {
+	// Validate fields
+	if !IsValidUserExternalID(externalId) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: externalId %v", id),
+			Message: fmt.Sprintf("Invalid parameter: externalId %v", externalId),
+		}
+	}
+	if !IsValidPath(path) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: path %v", path),
+		}
+	}
+
+	user := createUser(externalId, path)
+
+	// Check restrictions
+	usersFiltered, err := api.GetAuthorizedUsers(authenticatedUser, user.Urn, USER_ACTION_CREATE_USER, []User{user})
+	if err != nil {
+		return nil, err
+	}
+	if len(usersFiltered) < 1 {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
+				authenticatedUser.Identifier, user.Urn),
+		}
+	}
+
+	// Check if user already exists
+	_, err = api.UserRepo.GetUserByExternalID(externalId)
+
+	if err != nil {
+		// Transform to DB error
+		dbError := err.(*database.Error)
+		// User doesn't exist in DB
+		switch dbError.Code {
+		case database.USER_NOT_FOUND:
+			// Create user
+			createdUser, err := api.UserRepo.AddUser(user)
+
+			// Check unexpected DB error
+			if err != nil {
+				//Transform to DB error
+				dbError := err.(*database.Error)
+				return nil, &Error{
+					Code:    UNKNOWN_API_ERROR,
+					Message: dbError.Message,
+				}
+			}
+
+			// Return user created
+			return createdUser, nil
+		default: // Unexpected error
+			return nil, &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	} else {
+		return nil, &Error{
+			Code:    USER_ALREADY_EXIST,
+			Message: fmt.Sprintf("Unable to create user, user with externalId %v already exist", externalId),
+		}
+	}
+
+}
+
+func (api AuthAPI) GetUserByExternalID(authenticatedUser AuthenticatedUser, externalId string) (*User, error) {
+	if !IsValidUserExternalID(externalId) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: externalId %v", externalId),
 		}
 	}
 	// Retrieve user from DB
-	user, err := api.UserRepo.GetUserByExternalID(id)
+	user, err := api.UserRepo.GetUserByExternalID(externalId)
 
 	// Error handling
 	if err != nil {
@@ -68,7 +140,7 @@ func (api AuthAPI) GetUserByExternalId(authenticatedUser AuthenticatedUser, id s
 
 }
 
-func (api AuthAPI) GetUserList(authenticatedUser AuthenticatedUser, pathPrefix string) ([]string, error) {
+func (api AuthAPI) ListUsers(authenticatedUser AuthenticatedUser, pathPrefix string) ([]string, error) {
 	// Check parameters
 	if len(pathPrefix) > 0 && !IsValidPath(pathPrefix) {
 		return nil, &Error{
@@ -102,90 +174,20 @@ func (api AuthAPI) GetUserList(authenticatedUser AuthenticatedUser, pathPrefix s
 	}
 
 	// Return user IDs
-	externalIDs := []string{}
+	externalIds := []string{}
 	for _, u := range usersFiltered {
-		externalIDs = append(externalIDs, u.ExternalID)
+		externalIds = append(externalIds, u.ExternalID)
 	}
 
-	return externalIDs, nil
+	return externalIds, nil
 }
 
-func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalID string, path string) (*User, error) {
+func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalId string, newPath string) (*User, error) {
 	// Validate fields
-	if !IsValidUserExternalID(externalID) {
+	if !IsValidUserExternalID(externalId) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: externalId %v", externalID),
-		}
-	}
-	if !IsValidPath(path) {
-		return nil, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: path %v", path),
-		}
-	}
-
-	user := createUser(externalID, path)
-
-	// Check restrictions
-	usersFiltered, err := api.GetAuthorizedUsers(authenticatedUser, user.Urn, USER_ACTION_CREATE_USER, []User{user})
-	if err != nil {
-		return nil, err
-	}
-	if len(usersFiltered) < 1 {
-		return nil, &Error{
-			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, user.Urn),
-		}
-	}
-
-	// Check if user already exists
-	_, err = api.UserRepo.GetUserByExternalID(externalID)
-
-	// Check if user could be retrieved
-	if err != nil {
-		// Transform to DB error
-		dbError := err.(*database.Error)
-		// User doesn't exist in DB
-		switch dbError.Code {
-		case database.USER_NOT_FOUND:
-			// Create user
-			createdUser, err := api.UserRepo.AddUser(user)
-
-			// Check unexpected DB error
-			if err != nil {
-				//Transform to DB error
-				dbError := err.(*database.Error)
-				return nil, &Error{
-					Code:    UNKNOWN_API_ERROR,
-					Message: dbError.Message,
-				}
-			}
-
-			// Return user created
-			return createdUser, nil
-		default: // Unexpected error
-			return nil, &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
-		}
-	} else {
-		return nil, &Error{
-			Code:    USER_ALREADY_EXIST,
-			Message: fmt.Sprintf("Unable to create user, user with externalId %v already exist", externalID),
-		}
-	}
-
-}
-
-func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalID string, newPath string) (*User, error) {
-	// Validate fields
-	if !IsValidUserExternalID(externalID) {
-		return nil, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: externalId %v", externalID),
+			Message: fmt.Sprintf("Invalid parameter: externalId %v", externalId),
 		}
 	}
 	if !IsValidPath(newPath) {
@@ -196,7 +198,7 @@ func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalID st
 	}
 
 	// Call repo to retrieve the user
-	userDB, err := api.GetUserByExternalId(authenticatedUser, externalID)
+	userDB, err := api.GetUserByExternalID(authenticatedUser, externalId)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +216,7 @@ func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalID st
 		}
 	}
 
-	userToUpdate := createUser(externalID, newPath)
+	userToUpdate := createUser(externalId, newPath)
 
 	// Check restrictions
 	usersFiltered, err = api.GetAuthorizedUsers(authenticatedUser, userToUpdate.Urn, USER_ACTION_GET_USER, []User{userToUpdate})
@@ -246,9 +248,9 @@ func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalID st
 
 }
 
-func (api AuthAPI) RemoveUserById(authenticatedUser AuthenticatedUser, id string) error {
+func (api AuthAPI) RemoveUser(authenticatedUser AuthenticatedUser, externalId string) error {
 	// Call repo to retrieve the user
-	user, err := api.GetUserByExternalId(authenticatedUser, id)
+	user, err := api.GetUserByExternalID(authenticatedUser, externalId)
 	if err != nil {
 		return err
 	}
@@ -282,9 +284,9 @@ func (api AuthAPI) RemoveUserById(authenticatedUser AuthenticatedUser, id string
 	return nil
 }
 
-func (api AuthAPI) GetGroupsByUserId(authenticatedUser AuthenticatedUser, id string) ([]GroupIdentity, error) {
+func (api AuthAPI) ListGroupsByUser(authenticatedUser AuthenticatedUser, externalId string) ([]GroupIdentity, error) {
 	// Call repo to retrieve the user
-	user, err := api.GetUserByExternalId(authenticatedUser, id)
+	user, err := api.GetUserByExternalID(authenticatedUser, externalId)
 	if err != nil {
 		return nil, err
 	}
@@ -327,12 +329,13 @@ func (api AuthAPI) GetGroupsByUserId(authenticatedUser AuthenticatedUser, id str
 	return groupIDs, nil
 }
 
-// Private helper methods
-func createUser(externalID string, path string) User {
-	urn := CreateUrn("", RESOURCE_USER, path, externalID)
+// PRIVATE HELPER METHODS
+
+func createUser(externalId string, path string) User {
+	urn := CreateUrn("", RESOURCE_USER, path, externalId)
 	user := User{
 		ID:         uuid.NewV4().String(),
-		ExternalID: externalID,
+		ExternalID: externalId,
 		Path:       path,
 		CreateAt:   time.Now().UTC(),
 		Urn:        urn,

@@ -7,7 +7,7 @@ import (
 	"github.com/tecsisa/authorizr/database"
 )
 
-func TestAddGroup(t *testing.T) {
+func TestAuthAPI_AddGroup(t *testing.T) {
 	testcases := map[string]struct {
 		// API Method args
 		authUser AuthenticatedUser
@@ -250,305 +250,7 @@ func TestAddGroup(t *testing.T) {
 
 }
 
-func TestRemoveGroup(t *testing.T) {
-	testcases := map[string]struct {
-		//API method args
-		authUser AuthenticatedUser
-		name     string
-		org      string
-		// Expected result
-		wantError *Error
-		// Manager Results
-		getUserByExternalIDResult  *User
-		getGroupsByUserIDResult    []Group
-		getAttachedPoliciesResult  []Policy
-		getGroupByNameMethodResult *Group
-		// API Errors
-		getGroupByNameMethodErr error
-		removeGroupMethodErr    error
-		getGroupsByUserIDError  error
-	}{
-		"OKCaseAdminUser": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			name: "group1",
-			org:  "org1",
-			getGroupByNameMethodResult: &Group{
-				ID:   "543210",
-				Name: "group1",
-				Org:  "org1",
-				Path: "/example/",
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "123456",
-				ExternalID: "123456",
-				Path:       "/path/",
-				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
-			},
-		},
-		"OkCaseRegularUser": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      false,
-			},
-			name: "group1",
-			org:  "org1",
-			getGroupByNameMethodResult: &Group{
-				ID:   "543210",
-				Name: "group1",
-				Org:  "org1",
-				Path: "/example/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "123456",
-				ExternalID: "123456",
-				Path:       "/path/",
-				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
-			},
-			getAttachedPoliciesResult: []Policy{
-				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/example/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Action: []string{
-								GROUP_ACTION_DELETE_GROUP,
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-					},
-				},
-			},
-			getGroupsByUserIDResult: []Group{
-				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/example/",
-					Org:  "org1",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
-				},
-			},
-		},
-		"ErrorCaseInvalidName": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			name: "invalid*",
-			org:  "org1",
-			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
-			},
-		},
-		"ErrorCaseInvalidOrg": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			name: "n1",
-			org:  "**^!$%&",
-			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
-			},
-		},
-		"ErrorCaseGroupNotFound": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			name: "group1",
-			org:  "org1",
-			wantError: &Error{
-				Code: GROUP_BY_ORG_AND_NAME_NOT_FOUND,
-			},
-			getGroupByNameMethodErr: &database.Error{
-				Code: database.GROUP_NOT_FOUND,
-			},
-		},
-		"ErrorCaseImplicitUnauthorizedDeleteGroup": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      false,
-			},
-			name: "group1",
-			org:  "org1",
-			getGroupByNameMethodResult: &Group{
-				ID:   "543210",
-				Name: "group1",
-				Org:  "org1",
-				Path: "/example/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "123456",
-				ExternalID: "123456",
-				Path:       "/path/",
-				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
-			},
-			getGroupsByUserIDResult: []Group{
-				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/example/",
-					Org:  "org1",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
-				},
-			},
-			getAttachedPoliciesResult: []Policy{
-				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/example/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Action: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-					},
-				},
-			},
-			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
-			},
-		},
-		"ErrorCaseExplicitUnauthorizedDeleteGroup": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      false,
-			},
-			name: "group1",
-			org:  "org1",
-			getGroupByNameMethodResult: &Group{
-				ID:   "543210",
-				Name: "group1",
-				Org:  "org1",
-				Path: "/example/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "123456",
-				ExternalID: "123456",
-				Path:       "/path/",
-				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
-			},
-			getGroupsByUserIDResult: []Group{
-				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/example/",
-					Org:  "org1",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
-				},
-			},
-			getAttachedPoliciesResult: []Policy{
-				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/example/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Action: []string{
-								GROUP_ACTION_DELETE_GROUP,
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "deny",
-							Action: []string{
-								GROUP_ACTION_DELETE_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, "/example/group1"),
-							},
-						},
-					},
-				},
-			},
-			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
-			},
-		},
-		"ErrorCaseDeleteGroupDBErr": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			name: "group1",
-			org:  "org1",
-			getGroupByNameMethodResult: &Group{
-				ID:   "543210",
-				Name: "group1",
-				Org:  "org1",
-				Path: "/example/",
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "123456",
-				ExternalID: "123456",
-				Path:       "/path/",
-				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
-			},
-			removeGroupMethodErr: &database.Error{
-				Code: database.INTERNAL_ERROR,
-			},
-			wantError: &Error{
-				Code: UNKNOWN_API_ERROR,
-			},
-		},
-	}
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-	for x, testcase := range testcases {
-		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameMethodResult
-		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
-		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
-		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
-		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = testcase.getGroupsByUserIDError
-		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
-		testRepo.ArgsOut[RemoveGroupMethod][0] = testcase.removeGroupMethodErr
-		err := testAPI.RemoveGroup(testcase.authUser, testcase.org, testcase.name)
-		if testcase.wantError != nil {
-			apiError, ok := err.(*Error)
-			if !ok || apiError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
-				continue
-			}
-			if apiError.Code != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed: %v", x, err)
-				continue
-			}
-		}
-	}
-}
-
-func TestGetGroupByName(t *testing.T) {
+func TestAuthAPI_GetGroupByName(t *testing.T) {
 	testcases := map[string]struct {
 		// API Method args
 		authUser AuthenticatedUser
@@ -768,7 +470,7 @@ func TestGetGroupByName(t *testing.T) {
 	}
 }
 
-func TestGetGroupList(t *testing.T) {
+func TestAuthAPI_ListGroups(t *testing.T) {
 	testcases := map[string]struct {
 		// API Method args
 		authUser   AuthenticatedUser
@@ -972,7 +674,7 @@ func TestGetGroupList(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 
-		groups, err := testAPI.GetGroupList(testcase.authUser, testcase.org, testcase.pathPrefix)
+		groups, err := testAPI.ListGroups(testcase.authUser, testcase.org, testcase.pathPrefix)
 		if testcase.wantError != nil {
 			apiError, ok := err.(*Error)
 			if !ok || apiError == nil {
@@ -997,1064 +699,7 @@ func TestGetGroupList(t *testing.T) {
 	}
 }
 
-func TestAddMember(t *testing.T) {
-	testcases := map[string]struct {
-		// API Method args
-		authUser  AuthenticatedUser
-		userID    string
-		org       string
-		groupName string
-		// Expected result
-		wantError *Error
-		// Manager Results
-		getGroupsByUserIDResult   []Group
-		getAttachedPoliciesResult []Policy
-		getUserByExternalIDResult *User
-		getGroupByNameResult      *Group
-		isMemberOfGroupResult     bool
-		// Manager Errors
-		getUserByExternalIDMethodErr error
-		getGroupByNameMethodErr      error
-		addMemberMethodErr           error
-		isMemberOfGroupMethodErr     error
-	}{
-		"OkCaseAdmin": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "12345",
-			org:       "org1",
-			groupName: "group1",
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "12345",
-				Path:       "/test/asd/",
-			},
-			getGroupByNameResult: &Group{
-				ID:   "543210",
-				Name: "group1",
-				Org:  "org1",
-				Path: "/test/asd/",
-			},
-			isMemberOfGroupResult: false,
-		},
-		"ErrorCaseInvalidExternalID": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID: "d*%$",
-			org:    "org1",
-			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
-			},
-		},
-		"ErrorCaseInvalidOrg": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID: "12345",
-			org:    "!^**$%&",
-			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
-			},
-		},
-		"ErrorCaseInvalidGroupName": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "12345",
-			org:       "org1",
-			groupName: "d*%$",
-			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
-			},
-		},
-		"ErrorCaseGroupNotFound": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "12345",
-			org:       "org1",
-			groupName: "group1",
-			wantError: &Error{
-				Code: GROUP_BY_ORG_AND_NAME_NOT_FOUND,
-			},
-			getGroupByNameMethodErr: &database.Error{
-				Code: database.GROUP_NOT_FOUND,
-			},
-		},
-		"ErrorCaseUnauthorizedUser": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      false,
-			},
-			userID:    "12345",
-			org:       "org1",
-			groupName: "group1",
-			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
-			},
-			getGroupsByUserIDResult: []Group{
-				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
-				},
-			},
-			getAttachedPoliciesResult: []Policy{
-				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "deny",
-							Action: []string{
-								GROUP_ACTION_ADD_MEMBER,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "allow",
-							Action: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-					},
-				},
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "1234",
-				Path:       "/path/",
-				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
-			},
-			getGroupByNameResult: &Group{
-				ID:   "GROUP-USER-ID",
-				Name: "group1",
-				Org:  "org1",
-				Path: "/path/1/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/1/", "group1"),
-			},
-		},
-		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      false,
-			},
-			userID:    "12345",
-			org:       "org1",
-			groupName: "group1",
-			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
-			},
-			getGroupsByUserIDResult: []Group{
-				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
-				},
-			},
-			getAttachedPoliciesResult: []Policy{
-				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "deny",
-							Action: []string{
-								GROUP_ACTION_ADD_MEMBER,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "allow",
-							Action: []string{
-								"iam:*",
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-								GetUrnPrefix("", RESOURCE_USER, ""),
-							},
-						},
-					},
-				},
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "1234",
-				Path:       "/path/",
-				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
-			},
-			getGroupByNameResult: &Group{
-				ID:   "GROUP-USER-ID",
-				Name: "groupUser",
-				Org:  "org1",
-				Path: "/path/1/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
-			},
-		},
-		"ErrorCaseUserNotFound": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "12345",
-			org:       "org1",
-			groupName: "group1",
-			wantError: &Error{
-				Code: USER_BY_EXTERNAL_ID_NOT_FOUND,
-			},
-			getGroupByNameResult: &Group{
-				ID:   "543210",
-				Name: "group1",
-				Org:  "org1",
-				Path: "/test/asd/",
-			},
-			getUserByExternalIDMethodErr: &database.Error{
-				Code: database.USER_NOT_FOUND,
-			},
-		},
-		"ErrorCaseIsAlreadyMember": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "12345",
-			org:       "org1",
-			groupName: "group1",
-			wantError: &Error{
-				Code: USER_IS_ALREADY_A_MEMBER_OF_GROUP,
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "12345",
-				Path:       "/test/asd/",
-			},
-			getGroupByNameResult: &Group{
-				ID:   "543210",
-				Name: "group1",
-				Org:  "org1",
-				Path: "/test/asd/",
-			},
-			isMemberOfGroupResult: true,
-		},
-		"ErrorCaseIsMemberDBErr": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "12345",
-			org:       "org1",
-			groupName: "group1",
-			wantError: &Error{
-				Code: UNKNOWN_API_ERROR,
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "12345",
-				Path:       "/test/asd/",
-			},
-			getGroupByNameResult: &Group{
-				ID:   "543210",
-				Name: "group1",
-				Org:  "org1",
-				Path: "/test/asd/",
-			},
-			isMemberOfGroupMethodErr: &database.Error{
-				Code: database.INTERNAL_ERROR,
-			},
-		},
-		"ErrorCaseAddMemberDBErr": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "12345",
-			org:       "org1",
-			groupName: "group1",
-			wantError: &Error{
-				Code: UNKNOWN_API_ERROR,
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "12345",
-				Path:       "/test/asd/",
-			},
-			getGroupByNameResult: &Group{
-				ID:   "543210",
-				Name: "group1",
-				Org:  "org1",
-				Path: "/test/asd/",
-			},
-			isMemberOfGroupResult: false,
-			addMemberMethodErr: &database.Error{
-				Code: database.INTERNAL_ERROR,
-			},
-		},
-	}
-
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
-	for x, testcase := range testcases {
-
-		testRepo.ArgsOut[AddMemberMethod][0] = testcase.addMemberMethodErr
-		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameResult
-		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
-		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
-		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
-		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
-		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
-		testRepo.ArgsOut[IsMemberOfGroupMethod][0] = testcase.isMemberOfGroupResult
-		testRepo.ArgsOut[IsMemberOfGroupMethod][1] = testcase.isMemberOfGroupMethodErr
-
-		err := testAPI.AddMember(testcase.authUser, testcase.userID, testcase.groupName, testcase.org)
-		if testcase.wantError != nil {
-			apiError, ok := err.(*Error)
-			if !ok || apiError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
-				continue
-			}
-			if apiError.Code != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", x, err)
-				continue
-			}
-		}
-	}
-}
-
-func TestListMembers(t *testing.T) {
-	testcases := map[string]struct {
-		// API Method args
-		authUser  AuthenticatedUser
-		org       string
-		groupName string
-		// Expected result
-		expectedMembers []string
-		wantError       *Error
-		// Manager Results
-		getGroupByNameResult      *Group
-		getGroupMembersResult     []User
-		getGroupsByUserIDResult   []Group
-		getAttachedPoliciesResult []Policy
-		getUserByExternalIDResult *User
-		// API Errors
-		getGroupByNameMethodErr      error
-		getUserByExternalIDMethodErr error
-		getGroupMembersMethodErr     error
-	}{
-		"OkCaseAdmin": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			org:       "org1",
-			groupName: "group1",
-			expectedMembers: []string{
-				"member1",
-				"member2",
-			},
-			getGroupByNameResult: &Group{
-				ID:   "543210",
-				Name: "group1",
-				Org:  "org1",
-				Path: "/test/",
-			},
-			getGroupMembersResult: []User{
-				{
-					ID:         "12345",
-					ExternalID: "member1",
-					Path:       "/test/",
-				},
-				{
-					ID:         "123456",
-					ExternalID: "member2",
-					Path:       "/test/",
-				},
-			},
-		},
-		"ErrorCaseInvalidName": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			org:       "org1",
-			groupName: "*%$",
-			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
-			},
-		},
-		"ErrorCaseInvalidOrg": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			org:       "!^**$%&",
-			groupName: "g1",
-			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
-			},
-		},
-		"ErrorCaseGroupNotFound": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			org:       "org1",
-			groupName: "group1",
-			getGroupByNameMethodErr: &database.Error{
-				Code: database.GROUP_NOT_FOUND,
-			},
-			wantError: &Error{
-				Code: GROUP_BY_ORG_AND_NAME_NOT_FOUND,
-			},
-		},
-		"ErrorCaseUnauthorizedGetGroup": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      false,
-			},
-			org:       "org1",
-			groupName: "group1",
-			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
-			},
-			getGroupByNameResult: &Group{
-				ID:   "GROUP-USER-ID",
-				Name: "groupUser",
-				Org:  "org1",
-				Path: "/path/1/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
-			},
-			getGroupsByUserIDResult: []Group{
-				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
-				},
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "1234",
-				Path:       "/path/",
-				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
-			},
-		},
-		"ErrorCaseUnauthorizedListMembers": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      false,
-			},
-			org:       "org1",
-			groupName: "group1",
-			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
-			},
-			getGroupByNameResult: &Group{
-				ID:   "GROUP-USER-ID",
-				Name: "groupUser",
-				Org:  "org1",
-				Path: "/path/1/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
-			},
-			getGroupsByUserIDResult: []Group{
-				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
-				},
-			},
-			getAttachedPoliciesResult: []Policy{
-				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Action: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-					},
-				},
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "1234",
-				Path:       "/path/",
-				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
-			},
-		},
-		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      false,
-			},
-			org:       "org1",
-			groupName: "group1",
-			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
-			},
-			getGroupByNameResult: &Group{
-				ID:   "GROUP-USER-ID",
-				Name: "groupUser",
-				Org:  "org1",
-				Path: "/path/1/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
-			},
-			getGroupsByUserIDResult: []Group{
-				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
-				},
-			},
-			getAttachedPoliciesResult: []Policy{
-				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "deny",
-							Action: []string{
-								GROUP_ACTION_LIST_MEMBERS,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "allow",
-							Action: []string{
-								GROUP_ACTION_LIST_MEMBERS,
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-					},
-				},
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "1234",
-				Path:       "/path/",
-				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
-			},
-		},
-		"ErrorCaseListMembersDBErr": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			org:       "org1",
-			groupName: "group1",
-			wantError: &Error{
-				Code: UNKNOWN_API_ERROR,
-			},
-			getGroupByNameResult: &Group{
-				ID:   "543210",
-				Name: "group1",
-				Org:  "org1",
-				Path: "/test/",
-			},
-			getGroupMembersMethodErr: &database.Error{
-				Code: database.INTERNAL_ERROR,
-			},
-		},
-	}
-
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
-	for x, testcase := range testcases {
-		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameResult
-		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
-		testRepo.ArgsOut[GetGroupMembersMethod][0] = testcase.getGroupMembersResult
-		testRepo.ArgsOut[GetGroupMembersMethod][1] = testcase.getGroupMembersMethodErr
-		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
-		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
-		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
-		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
-
-		members, err := testAPI.ListMembers(testcase.authUser, testcase.org, testcase.groupName)
-		if testcase.wantError != nil {
-			apiError, ok := err.(*Error)
-			if !ok || apiError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
-				continue
-			}
-			if apiError.Code != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", x, err)
-				continue
-			} else {
-				if diff := pretty.Compare(members, testcase.expectedMembers); diff != "" {
-					t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
-					continue
-				}
-			}
-		}
-	}
-}
-
-func TestRemoveMember(t *testing.T) {
-	testcases := map[string]struct {
-		// API Method args
-		authUser  AuthenticatedUser
-		userID    string
-		groupName string
-		org       string
-		// Expected result
-		wantError *Error
-		// Manager Results
-		getGroupByNameResult      *Group
-		getUserByExternalIDResult *User
-		getGroupsByUserIDResult   []Group
-		getAttachedPoliciesResult []Policy
-		isMemberOfGroupResult     bool
-		// Manager Errors
-		getGroupByNameMethodErr      error
-		getUserByExternalIDMethodErr error
-		isMemberOfGroupMethodErr     error
-		removeMemberMethodErr        error
-	}{
-		"OkCaseAdmin": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "12345",
-			groupName: "group1",
-			org:       "org1",
-			getGroupByNameResult: &Group{
-				ID:   "543210",
-				Name: "group1",
-				Org:  "org1",
-				Path: "/test/",
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "123456",
-				ExternalID: "12345",
-				Path:       "/test/",
-			},
-			isMemberOfGroupResult: true,
-		},
-		"ErrorCaseInvalidExternalID": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "$%&",
-			org:       "org1",
-			groupName: "group1",
-			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
-			},
-		},
-		"ErrorCaseInvalidOrg": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "12345",
-			org:       "$**^%&!",
-			groupName: "group1",
-			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
-			},
-		},
-		"ErrorCaseInvalidName": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "12345",
-			org:       "org1",
-			groupName: "$%&",
-			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
-			},
-		},
-		"ErrorCaseGroupNotFound": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "12345",
-			org:       "org1",
-			groupName: "group1",
-			wantError: &Error{
-				Code: GROUP_BY_ORG_AND_NAME_NOT_FOUND,
-			},
-			getGroupByNameMethodErr: &database.Error{
-				Code: database.GROUP_NOT_FOUND,
-			},
-		},
-		"ErrorCaseUnauthorizedRemoveMember": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      false,
-			},
-			userID:    "12345",
-			groupName: "group1",
-			org:       "org1",
-			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
-			},
-			getGroupByNameResult: &Group{
-				ID:   "GROUP-USER-ID",
-				Name: "groupUser",
-				Org:  "org1",
-				Path: "/path/1/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
-			},
-			getGroupsByUserIDResult: []Group{
-				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
-				},
-			},
-			getAttachedPoliciesResult: []Policy{
-				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Action: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-					},
-				},
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "1234",
-				Path:       "/path/",
-				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
-			},
-		},
-		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      false,
-			},
-			userID:    "12345",
-			groupName: "group1",
-			org:       "org1",
-			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
-			},
-			getGroupByNameResult: &Group{
-				ID:   "GROUP-USER-ID",
-				Name: "groupUser",
-				Org:  "org1",
-				Path: "/path/1/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
-			},
-			getGroupsByUserIDResult: []Group{
-				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
-				},
-			},
-			getAttachedPoliciesResult: []Policy{
-				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Action: []string{
-								GROUP_ACTION_GET_GROUP,
-								GROUP_ACTION_REMOVE_MEMBER,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "deny",
-							Action: []string{
-								GROUP_ACTION_REMOVE_MEMBER,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-					},
-				},
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "1234",
-				Path:       "/path/",
-				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
-			},
-		},
-		"ErrorCaseUserNotFound": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "12345",
-			groupName: "group1",
-			org:       "org1",
-			wantError: &Error{
-				Code: USER_BY_EXTERNAL_ID_NOT_FOUND,
-			},
-			getGroupByNameResult: &Group{
-				ID:   "GROUP-USER-ID",
-				Name: "groupUser",
-				Org:  "org1",
-				Path: "/path/1/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
-			},
-			getUserByExternalIDMethodErr: &database.Error{
-				Code: database.USER_NOT_FOUND,
-			},
-		},
-		"ErrorCaseUnauthorizedGetUser": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      false,
-			},
-			userID:    "12345",
-			groupName: "group1",
-			org:       "org1",
-			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
-			},
-			getGroupByNameResult: &Group{
-				ID:   "GROUP-USER-ID",
-				Name: "groupUser",
-				Org:  "org1",
-				Path: "/path/1/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
-			},
-			getGroupsByUserIDResult: []Group{
-				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
-				},
-			},
-			getAttachedPoliciesResult: []Policy{
-				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Action: []string{
-								GROUP_ACTION_GET_GROUP,
-								GROUP_ACTION_REMOVE_MEMBER,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "deny",
-							Action: []string{
-								USER_ACTION_GET_USER,
-							},
-							Resources: []string{
-								GetUrnPrefix("", RESOURCE_USER, ""),
-							},
-						},
-					},
-				},
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "1234",
-				Path:       "/path/",
-				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
-			},
-		},
-		"ErrorCaseIsMemberDBErr": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "12345",
-			groupName: "group1",
-			org:       "org1",
-			wantError: &Error{
-				Code: UNKNOWN_API_ERROR,
-			},
-			getGroupByNameResult: &Group{
-				ID:   "GROUP-USER-ID",
-				Name: "groupUser",
-				Org:  "org1",
-				Path: "/path/1/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "1234",
-				Path:       "/path/",
-				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
-			},
-			isMemberOfGroupMethodErr: &database.Error{
-				Code: database.INTERNAL_ERROR,
-			},
-		},
-		"ErrorCaseIsNotMember": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "12345",
-			groupName: "group1",
-			org:       "org1",
-			wantError: &Error{
-				Code: USER_IS_NOT_A_MEMBER_OF_GROUP,
-			},
-			getGroupByNameResult: &Group{
-				ID:   "GROUP-USER-ID",
-				Name: "groupUser",
-				Org:  "org1",
-				Path: "/path/1/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "1234",
-				Path:       "/path/",
-				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
-			},
-			isMemberOfGroupResult: false,
-		},
-		"ErrorCaseRemoveMemberDBErr": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "12345",
-			groupName: "group1",
-			org:       "org1",
-			wantError: &Error{
-				Code: UNKNOWN_API_ERROR,
-			},
-			getGroupByNameResult: &Group{
-				ID:   "GROUP-USER-ID",
-				Name: "groupUser",
-				Org:  "org1",
-				Path: "/path/1/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "1234",
-				Path:       "/path/",
-				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
-			},
-			isMemberOfGroupResult: true,
-			removeMemberMethodErr: &database.Error{
-				Code: database.INTERNAL_ERROR,
-			},
-		},
-	}
-
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
-	for x, testcase := range testcases {
-		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameResult
-		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
-		testRepo.ArgsOut[IsMemberOfGroupMethod][0] = testcase.isMemberOfGroupResult
-		testRepo.ArgsOut[IsMemberOfGroupMethod][1] = testcase.isMemberOfGroupMethodErr
-		testRepo.ArgsOut[RemoveMemberMethod][0] = testcase.removeMemberMethodErr
-		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
-		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
-		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
-		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
-
-		err := testAPI.RemoveMember(testcase.authUser, testcase.userID, testcase.groupName, testcase.org)
-		if testcase.wantError != nil {
-			apiError, ok := err.(*Error)
-			if !ok || apiError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
-				continue
-			}
-			if apiError.Code != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", x, err)
-				continue
-			}
-		}
-	}
-}
-
-func TestUpdateGroup(t *testing.T) {
+func TestAuthAPI_UpdateGroup(t *testing.T) {
 	testcases := map[string]struct {
 		authUser     AuthenticatedUser
 		org          string
@@ -2568,7 +1213,1368 @@ func TestUpdateGroup(t *testing.T) {
 	}
 }
 
-func TestAttachPolicyToGroup(t *testing.T) {
+func TestAuthAPI_RemoveGroup(t *testing.T) {
+	testcases := map[string]struct {
+		//API method args
+		authUser AuthenticatedUser
+		name     string
+		org      string
+		// Expected result
+		wantError *Error
+		// Manager Results
+		getUserByExternalIDResult  *User
+		getGroupsByUserIDResult    []Group
+		getAttachedPoliciesResult  []Policy
+		getGroupByNameMethodResult *Group
+		// API Errors
+		getGroupByNameMethodErr error
+		removeGroupMethodErr    error
+		getGroupsByUserIDError  error
+	}{
+		"OKCaseAdminUser": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			name: "group1",
+			org:  "org1",
+			getGroupByNameMethodResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/example/",
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
+			},
+		},
+		"OkCaseRegularUser": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "group1",
+			org:  "org1",
+			getGroupByNameMethodResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/example/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "org1",
+					Path: "/example/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								GROUP_ACTION_DELETE_GROUP,
+								GROUP_ACTION_GET_GROUP,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+					},
+				},
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/example/",
+					Org:  "org1",
+					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+				},
+			},
+		},
+		"ErrorCaseInvalidName": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			name: "invalid*",
+			org:  "org1",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			name: "n1",
+			org:  "**^!$%&",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseGroupNotFound": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			name: "group1",
+			org:  "org1",
+			wantError: &Error{
+				Code: GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+			},
+			getGroupByNameMethodErr: &database.Error{
+				Code: database.GROUP_NOT_FOUND,
+			},
+		},
+		"ErrorCaseImplicitUnauthorizedDeleteGroup": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "group1",
+			org:  "org1",
+			getGroupByNameMethodResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/example/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/example/",
+					Org:  "org1",
+					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "org1",
+					Path: "/example/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								GROUP_ACTION_GET_GROUP,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+					},
+				},
+			},
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+		},
+		"ErrorCaseExplicitUnauthorizedDeleteGroup": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "group1",
+			org:  "org1",
+			getGroupByNameMethodResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/example/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/example/",
+					Org:  "org1",
+					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "org1",
+					Path: "/example/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								GROUP_ACTION_DELETE_GROUP,
+								GROUP_ACTION_GET_GROUP,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+						{
+							Effect: "deny",
+							Action: []string{
+								GROUP_ACTION_DELETE_GROUP,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, "/example/group1"),
+							},
+						},
+					},
+				},
+			},
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+		},
+		"ErrorCaseDeleteGroupDBErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			name: "group1",
+			org:  "org1",
+			getGroupByNameMethodResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/example/",
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
+			},
+			removeGroupMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+		},
+	}
+	testRepo := makeTestRepo()
+	testAPI := makeTestAPI(testRepo)
+	for x, testcase := range testcases {
+		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameMethodResult
+		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = testcase.getGroupsByUserIDError
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
+		testRepo.ArgsOut[RemoveGroupMethod][0] = testcase.removeGroupMethodErr
+		err := testAPI.RemoveGroup(testcase.authUser, testcase.org, testcase.name)
+		if testcase.wantError != nil {
+			apiError, ok := err.(*Error)
+			if !ok || apiError == nil {
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				continue
+			}
+			if apiError.Code != testcase.wantError.Code {
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test %v failed: %v", x, err)
+				continue
+			}
+		}
+	}
+}
+
+func TestAuthAPI_AddMember(t *testing.T) {
+	testcases := map[string]struct {
+		// API Method args
+		authUser  AuthenticatedUser
+		userID    string
+		org       string
+		groupName string
+		// Expected result
+		wantError *Error
+		// Manager Results
+		getGroupsByUserIDResult   []Group
+		getAttachedPoliciesResult []Policy
+		getUserByExternalIDResult *User
+		getGroupByNameResult      *Group
+		isMemberOfGroupResult     bool
+		// Manager Errors
+		getUserByExternalIDMethodErr error
+		getGroupByNameMethodErr      error
+		addMemberMethodErr           error
+		isMemberOfGroupMethodErr     error
+	}{
+		"OkCaseAdmin": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			org:       "org1",
+			groupName: "group1",
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "12345",
+				Path:       "/test/asd/",
+			},
+			getGroupByNameResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/test/asd/",
+			},
+			isMemberOfGroupResult: false,
+		},
+		"ErrorCaseInvalidExternalID": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID: "d*%$",
+			org:    "org1",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID: "12345",
+			org:    "!^**$%&",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidGroupName": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			org:       "org1",
+			groupName: "d*%$",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseGroupNotFound": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code: GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+			},
+			getGroupByNameMethodErr: &database.Error{
+				Code: database.GROUP_NOT_FOUND,
+			},
+		},
+		"ErrorCaseUnauthorizedUser": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			userID:    "12345",
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Org:  "org1",
+					Path: "/path/1/",
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "deny",
+							Action: []string{
+								GROUP_ACTION_ADD_MEMBER,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+						{
+							Effect: "allow",
+							Action: []string{
+								GROUP_ACTION_GET_GROUP,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/path/1/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/1/", "group1"),
+			},
+		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			userID:    "12345",
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Org:  "org1",
+					Path: "/path/1/",
+					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "deny",
+							Action: []string{
+								GROUP_ACTION_ADD_MEMBER,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+						{
+							Effect: "allow",
+							Action: []string{
+								"iam:*",
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								GetUrnPrefix("", RESOURCE_USER, ""),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/1/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
+			},
+		},
+		"ErrorCaseUserNotFound": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code: USER_BY_EXTERNAL_ID_NOT_FOUND,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/test/asd/",
+			},
+			getUserByExternalIDMethodErr: &database.Error{
+				Code: database.USER_NOT_FOUND,
+			},
+		},
+		"ErrorCaseIsAlreadyMember": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code: USER_IS_ALREADY_A_MEMBER_OF_GROUP,
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "12345",
+				Path:       "/test/asd/",
+			},
+			getGroupByNameResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/test/asd/",
+			},
+			isMemberOfGroupResult: true,
+		},
+		"ErrorCaseIsMemberDBErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "12345",
+				Path:       "/test/asd/",
+			},
+			getGroupByNameResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/test/asd/",
+			},
+			isMemberOfGroupMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+		},
+		"ErrorCaseAddMemberDBErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "12345",
+				Path:       "/test/asd/",
+			},
+			getGroupByNameResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/test/asd/",
+			},
+			isMemberOfGroupResult: false,
+			addMemberMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+		},
+	}
+
+	testRepo := makeTestRepo()
+	testAPI := makeTestAPI(testRepo)
+
+	for x, testcase := range testcases {
+
+		testRepo.ArgsOut[AddMemberMethod][0] = testcase.addMemberMethodErr
+		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameResult
+		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
+		testRepo.ArgsOut[IsMemberOfGroupMethod][0] = testcase.isMemberOfGroupResult
+		testRepo.ArgsOut[IsMemberOfGroupMethod][1] = testcase.isMemberOfGroupMethodErr
+
+		err := testAPI.AddMember(testcase.authUser, testcase.userID, testcase.groupName, testcase.org)
+		if testcase.wantError != nil {
+			apiError, ok := err.(*Error)
+			if !ok || apiError == nil {
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				continue
+			}
+			if apiError.Code != testcase.wantError.Code {
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test %v failed. Error: %v", x, err)
+				continue
+			}
+		}
+	}
+}
+
+func TestAuthAPI_RemoveMember(t *testing.T) {
+	testcases := map[string]struct {
+		// API Method args
+		authUser  AuthenticatedUser
+		userID    string
+		groupName string
+		org       string
+		// Expected result
+		wantError *Error
+		// Manager Results
+		getGroupByNameResult      *Group
+		getUserByExternalIDResult *User
+		getGroupsByUserIDResult   []Group
+		getAttachedPoliciesResult []Policy
+		isMemberOfGroupResult     bool
+		// Manager Errors
+		getGroupByNameMethodErr      error
+		getUserByExternalIDMethodErr error
+		isMemberOfGroupMethodErr     error
+		removeMemberMethodErr        error
+	}{
+		"OkCaseAdmin": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			groupName: "group1",
+			org:       "org1",
+			getGroupByNameResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/test/",
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "12345",
+				Path:       "/test/",
+			},
+			isMemberOfGroupResult: true,
+		},
+		"ErrorCaseInvalidExternalID": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "$%&",
+			org:       "org1",
+			groupName: "group1",
+			getGroupByNameResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/test/",
+			},
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			org:       "$**^%&!",
+			groupName: "group1",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidName": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			org:       "org1",
+			groupName: "$%&",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseGroupNotFound": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code: GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+			},
+			getGroupByNameMethodErr: &database.Error{
+				Code: database.GROUP_NOT_FOUND,
+			},
+		},
+		"ErrorCaseUnauthorizedRemoveMember": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			userID:    "12345",
+			groupName: "group1",
+			org:       "org1",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/1/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Org:  "org1",
+					Path: "/path/1/",
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								GROUP_ACTION_GET_GROUP,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			userID:    "12345",
+			groupName: "group1",
+			org:       "org1",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/1/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Org:  "org1",
+					Path: "/path/1/",
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								GROUP_ACTION_GET_GROUP,
+								GROUP_ACTION_REMOVE_MEMBER,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+						{
+							Effect: "deny",
+							Action: []string{
+								GROUP_ACTION_REMOVE_MEMBER,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
+		"ErrorCaseUserNotFound": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			groupName: "group1",
+			org:       "org1",
+			wantError: &Error{
+				Code: USER_BY_EXTERNAL_ID_NOT_FOUND,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/1/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
+			},
+			getUserByExternalIDMethodErr: &database.Error{
+				Code: database.USER_NOT_FOUND,
+			},
+		},
+		"ErrorCaseUnauthorizedGetUser": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			userID:    "12345",
+			groupName: "group1",
+			org:       "org1",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/1/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Org:  "org1",
+					Path: "/path/1/",
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								GROUP_ACTION_GET_GROUP,
+								GROUP_ACTION_REMOVE_MEMBER,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+						{
+							Effect: "deny",
+							Action: []string{
+								USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, ""),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
+		"ErrorCaseIsMemberDBErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			groupName: "group1",
+			org:       "org1",
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/1/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			isMemberOfGroupMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+		},
+		"ErrorCaseIsNotMember": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			groupName: "group1",
+			org:       "org1",
+			wantError: &Error{
+				Code: USER_IS_NOT_A_MEMBER_OF_GROUP,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/1/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			isMemberOfGroupResult: false,
+		},
+		"ErrorCaseRemoveMemberDBErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			groupName: "group1",
+			org:       "org1",
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/1/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			isMemberOfGroupResult: true,
+			removeMemberMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+		},
+	}
+
+	testRepo := makeTestRepo()
+	testAPI := makeTestAPI(testRepo)
+
+	for x, testcase := range testcases {
+		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameResult
+		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
+		testRepo.ArgsOut[IsMemberOfGroupMethod][0] = testcase.isMemberOfGroupResult
+		testRepo.ArgsOut[IsMemberOfGroupMethod][1] = testcase.isMemberOfGroupMethodErr
+		testRepo.ArgsOut[RemoveMemberMethod][0] = testcase.removeMemberMethodErr
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
+
+		err := testAPI.RemoveMember(testcase.authUser, testcase.userID, testcase.groupName, testcase.org)
+		if testcase.wantError != nil {
+			apiError, ok := err.(*Error)
+			if !ok || apiError == nil {
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				continue
+			}
+			if apiError.Code != testcase.wantError.Code {
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test %v failed. Error: %v", x, err)
+				continue
+			}
+		}
+	}
+}
+
+func TestAuthAPI_ListMembers(t *testing.T) {
+	testcases := map[string]struct {
+		// API Method args
+		authUser  AuthenticatedUser
+		org       string
+		groupName string
+		// Expected result
+		expectedMembers []string
+		wantError       *Error
+		// Manager Results
+		getGroupByNameResult      *Group
+		getGroupMembersResult     []User
+		getGroupsByUserIDResult   []Group
+		getAttachedPoliciesResult []Policy
+		getUserByExternalIDResult *User
+		// API Errors
+		getGroupByNameMethodErr      error
+		getUserByExternalIDMethodErr error
+		getGroupMembersMethodErr     error
+	}{
+		"OkCaseAdmin": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:       "org1",
+			groupName: "group1",
+			expectedMembers: []string{
+				"member1",
+				"member2",
+			},
+			getGroupByNameResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/test/",
+			},
+			getGroupMembersResult: []User{
+				{
+					ID:         "12345",
+					ExternalID: "member1",
+					Path:       "/test/",
+				},
+				{
+					ID:         "123456",
+					ExternalID: "member2",
+					Path:       "/test/",
+				},
+			},
+		},
+		"ErrorCaseInvalidName": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:       "org1",
+			groupName: "*%$",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:       "!^**$%&",
+			groupName: "g1",
+			wantError: &Error{
+				Code: INVALID_PARAMETER_ERROR,
+			},
+		},
+		"ErrorCaseGroupNotFound": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:       "org1",
+			groupName: "group1",
+			getGroupByNameMethodErr: &database.Error{
+				Code: database.GROUP_NOT_FOUND,
+			},
+			wantError: &Error{
+				Code: GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+			},
+		},
+		"ErrorCaseUnauthorizedGetGroup": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/1/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Org:  "org1",
+					Path: "/path/1/",
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
+		"ErrorCaseUnauthorizedListMembers": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/1/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Org:  "org1",
+					Path: "/path/1/",
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								GROUP_ACTION_GET_GROUP,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code: UNAUTHORIZED_RESOURCES_ERROR,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/1/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", ""),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Org:  "org1",
+					Path: "/path/1/",
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "deny",
+							Action: []string{
+								GROUP_ACTION_LIST_MEMBERS,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+						{
+							Effect: "allow",
+							Action: []string{
+								GROUP_ACTION_LIST_MEMBERS,
+								GROUP_ACTION_GET_GROUP,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
+		"ErrorCaseListMembersDBErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/test/",
+			},
+			getGroupMembersMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+		},
+	}
+
+	testRepo := makeTestRepo()
+	testAPI := makeTestAPI(testRepo)
+
+	for x, testcase := range testcases {
+		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameResult
+		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
+		testRepo.ArgsOut[GetGroupMembersMethod][0] = testcase.getGroupMembersResult
+		testRepo.ArgsOut[GetGroupMembersMethod][1] = testcase.getGroupMembersMethodErr
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
+
+		members, err := testAPI.ListMembers(testcase.authUser, testcase.org, testcase.groupName)
+		if testcase.wantError != nil {
+			apiError, ok := err.(*Error)
+			if !ok || apiError == nil {
+				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
+				continue
+			}
+			if apiError.Code != testcase.wantError.Code {
+				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Test %v failed. Error: %v", x, err)
+				continue
+			} else {
+				if diff := pretty.Compare(members, testcase.expectedMembers); diff != "" {
+					t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
+					continue
+				}
+			}
+		}
+	}
+}
+
+func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 	testcases := map[string]struct {
 		authUser   AuthenticatedUser
 		org        string
@@ -2655,6 +2661,13 @@ func TestAttachPolicyToGroup(t *testing.T) {
 			org:        "123",
 			groupName:  "group1",
 			policyName: "$·%",
+			getGroupByNameResult: &Group{
+				ID:   "12345",
+				Name: "group1",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "test"),
+			},
 			wantError: &Error{
 				Code: INVALID_PARAMETER_ERROR,
 			},
@@ -2969,7 +2982,7 @@ func TestAttachPolicyToGroup(t *testing.T) {
 	}
 }
 
-func TestDetachPolicyToGroup(t *testing.T) {
+func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 	testcases := map[string]struct {
 		authUser   AuthenticatedUser
 		org        string
@@ -3056,6 +3069,13 @@ func TestDetachPolicyToGroup(t *testing.T) {
 			org:        "123",
 			groupName:  "group1",
 			policyName: "$·%",
+			getGroupByNameResult: &Group{
+				ID:   "12345",
+				Name: "group1",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "test"),
+			},
 			wantError: &Error{
 				Code: INVALID_PARAMETER_ERROR,
 			},
@@ -3370,7 +3390,7 @@ func TestDetachPolicyToGroup(t *testing.T) {
 	}
 }
 
-func TestListAttachedGroupPolicies(t *testing.T) {
+func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 	testcases := map[string]struct {
 		//API method args
 		authUser AuthenticatedUser
