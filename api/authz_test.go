@@ -481,6 +481,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 							},
 							Resources: []string{
 								GetUrnPrefix("example", RESOURCE_POLICY, "/path/path2"),
+								GetUrnPrefix("example2", RESOURCE_POLICY, "/path/path2"),
 							},
 						},
 					},
@@ -949,9 +950,6 @@ func TestGetRestrictions(t *testing.T) {
 			resourceUrn: CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupAllow"),
 			action:      GROUP_ACTION_GET_GROUP,
 			expectedRestrictions: &Restrictions{
-				AllowedFullUrns: []string{
-					CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupAllow"),
-				},
 				AllowedUrnPrefixes: []string{
 					GetUrnPrefix("example", RESOURCE_GROUP, "/path1/"),
 				},
@@ -1004,10 +1002,10 @@ func TestGetRestrictions(t *testing.T) {
 			resourceUrn: GetUrnPrefix("example", RESOURCE_GROUP, "/path"),
 			action:      GROUP_ACTION_GET_GROUP,
 			expectedRestrictions: &Restrictions{
-				AllowedFullUrns: []string{
-					CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupAllow"),
-					CreateUrn("example", RESOURCE_GROUP, "/path2/", "groupAllow"),
-				},
+				//AllowedFullUrns: []string{
+				//	CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupAllow"),
+				//	CreateUrn("example", RESOURCE_GROUP, "/path2/", "groupAllow"),
+				//},
 				AllowedUrnPrefixes: []string{
 					GetUrnPrefix("example", RESOURCE_GROUP, "/path1/"),
 					GetUrnPrefix("example", RESOURCE_GROUP, "/path2/"),
@@ -1504,7 +1502,7 @@ func TestIsResourceContained(t *testing.T) {
 
 	for n, test := range testcases {
 
-		isContained := isResourceContained(test.resource, test.resourcePrefix)
+		isContained := isContainedOrEqual(test.resource, test.resourcePrefix)
 
 		// Check result
 		if test.expectedResponse != isContained {
@@ -1538,6 +1536,494 @@ func TestIsFullUrn(t *testing.T) {
 		if test.expectedResponse != isFullUrn {
 			t.Errorf("Test %v failed. Received different values (wanted:%v / received:%v)",
 				n, test.expectedResponse, isFullUrn)
+			continue
+		}
+	}
+}
+
+func TestInsertRestriction(t *testing.T) {
+	testcases := map[string]struct {
+		resource struct {
+			isAllow   bool
+			isFullUrn bool
+			urn       string
+		}
+		restrictions         *Restrictions
+		expectedRestrictions *Restrictions
+	}{
+		"AllowFullUrn1": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   true,
+				isFullUrn: true,
+				urn:       "asd:/path/asd",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{"asd:/*"},
+				DeniedFullUrns:     []string{},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{"asd:/*"},
+				DeniedFullUrns:     []string{},
+			},
+		},
+		"AllowFullUrn2": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   true,
+				isFullUrn: true,
+				urn:       "asd:/path/asd",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{"asd:/path/asd"},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{"asd:/path/asd"},
+			},
+		},
+		"AllowFullUrn3": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   true,
+				isFullUrn: true,
+				urn:       "asd:/path/asd",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/*"},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/*"},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{},
+			},
+		},
+		"AllowFullUrn4": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   true,
+				isFullUrn: true,
+				urn:       "asd:/path/asd",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/path2/*"},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/path2/*"},
+				AllowedFullUrns:    []string{"asd:/path/asd"},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{},
+			},
+		},
+		"AllowFullUrn5": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   true,
+				isFullUrn: true,
+				urn:       "asd:/path/asd",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/path2/*"},
+				AllowedFullUrns:    []string{"asd:/path/asd"},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{"asd:/path3/zxc"},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/path2/*"},
+				AllowedFullUrns:    []string{"asd:/path/asd"},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{"asd:/path3/zxc"},
+			},
+		},
+
+		"AllowPrefix1": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   true,
+				isFullUrn: false,
+				urn:       "asd:/path/*",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/path2/*"},
+				AllowedFullUrns:    []string{"asd:/path/asd"},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{"asd:/path3/zxc"},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/path2/*", "asd:/path/*"},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{"asd:/path3/zxc"},
+			},
+		},
+		"AllowPrefix2": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   true,
+				isFullUrn: false,
+				urn:       "asd:/path/*",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/path/*"},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{},
+			},
+		},
+		"AllowPrefix3": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   true,
+				isFullUrn: false,
+				urn:       "asd:/path/*",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/*"},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/*"},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{},
+			},
+		},
+		"AllowPrefix4": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   true,
+				isFullUrn: false,
+				urn:       "asd:/path/*",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{"asd:/path/asd1", "asd:/path/asd2"},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/path/*"},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{},
+			},
+		},
+		"AllowPrefix5": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   true,
+				isFullUrn: false,
+				urn:       "asd:/path/*",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"zxc:/path2/*"},
+				AllowedFullUrns:    []string{"zxc:/path/asd"},
+				DeniedUrnPrefixes:  []string{"asd:/*"},
+				DeniedFullUrns:     []string{"asd:/path3/asd"},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"zxc:/path2/*"},
+				AllowedFullUrns:    []string{"zxc:/path/asd"},
+				DeniedUrnPrefixes:  []string{"asd:/*"},
+				DeniedFullUrns:     []string{"asd:/path3/asd"},
+			},
+		},
+
+		"DenyFullUrn1": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   false,
+				isFullUrn: true,
+				urn:       "asd:/path/asd",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{"asd:/*"},
+				DeniedFullUrns:     []string{},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{"asd:/*"},
+				DeniedFullUrns:     []string{},
+			},
+		},
+		"DenyFullUrn2": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   false,
+				isFullUrn: true,
+				urn:       "asd:/path/asd",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{"asd:/path/asd"},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{"asd:/path/asd"},
+			},
+		},
+		"DenyFullUrn3": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   false,
+				isFullUrn: true,
+				urn:       "asd:/path/asd",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/*"},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/*"},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{"asd:/path/asd"},
+			},
+		},
+		"DenyFullUrn4": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   false,
+				isFullUrn: true,
+				urn:       "asd:/path/asd",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/path2/*"},
+				AllowedFullUrns:    []string{"asd:/path/asd"},
+				DeniedUrnPrefixes:  []string{"asd:/path3/*"},
+				DeniedFullUrns:     []string{},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/path2/*"},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{"asd:/path3/*"},
+				DeniedFullUrns:     []string{"asd:/path/asd"},
+			},
+		},
+		"DenyFullUrn5": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   false,
+				isFullUrn: true,
+				urn:       "asd:/path/asd",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/path2/*"},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{"asd:/path/*"},
+				DeniedFullUrns:     []string{"asd:/path3/asd"},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/path2/*"},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{"asd:/path/*"},
+				DeniedFullUrns:     []string{"asd:/path3/asd"},
+			},
+		},
+
+		"DenyPrefix1": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   false,
+				isFullUrn: false,
+				urn:       "asd:/path/*",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/path2/*"},
+				AllowedFullUrns:    []string{"asd:/path/asd"},
+				DeniedUrnPrefixes:  []string{"asd:/path2/*"},
+				DeniedFullUrns:     []string{"asd:/path3/zxc"},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"asd:/path2/*"},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{"asd:/path2/*", "asd:/path/*"},
+				DeniedFullUrns:     []string{"asd:/path3/zxc"},
+			},
+		},
+		"DenyPrefix2": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   false,
+				isFullUrn: false,
+				urn:       "asd:/path/*",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{"asd:/path/*"},
+				DeniedFullUrns:     []string{},
+			},
+		},
+		"DenyPrefix3": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   false,
+				isFullUrn: false,
+				urn:       "asd:/path/*",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{"asd:/*"},
+				DeniedFullUrns:     []string{},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{"asd:/*"},
+				DeniedFullUrns:     []string{},
+			},
+		},
+		"DenyPrefix4": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   false,
+				isFullUrn: false,
+				urn:       "asd:/path/*",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
+				DeniedFullUrns:     []string{"asd:/path/asd1", "asd:/path/asd2"},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{"asd:/path/*"},
+				DeniedFullUrns:     []string{},
+			},
+		},
+		"DenyPrefix5": {
+			resource: struct {
+				isAllow   bool
+				isFullUrn bool
+				urn       string
+			}{
+				isAllow:   false,
+				isFullUrn: false,
+				urn:       "asd:/path/*",
+			},
+			restrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"zxc:/path2/*"},
+				AllowedFullUrns:    []string{"zxc:/path/asd"},
+				DeniedUrnPrefixes:  []string{"asd:/*"},
+				DeniedFullUrns:     []string{"asd:/path3/asd"},
+			},
+			expectedRestrictions: &Restrictions{
+				AllowedUrnPrefixes: []string{"zxc:/path2/*"},
+				AllowedFullUrns:    []string{"zxc:/path/asd"},
+				DeniedUrnPrefixes:  []string{"asd:/*"},
+				DeniedFullUrns:     []string{"asd:/path3/asd"},
+			},
+		},
+	}
+
+	for n, test := range testcases {
+
+		test.restrictions.insertRestriction(test.resource.isAllow, test.resource.isFullUrn, test.resource.urn)
+
+		// Check result
+		if diff := pretty.Compare(test.restrictions, test.expectedRestrictions); diff != "" {
+			t.Errorf("Test %v failed. Received different values (wanted / received): %v",
+				n, diff)
 			continue
 		}
 	}
@@ -1597,18 +2083,10 @@ func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
 			},
 			resource: GetUrnPrefix("", RESOURCE_USER, "/path"),
 			expectedRestrictions: &Restrictions{
-				AllowedUrnPrefixes: []string{
-					GetUrnPrefix("", RESOURCE_USER, "/path1/"),
-					GetUrnPrefix("", RESOURCE_USER, "/path2/"),
-					GetUrnPrefix("", RESOURCE_USER, "/"),
-					GetUrnPrefix("", RESOURCE_USER, "/path"),
-				},
-				AllowedFullUrns: []string{},
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
 				DeniedUrnPrefixes: []string{
-					GetUrnPrefix("", RESOURCE_USER, "/path1/"),
-					GetUrnPrefix("", RESOURCE_USER, "/path2/"),
 					GetUrnPrefix("", RESOURCE_USER, "/"),
-					GetUrnPrefix("", RESOURCE_USER, "/path"),
 				},
 				DeniedFullUrns: []string{},
 			},
@@ -1710,13 +2188,9 @@ func TestGetRestrictionsWhenResourceRequestedIsFullUrn(t *testing.T) {
 			},
 			resource: CreateUrn("", RESOURCE_USER, "/path/", "user"),
 			expectedRestrictions: &Restrictions{
-				AllowedUrnPrefixes: []string{
-					GetUrnPrefix("", RESOURCE_USER, "/path/"),
-					GetUrnPrefix("", RESOURCE_USER, "/"),
-				},
-				AllowedFullUrns: []string{},
+				AllowedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
 				DeniedUrnPrefixes: []string{
-					GetUrnPrefix("", RESOURCE_USER, "/path/"),
 					GetUrnPrefix("", RESOURCE_USER, "/"),
 				},
 				DeniedFullUrns: []string{},
@@ -1748,10 +2222,8 @@ func TestGetRestrictionsWhenResourceRequestedIsFullUrn(t *testing.T) {
 			resource: CreateUrn("", RESOURCE_USER, "/path/", "user"),
 			expectedRestrictions: &Restrictions{
 				AllowedUrnPrefixes: []string{},
-				AllowedFullUrns: []string{
-					CreateUrn("", RESOURCE_USER, "/path/", "user"),
-				},
-				DeniedUrnPrefixes: []string{},
+				AllowedFullUrns:    []string{},
+				DeniedUrnPrefixes:  []string{},
 				DeniedFullUrns: []string{
 					CreateUrn("", RESOURCE_USER, "/path/", "user"),
 				},
