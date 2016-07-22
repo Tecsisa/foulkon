@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+
 	"github.com/Sirupsen/logrus"
 )
 
@@ -46,7 +47,7 @@ func (e Error) Error() string {
 
 func LogErrorMessage(logger *logrus.Logger, requestID string, err *Error) {
 	logger.WithFields(logrus.Fields{
-		"RequestID": requestID,
-		"Code":      err.Code,
+		"requestID": requestID,
+		"code":      err.Code,
 	}).Error(err.Message)
 }

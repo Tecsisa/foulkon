@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"testing"
 
+	"strings"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/kylelemons/godebug/pretty"
-	"strings"
 )
 
 func TestError(t *testing.T) {
@@ -66,7 +67,7 @@ func TestLogErrorMessage(t *testing.T) {
 				Code:    "Code Error",
 				Message: "Error Message",
 			},
-			expectedMessage: "{\"Code\":\"Code Error\",\"RequestID\":\"RequestID\",\"level\":\"error\",\"msg\":\"Error Message\",\"time\"",
+			expectedMessage: "{\"code\":\"Code Error\",\"level\":\"error\",\"msg\":\"Error Message\",\"requestID\":\"RequestID\",\"time\"",
 		},
 	}
 

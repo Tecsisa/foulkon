@@ -32,14 +32,14 @@ func InitOIDCConnector(logger *log.Logger, provider string, clientids []string) 
 		requestID := r.Header.Get("Request-ID")
 		if verr, ok := e.(*openid.ValidationError); ok {
 			logger.WithFields(log.Fields{
-				"RequestID": requestID,
+				"requestID": requestID,
 			}).Error(verr.Message)
 			http.Error(rw, fmt.Sprintf("Error %v", verr.Message), verr.HTTPStatus)
 		} else {
 			logger.WithFields(log.Fields{
-				"RequestID": requestID,
+				"requestID": requestID,
 			}).Error("Internal server error")
-			http.Error(rw, fmt.Sprintf("Unexpected error"), http.StatusInternalServerError)
+			http.Error(rw, "Unexpected error", http.StatusInternalServerError)
 		}
 
 		return true

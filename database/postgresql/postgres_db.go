@@ -19,8 +19,8 @@ func InitDb(datasourcename string) (*gorm.DB, error) {
 	}
 
 	// construct a gorp DbMap
-	db.DB().SetMaxIdleConns(10)
-	db.DB().SetMaxOpenConns(100)
+	db.DB().SetMaxIdleConns(5)
+	db.DB().SetMaxOpenConns(20)
 	db.DB().SetConnMaxLifetime(5 * time.Minute)
 
 	// Check connection
