@@ -1002,10 +1002,6 @@ func TestGetRestrictions(t *testing.T) {
 			resourceUrn: GetUrnPrefix("example", RESOURCE_GROUP, "/path"),
 			action:      GROUP_ACTION_GET_GROUP,
 			expectedRestrictions: &Restrictions{
-				//AllowedFullUrns: []string{
-				//	CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupAllow"),
-				//	CreateUrn("example", RESOURCE_GROUP, "/path2/", "groupAllow"),
-				//},
 				AllowedUrnPrefixes: []string{
 					GetUrnPrefix("example", RESOURCE_GROUP, "/path1/"),
 					GetUrnPrefix("example", RESOURCE_GROUP, "/path2/"),
@@ -2128,7 +2124,7 @@ func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
 
 	for n, test := range testcases {
 
-		restrictions := getRestrictionsWhenResourceRequestedIsPrefix(test.statements, test.resource)
+		restrictions := getRestrictions(test.statements, test.resource, isFullUrn(test.resource))
 
 		// Check result
 		if diff := pretty.Compare(restrictions, test.expectedRestrictions); diff != "" {
@@ -2233,7 +2229,7 @@ func TestGetRestrictionsWhenResourceRequestedIsFullUrn(t *testing.T) {
 
 	for n, test := range testcases {
 
-		restrictions := getRestrictionsWhenResourceRequestedIsFullUrn(test.statements, test.resource)
+		restrictions := getRestrictions(test.statements, test.resource, isFullUrn(test.resource))
 
 		// Check result
 		if diff := pretty.Compare(restrictions, test.expectedRestrictions); diff != "" {

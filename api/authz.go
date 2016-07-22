@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/tecsisa/authorizr/database"
 )
@@ -212,11 +213,7 @@ func (api AuthAPI) getRestrictions(externalID string, action string, resource st
 
 	// Retrieve restrictions
 	var authResources *Restrictions
-	if isFullUrn(resource) {
-		authResources = getRestrictionsWhenResourceRequestedIsFullUrn(statements, resource)
-	} else {
-		authResources = getRestrictionsWhenResourceRequestedIsPrefix(statements, resource)
-	}
+	authResources = getRestrictions(statements, resource, isFullUrn(resource))
 
 	return authResources, nil
 }
@@ -325,6 +322,7 @@ func isFullUrn(resource string) bool {
 // Insert restriction with filtering and cleaning
 func (r *Restrictions) insertRestriction(allow bool, fullUrn bool, resource string) {
 
+	// HELPER FUNCS
 	// delete an element from a slice, given an index
 	deleteElementFunc := func(i int, slice []string) []string {
 		if len(slice) > 1 {
@@ -347,24 +345,9 @@ func (r *Restrictions) insertRestriction(allow bool, fullUrn bool, resource stri
 
 	if allow {
 		if fullUrn {
-			// if urn is already contained in any denied prefixes, skip
-			if skip(r.DeniedUrnPrefixes) {
-				goto END
-			}
-
-			// if urn is already contained in any allowed prefixes, skip
-			if skip(r.AllowedUrnPrefixes) {
-				goto END
-			}
-
-			// if urn is already denied, skip
-			if skip(r.DeniedFullUrns) {
-				goto END
-			}
-
-			// if urn is already allowed, skip
-			if skip(r.AllowedFullUrns) {
-				goto END
+			// if urn is already contained wherever, skip
+			if skip(r.DeniedUrnPrefixes) || skip(r.AllowedUrnPrefixes) || skip(r.DeniedFullUrns) || skip(r.AllowedFullUrns) {
+				return
 			}
 
 			r.AllowedFullUrns = append(r.AllowedFullUrns, resource)
@@ -372,13 +355,13 @@ func (r *Restrictions) insertRestriction(allow bool, fullUrn bool, resource stri
 		} else { // urnPrefix
 			// if urnPrefix is already contained in any denied prefixes, skip
 			if skip(r.DeniedUrnPrefixes) {
-				goto END
+				return
 			}
 
 			// if urnPrefix is already contained in any allowed prefixes, skip
 			for i, allowPrefix := range r.AllowedUrnPrefixes {
 				if isContainedOrEqual(resource, allowPrefix) {
-					goto END
+					return
 				}
 				// if urnPrefix contains other prefixes already inserted, delete them
 				if isContainedOrEqual(allowPrefix, resource) {
@@ -397,14 +380,9 @@ func (r *Restrictions) insertRestriction(allow bool, fullUrn bool, resource stri
 		}
 	} else { // deny
 		if fullUrn {
-			// if urn is already contained in any denied prefixes, skip
-			if skip(r.DeniedUrnPrefixes) {
-				goto END
-			}
-
-			// if urn is already denied, skip
-			if skip(r.DeniedFullUrns) {
-				goto END
+			// if urn is already contained in denied restrictions, skip
+			if skip(r.DeniedUrnPrefixes) || skip(r.DeniedFullUrns) {
+				return
 			}
 
 			// if urn is already allowed, delete it
@@ -417,45 +395,60 @@ func (r *Restrictions) insertRestriction(allow bool, fullUrn bool, resource stri
 			r.DeniedFullUrns = append(r.DeniedFullUrns, resource)
 
 		} else { // urnPrefix
-
 			for i, denyPrefix := range r.DeniedUrnPrefixes {
 				// if denyPrefix is contained in prefixes already inserted, skip
 				if isContainedOrEqual(resource, denyPrefix) {
-					goto END
+					return
 				}
 				// if denyPrefix contains prefixes already inserted, delete them
 				if isContainedOrEqual(denyPrefix, resource) {
 					r.DeniedUrnPrefixes = deleteElementFunc(i, r.DeniedUrnPrefixes)
 				}
 			}
-			for i, allowPrefix := range r.AllowedUrnPrefixes {
-				// if denyPrefix contains allowed prefixes already inserted, delete them
-				if resource == allowPrefix {
-					r.AllowedUrnPrefixes = deleteElementFunc(i, r.AllowedUrnPrefixes)
-				}
-			}
-			for i, allowUrn := range r.AllowedFullUrns {
-				// if denyPrefix contains allowed full urns already inserted, delete them
-				if isContainedOrEqual(allowUrn, resource) {
-					r.AllowedFullUrns = deleteElementFunc(i, r.AllowedFullUrns)
-				}
-			}
-			for i, denyUrn := range r.DeniedFullUrns {
-				// if denyPrefix contains denied full urns already inserted, delete them
-				if isContainedOrEqual(denyUrn, resource) {
-					r.DeniedFullUrns = deleteElementFunc(i, r.DeniedFullUrns)
-				}
-			}
 
+			// create waitGroup in order to launch 3 concurrent goroutines to delete duplicate restrictions
+			var wg sync.WaitGroup
+			wg.Add(3)
+
+			go func() {
+				defer wg.Done()
+				for i, allowPrefix := range r.AllowedUrnPrefixes {
+					// if denyPrefix contains allowed prefixes already inserted, delete them
+					if resource == allowPrefix {
+						r.AllowedUrnPrefixes = deleteElementFunc(i, r.AllowedUrnPrefixes)
+					}
+				}
+
+			}()
+			go func() {
+				defer wg.Done()
+				for i, allowUrn := range r.AllowedFullUrns {
+
+					// if denyPrefix contains allowed full urns already inserted, delete them
+					if isContainedOrEqual(allowUrn, resource) {
+						r.AllowedFullUrns = deleteElementFunc(i, r.AllowedFullUrns)
+					}
+				}
+			}()
+			go func() {
+				defer wg.Done()
+				for i, denyUrn := range r.DeniedFullUrns {
+					// if denyPrefix contains denied full urns already inserted, delete them
+					if isContainedOrEqual(denyUrn, resource) {
+						r.DeniedFullUrns = deleteElementFunc(i, r.DeniedFullUrns)
+					}
+				}
+			}()
+
+			wg.Wait()
 			r.DeniedUrnPrefixes = append(r.DeniedUrnPrefixes, resource)
 
 		}
 	}
-END:
 }
 
-// Retrieve restrictions for a specified resource prefix according to the statements
-func getRestrictionsWhenResourceRequestedIsPrefix(statements []Statement, resource string) *Restrictions {
+// Retrieve restrictions for a specified resource according to the statements
+func getRestrictions(statements []Statement, resource string, resourceIsFullUrn bool) *Restrictions {
 	restrictions := &Restrictions{
 		AllowedUrnPrefixes: []string{},
 		AllowedFullUrns:    []string{},
@@ -466,74 +459,19 @@ func getRestrictionsWhenResourceRequestedIsPrefix(statements []Statement, resour
 		for _, statement := range statements {
 			for _, statementResource := range statement.Resources {
 				// Append resource to allowed or denied resources, if the resource URN is not a prefix (full URN), and is contained inside the passed resource.
-				// Else, it means that resource is a prefix, so we have to check if the passed resource contains it or viceversa.
-				if isFullUrn(statementResource) && isContainedOrEqual(statementResource, resource) {
-					if statement.Effect == "allow" {
-						restrictions.insertRestriction(true, true, statementResource)
-					} else {
-						restrictions.insertRestriction(false, true, statementResource)
+				// Else, it means that resource is a prefix, so we have to check if the passed resource contains it or vice versa.
+				statementIsFullUrn := isFullUrn(statementResource)
+				statementIsAllow := statement.Effect == "allow"
+
+				if !resourceIsFullUrn {
+					if isContainedOrEqual(statementResource, resource) || isContainedOrEqual(resource, statementResource) {
+						restrictions.insertRestriction(statementIsAllow, statementIsFullUrn, statementResource)
 					}
 				} else {
-					switch {
-					case len(statementResource) > len(resource):
-						if isContainedOrEqual(statementResource, resource) {
-							if statement.Effect == "allow" {
-								restrictions.insertRestriction(true, false, statementResource)
-							} else {
-								restrictions.insertRestriction(false, false, statementResource)
-							}
-						}
-					case len(resource) > len(statementResource):
-						if isContainedOrEqual(resource, statementResource) {
-							if statement.Effect == "allow" {
-								restrictions.insertRestriction(true, false, statementResource)
-							} else {
-								restrictions.insertRestriction(false, false, statementResource)
-							}
-						}
-					default:
-						if resource == statementResource {
-							if statement.Effect == "allow" {
-								restrictions.insertRestriction(true, false, statementResource)
-							} else {
-								restrictions.insertRestriction(false, false, statementResource)
-							}
-						}
+					// Insert restriction if resource is contained in statements
+					if isContainedOrEqual(resource, statementResource) {
+						restrictions.insertRestriction(statementIsAllow, statementIsFullUrn, statementResource)
 					}
-				}
-
-			}
-		}
-	}
-
-	return restrictions
-}
-
-// Retrieve restrictions for a specified resource according to the statements
-func getRestrictionsWhenResourceRequestedIsFullUrn(statements []Statement, resource string) *Restrictions {
-	restrictions := &Restrictions{
-		AllowedUrnPrefixes: []string{},
-		AllowedFullUrns:    []string{},
-		DeniedUrnPrefixes:  []string{},
-		DeniedFullUrns:     []string{},
-	}
-	if statements != nil || len(statements) > 0 {
-		for _, statement := range statements {
-			for _, statementResource := range statement.Resources {
-				switch {
-				case isFullUrn(statementResource) && statementResource == resource:
-					if statement.Effect == "allow" {
-						restrictions.insertRestriction(true, true, statementResource)
-					} else {
-						restrictions.insertRestriction(false, true, statementResource)
-					}
-				case !isFullUrn(statementResource) && isContainedOrEqual(resource, statementResource):
-					if statement.Effect == "allow" {
-						restrictions.insertRestriction(true, false, statementResource)
-					} else {
-						restrictions.insertRestriction(false, false, statementResource)
-					}
-				default: //Do nothing
 				}
 			}
 		}
