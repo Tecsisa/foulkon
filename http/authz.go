@@ -8,20 +8,22 @@ import (
 	"github.com/tecsisa/authorizr/api"
 )
 
-// Requests
+// REQUESTS
 
 type AuthorizeResourcesRequest struct {
 	Action    string   `json:"action, omitempty"`
 	Resources []string `json:"resources, omitempty"`
 }
 
-// Responses
+// RESPONSES
 
 type AuthorizeResourcesResponse struct {
 	ResourcesAllowed []string `json:"resourcesAllowed, omitempty"`
 }
 
-func (a *WorkerHandler) HandleAuthorizeResources(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+// HANDLERS
+
+func (a *WorkerHandler) HandleGetAuthorizedExternalResources(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	userID := a.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
 

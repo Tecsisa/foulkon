@@ -8,7 +8,8 @@ import (
 	"github.com/tecsisa/authorizr/api"
 )
 
-// Requests
+// REQUESTS
+
 type CreatePolicyRequest struct {
 	Name       string          `json:"name, omitempty"`
 	Path       string          `json:"path, omitempty"`
@@ -21,7 +22,8 @@ type UpdatePolicyRequest struct {
 	Statements []api.Statement `json:"statements, omitempty"`
 }
 
-// Responses
+// RESPONSES
+
 type ListPoliciesResponse struct {
 	Policies []string `json:"policies, omitempty"`
 }
@@ -30,50 +32,13 @@ type ListAllPoliciesResponse struct {
 	Policies []api.PolicyIdentity `json:"policies, omitempty"`
 }
 
-type GetPolicyGroupsResponse struct {
+type ListAttachedGroupsResponse struct {
 	Groups []string `json:"groups, omitempty"`
 }
 
-func (a *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
-	requestID := r.Header.Get(REQUEST_ID_HEADER)
-	// Retrieve org from path
-	org := ps.ByName(ORG_NAME)
+// HANDLERS
 
-	// Retrieve query param if exist
-	pathPrefix := r.URL.Query().Get("PathPrefix")
-
-	// Call policy API to retrieve policies
-	result, err := a.worker.PolicyApi.GetPolicyList(authenticatedUser, org, pathPrefix)
-	if err != nil {
-		// Transform to API errors
-		apiError := err.(*api.Error)
-		api.LogErrorMessage(a.worker.Logger, requestID, apiError)
-		switch apiError.Code {
-		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
-		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &authenticatedUser, w, apiError)
-		default: // Unexpected API error
-			a.RespondInternalServerError(r, &authenticatedUser, w)
-		}
-		return
-	}
-
-	// Create response
-	policies := []string{}
-	for _, policy := range result {
-		policies = append(policies, policy.Name)
-	}
-	response := &ListPoliciesResponse{
-		Policies: policies,
-	}
-
-	// Return policies
-	a.RespondOk(r, &authenticatedUser, w, response)
-}
-
-func (a *WorkerHandler) HandleCreatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *WorkerHandler) HandleAddPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	// Retrieve Organization
@@ -117,24 +82,54 @@ func (a *WorkerHandler) HandleCreatePolicy(w http.ResponseWriter, r *http.Reques
 	a.RespondCreated(r, &authenticatedUser, w, response)
 }
 
-func (a *WorkerHandler) HandleDeletePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
+func (a *WorkerHandler) HandleGetPolicyByName(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	authethicatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
-
 	// Retrieve org and policy name from request path
 	orgId := ps.ByName(ORG_NAME)
 	policyName := ps.ByName(POLICY_NAME)
 
-	// Call API to delete policy
-	err := a.worker.PolicyApi.DeletePolicy(authenticatedUser, orgId, policyName)
+	// Call policies API to retrieve policy
+	response, err := a.worker.PolicyApi.GetPolicyByName(authethicatedUser, orgId, policyName)
 
+	// Check errors
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		api.LogErrorMessage(a.worker.Logger, requestID, apiError)
 		switch apiError.Code {
 		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &authenticatedUser, w, apiError)
+			a.RespondNotFound(r, &authethicatedUser, w, apiError)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			a.RespondForbidden(r, &authethicatedUser, w, apiError)
+		case api.INVALID_PARAMETER_ERROR:
+			a.RespondBadRequest(r, &authethicatedUser, w, apiError)
+		default: // Unexpected API error
+			a.RespondInternalServerError(r, &authethicatedUser, w)
+		}
+		return
+	}
+
+	// Return policy
+	a.RespondOk(r, &authethicatedUser, w, response)
+}
+
+func (a *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
+	requestID := r.Header.Get(REQUEST_ID_HEADER)
+	// Retrieve org from path
+	org := ps.ByName(ORG_NAME)
+
+	// Retrieve query param if exist
+	pathPrefix := r.URL.Query().Get("PathPrefix")
+
+	// Call policy API to retrieve policies
+	result, err := a.worker.PolicyApi.ListPolicies(authenticatedUser, org, pathPrefix)
+	if err != nil {
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		api.LogErrorMessage(a.worker.Logger, requestID, apiError)
+		switch apiError.Code {
 		case api.INVALID_PARAMETER_ERROR:
 			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
@@ -145,7 +140,49 @@ func (a *WorkerHandler) HandleDeletePolicy(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	a.RespondNoContent(r, &authenticatedUser, w)
+	// Create response
+	policies := []string{}
+	for _, policy := range result {
+		policies = append(policies, policy.Name)
+	}
+	response := &ListPoliciesResponse{
+		Policies: policies,
+	}
+
+	// Return policies
+	a.RespondOk(r, &authenticatedUser, w, response)
+}
+
+func (a *WorkerHandler) HandleListAllPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	autheticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
+	requestID := r.Header.Get(REQUEST_ID_HEADER)
+	// get Org and PathPrefix from request, so the query can be filtered
+	pathPrefix := r.URL.Query().Get("PathPrefix")
+
+	// Call policies API to retrieve policies
+	result, err := a.worker.PolicyApi.ListPolicies(autheticatedUser, "", pathPrefix)
+	if err != nil {
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		api.LogErrorMessage(a.worker.Logger, requestID, apiError)
+		switch apiError.Code {
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			a.RespondForbidden(r, &autheticatedUser, w, apiError)
+		case api.INVALID_PARAMETER_ERROR:
+			a.RespondBadRequest(r, &autheticatedUser, w, apiError)
+		default: // Unexpected API error
+			a.RespondInternalServerError(r, &autheticatedUser, w)
+		}
+		return
+	}
+
+	// Create response
+	response := &ListAllPoliciesResponse{
+		Policies: result,
+	}
+
+	// Return policies
+	a.RespondOk(r, &autheticatedUser, w, response)
 }
 
 func (a *WorkerHandler) HandleUpdatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -195,39 +232,38 @@ func (a *WorkerHandler) HandleUpdatePolicy(w http.ResponseWriter, r *http.Reques
 	a.RespondOk(r, &authenticatedUser, w, response)
 }
 
-func (a *WorkerHandler) HandleGetPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	authethicatedUser := a.worker.Authenticator.RetrieveUserID(*r)
+func (a *WorkerHandler) HandleRemovePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
+
 	// Retrieve org and policy name from request path
 	orgId := ps.ByName(ORG_NAME)
 	policyName := ps.ByName(POLICY_NAME)
 
-	// Call policies API to retrieve policy
-	response, err := a.worker.PolicyApi.GetPolicyByName(authethicatedUser, orgId, policyName)
+	// Call API to delete policy
+	err := a.worker.PolicyApi.RemovePolicy(authenticatedUser, orgId, policyName)
 
-	// Check errors
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		api.LogErrorMessage(a.worker.Logger, requestID, apiError)
 		switch apiError.Code {
 		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &authethicatedUser, w, apiError)
-		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &authethicatedUser, w, apiError)
+			a.RespondNotFound(r, &authenticatedUser, w, apiError)
 		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &authethicatedUser, w, apiError)
+			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			a.RespondForbidden(r, &authenticatedUser, w, apiError)
 		default: // Unexpected API error
-			a.RespondInternalServerError(r, &authethicatedUser, w)
+			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
 	}
 
-	// Return policy
-	a.RespondOk(r, &authethicatedUser, w, response)
+	a.RespondNoContent(r, &authenticatedUser, w)
 }
 
-func (a *WorkerHandler) HandleGetPolicyAttachedGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *WorkerHandler) HandleListAttachedGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	autheticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	// Retrieve org and policy name from request path
@@ -235,7 +271,7 @@ func (a *WorkerHandler) HandleGetPolicyAttachedGroups(w http.ResponseWriter, r *
 	policyName := ps.ByName(POLICY_NAME)
 
 	// Call policies API to retrieve attached groups
-	result, err := a.worker.PolicyApi.GetAttachedGroups(autheticatedUser, orgId, policyName)
+	result, err := a.worker.PolicyApi.ListAttachedGroups(autheticatedUser, orgId, policyName)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -254,42 +290,10 @@ func (a *WorkerHandler) HandleGetPolicyAttachedGroups(w http.ResponseWriter, r *
 	}
 
 	// Create response
-	response := &GetPolicyGroupsResponse{
+	response := &ListAttachedGroupsResponse{
 		Groups: result,
 	}
 
 	// Return groups
-	a.RespondOk(r, &autheticatedUser, w, response)
-}
-
-func (a *WorkerHandler) HandleListAllPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	autheticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
-	requestID := r.Header.Get(REQUEST_ID_HEADER)
-	// get Org and PathPrefix from request, so the query can be filtered
-	pathPrefix := r.URL.Query().Get("PathPrefix")
-
-	// Call policies API to retrieve policies
-	result, err := a.worker.PolicyApi.GetPolicyList(autheticatedUser, "", pathPrefix)
-	if err != nil {
-		// Transform to API errors
-		apiError := err.(*api.Error)
-		api.LogErrorMessage(a.worker.Logger, requestID, apiError)
-		switch apiError.Code {
-		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &autheticatedUser, w, apiError)
-		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &autheticatedUser, w, apiError)
-		default: // Unexpected API error
-			a.RespondInternalServerError(r, &autheticatedUser, w)
-		}
-		return
-	}
-
-	// Create response
-	response := &ListAllPoliciesResponse{
-		Policies: result,
-	}
-
-	// Return policies
 	a.RespondOk(r, &autheticatedUser, w, response)
 }

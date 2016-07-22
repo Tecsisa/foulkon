@@ -7,11 +7,7 @@ import (
 	"github.com/tecsisa/authorizr/database"
 )
 
-// Interface that all resource types have to implement
-type Resource interface {
-	// This method must return resource URN
-	GetUrn() string
-}
+// TYPE DEFINITIONS
 
 type AuthenticatedUser struct {
 	Identifier string
@@ -37,6 +33,8 @@ type ExternalResource struct {
 func (e ExternalResource) GetUrn() string {
 	return e.Urn
 }
+
+// AUTHZ API IMPLEMENTATION
 
 // Return authorized users for specified resource+action
 func (api AuthAPI) GetAuthorizedUsers(user AuthenticatedUser, resourceUrn string, action string, users []User) ([]User, error) {
@@ -144,7 +142,7 @@ func (api AuthAPI) GetAuthorizedExternalResources(user AuthenticatedUser, action
 	return response, nil
 }
 
-// Private Helper Methods
+// PRIVATE HELPER METHODS
 
 // This method retrieves filtered resources where the authenticated user has permissions
 func (api AuthAPI) getAuthorizedResources(user AuthenticatedUser, resourceUrn string, action string, resources []Resource) ([]Resource, error) {

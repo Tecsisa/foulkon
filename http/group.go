@@ -8,7 +8,7 @@ import (
 	"github.com/tecsisa/authorizr/api"
 )
 
-// Requests
+// REQUESTS
 
 type CreateGroupRequest struct {
 	Name string `json:"name, omitempty"`
@@ -20,7 +20,7 @@ type UpdateGroupRequest struct {
 	Path string `json:"path, omitempty"`
 }
 
-// Responses
+// RESPONSES
 
 type ListGroupsResponse struct {
 	Groups []string `json:"groups, omitempty"`
@@ -30,15 +30,17 @@ type ListAllGroupsResponse struct {
 	Groups []api.GroupIdentity `json:"groups, omitempty"`
 }
 
-type GetGroupMembersResponse struct {
+type ListMembersResponse struct {
 	Members []string `json:"members, omitempty"`
 }
 
-type GetGroupPoliciesResponse struct {
+type ListAttachedGroupPoliciesResponse struct {
 	AttachedPolicies []string `json:"policies, omitempty"`
 }
 
-func (a *WorkerHandler) HandleCreateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// HANDLERS
+
+func (a *WorkerHandler) HandleAddGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	// Decode request
@@ -80,38 +82,7 @@ func (a *WorkerHandler) HandleCreateGroup(w http.ResponseWriter, r *http.Request
 	a.RespondCreated(r, &authenticatedUser, w, response)
 }
 
-func (a *WorkerHandler) HandleDeleteGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
-	requestID := r.Header.Get(REQUEST_ID_HEADER)
-	// Retrieve group org and name from path
-	org := ps.ByName(ORG_NAME)
-	name := ps.ByName(GROUP_NAME)
-
-	// Call user API to delete group
-	err := a.worker.GroupApi.RemoveGroup(authenticatedUser, org, name)
-
-	// Check if there were errors
-	if err != nil {
-		// Transform to API errors
-		apiError := err.(*api.Error)
-		api.LogErrorMessage(a.worker.Logger, requestID, apiError)
-		switch apiError.Code {
-		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
-			a.RespondNotFound(r, &authenticatedUser, w, apiError)
-		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &authenticatedUser, w, apiError)
-		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
-		default: // Unexpected API error
-			a.RespondInternalServerError(r, &authenticatedUser, w)
-		}
-		return
-	} else {
-		a.RespondNoContent(r, &authenticatedUser, w)
-	}
-}
-
-func (a *WorkerHandler) HandleGetGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *WorkerHandler) HandleGetGroupByName(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	// Retrieve group org and name from path
@@ -153,7 +124,7 @@ func (a *WorkerHandler) HandleListGroups(w http.ResponseWriter, r *http.Request,
 	pathPrefix := r.URL.Query().Get("PathPrefix")
 
 	// Call group API to retrieve groups
-	result, err := a.worker.GroupApi.GetGroupList(authenticatedUser, org, pathPrefix)
+	result, err := a.worker.GroupApi.ListGroups(authenticatedUser, org, pathPrefix)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -177,6 +148,39 @@ func (a *WorkerHandler) HandleListGroups(w http.ResponseWriter, r *http.Request,
 	// Create response
 	response := &ListGroupsResponse{
 		Groups: groups,
+	}
+
+	// Return groups
+	a.RespondOk(r, &authenticatedUser, w, response)
+
+}
+
+func (a *WorkerHandler) HandleListAllGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
+	requestID := r.Header.Get(REQUEST_ID_HEADER)
+	// get PathPrefix from request, so the query can be filtered
+	pathPrefix := r.URL.Query().Get("PathPrefix")
+
+	// Call group API to retrieve groups
+	result, err := a.worker.GroupApi.ListGroups(authenticatedUser, "", pathPrefix)
+	if err != nil {
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		api.LogErrorMessage(a.worker.Logger, requestID, apiError)
+		switch apiError.Code {
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			a.RespondForbidden(r, &authenticatedUser, w, apiError)
+		case api.INVALID_PARAMETER_ERROR:
+			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
+		default:
+			a.RespondInternalServerError(r, &authenticatedUser, w)
+		}
+		return
+	}
+
+	// Create response
+	response := &ListAllGroupsResponse{
+		Groups: result,
 	}
 
 	// Return groups
@@ -231,17 +235,17 @@ func (a *WorkerHandler) HandleUpdateGroup(w http.ResponseWriter, r *http.Request
 	a.RespondOk(r, &authenticatedUser, w, response)
 }
 
-func (a *WorkerHandler) HandleListMembers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *WorkerHandler) HandleRemoveGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
-	// Retrieve group, org
+	// Retrieve group org and name from path
 	org := ps.ByName(ORG_NAME)
-	group := ps.ByName(GROUP_NAME)
+	name := ps.ByName(GROUP_NAME)
 
-	// Call group API to list members
-	result, err := a.worker.GroupApi.ListMembers(authenticatedUser, org, group)
+	// Call user API to delete group
+	err := a.worker.GroupApi.RemoveGroup(authenticatedUser, org, name)
 
-	// Check errors
+	// Check if there were errors
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -253,20 +257,13 @@ func (a *WorkerHandler) HandleListMembers(w http.ResponseWriter, r *http.Request
 			a.RespondForbidden(r, &authenticatedUser, w, apiError)
 		case api.INVALID_PARAMETER_ERROR:
 			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
-		default:
+		default: // Unexpected API error
 			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
+	} else {
+		a.RespondNoContent(r, &authenticatedUser, w)
 	}
-
-	// Create response
-	response := &GetGroupMembersResponse{
-		Members: result,
-	}
-
-	// Write GroupMembers to response
-	a.RespondOk(r, &authenticatedUser, w, response)
-
 }
 
 func (a *WorkerHandler) HandleAddMember(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -334,7 +331,45 @@ func (a *WorkerHandler) HandleRemoveMember(w http.ResponseWriter, r *http.Reques
 
 }
 
-func (a *WorkerHandler) HandleAttachGroupPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *WorkerHandler) HandleListMembers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
+	requestID := r.Header.Get(REQUEST_ID_HEADER)
+	// Retrieve group, org
+	org := ps.ByName(ORG_NAME)
+	group := ps.ByName(GROUP_NAME)
+
+	// Call group API to list members
+	result, err := a.worker.GroupApi.ListMembers(authenticatedUser, org, group)
+
+	// Check errors
+	if err != nil {
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		api.LogErrorMessage(a.worker.Logger, requestID, apiError)
+		switch apiError.Code {
+		case api.GROUP_BY_ORG_AND_NAME_NOT_FOUND:
+			a.RespondNotFound(r, &authenticatedUser, w, apiError)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			a.RespondForbidden(r, &authenticatedUser, w, apiError)
+		case api.INVALID_PARAMETER_ERROR:
+			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
+		default:
+			a.RespondInternalServerError(r, &authenticatedUser, w)
+		}
+		return
+	}
+
+	// Create response
+	response := &ListMembersResponse{
+		Members: result,
+	}
+
+	// Write GroupMembers to response
+	a.RespondOk(r, &authenticatedUser, w, response)
+
+}
+
+func (a *WorkerHandler) HandleAttachPolicyToGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	// Retrieve group, org and policy from path
@@ -370,7 +405,7 @@ func (a *WorkerHandler) HandleAttachGroupPolicy(w http.ResponseWriter, r *http.R
 
 }
 
-func (a *WorkerHandler) HandleDetachGroupPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (a *WorkerHandler) HandleDetachPolicyToGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	// Retrieve group, org and policy from path
@@ -430,44 +465,11 @@ func (a *WorkerHandler) HandleListAttachedGroupPolicies(w http.ResponseWriter, r
 	}
 
 	// Create response
-	response := &GetGroupPoliciesResponse{
+	response := &ListAttachedGroupPoliciesResponse{
 		AttachedPolicies: result,
 	}
 
 	// Return group policies
-	a.RespondOk(r, &authenticatedUser, w, response)
-
-}
-
-func (a *WorkerHandler) HandleListAllGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	authenticatedUser := a.worker.Authenticator.RetrieveUserID(*r)
-	requestID := r.Header.Get(REQUEST_ID_HEADER)
-	// get PathPrefix from request, so the query can be filtered
-	pathPrefix := r.URL.Query().Get("PathPrefix")
-
-	// Call group API to retrieve groups
-	result, err := a.worker.GroupApi.GetGroupList(authenticatedUser, "", pathPrefix)
-	if err != nil {
-		// Transform to API errors
-		apiError := err.(*api.Error)
-		api.LogErrorMessage(a.worker.Logger, requestID, apiError)
-		switch apiError.Code {
-		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &authenticatedUser, w, apiError)
-		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &authenticatedUser, w, apiError)
-		default:
-			a.RespondInternalServerError(r, &authenticatedUser, w)
-		}
-		return
-	}
-
-	// Create response
-	response := &ListAllGroupsResponse{
-		Groups: result,
-	}
-
-	// Return groups
 	a.RespondOk(r, &authenticatedUser, w, response)
 
 }

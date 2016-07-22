@@ -8,7 +8,7 @@ import (
 	"github.com/tecsisa/authorizr/api"
 )
 
-// Requests
+// REQUESTS
 
 type CreateUserRequest struct {
 	ExternalID string `json:"externalId, omitempty"`
@@ -19,7 +19,7 @@ type UpdateUserRequest struct {
 	Path string `json:"path, omitempty"`
 }
 
-// Responses
+// RESPONSES
 
 type GetUserExternalIDsResponse struct {
 	ExternalIDs []string `json:"users, omitempty"`
@@ -29,39 +29,9 @@ type GetGroupsByUserIdResponse struct {
 	Groups []api.GroupIdentity `json:"groups, omitempty"`
 }
 
-// This method returns a list of users that belongs to Org param and have PathPrefix
-func (h *WorkerHandler) HandleGetUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	// Retrieve PathPrefix
-	pathPrefix := r.URL.Query().Get("PathPrefix")
+// HANDLERS
 
-	// Call user API
-	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
-	requestID := r.Header.Get(REQUEST_ID_HEADER)
-	result, err := h.worker.UserApi.GetUserList(authenticatedUser, pathPrefix)
-	if err != nil {
-		// Transform to API errors
-		apiError := err.(*api.Error)
-		api.LogErrorMessage(h.worker.Logger, requestID, apiError)
-		switch apiError.Code {
-		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			h.RespondForbidden(r, &authenticatedUser, w, apiError)
-		default: // Unexpected API error
-			h.RespondInternalServerError(r, &authenticatedUser, w)
-		}
-		return
-	}
-
-	// Create response
-	response := &GetUserExternalIDsResponse{
-		ExternalIDs: result,
-	}
-
-	// Return users
-	h.RespondOk(r, &authenticatedUser, w, response)
-}
-
-// This method creates the user passed by form request and return the user created
-func (h *WorkerHandler) HandlePostUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *WorkerHandler) HandleAddUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	// Decode request
@@ -102,7 +72,68 @@ func (h *WorkerHandler) HandlePostUsers(w http.ResponseWriter, r *http.Request, 
 	h.RespondCreated(r, &authenticatedUser, w, response)
 }
 
-func (h *WorkerHandler) HandlePutUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *WorkerHandler) HandleGetUserByExternalID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
+	requestID := r.Header.Get(REQUEST_ID_HEADER)
+	// Retrieve user id from path
+	id := ps.ByName(USER_ID)
+
+	// Call user API to retrieve user
+	response, err := h.worker.UserApi.GetUserByExternalID(authenticatedUser, id)
+
+	// Error handling
+	if err != nil {
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestID, apiError)
+		switch apiError.Code {
+		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
+			h.RespondNotFound(r, &authenticatedUser, w, apiError)
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			h.RespondForbidden(r, &authenticatedUser, w, apiError)
+		case api.INVALID_PARAMETER_ERROR:
+			h.RespondBadRequest(r, &authenticatedUser, w, apiError)
+		default: // Unexpected API error
+			h.RespondInternalServerError(r, &authenticatedUser, w)
+		}
+		return
+	}
+
+	// Write user to response
+	h.RespondOk(r, &authenticatedUser, w, response)
+}
+
+func (h *WorkerHandler) HandleListUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	// Retrieve PathPrefix
+	pathPrefix := r.URL.Query().Get("PathPrefix")
+
+	// Call user API
+	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
+	requestID := r.Header.Get(REQUEST_ID_HEADER)
+	result, err := h.worker.UserApi.ListUsers(authenticatedUser, pathPrefix)
+	if err != nil {
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestID, apiError)
+		switch apiError.Code {
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			h.RespondForbidden(r, &authenticatedUser, w, apiError)
+		default: // Unexpected API error
+			h.RespondInternalServerError(r, &authenticatedUser, w)
+		}
+		return
+	}
+
+	// Create response
+	response := &GetUserExternalIDsResponse{
+		ExternalIDs: result,
+	}
+
+	// Return users
+	h.RespondOk(r, &authenticatedUser, w, response)
+}
+
+func (h *WorkerHandler) HandleUpdateUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	// Decode request
@@ -146,45 +177,14 @@ func (h *WorkerHandler) HandlePutUser(w http.ResponseWriter, r *http.Request, ps
 	h.RespondOk(r, &authenticatedUser, w, response)
 }
 
-func (h *WorkerHandler) HandleGetUserId(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
-	requestID := r.Header.Get(REQUEST_ID_HEADER)
-	// Retrieve user id from path
-	id := ps.ByName(USER_ID)
-
-	// Call user API to retrieve user
-	response, err := h.worker.UserApi.GetUserByExternalId(authenticatedUser, id)
-
-	// Error handling
-	if err != nil {
-		// Transform to API errors
-		apiError := err.(*api.Error)
-		api.LogErrorMessage(h.worker.Logger, requestID, apiError)
-		switch apiError.Code {
-		case api.USER_BY_EXTERNAL_ID_NOT_FOUND:
-			h.RespondNotFound(r, &authenticatedUser, w, apiError)
-		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			h.RespondForbidden(r, &authenticatedUser, w, apiError)
-		case api.INVALID_PARAMETER_ERROR:
-			h.RespondBadRequest(r, &authenticatedUser, w, apiError)
-		default: // Unexpected API error
-			h.RespondInternalServerError(r, &authenticatedUser, w)
-		}
-		return
-	}
-
-	// Write user to response
-	h.RespondOk(r, &authenticatedUser, w, response)
-}
-
-func (h *WorkerHandler) HandleDeleteUserId(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *WorkerHandler) HandleRemoveUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	// Retrieve user id from path
 	id := ps.ByName(USER_ID)
 
 	// Call user API to delete user
-	err := h.worker.UserApi.RemoveUserById(authenticatedUser, id)
+	err := h.worker.UserApi.RemoveUser(authenticatedUser, id)
 
 	if err != nil {
 		// Transform to API errors
@@ -206,13 +206,13 @@ func (h *WorkerHandler) HandleDeleteUserId(w http.ResponseWriter, r *http.Reques
 	h.RespondNoContent(r, &authenticatedUser, w)
 }
 
-func (h *WorkerHandler) HandleUserIdGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *WorkerHandler) HandleListGroupsByUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authenticatedUser := h.worker.Authenticator.RetrieveUserID(*r)
 	requestID := r.Header.Get(REQUEST_ID_HEADER)
 	// Retrieve users using path
 	id := ps.ByName(USER_ID)
 
-	result, err := h.worker.UserApi.GetGroupsByUserId(authenticatedUser, id)
+	result, err := h.worker.UserApi.ListGroupsByUser(authenticatedUser, id)
 
 	if err != nil {
 		// Transform to API errors

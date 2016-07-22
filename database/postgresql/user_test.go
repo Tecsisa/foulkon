@@ -276,84 +276,6 @@ func TestPostgresRepo_GetUserByID(t *testing.T) {
 	}
 }
 
-func TestPostgresRepo_UpdateUser(t *testing.T) {
-	now := time.Now().UTC()
-	testcases := map[string]struct {
-		// Previous data
-		previousUser *api.User
-		// Postgres Repo Args
-		userToUpdate *api.User
-		newPath      string
-		newUrn       string
-		// Expected result
-		expectedResponse *api.User
-	}{
-		"OkCase": {
-			previousUser: &api.User{
-				ID:         "UserID",
-				ExternalID: "ExternalID",
-				Path:       "OldPath",
-				Urn:        "Oldurn",
-				CreateAt:   now,
-			},
-			userToUpdate: &api.User{
-				ID:         "UserID",
-				ExternalID: "ExternalID",
-				Path:       "OldPath",
-				Urn:        "Oldurn",
-				CreateAt:   now,
-			},
-			newPath: "NewPath",
-			newUrn:  "NewUrn",
-			expectedResponse: &api.User{
-				ID:         "UserID",
-				ExternalID: "ExternalID",
-				Path:       "NewPath",
-				Urn:        "NewUrn",
-				CreateAt:   now,
-			},
-		},
-	}
-
-	for n, test := range testcases {
-		// Clean user database
-		cleanUserTable()
-
-		// Insert previous data
-		if test.previousUser != nil {
-			if err := insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
-				test.previousUser.CreateAt.UnixNano(), test.previousUser.Urn); err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
-				continue
-			}
-		}
-		// Call to repository to update an user
-		updatedUser, err := repoDB.UpdateUser(*test.userToUpdate, test.newPath, test.newUrn)
-
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-			continue
-		}
-		// Check response
-		if diff := pretty.Compare(updatedUser, test.expectedResponse); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
-		// Check database
-		userNumber, err := getUsersCountFiltered(test.expectedResponse.ID, test.expectedResponse.ExternalID, test.expectedResponse.Path,
-			test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.Urn, "")
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
-			continue
-		}
-		if userNumber != 1 {
-			t.Fatalf("Test %v failed. Received different user number: %v", n, userNumber)
-			continue
-		}
-
-	}
-}
-
 func TestPostgresRepo_GetUsersFiltered(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {
@@ -472,6 +394,166 @@ func TestPostgresRepo_GetUsersFiltered(t *testing.T) {
 		// Check response
 		if diff := pretty.Compare(receivedUsers, test.expectedResponse); diff != "" {
 			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+			continue
+		}
+
+	}
+}
+
+func TestPostgresRepo_UpdateUser(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		// Previous data
+		previousUser *api.User
+		// Postgres Repo Args
+		userToUpdate *api.User
+		newPath      string
+		newUrn       string
+		// Expected result
+		expectedResponse *api.User
+	}{
+		"OkCase": {
+			previousUser: &api.User{
+				ID:         "UserID",
+				ExternalID: "ExternalID",
+				Path:       "OldPath",
+				Urn:        "Oldurn",
+				CreateAt:   now,
+			},
+			userToUpdate: &api.User{
+				ID:         "UserID",
+				ExternalID: "ExternalID",
+				Path:       "OldPath",
+				Urn:        "Oldurn",
+				CreateAt:   now,
+			},
+			newPath: "NewPath",
+			newUrn:  "NewUrn",
+			expectedResponse: &api.User{
+				ID:         "UserID",
+				ExternalID: "ExternalID",
+				Path:       "NewPath",
+				Urn:        "NewUrn",
+				CreateAt:   now,
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean user database
+		cleanUserTable()
+
+		// Insert previous data
+		if test.previousUser != nil {
+			if err := insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
+				test.previousUser.CreateAt.UnixNano(), test.previousUser.Urn); err != nil {
+				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
+				continue
+			}
+		}
+		// Call to repository to update an user
+		updatedUser, err := repoDB.UpdateUser(*test.userToUpdate, test.newPath, test.newUrn)
+
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+			continue
+		}
+		// Check response
+		if diff := pretty.Compare(updatedUser, test.expectedResponse); diff != "" {
+			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+			continue
+		}
+		// Check database
+		userNumber, err := getUsersCountFiltered(test.expectedResponse.ID, test.expectedResponse.ExternalID, test.expectedResponse.Path,
+			test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.Urn, "")
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
+			continue
+		}
+		if userNumber != 1 {
+			t.Fatalf("Test %v failed. Received different user number: %v", n, userNumber)
+			continue
+		}
+
+	}
+}
+
+func TestPostgresRepo_RemoveUser(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		// Previous data
+		previousUser *api.User
+		relation     *struct {
+			user_id       string
+			group_ids     []string
+			groupNotFound bool
+		}
+		// Postgres Repo Args
+		userToDelete string
+	}{
+		"OkCase": {
+			previousUser: &api.User{
+				ID:         "UserID",
+				ExternalID: "ExternalID",
+				Path:       "OldPath",
+				Urn:        "Oldurn",
+				CreateAt:   now,
+			},
+			relation: &struct {
+				user_id       string
+				group_ids     []string
+				groupNotFound bool
+			}{
+				user_id:   "UserID",
+				group_ids: []string{"GroupID1", "GroupID2"},
+			},
+			userToDelete: "UserID",
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean user database
+		cleanUserTable()
+		cleanGroupUserRelationTable()
+
+		// Insert previous data
+		if test.previousUser != nil {
+			if err := insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
+				test.previousUser.CreateAt.Unix(), test.previousUser.Urn); err != nil {
+				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
+				continue
+			}
+		}
+		if test.relation != nil {
+			for _, id := range test.relation.group_ids {
+				if err := insertGroupUserRelation(test.relation.user_id, id); err != nil {
+					t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
+					continue
+				}
+			}
+		}
+		// Call to repository to remove user
+		err := repoDB.RemoveUser(test.userToDelete)
+
+		// Check database
+		userNumber, err := getUsersCountFiltered(test.userToDelete, "", "",
+			0, "", "")
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
+			continue
+		}
+		if userNumber != 0 {
+			t.Errorf("Test %v failed. Received different user number: %v", n, userNumber)
+			continue
+		}
+
+		relations, err := getGroupUserRelations("", test.previousUser.ID)
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error counting relations: %v", n, err)
+			continue
+		}
+		if relations != 0 {
+			t.Errorf("Test %v failed. Received different relations number: %v", n, relations)
 			continue
 		}
 
@@ -608,88 +690,6 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
-		}
-
-	}
-}
-
-func TestPostgresRepo_RemoveUser(t *testing.T) {
-	now := time.Now().UTC()
-	testcases := map[string]struct {
-		// Previous data
-		previousUser *api.User
-		relation     *struct {
-			user_id       string
-			group_ids     []string
-			groupNotFound bool
-		}
-		// Postgres Repo Args
-		userToDelete string
-	}{
-		"OkCase": {
-			previousUser: &api.User{
-				ID:         "UserID",
-				ExternalID: "ExternalID",
-				Path:       "OldPath",
-				Urn:        "Oldurn",
-				CreateAt:   now,
-			},
-			relation: &struct {
-				user_id       string
-				group_ids     []string
-				groupNotFound bool
-			}{
-				user_id:   "UserID",
-				group_ids: []string{"GroupID1", "GroupID2"},
-			},
-			userToDelete: "UserID",
-		},
-	}
-
-	for n, test := range testcases {
-		// Clean user database
-		cleanUserTable()
-		cleanGroupUserRelationTable()
-
-		// Insert previous data
-		if test.previousUser != nil {
-			if err := insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
-				test.previousUser.CreateAt.Unix(), test.previousUser.Urn); err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
-				continue
-			}
-		}
-		if test.relation != nil {
-			for _, id := range test.relation.group_ids {
-				if err := insertGroupUserRelation(test.relation.user_id, id); err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
-					continue
-				}
-			}
-		}
-		// Call to repository to remove user
-		err := repoDB.RemoveUser(test.userToDelete)
-
-		// Check database
-		userNumber, err := getUsersCountFiltered(test.userToDelete, "", "",
-			0, "", "")
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
-			continue
-		}
-		if userNumber != 0 {
-			t.Errorf("Test %v failed. Received different user number: %v", n, userNumber)
-			continue
-		}
-
-		relations, err := getGroupUserRelations("", test.previousUser.ID)
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting relations: %v", n, err)
-			continue
-		}
-		if relations != 0 {
-			t.Errorf("Test %v failed. Received different relations number: %v", n, relations)
-			continue
 		}
 
 	}
