@@ -165,7 +165,7 @@ func (api AuthAPI) getAuthorizedResources(user AuthenticatedUser, resourceUrn st
 	if len(restrictions.AllowedFullUrns) < 1 && len(restrictions.AllowedUrnPrefixes) < 1 {
 		return nil, &Error{
 			Code:    UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with external ID %v is not allowed to access to resource %v", user.Identifier, resourceUrn),
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v", user.Identifier, resourceUrn),
 		}
 	}
 
@@ -188,7 +188,7 @@ func (api AuthAPI) getRestrictions(externalID string, action string, resource st
 		case database.USER_NOT_FOUND:
 			return nil, &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
-				Message: fmt.Sprintf("Authenticated user with external ID %v not found. Unable to retrieve permissions.", externalID),
+				Message: fmt.Sprintf("Authenticated user with externalId %v not found. Unable to retrieve permissions.", externalID),
 			}
 		default:
 			return nil, &Error{
