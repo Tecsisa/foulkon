@@ -6,6 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"errors"
+
+	"github.com/kylelemons/godebug/pretty"
 	"github.com/tecsisa/authorizr/database"
 )
 
@@ -15,7 +18,7 @@ func TestMain(m *testing.M) {
 	// Wait for DB
 	time.Sleep(3 * time.Second)
 	// Retrieve db connector to run test
-	dbmap, err := InitDb("postgres://postgres:password@localhost:54320/postgres?sslmode=disable")
+	dbmap, err := InitDb("postgres://postgres:password@localhost:54320/postgres?sslmode=disable", "5", "20", "300")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "There was an error starting connector", err)
 		os.Exit(1)
@@ -27,6 +30,44 @@ func TestMain(m *testing.M) {
 	result := m.Run()
 
 	os.Exit(result)
+}
+
+func TestInitDb(t *testing.T) {
+	// Retrieve db connector to run test
+	testcases := map[string]struct {
+		idle          string
+		max           string
+		ttl           string
+		expectedError error
+	}{
+		"ErrorCaseInvalidIdleParam": {
+			idle:          "asd",
+			max:           "20",
+			ttl:           "300",
+			expectedError: errors.New("Invalid postgresql idleConns param: asd"),
+		},
+		"ErrorCaseInvalidMaxParam": {
+			idle:          "5",
+			max:           "asd",
+			ttl:           "300",
+			expectedError: errors.New("Invalid postgresql maxOpenConns param: asd"),
+		},
+		"ErrorCaseInvalidTTLParam": {
+			idle:          "5",
+			max:           "20",
+			ttl:           "asd",
+			expectedError: errors.New("Invalid postgresql connTTL param: asd"),
+		},
+	}
+
+	for n, test := range testcases {
+		_, err := InitDb("postgres://postgres:password@localhost:54320/postgres?sslmode=disable", test.idle, test.max, test.ttl)
+		if diff := pretty.Compare(err, test.expectedError); diff != "" {
+			fmt.Fprintln(os.Stderr, "Test %v failed. Received different responses (received/wanted) %v", n, diff)
+			continue
+		}
+	}
+
 }
 
 // Aux methods

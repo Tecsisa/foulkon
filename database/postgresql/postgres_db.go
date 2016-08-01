@@ -3,6 +3,11 @@ package postgresql
 import (
 	"time"
 
+	"strconv"
+
+	"errors"
+	"fmt"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
 )
@@ -11,7 +16,7 @@ type PostgresRepo struct {
 	Dbmap *gorm.DB
 }
 
-func InitDb(datasourcename string) (*gorm.DB, error) {
+func InitDb(datasourcename string, idleConns string, maxOpenConns string, connTTL string) (*gorm.DB, error) {
 	// connect to db using GORM - github.com/jinzhu/gorm
 	db, err := gorm.Open("postgres", datasourcename)
 	if err != nil {
@@ -19,9 +24,21 @@ func InitDb(datasourcename string) (*gorm.DB, error) {
 	}
 
 	// construct a gorp DbMap
-	db.DB().SetMaxIdleConns(5)
-	db.DB().SetMaxOpenConns(20)
-	db.DB().SetConnMaxLifetime(5 * time.Minute)
+	idle, err := strconv.Atoi(idleConns)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Invalid postgresql idleConns param: %v", idleConns))
+	}
+	maxOpen, err := strconv.Atoi(maxOpenConns)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Invalid postgresql maxOpenConns param: %v", maxOpenConns))
+	}
+	ttl, err := strconv.Atoi(connTTL)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Invalid postgresql connTTL param: %v", connTTL))
+	}
+	db.DB().SetMaxIdleConns(idle)
+	db.DB().SetMaxOpenConns(maxOpen)
+	db.DB().SetConnMaxLifetime(time.Duration(ttl) * time.Second)
 
 	// Check connection
 	err = db.DB().Ping()
