@@ -84,7 +84,11 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 	switch getMandatoryValue(config, "database.type") {
 	case "postgres": // PostgreSQL DB
 		logger.Info("Connecting to postgres database")
-		gormDB, err := postgresql.InitDb(getMandatoryValue(config, "database.postgres.datasourcename"))
+		gormDB, err := postgresql.InitDb(getMandatoryValue(config, "database.postgres.datasourcename"),
+			getDefaultValue(config,"database.postgres.idleconns", "5"),
+			getDefaultValue(config,"database.postgres.maxopenconns", "20"),
+			getDefaultValue(config,"database.postgres.connttl", "300"),
+		)
 		if err != nil {
 			logger.Error(err)
 			return nil, err
