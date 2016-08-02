@@ -1,35 +1,40 @@
-hash: ea97926a1487232d4395289d050dec9b59f9c0ad290f0a5b1bae2086fec4c5e7
-updated: 2016-06-23T14:32:43.220970765+02:00
+hash: af6c53dd59542ec4c033e127391ed818b6009696c5f91c2ae5a174abddd5097d
+updated: 2016-08-01T14:58:15.439232072+02:00
 imports:
 - name: github.com/dgrijalva/jwt-go
-  version: 05adb952df263e4872e45480c1ac86775615b0eb
+  version: 63734eae1ef55eaac06fdc0f312615f2e321e273
 - name: github.com/emanoelxavier/openid2go
-  version: ""
+  version: 96b5ec6afd0d46742f53db61b7bbee2ddfc8bcb9
   subpackages:
   - openid
 - name: github.com/jinzhu/gorm
-  version: ""
+  version: 5174cc5c242a728b435ea2be8a2f7f998e15429b
 - name: github.com/jinzhu/inflection
-  version: 05adb952df263e4872e45480c1ac86775615b0eb
+  version: 8f4d3a0d04ce0b7c0cf3126fb98524246d00d102
 - name: github.com/julienschmidt/httprouter
-  version: ""
+  version: 8c199fb6259ffc1af525cc3ad52ee60ba8359669
 - name: github.com/kylelemons/godebug
   version: eadb3ce320cbab8393bea5ca17bebac3f78a021b
+  subpackages:
+  - pretty
+  - diff
 - name: github.com/lib/pq
-  version: ""
+  version: 5da87320b996b433460a8930bb6b8f4e5672d371
   subpackages:
   - oid
 - name: github.com/pelletier/go-buffruneio
-  version: 05adb952df263e4872e45480c1ac86775615b0eb
+  version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
 - name: github.com/pelletier/go-toml
-  version: ""
+  version: 64ff1ea4d585bc1fca65e6331eb8239f2ff31845
 - name: github.com/satori/go.uuid
-  version: ""
+  version: 879c5887cd475cd7864858769793b2ceb0d44feb
 - name: github.com/Sirupsen/logrus
-  version: ""
+  version: 4b6ea7319e214d98c938f12692336f7ca9348d6b
 - name: github.com/square/go-jose
-  version: 05adb952df263e4872e45480c1ac86775615b0eb
+  version: f7dab0d84e417e827829f248ef197af7d87c714c
   subpackages:
   - cipher
   - json
-devImports: []
+- name: gopkg.in/dgrijalva/jwt-go.v2
+  version: 268038b363c7a8d7306b8e35bf77a1fde4b0c402
+testImports: []

@@ -3,7 +3,7 @@ package openid
 import (
 	"net/http"
 
-	"github.com/dgrijalva/jwt-go"
+	"gopkg.in/dgrijalva/jwt-go.v2"
 )
 
 // The Configuration contains the entities needed to perform ID token validation.

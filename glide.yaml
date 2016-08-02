@@ -5,15 +5,16 @@ import:
 - package: github.com/Sirupsen/logrus
   version: 0.10.0
 - package: github.com/julienschmidt/httprouter
-  version: "1.1"
+  version: 1.1
 - package: github.com/lib/pq
   version: go1.0-cutoff
 - package: github.com/jinzhu/gorm
-  version: 5174cc5c242a728b435ea2be8a2f7f998e15429b
+  version: 1.0
 - package: github.com/satori/go.uuid
-  version: 1.0.0
+  version: 1.1.0
 - package: github.com/emanoelxavier/openid2go
-  version: 90f51ccdd292798d4995b9c5057d4cbc94a8b782
+  version: 96b5ec6afd0d46742f53db61b7bbee2ddfc8bcb9
 - package: github.com/pelletier/go-toml
-  version: 0.3.4
+  version: 0.3.5
 - package: github.com/kylelemons/godebug
+  version: eadb3ce320cbab8393bea5ca17bebac3f78a021b
