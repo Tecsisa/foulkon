@@ -311,6 +311,37 @@ func Test_getSigningKey_UsingValidToken_WhenSigningKeyGetterSucceeds(t *testing.
 	sm.assertDone()
 }
 
+func Test_getSigningKey_UsingValidToken_WithoutKeyIdentifier_WhenSigningKeyGetterSucceeds(t *testing.T) {
+	pm, _, sm, tv := createIDTokenValidator(t)
+
+	iss := "https://issuer"
+	keyID := ""
+	esk := "signingKey"
+
+	go func() {
+		pm.assertGetProviders([]Provider{{Issuer: iss, ClientIDs: []string{"client"}}}, nil)
+		sm.assertGetSigningKey(iss, keyID, []byte(esk), nil)
+		pm.close()
+		sm.close()
+	}()
+
+	jt := &jwt.Token{Claims: make(map[string]interface{}), Header: make(map[string]interface{})}
+	jt.Claims["iss"] = iss
+	jt.Claims["aud"] = "client"
+	jt.Claims["sub"] = "subject1"
+
+	rsk, err := tv.getSigningKey(jt)
+
+	if err != nil {
+		t.Error("An error was returned but not expected.", err)
+	}
+
+	expectSigningKey(t, rsk, jt, esk)
+
+	pm.assertDone()
+	sm.assertDone()
+}
+
 func Test_getSigningKey_UsingValidTokenWithMultipleAudiences(t *testing.T) {
 	pm, _, sm, tv := createIDTokenValidator(t)
 

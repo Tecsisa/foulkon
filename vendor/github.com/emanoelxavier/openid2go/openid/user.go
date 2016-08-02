@@ -3,7 +3,7 @@ package openid
 import (
 	"net/http"
 
-	"github.com/dgrijalva/jwt-go"
+	"gopkg.in/dgrijalva/jwt-go.v2"
 )
 
 // User represents the authenticated user encapsulating information obtained from the validated ID token.
