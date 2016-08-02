@@ -63,5 +63,4 @@ func (a *WorkerHandler) HandleGetAuthorizedExternalResources(w http.ResponseWrit
 	}
 
 	a.RespondOk(r, &userID, w, response)
-
 }

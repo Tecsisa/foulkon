@@ -282,7 +282,6 @@ func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
 				continue
 			}
 		}
-
 	}
 }
 
@@ -453,9 +452,7 @@ func TestWorkerHandler_HandleGetPolicy(t *testing.T) {
 				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
 				continue
 			}
-
 		}
-
 	}
 }
 
@@ -606,7 +603,6 @@ func TestWorkerHandler_HandleListPolicies(t *testing.T) {
 					n, diff)
 				continue
 			}
-
 		}
 	}
 }
@@ -751,7 +747,6 @@ func TestWorkerHandler_HandleListAllPolicies(t *testing.T) {
 					n, diff)
 				continue
 			}
-
 		}
 	}
 }
@@ -1300,8 +1295,6 @@ func TestWorkerHandler_HandleListAttachedGroups(t *testing.T) {
 				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
 				continue
 			}
-
 		}
-
 	}
 }

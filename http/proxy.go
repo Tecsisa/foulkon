@@ -164,21 +164,15 @@ func (h *ProxyHandler) checkAuthorization(r *http.Request, urn string, action st
 
 // Check parameters in URN to replace with URI parameters
 func getUrnParameters(urn string) [][]string {
-
 	match := rUrnParam.FindAllStringSubmatch(urn, -1)
 	if match != nil && len(match) > 0 {
 		return match
 	}
 	return nil
-
 }
 
 func isFullUrn(resource string) bool {
-	if strings.ContainsAny(resource, "*") {
-		return false
-	} else {
-		return true
-	}
+	return !strings.ContainsAny(resource, "*")
 }
 
 func getErrorMessage(errorCode string, message string) *api.Error {

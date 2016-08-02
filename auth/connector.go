@@ -62,8 +62,5 @@ func (a *Authenticator) RetrieveUserID(r http.Request) api.AuthenticatedUser {
 func isAdmin(r http.Request, adminUser string, adminPassword string) bool {
 	username, password, ok := r.BasicAuth()
 	// Password is never stored in DB
-	if ok && username == adminUser && password == adminPassword {
-		return true
-	}
-	return false
+	return ok && username == adminUser && password == adminPassword
 }

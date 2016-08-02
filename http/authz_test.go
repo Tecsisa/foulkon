@@ -150,8 +150,6 @@ func TestWorkerHandler_HandleGetAuthorizedExternalResources(t *testing.T) {
 				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
 				continue
 			}
-
 		}
-
 	}
 }

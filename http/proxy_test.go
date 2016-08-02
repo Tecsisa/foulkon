@@ -190,8 +190,6 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 					n, test.expectedError, apiError)
 				continue
 			}
-
 		}
-
 	}
 }
