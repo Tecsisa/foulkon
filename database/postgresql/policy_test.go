@@ -165,7 +165,6 @@ func TestPostgresRepo_AddPolicy(t *testing.T) {
 				}
 			}
 		}
-
 	}
 }
 
@@ -266,7 +265,6 @@ func TestPostgresRepo_GetPolicyByName(t *testing.T) {
 				continue
 			}
 		}
-
 	}
 }
 
@@ -674,7 +672,6 @@ func TestPostgresRepo_RemovePolicy(t *testing.T) {
 			t.Errorf("Test %v failed. Received different relations number: %v", n, groupPolicyRelationNumber)
 			continue
 		}
-
 	}
 }
 

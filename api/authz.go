@@ -312,11 +312,7 @@ func isContainedOrEqual(resource string, resourcePrefix string) bool {
 }
 
 func isFullUrn(resource string) bool {
-	if strings.ContainsAny(resource, "*") {
-		return false
-	} else {
-		return true
-	}
+	return !strings.ContainsAny(resource, "*")
 }
 
 // Insert restriction with filtering and cleaning
@@ -442,7 +438,6 @@ func (r *Restrictions) insertRestriction(allow bool, fullUrn bool, resource stri
 
 			wg.Wait()
 			r.DeniedUrnPrefixes = append(r.DeniedUrnPrefixes, resource)
-
 		}
 	}
 }
@@ -532,9 +527,5 @@ func isAllowedResource(resource Resource, restrictions Restrictions) bool {
 		}
 	}
 
-	if allowed && !denied {
-		return true
-	} else {
-		return false
-	}
+	return allowed && !denied
 }

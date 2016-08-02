@@ -108,9 +108,7 @@ func TestPostgresRepo_AddGroup(t *testing.T) {
 				t.Errorf("Test %v failed. Received different group number: %v", n, groupNumber)
 				continue
 			}
-
 		}
-
 	}
 }
 
@@ -197,7 +195,6 @@ func TestPostgresRepo_GetGroupByName(t *testing.T) {
 				continue
 			}
 		}
-
 	}
 }
 
@@ -281,7 +278,6 @@ func TestPostgresRepo_GetGroupById(t *testing.T) {
 				continue
 			}
 		}
-
 	}
 }
 
@@ -516,7 +512,6 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 			continue
 		}
-
 	}
 }
 
@@ -653,7 +648,6 @@ func TestPostgresRepo_UpdateGroup(t *testing.T) {
 			}
 		}
 	}
-
 }
 
 func TestPostgresRepo_RemoveGroup(t *testing.T) {
@@ -846,7 +840,6 @@ func TestPostgresRepo_RemoveMember(t *testing.T) {
 			t.Errorf("Test %v failed. Received different relations number: %v", n, relations)
 			continue
 		}
-
 	}
 }
 
@@ -904,7 +897,6 @@ func TestPostgresRepo_IsMemberOfGroup(t *testing.T) {
 			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 			continue
 		}
-
 	}
 }
 
@@ -1142,7 +1134,6 @@ func TestPostgresRepo_DetachPolicy(t *testing.T) {
 			t.Errorf("Test %v failed. Received different relations number: %v", n, relations)
 			continue
 		}
-
 	}
 }
 

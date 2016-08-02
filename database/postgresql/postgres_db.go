@@ -52,6 +52,7 @@ func InitDb(datasourcename string, idleConns string, maxOpenConns string, connTT
 		return nil, err
 	}
 
+	// TODO:
 	// Activate sql logger
 	//db.LogMode(true)
 
@@ -67,7 +68,7 @@ type User struct {
 	Urn        string `gorm:"not null;unique"`
 }
 
-// set User's table name
+// User's table name
 func (User) TableName() string {
 	return "users"
 }
@@ -82,7 +83,7 @@ type Group struct {
 	Urn      string `gorm:"not null;unique"`
 }
 
-// set Group's table name
+// Group's table name
 func (Group) TableName() string {
 	return "groups"
 }
@@ -97,7 +98,7 @@ type Policy struct {
 	Urn      string `gorm:"not null;unique"`
 }
 
-// set Policy's table name
+// Policy's table name
 func (Policy) TableName() string {
 	return "policies"
 }
@@ -111,7 +112,7 @@ type Statement struct {
 	Resources string `gorm:"not null"`
 }
 
-// set Statement's table name
+// Statement's table name
 func (Statement) TableName() string {
 	return "statements"
 }
@@ -122,7 +123,7 @@ type GroupUserRelation struct {
 	GroupID string `gorm:"primary_key"`
 }
 
-// set GroupUserRelation's table name
+// GroupUserRelation's table name
 func (GroupUserRelation) TableName() string {
 	return "group_user_relations"
 }
@@ -133,7 +134,7 @@ type GroupPolicyRelation struct {
 	PolicyID string `gorm:"primary_key"`
 }
 
-// set GroupPolicyRelation's table name
+// GroupPolicyRelation's table name
 func (GroupPolicyRelation) TableName() string {
 	return "group_policy_relations"
 }

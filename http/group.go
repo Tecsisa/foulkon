@@ -152,7 +152,6 @@ func (a *WorkerHandler) HandleListGroups(w http.ResponseWriter, r *http.Request,
 
 	// Return groups
 	a.RespondOk(r, &authenticatedUser, w, response)
-
 }
 
 func (a *WorkerHandler) HandleListAllGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -185,7 +184,6 @@ func (a *WorkerHandler) HandleListAllGroups(w http.ResponseWriter, r *http.Reque
 
 	// Return groups
 	a.RespondOk(r, &authenticatedUser, w, response)
-
 }
 
 func (a *WorkerHandler) HandleUpdateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -261,9 +259,9 @@ func (a *WorkerHandler) HandleRemoveGroup(w http.ResponseWriter, r *http.Request
 			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
-	} else {
-		a.RespondNoContent(r, &authenticatedUser, w)
 	}
+
+	a.RespondNoContent(r, &authenticatedUser, w)
 }
 
 func (a *WorkerHandler) HandleAddMember(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -294,9 +292,9 @@ func (a *WorkerHandler) HandleAddMember(w http.ResponseWriter, r *http.Request, 
 			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
-	} else {
-		a.RespondNoContent(r, &authenticatedUser, w)
 	}
+
+	a.RespondNoContent(r, &authenticatedUser, w)
 }
 
 func (a *WorkerHandler) HandleRemoveMember(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -325,10 +323,9 @@ func (a *WorkerHandler) HandleRemoveMember(w http.ResponseWriter, r *http.Reques
 			a.RespondInternalServerError(r, &authenticatedUser, w)
 		}
 		return
-	} else {
-		a.RespondNoContent(r, &authenticatedUser, w)
 	}
 
+	a.RespondNoContent(r, &authenticatedUser, w)
 }
 
 func (a *WorkerHandler) HandleListMembers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -366,7 +363,6 @@ func (a *WorkerHandler) HandleListMembers(w http.ResponseWriter, r *http.Request
 
 	// Write GroupMembers to response
 	a.RespondOk(r, &authenticatedUser, w, response)
-
 }
 
 func (a *WorkerHandler) HandleAttachPolicyToGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -399,10 +395,9 @@ func (a *WorkerHandler) HandleAttachPolicyToGroup(w http.ResponseWriter, r *http
 		}
 		return
 
-	} else {
-		a.RespondNoContent(r, &authenticatedUser, w)
 	}
 
+	a.RespondNoContent(r, &authenticatedUser, w)
 }
 
 func (a *WorkerHandler) HandleDetachPolicyToGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -433,9 +428,9 @@ func (a *WorkerHandler) HandleDetachPolicyToGroup(w http.ResponseWriter, r *http
 		}
 		return
 
-	} else {
-		a.RespondNoContent(r, &authenticatedUser, w)
 	}
+
+	a.RespondNoContent(r, &authenticatedUser, w)
 }
 
 func (a *WorkerHandler) HandleListAttachedGroupPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -471,5 +466,4 @@ func (a *WorkerHandler) HandleListAttachedGroupPolicies(w http.ResponseWriter, r
 
 	// Return group policies
 	a.RespondOk(r, &authenticatedUser, w, response)
-
 }

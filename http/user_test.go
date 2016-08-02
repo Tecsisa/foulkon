@@ -194,9 +194,7 @@ func TestWorkerHandler_HandleAddUser(t *testing.T) {
 					n, diff)
 				continue
 			}
-
 		}
-
 	}
 }
 
@@ -339,9 +337,7 @@ func TestWorkerHandler_HandleGetUserByExternalID(t *testing.T) {
 					n, diff)
 				continue
 			}
-
 		}
-
 	}
 }
 
@@ -454,9 +450,7 @@ func TestWorkerHandler_HandleListUsers(t *testing.T) {
 					n, diff)
 				continue
 			}
-
 		}
-
 	}
 }
 
@@ -635,9 +629,7 @@ func TestWorkerHandler_HandleUpdateUser(t *testing.T) {
 					n, diff)
 				continue
 			}
-
 		}
-
 	}
 }
 
@@ -751,9 +743,7 @@ func TestWorkerHandler_HandleRemoveUser(t *testing.T) {
 					n, diff)
 				continue
 			}
-
 		}
-
 	}
 }
 
@@ -903,8 +893,6 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 					n, diff)
 				continue
 			}
-
 		}
-
 	}
 }
