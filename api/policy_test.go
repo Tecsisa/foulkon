@@ -3,7 +3,6 @@ package api
 import (
 	"testing"
 
-	"github.com/kylelemons/godebug/pretty"
 	"github.com/tecsisa/authorizr/database"
 )
 
@@ -21,7 +20,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 
 		addPolicyMethodResult       *Policy
 		getPolicyByNameMethodResult *Policy
-		wantError                   *Error
+		wantError                   error
 
 		getPolicyByNameMethodErr error
 		addPolicyMethodErr       error
@@ -105,7 +104,8 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: POLICY_ALREADY_EXIST,
+				Code:    POLICY_ALREADY_EXIST,
+				Message: "Unable to create policy, policy with org 123 and name test already exist",
 			},
 		},
 		"ErrorCaseBadName": {
@@ -128,7 +128,8 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: name **!^#~",
 			},
 		},
 		"ErrorCaseBadOrgName": {
@@ -151,7 +152,8 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: org **!^#~",
 			},
 		},
 		"ErrorCaseBadPath": {
@@ -174,7 +176,8 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: path /**!^#~path/",
 			},
 		},
 		"ErrorCaseBadStatement": {
@@ -197,7 +200,8 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid effect: idufhefmfcasfluhf - Only 'allow' and 'deny' accepted",
 			},
 		},
 		"ErrorCaseNoPermissions": {
@@ -234,7 +238,8 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:123:policy/path/test",
 			},
 		},
 		"ErrorCaseDenyResource": {
@@ -312,7 +317,8 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 1234 is not allowed to access to resource urn:iws:iam:example:policy/path/test",
 			},
 		},
 		"ErrorCaseAddPolicyDBErr": {
@@ -384,27 +390,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		policy, err := testAPI.AddPolicy(testcase.authUser, testcase.policyName, testcase.path, testcase.org, testcase.statements)
-		if testcase.wantError != nil {
-			apiError, ok := err.(*Error)
-			if !ok || apiError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
-				continue
-			}
-			if apiError.Code != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", x, err)
-				continue
-			} else {
-				if diff := pretty.Compare(policy, testcase.addPolicyMethodResult); diff != "" {
-					t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
-					continue
-				}
-			}
-		}
+		CheckApiResponse(t, x, testcase.wantError, err, testcase.addPolicyMethodResult, policy)
 	}
 }
 
@@ -419,7 +405,7 @@ func TestAuthAPI_GetPolicyByName(t *testing.T) {
 		getUserByExternalIDResult *User
 
 		getPolicyByNameMethodResult *Policy
-		wantError                   *Error
+		wantError                   error
 
 		getPolicyByNameMethodErr error
 	}{
@@ -471,7 +457,8 @@ func TestAuthAPI_GetPolicyByName(t *testing.T) {
 			org:        "123",
 			policyName: "~#**!",
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: name ~#**!",
 			},
 		},
 		"ErrorCaseBadOrgName": {
@@ -482,7 +469,8 @@ func TestAuthAPI_GetPolicyByName(t *testing.T) {
 			org:        "~#**!",
 			policyName: "p1",
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: org ~#**!",
 			},
 		},
 		"ErrorCasePolicyNotFound": {
@@ -539,7 +527,8 @@ func TestAuthAPI_GetPolicyByName(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 1234 is not allowed to access to resource urn:iws:iam:example:policy/path/policyUser",
 			},
 		},
 		"ErrorCaseDenyResourceErr": {
@@ -611,7 +600,8 @@ func TestAuthAPI_GetPolicyByName(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 1234 is not allowed to access to resource urn:iws:iam:example:policy/path/policyUser",
 			},
 		},
 	}
@@ -627,27 +617,7 @@ func TestAuthAPI_GetPolicyByName(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		policy, err := testAPI.GetPolicyByName(testcase.authUser, testcase.org, testcase.policyName)
-		if testcase.wantError != nil {
-			apiError, ok := err.(*Error)
-			if !ok || apiError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
-				continue
-			}
-			if apiError.Code != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", x, err)
-				continue
-			} else {
-				if diff := pretty.Compare(policy, testcase.getPolicyByNameMethodResult); diff != "" {
-					t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
-					continue
-				}
-			}
-		}
+		CheckApiResponse(t, x, testcase.wantError, err, testcase.getPolicyByNameMethodResult, policy)
 	}
 }
 
@@ -667,7 +637,7 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 		getPoliciesFilteredMethodResult []Policy
 		getPoliciesFilteredMethodErr    error
 
-		wantError *Error
+		wantError error
 	}{
 		"OkCaseAdmin": {
 			authUser: AuthenticatedUser{
@@ -861,7 +831,8 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 			org:        "123",
 			pathPrefix: "/path*/",
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: PathPrefix /path*/",
 			},
 		},
 		"ErrorCaseInvalidOrg": {
@@ -872,7 +843,8 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 			org:        "!#$$%**^",
 			pathPrefix: "/",
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: org !#$$%**^",
 			},
 		},
 		"ErrorCaseInternalErrorGetPoliciesFiltered": {
@@ -920,7 +892,8 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 				Code: database.USER_NOT_FOUND,
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
 			},
 		},
 	}
@@ -937,27 +910,7 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		policies, err := testAPI.ListPolicies(testcase.authUser, testcase.org, testcase.pathPrefix)
-		if testcase.wantError != nil {
-			apiError, ok := err.(*Error)
-			if !ok || apiError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
-				continue
-			}
-			if apiError.Code != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", x, err)
-				continue
-			} else {
-				if diff := pretty.Compare(policies, testcase.expectedPolicies); diff != "" {
-					t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
-					continue
-				}
-			}
-		}
+		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedPolicies, policies)
 	}
 }
 
@@ -978,7 +931,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 		getUserByExternalIDResult   *User
 		updatePolicyMethodResult    *Policy
 
-		wantError *Error
+		wantError error
 
 		getPolicyByNameMethodErr error
 		getUserByExternalIDErr   error
@@ -1088,7 +1041,8 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: name **!~#",
 			},
 		},
 		"ErrorCaseInvalidOrgName": {
@@ -1124,7 +1078,8 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: org **!~#",
 			},
 		},
 		"ErrorCaseInvalidNewPolicyName": {
@@ -1160,7 +1115,8 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: new name **!~#",
 			},
 		},
 		"ErrorCaseInvalidNewPath": {
@@ -1196,7 +1152,8 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: new path /**~#!/",
 			},
 		},
 		"ErrorCaseInvalidNewStatements": {
@@ -1232,7 +1189,8 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid effect: jblkasdjgp - Only 'allow' and 'deny' accepted",
 			},
 		},
 		"ErrorCaseGetPolicyDBErr": {
@@ -1385,7 +1343,8 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				Code: database.USER_NOT_FOUND,
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
 			},
 		},
 		"ErrorCaseDenyResource": {
@@ -1490,7 +1449,8 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 1234 is not allowed to access to resource urn:iws:iam:123:policy/path/test",
 			},
 		},
 		"ErrorCaseNoPermissions": {
@@ -1577,7 +1537,8 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 1234 is not allowed to access to resource urn:iws:iam:123:policy/path/test",
 			},
 		},
 		"ErrorCaseNewPolicyAlreadyExists": {
@@ -1696,7 +1657,8 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: POLICY_ALREADY_EXIST,
+				Code:    POLICY_ALREADY_EXIST,
+				Message: "Policy name: test2 already exists",
 			},
 		},
 		"ErrorCaseNoPermissionsToRetrieveTarget": {
@@ -1823,7 +1785,8 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 1234 is not allowed to access to resource urn:iws:iam:123:policy/path2/test",
 			},
 		},
 		"ErrorCaseNoPermissionsToUpdateTarget": {
@@ -1935,7 +1898,8 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 1234 is not allowed to access to resource urn:iws:iam:123:policy/path2/test2",
 			},
 		},
 		"ErrorCaseExplicitDenyPermissionsToUpdateTarget": {
@@ -2098,7 +2062,8 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 1234 is not allowed to access to resource urn:iws:iam:123:policy/path2/test2",
 			},
 		},
 		"ErrorCaseErrorUpdatingPolicy": {
@@ -2266,27 +2231,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		policy, err := testAPI.UpdatePolicy(testcase.authUser, testcase.org, testcase.policyName, testcase.newPolicyName, testcase.newPath, testcase.newStatements)
-		if testcase.wantError != nil {
-			apiError, ok := err.(*Error)
-			if !ok || apiError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
-				continue
-			}
-			if apiError.Code != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", x, err)
-				continue
-			} else {
-				if diff := pretty.Compare(policy, testcase.updatePolicyMethodResult); diff != "" {
-					t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
-					continue
-				}
-			}
-		}
+		CheckApiResponse(t, x, testcase.wantError, err, testcase.updatePolicyMethodResult, policy)
 	}
 }
 
@@ -2304,7 +2249,7 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 		getUserByExternalIDErr      error
 		deletePolicyErr             error
 
-		wantError *Error
+		wantError error
 	}{
 		"OkCase": {
 			authUser: AuthenticatedUser{
@@ -2340,7 +2285,8 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 			org:  "123",
 			name: "invalid*",
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: name invalid*",
 			},
 		},
 		"ErrorCaseInvalidOrg": {
@@ -2351,7 +2297,8 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 			org:  "**!^#$%",
 			name: "invalid",
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: org **!^#$%",
 			},
 		},
 		"ErrorCasePolicyNotExist": {
@@ -2376,7 +2323,8 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 			org:  "example",
 			name: "test",
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:example:policy/path/test",
 			},
 			getPolicyByNameMethodResult: &Policy{
 				ID:   "test1",
@@ -2432,7 +2380,8 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 			org:  "example",
 			name: "test",
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:example:policy/path/test",
 			},
 			getPolicyByNameMethodResult: &Policy{
 				ID:   "test1",
@@ -2545,22 +2494,7 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		err := testAPI.RemovePolicy(testcase.authUser, testcase.org, testcase.name)
-		if testcase.wantError != nil {
-			apiError, ok := err.(*Error)
-			if !ok || apiError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
-				continue
-			}
-			if apiError.Code != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", x, err)
-				continue
-			}
-		}
+		CheckApiResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
 
@@ -2579,7 +2513,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 		getAttachedGroupsErr    error
 
 		getPolicyByNameMethodResult *Policy
-		wantError                   *Error
+		wantError                   error
 
 		getPolicyByNameMethodErr error
 	}{
@@ -2630,7 +2564,8 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 			org:        "123",
 			policyName: "invalid*",
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: name invalid*",
 			},
 		},
 		"ErrorCaseInvalidOrg": {
@@ -2641,7 +2576,8 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 			org:        "!*^**~$%",
 			policyName: "p1",
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: org !*^**~$%",
 			},
 		},
 		"ErrorCasePolicyNotExist": {
@@ -2666,7 +2602,8 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 			org:        "example",
 			policyName: "test",
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:example:policy/path/test",
 			},
 			getPolicyByNameMethodResult: &Policy{
 				ID:   "test1",
@@ -2722,7 +2659,8 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 			org:        "example",
 			policyName: "test",
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:example:policy/path/test",
 			},
 			getPolicyByNameMethodResult: &Policy{
 				ID:   "test1",
@@ -2835,26 +2773,6 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedGroupsMethod][0] = testcase.getAttachedGroupsResult
 		testRepo.ArgsOut[GetAttachedGroupsMethod][1] = testcase.getAttachedGroupsErr
 		groups, err := testAPI.ListAttachedGroups(testcase.authUser, testcase.org, testcase.policyName)
-		if testcase.wantError != nil {
-			apiError, ok := err.(*Error)
-			if !ok || apiError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
-				continue
-			}
-			if apiError.Code != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", x, err)
-				continue
-			} else {
-				if diff := pretty.Compare(groups, testcase.expectedGroups); diff != "" {
-					t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
-					continue
-				}
-			}
-		}
+		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedGroups, groups)
 	}
 }
