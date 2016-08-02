@@ -3,7 +3,6 @@ package api
 import (
 	"testing"
 
-	"github.com/kylelemons/godebug/pretty"
 	"github.com/tecsisa/authorizr/database"
 )
 
@@ -13,12 +12,12 @@ func TestAuthAPI_AddUser(t *testing.T) {
 		externalID string
 		path       string
 
-		getUserByExternalIDResult *User
-		getGroupsByUserIDResult   []Group
-		getAttachedPoliciesResult []Policy
+		getUserByExternalIDMethodResult *User
+		getGroupsByUserIDResult         []Group
+		getAttachedPoliciesResult       []Policy
 
 		expectedUser *User
-		wantError    *Error
+		wantError    error
 
 		addUserMethodErr             error
 		getUserByExternalIDMethodErr error
@@ -40,31 +39,55 @@ func TestAuthAPI_AddUser(t *testing.T) {
 				Message: "User not found",
 			},
 		},
-		"AlreadyExists": {
+		"ErrorCaseInvalidExtID": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
 			},
-			externalID: "1234",
+			externalID: "*%~#@|",
 			path:       "/example/",
+			expectedUser: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/example/",
+			},
 			wantError: &Error{
-				Code:    USER_ALREADY_EXIST,
-				Message: "User already exists",
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: externalId *%~#@|",
 			},
 		},
-		"Nopath": {
+		"ErrorCaseInvalidPath": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			externalID: "012",
+			path:       "/**%%/*123",
+			expectedUser: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/example/",
+			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: path /**%%/*123",
+			},
+		},
+		"ErrorCaseNopath": {
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: path ",
 			},
 			externalID: "1234",
 		},
-		"NoID": {
+		"ErrorCaseNoID": {
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: externalId ",
 			},
 			path: "/example/",
 		},
-		"NoAuth": {
+		"ErrorCaseNoAuth": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
@@ -72,19 +95,20 @@ func TestAuthAPI_AddUser(t *testing.T) {
 			externalID: "1234",
 			path:       "/example/",
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
 			},
 			getUserByExternalIDMethodErr: &database.Error{
 				Code:    database.USER_NOT_FOUND,
 				Message: "User not found",
 			},
 		},
-		"ErrorUnauthorizedResource": {
+		"ErrorCaseUnauthorizedResource": {
 			authUser: AuthenticatedUser{
 				Identifier: "000",
 				Admin:      false,
 			},
-			getUserByExternalIDResult: &User{
+			getUserByExternalIDMethodResult: &User{
 				ID:         "000",
 				ExternalID: "000",
 				Path:       "/path/",
@@ -129,47 +153,28 @@ func TestAuthAPI_AddUser(t *testing.T) {
 			externalID: "1234",
 			path:       "/test/asd/",
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 000 is not allowed to access to resource urn:iws:iam::user/test/asd/1234",
 			},
 		},
-		"InvalidExtID": {
+		"ErrorCaseUserAlreadyExists": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
 			},
-			externalID: "*%~#@|",
+			externalID: "1234",
 			path:       "/example/",
-			expectedUser: &User{
-				ID:         "543210",
-				ExternalID: "1234",
-				Path:       "/example/",
-			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    USER_ALREADY_EXIST,
+				Message: "Unable to create user, user with externalId 1234 already exist",
 			},
 		},
-		"InvalidPath": {
+		"ErrorCaseDBErr1": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
 			},
-			externalID: "012",
-			path:       "/**%%/*123",
-			expectedUser: &User{
-				ID:         "543210",
-				ExternalID: "1234",
-				Path:       "/example/",
-			},
-			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
-			},
-		},
-		"DBErr1": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			getUserByExternalIDResult: &User{
+			getUserByExternalIDMethodResult: &User{
 				ID:         "123456",
 				ExternalID: "123456",
 				Path:       "/path/",
@@ -188,12 +193,12 @@ func TestAuthAPI_AddUser(t *testing.T) {
 				Code: UNKNOWN_API_ERROR,
 			},
 		},
-		"DBErr2": {
+		"ErrorCaseDBErr2": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
 			},
-			getUserByExternalIDResult: &User{
+			getUserByExternalIDMethodResult: &User{
 				ID:         "123456",
 				ExternalID: "123456",
 				Path:       "/path/",
@@ -209,7 +214,8 @@ func TestAuthAPI_AddUser(t *testing.T) {
 				Code: database.INTERNAL_ERROR,
 			},
 			wantError: &Error{
-				Code: UNKNOWN_API_ERROR,
+				Code:    UNKNOWN_API_ERROR,
+				Message: "User not found",
 			},
 		},
 	}
@@ -218,29 +224,14 @@ func TestAuthAPI_AddUser(t *testing.T) {
 	testAPI := makeTestAPI(testRepo)
 
 	for x, testcase := range testcases {
-		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDMethodResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[AddUserMethod][0] = testcase.expectedUser
 		testRepo.ArgsOut[AddUserMethod][1] = testcase.addUserMethodErr
 		user, err := testAPI.AddUser(testcase.authUser, testcase.externalID, testcase.path)
-		if testcase.wantError != nil {
-			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed: %v", x, err)
-				continue
-			} else {
-				if diff := pretty.Compare(user, testcase.expectedUser); diff != "" {
-					t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
-					continue
-				}
-			}
-		}
+		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedUser, user)
 	}
 
 }
@@ -250,12 +241,12 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 		authUser   AuthenticatedUser
 		externalID string
 
-		getGroupsByUserIDResult   []Group
-		getAttachedPoliciesResult []Policy
-		getUserByExternalIDResult *User
+		getGroupsByUserIDMethodResult   []Group
+		getAttachedPoliciesMethodResult []Policy
+		getUserByExternalIDMethodResult *User
 
 		expectedUser *User
-		wantError    *Error
+		wantError    error
 
 		getUserByExternalIDMethodErr error
 	}{
@@ -269,9 +260,15 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 				ID:         "543210",
 				ExternalID: "123",
 				Path:       "/users/test/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/users/test/", "123"),
+			},
+			getUserByExternalIDMethodResult: &User{
+				ID:         "543210",
+				ExternalID: "123",
+				Path:       "/users/test/",
 			},
 		},
-		"ErrorAuthUserNotExist": {
+		"ErrorCaseAuthUserNotExist": {
 			authUser: AuthenticatedUser{
 				Identifier: "notAdminUser",
 				Admin:      false,
@@ -281,23 +278,25 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 				ID:         "543210",
 				ExternalID: "123",
 				Path:       "/users/test/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/users/test/", "123"),
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId notAdminUser is not allowed to access to resource urn:iws:iam::user/users/test/123",
 			},
 		},
-		"ErrorUnauthorizedResource": {
+		"ErrorCaseUnauthorizedResource": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
 			},
-			getUserByExternalIDResult: &User{
+			getUserByExternalIDMethodResult: &User{
 				ID:         "000",
 				ExternalID: "000",
 				Path:       "/path/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "000"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDMethodResult: []Group{
 				{
 					ID:   "GROUP-USER-ID",
 					Name: "groupUser",
@@ -305,7 +304,7 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesMethodResult: []Policy{
 				{
 					ID:   "POLICY-USER-ID",
 					Name: "policyUser",
@@ -341,29 +340,32 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "000"),
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam::user/path/000",
 			},
 		},
-		"ErrorUserNotExist": {
+		"ErrorCaseUserNotExist": {
 			authUser: AuthenticatedUser{
 				Identifier: "notAdminUser",
 				Admin:      true,
 			},
 			externalID: "111",
 			wantError: &Error{
-				Code: USER_BY_EXTERNAL_ID_NOT_FOUND,
+				Code:    USER_BY_EXTERNAL_ID_NOT_FOUND,
+				Message: "User not found",
 			},
 			getUserByExternalIDMethodErr: &database.Error{
 				Code:    database.USER_NOT_FOUND,
-				Message: "Error",
+				Message: "User not found",
 			},
 		},
-		"NoIDpassed": {
+		"ErrorCaseNoID": {
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: externalId ",
 			},
 		},
-		"InternalError": {
+		"ErrorCaseInternalError": {
 			externalID: "1234",
 			getUserByExternalIDMethodErr: &database.Error{
 				Code: database.INTERNAL_ERROR,
@@ -380,26 +382,10 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 	for x, testcase := range testcases {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.expectedUser
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
-		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
-		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDMethodResult
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesMethodResult
 		user, err := testAPI.GetUserByExternalID(testcase.authUser, testcase.externalID)
-		if testcase.wantError != nil {
-			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed", x)
-				continue
-			} else {
-				if testcase.expectedUser.ExternalID != user.ExternalID {
-					t.Errorf("Test %v failed. Received different users (wanted:%v / received:%v)",
-						x, testcase.expectedUser.ExternalID, user.ExternalID)
-					continue
-				}
-			}
-		}
+		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedUser, user)
 	}
 
 }
@@ -409,13 +395,13 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 		authUser   AuthenticatedUser
 		pathPrefix string
 
-		getUsersFilteredMethodResult []User
-		getGroupsByUserIDResult      []Group
-		getAttachedPoliciesResult    []Policy
-		getUserByExternalIDResult    *User
+		getUsersFilteredMethodResult    []User
+		getGroupsByUserIDMethodResult   []Group
+		getAttachedPoliciesMethodResult []Policy
+		getUserByExternalIDMethodResult *User
 
 		expectedResult []string
-		wantError      *Error
+		wantError      error
 
 		GetUsersFilteredMethodErr    error
 		getUserByExternalIDMethodErr error
@@ -431,11 +417,13 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 					ID:         "123",
 					ExternalID: "123",
 					Path:       "/example/test/",
+					Urn:        CreateUrn("", RESOURCE_USER, "/example/test/", "123"),
 				},
 				{
 					ID:         "321",
 					ExternalID: "321",
 					Path:       "/example/test2/",
+					Urn:        CreateUrn("", RESOURCE_USER, "/example/test2/", "321"),
 				},
 			},
 			expectedResult: []string{"123", "321"},
@@ -460,7 +448,8 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 			},
 			pathPrefix: "/^*$**~#!/",
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: PathPrefix /^*$**~#!/",
 			},
 		},
 		"FilterUsersDBErr": {
@@ -482,25 +471,14 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 	testAPI := makeTestAPI(testRepo)
 
 	for x, testcase := range testcases {
-		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDMethodResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
-		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
-		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDMethodResult
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesMethodResult
 		testRepo.ArgsOut[GetUsersFilteredMethod][0] = testcase.getUsersFilteredMethodResult
 		testRepo.ArgsOut[GetUsersFilteredMethod][1] = testcase.GetUsersFilteredMethodErr
 		users, err := testAPI.ListUsers(testcase.authUser, testcase.pathPrefix)
-		if testcase.wantError != nil {
-			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v",
-					x, errCode, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if diff := pretty.Compare(users, testcase.expectedResult); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
-				continue
-			}
-		}
+		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedResult, users)
 	}
 
 }
@@ -516,7 +494,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 		getGroupsByUserIDResult   []Group
 		getAttachedPoliciesResult []Policy
 
-		wantError *Error
+		wantError error
 
 		updateUserMethodErr          error
 		getUserByExternalIDMethodErr error
@@ -532,6 +510,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 				ID:         "543210",
 				ExternalID: "1234",
 				Path:       "/example/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/example/", "1234"),
 			},
 		},
 		"DBErr": {
@@ -545,6 +524,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 				ID:         "543210",
 				ExternalID: "1234",
 				Path:       "/example/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/example/", "1234"),
 			},
 			updateUserMethodErr: &database.Error{
 				Code: database.INTERNAL_ERROR,
@@ -564,9 +544,11 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 				ID:         "543210",
 				ExternalID: "1234",
 				Path:       "/example/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/example/", "1234"),
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: externalId *%~#@|",
 			},
 		},
 		"InvalidPath": {
@@ -580,20 +562,24 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 				ID:         "543210",
 				ExternalID: "1234",
 				Path:       "/example/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/example/", "1234"),
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: path /**%%/*123",
 			},
 		},
 		"Nopath": {
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: path ",
 			},
 			externalID: "1234",
 		},
 		"NoID": {
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: externalId ",
 			},
 			newPath: "/example/",
 		},
@@ -607,10 +593,12 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 				ID:         "543210",
 				ExternalID: "12345",
 				Path:       "/example/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/example/", "1234"),
 			},
 			newPath: "/example/",
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 1234 is not allowed to access to resource urn:iws:iam::user/example/1234",
 			},
 		},
 		"UpdateNotAllowed": {
@@ -672,7 +660,8 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 			},
 			externalID: "000",
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam::user/path/000",
 			},
 		},
 		"ZeroPermissions": {
@@ -716,7 +705,8 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 			},
 			externalID: "000",
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam::user/path/000",
 			},
 		},
 		"GetNewPathNotAllowed": {
@@ -778,7 +768,8 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 			},
 			externalID: "000",
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam::user/newpath/000",
 			},
 		},
 		"NewPathNotAllowed": {
@@ -849,7 +840,8 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 			},
 			externalID: "000",
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam::user/newpath/000",
 			},
 		},
 	}
@@ -865,22 +857,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 		testRepo.ArgsOut[UpdateUserMethod][0] = testcase.expectedUser
 		testRepo.ArgsOut[UpdateUserMethod][1] = testcase.updateUserMethodErr
 		user, err := testAPI.UpdateUser(testcase.authUser, testcase.externalID, testcase.newPath)
-		if testcase.wantError != nil {
-			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, errCode, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed: %v", x, err)
-				continue
-			} else {
-				if diff := pretty.Compare(user, testcase.expectedUser); diff != "" {
-					t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
-					continue
-				}
-			}
-		}
+		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedUser, user)
 	}
 
 }
@@ -890,12 +867,12 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 		authUser   AuthenticatedUser
 		externalID string
 
-		expectedUser *User
+		GetUserByExternalIDMethodResult *User
 
 		getGroupsByUserIDResult   []Group
 		getAttachedPoliciesResult []Policy
 
-		wantError *Error
+		wantError error
 
 		removeUserMethodErr error
 	}{
@@ -905,7 +882,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 				Admin:      true,
 			},
 			externalID: "1234",
-			expectedUser: &User{
+			GetUserByExternalIDMethodResult: &User{
 				ID:         "543210",
 				ExternalID: "1234",
 				Path:       "/example/",
@@ -917,18 +894,20 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 				Admin:      true,
 			},
 			externalID: "*%~#@|",
-			expectedUser: &User{
+			GetUserByExternalIDMethodResult: &User{
 				ID:         "543210",
 				ExternalID: "1234",
 				Path:       "/example/",
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: externalId *%~#@|",
 			},
 		},
 		"NoID": {
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: externalId ",
 			},
 		},
 		"NoAuth": {
@@ -937,13 +916,15 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 				Admin:      false,
 			},
 			externalID: "1234",
-			expectedUser: &User{
+			GetUserByExternalIDMethodResult: &User{
 				ID:         "543210",
 				ExternalID: "12345",
 				Path:       "/example/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/example/", "12345"),
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 1234 is not allowed to access to resource urn:iws:iam::user/example/12345",
 			},
 		},
 		"DeleteNotAllowedInPath": {
@@ -952,7 +933,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 				Admin:      false,
 			},
 			externalID: "1234",
-			expectedUser: &User{
+			GetUserByExternalIDMethodResult: &User{
 				ID:         "1234",
 				ExternalID: "1234",
 				Path:       "/path/",
@@ -986,7 +967,8 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 1234 is not allowed to access to resource urn:iws:iam::user/path/1234",
 			},
 		},
 		"DeleteUserNotAllowed": {
@@ -995,7 +977,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 				Admin:      false,
 			},
 			externalID: "1234",
-			expectedUser: &User{
+			GetUserByExternalIDMethodResult: &User{
 				ID:         "1234",
 				ExternalID: "1234",
 				Path:       "/path/",
@@ -1047,7 +1029,8 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 1234 is not allowed to access to resource urn:iws:iam::user/path/1234",
 			},
 		},
 		"DBErr": {
@@ -1056,7 +1039,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 				Admin:      true,
 			},
 			externalID: "123456",
-			expectedUser: &User{
+			GetUserByExternalIDMethodResult: &User{
 				ID:         "543210",
 				ExternalID: "123456",
 				Path:       "/example/",
@@ -1074,23 +1057,12 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 	testAPI := makeTestAPI(testRepo)
 
 	for x, testcase := range testcases {
-		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.expectedUser
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.GetUserByExternalIDMethodResult
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[RemoveUserMethod][0] = testcase.removeUserMethodErr
 		err := testAPI.RemoveUser(testcase.authUser, testcase.externalID)
-		if testcase.wantError != nil {
-			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v",
-					x, errCode, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed: %v", x, err)
-				continue
-			}
-		}
+		CheckApiResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
 
@@ -1098,7 +1070,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 	testcases := map[string]struct {
 		authUser         AuthenticatedUser
 		externalID       string
-		wantError        *Error
+		wantError        error
 		expectedResponse []GroupIdentity
 
 		getUserByExternalIDResult *User
@@ -1160,7 +1132,8 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam::user/path/1234",
 			},
 		},
 		"getGroupsDBErr": {
@@ -1176,6 +1149,9 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 			},
 			getGroupsByUserIDErr: &database.Error{
 				Code: database.INTERNAL_ERROR,
+			},
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
 			},
 		},
 		"GetUserExtIDDBErr": {
@@ -1263,7 +1239,8 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 1234 is not allowed to access to resource urn:iws:iam::user/path/1234",
 			},
 		},
 		"UnauthorizedListGroupsErr": {
@@ -1306,7 +1283,8 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 1234 is not allowed to access to resource urn:iws:iam::user/path/1234",
 			},
 		},
 	}
@@ -1321,18 +1299,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = testcase.getGroupsByUserIDErr
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		groups, err := testAPI.ListGroupsByUser(testcase.authUser, testcase.externalID)
-		if testcase.wantError != nil {
-			if errCode := err.(*Error).Code; errCode != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v",
-					x, errCode, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if diff := pretty.Compare(groups, testcase.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", x, diff)
-				continue
-			}
-		}
+		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedResponse, groups)
 	}
 
 }
