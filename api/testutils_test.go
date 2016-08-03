@@ -34,7 +34,7 @@ const (
 	GetAttachedGroupsMethod   = "GetAttachedGroups"
 )
 
-// Test repo that implements all repo manager interfaces
+// TestRepo that implements all repo manager interfaces
 type TestRepo struct {
 	ArgsIn       map[string][]interface{}
 	ArgsOut      map[string][]interface{}
