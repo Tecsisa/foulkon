@@ -3,7 +3,6 @@ package api
 import (
 	"testing"
 
-	"github.com/kylelemons/godebug/pretty"
 	"github.com/tecsisa/authorizr/database"
 )
 
@@ -20,7 +19,7 @@ func TestGetAuthorizedUsers(t *testing.T) {
 		// Resources authorized by method
 		usersAuthorized []User
 		// Error to compare when we expect an error
-		wantError *Error
+		wantError error
 		// GetUserByExternalID Method Out Arguments
 		getUserByExternalIDResult *User
 		getUserByExternalIDError  error
@@ -63,7 +62,8 @@ func TestGetAuthorizedUsers(t *testing.T) {
 			resourceUrn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
 			action:      USER_ACTION_GET_USER,
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId notAdminUser not found. Unable to retrieve permissions.",
 			},
 			getUserByExternalIDResult: nil,
 			getUserByExternalIDError: &database.Error{
@@ -73,39 +73,21 @@ func TestGetAuthorizedUsers(t *testing.T) {
 		},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for n, test := range testcases {
+
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
 
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = test.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
 
 		authorizedUsers, err := testAPI.GetAuthorizedUsers(test.authUser, test.resourceUrn, test.action, test.usersToAuthorize)
-		if test.wantError != nil {
-			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
-				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
-					test.wantError.Code, apiError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", n, err)
-				continue
-			}
-
-			if !test.authUser.Admin {
-				// Check received authenticated user in method GetUserByExternalID
-				if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
-					t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-						n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
-					continue
-				}
-			}
-
-			// Check result
-			if diff := pretty.Compare(authorizedUsers, test.usersAuthorized); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+		CheckApiResponse(t, n, test.wantError, err, test.usersAuthorized, authorizedUsers)
+		if !test.authUser.Admin {
+			// Check received authenticated user in method GetUserByExternalID
+			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
+				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+					n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
 				continue
 			}
 		}
@@ -125,7 +107,7 @@ func TestGetAuthorizedGroups(t *testing.T) {
 		// Resources authorized by method
 		groupsAuthorized []Group
 		// Error to compare when we expect an error
-		wantError *Error
+		wantError error
 		// GetUserByExternalID Method Out Arguments
 		getUserByExternalIDResult *User
 		getUserByExternalIDError  error
@@ -168,7 +150,8 @@ func TestGetAuthorizedGroups(t *testing.T) {
 			resourceUrn: CreateUrn("example", RESOURCE_GROUP, "/path/", "group1"),
 			action:      GROUP_ACTION_GET_GROUP,
 			wantError: &Error{
-				Code: UNKNOWN_API_ERROR,
+				Code:    UNKNOWN_API_ERROR,
+				Message: "Error",
 			},
 			getUserByExternalIDResult: nil,
 			getUserByExternalIDError: &database.Error{
@@ -178,39 +161,21 @@ func TestGetAuthorizedGroups(t *testing.T) {
 		},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for n, test := range testcases {
+
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
 
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = test.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
 
 		authorizedGroups, err := testAPI.GetAuthorizedGroups(test.authUser, test.resourceUrn, test.action, test.groupsToAuthorize)
-		if test.wantError != nil {
-			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
-				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
-					test.wantError.Code, apiError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", n, err)
-				continue
-			}
-
-			if !test.authUser.Admin {
-				// Check received authenticated user in method GetUserByExternalID
-				if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
-					t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-						n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
-					continue
-				}
-			}
-
-			// Check result
-			if diff := pretty.Compare(authorizedGroups, test.groupsAuthorized); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+		CheckApiResponse(t, n, test.wantError, err, test.groupsAuthorized, authorizedGroups)
+		if !test.authUser.Admin {
+			// Check received authenticated user in method GetUserByExternalID
+			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
+				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+					n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
 				continue
 			}
 		}
@@ -230,7 +195,7 @@ func TestGetAuthorizedPolicies(t *testing.T) {
 		// Resources authorized by method
 		policiesAuthorized []Policy
 		// Error to compare when we expect an error
-		wantError *Error
+		wantError error
 		// GetUserByExternalID Method Out Arguments
 		getUserByExternalIDResult *User
 		getUserByExternalIDError  error
@@ -273,7 +238,8 @@ func TestGetAuthorizedPolicies(t *testing.T) {
 			resourceUrn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policy1"),
 			action:      POLICY_ACTION_GET_POLICY,
 			wantError: &Error{
-				Code: UNKNOWN_API_ERROR,
+				Code:    UNKNOWN_API_ERROR,
+				Message: "Error",
 			},
 			getUserByExternalIDResult: nil,
 			getUserByExternalIDError: &database.Error{
@@ -283,39 +249,21 @@ func TestGetAuthorizedPolicies(t *testing.T) {
 		},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for n, test := range testcases {
+
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
 
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = test.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
 
 		authorizedPolicies, err := testAPI.GetAuthorizedPolicies(test.authUser, test.resourceUrn, test.action, test.policiesToAuthorize)
-		if test.wantError != nil {
-			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
-				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
-					test.wantError.Code, apiError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", n, err)
-				continue
-			}
-
-			if !test.authUser.Admin {
-				// Check received authenticated user in method GetUserByExternalID
-				if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
-					t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-						n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
-					continue
-				}
-			}
-
-			// Check result
-			if diff := pretty.Compare(authorizedPolicies, test.policiesAuthorized); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+		CheckApiResponse(t, n, test.wantError, err, test.policiesAuthorized, authorizedPolicies)
+		if !test.authUser.Admin {
+			// Check received authenticated user in method GetUserByExternalID
+			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
+				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+					n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
 				continue
 			}
 		}
@@ -333,7 +281,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 		// Expected allowed resources
 		expectedResources []string
 		// Error to compare when we expect an error
-		wantError *Error
+		wantError error
 		// GetUserByExternalID Method Out Arguments
 		getUserByExternalIDResult *User
 		getUserByExternalIDError  error
@@ -345,33 +293,50 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 		getAttachedPoliciesError  error
 	}{
 		"ErrortestCaseInvalidAction": {
+			authUser: AuthenticatedUser{
+				Admin: true,
+			},
 			action: "valid::Action",
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "No regex match in action: valid::Action",
 			},
 		},
 		"ErrortestCaseInvalidResource": {
+			authUser: AuthenticatedUser{
+				Admin: true,
+			},
 			action: "product:DoSomething",
 			resourceUrns: []string{
 				"urn:invalid/resource:resource",
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "No regex match in resource: urn:invalid/resource:resource",
 			},
 		},
 		"ErrortestCaseInvalidResourceWithPrefix": {
+			authUser: AuthenticatedUser{
+				Admin: true,
+			},
 			action: "product:DoSomething",
 			resourceUrns: []string{
 				"urn:*",
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter resource urn:*. Urn prefixes are not allowed here",
 			},
 		},
 		"ErrortestCaseEmptyResources": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
 			action: "product:DoSomething",
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter Resources %v. Resources can't be empty",
 			},
 		},
 		"ErrortestCaseGetRestrictions": {
@@ -380,19 +345,25 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 				CreateUrn("example", RESOURCE_POLICY, "/path/", "policy1"),
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId  not found. Unable to retrieve permissions.",
 			},
 			getUserByExternalIDError: &database.Error{
 				Code: database.USER_NOT_FOUND,
 			},
 		},
 		"ErrortestCaseActionPrefix": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
 			action: "product:DoPrefix*",
 			resourceUrns: []string{
 				CreateUrn("example", RESOURCE_POLICY, "/path/", "policy1"),
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter action product:DoPrefix*. Action parameter can't be a prefix",
 			},
 		},
 		"OktestCaseFullUrnAllow": {
@@ -549,10 +520,10 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 		},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for n, test := range testcases {
+
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
 
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = test.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
@@ -564,30 +535,12 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = test.getAttachedPoliciesError
 
 		resources, err := testAPI.GetAuthorizedExternalResources(test.authUser, test.action, test.resourceUrns)
-		if test.wantError != nil {
-			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
-				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
-					test.wantError.Code, apiError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", n, err)
-				continue
-			}
-
-			if !test.authUser.Admin {
-				// Check received authenticated user in method GetUserByExternalID
-				if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
-					t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-						n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
-					continue
-				}
-			}
-
-			// Check result
-			if diff := pretty.Compare(resources, test.expectedResources); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+		CheckApiResponse(t, n, test.wantError, err, test.expectedResources, resources)
+		if !test.authUser.Admin {
+			// Check received authenticated user in method GetUserByExternalID
+			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
+				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+					n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
 				continue
 			}
 		}
@@ -609,7 +562,7 @@ func TestGetAuthorizedResources(t *testing.T) {
 		// Resources authorized by method
 		resourcesAuthorized []Resource
 		// Error to compare when we expect an error
-		wantError *Error
+		wantError error
 		// GetUserByExternalID Method Out Arguments
 		getUserByExternalIDResult *User
 		getUserByExternalIDError  error
@@ -664,7 +617,8 @@ func TestGetAuthorizedResources(t *testing.T) {
 				Message: "User not found",
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
 			},
 		},
 		"ErrortestCaseNotAllowedResources": {
@@ -691,7 +645,8 @@ func TestGetAuthorizedResources(t *testing.T) {
 				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
 			},
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:example:group/path/group1",
 			},
 		},
 		"OKtestCaseResourcesFiltered": {
@@ -795,10 +750,10 @@ func TestGetAuthorizedResources(t *testing.T) {
 		},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for n, test := range testcases {
+
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
 
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = test.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
@@ -810,30 +765,12 @@ func TestGetAuthorizedResources(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = test.getAttachedPoliciesError
 
 		authorizedResources, err := testAPI.getAuthorizedResources(test.authUser, test.resourceUrn, test.action, test.resourcesToAuthorize)
-		if test.wantError != nil {
-			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
-				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
-					test.wantError.Code, apiError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", n, err)
-				continue
-			}
-
-			if !test.authUser.Admin {
-				// Check received authenticated user in method GetUserByExternalID
-				if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
-					t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-						n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
-					continue
-				}
-			}
-
-			// Check result
-			if diff := pretty.Compare(authorizedResources, test.resourcesAuthorized); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+		CheckApiResponse(t, n, test.wantError, err, test.resourcesAuthorized, authorizedResources)
+		if !test.authUser.Admin {
+			// Check received authenticated user in method GetUserByExternalID
+			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
+				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+					n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
 				continue
 			}
 		}
@@ -851,7 +788,7 @@ func TestGetRestrictions(t *testing.T) {
 		// Expected Restrictions
 		expectedRestrictions *Restrictions
 		// Error to compare when we expect an error
-		wantError *Error
+		wantError error
 		// GetUserByExternalID Method Out Arguments
 		getUserByExternalIDResult *User
 		getUserByExternalIDError  error
@@ -867,7 +804,8 @@ func TestGetRestrictions(t *testing.T) {
 			resourceUrn: "urn:resource",
 			action:      USER_ACTION_GET_USER,
 			wantError: &Error{
-				Code: UNAUTHORIZED_RESOURCES_ERROR,
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId NotFound not found. Unable to retrieve permissions.",
 			},
 			getUserByExternalIDError: &database.Error{
 				Code: database.USER_NOT_FOUND,
@@ -1057,10 +995,10 @@ func TestGetRestrictions(t *testing.T) {
 			}},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for n, test := range testcases {
+
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
 
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = test.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
@@ -1072,42 +1010,24 @@ func TestGetRestrictions(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = test.getAttachedPoliciesError
 
 		restrictions, err := testAPI.getRestrictions(test.authUserID, test.action, test.resourceUrn)
-		if test.wantError != nil {
-			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
-				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
-					test.wantError.Code, apiError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", n, err)
-				continue
-			}
+		CheckApiResponse(t, n, test.wantError, err, test.expectedRestrictions, restrictions)
+		if test.wantError == nil && testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUserID {
+			t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+				n, test.authUserID, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
+			continue
+		}
 
-			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUserID {
-				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-					n, test.authUserID, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
-				continue
-			}
+		if param := testRepo.ArgsIn[GetGroupsByUserIDMethod][0]; test.wantError == nil && test.authUserID != "" && param != test.authUserID {
+			t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+				n, test.authUserID, testRepo.ArgsIn[GetGroupsByUserIDMethod][0])
+			continue
+		}
 
-			if param := testRepo.ArgsIn[GetGroupsByUserIDMethod][0]; test.authUserID != "" && param != test.authUserID {
-				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-					n, test.authUserID, testRepo.ArgsIn[GetGroupsByUserIDMethod][0])
-				continue
-			}
-
-			if param := testRepo.ArgsIn[GetAttachedPoliciesMethod][0]; test.getGroupsByUserIDResult != nil &&
-				param != test.getGroupsByUserIDResult[0].ID {
-				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-					n, test.authUserID, testRepo.ArgsIn[GetAttachedPoliciesMethod][0])
-				continue
-			}
-
-			// Check result
-			if diff := pretty.Compare(restrictions, test.expectedRestrictions); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+		if param := testRepo.ArgsIn[GetAttachedPoliciesMethod][0]; test.wantError == nil && test.getGroupsByUserIDResult != nil &&
+			param != test.getGroupsByUserIDResult[0].ID {
+			t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+				n, test.authUserID, testRepo.ArgsIn[GetAttachedPoliciesMethod][0])
+			continue
 		}
 	}
 }
@@ -1119,7 +1039,7 @@ func TestGetGroupsByUser(t *testing.T) {
 		// Expected Groups
 		expectedGroups []Group
 		// Error to compare when we expect an error
-		wantError *Error
+		wantError error
 		// GetGroupsByUserID Method Out Arguments
 		getGroupsByUserIDResult []Group
 		getGroupsByUserIDError  error
@@ -1154,38 +1074,20 @@ func TestGetGroupsByUser(t *testing.T) {
 		},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for n, test := range testcases {
+
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
 
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = test.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = test.getGroupsByUserIDError
 
 		groups, err := testAPI.getGroupsByUser(test.userID)
-		if test.wantError != nil {
-			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
-				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
-					test.wantError.Code, apiError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", n, err)
-				continue
-			}
-
-			if param := testRepo.ArgsIn[GetGroupsByUserIDMethod][0]; param != test.userID {
-				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-					n, test.userID, testRepo.ArgsIn[GetGroupsByUserIDMethod][0])
-				continue
-			}
-
-			// Check result
-			if diff := pretty.Compare(groups, test.expectedGroups); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+		CheckApiResponse(t, n, test.wantError, err, test.expectedGroups, groups)
+		if param := testRepo.ArgsIn[GetGroupsByUserIDMethod][0]; param != test.userID {
+			t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
+				n, test.userID, testRepo.ArgsIn[GetGroupsByUserIDMethod][0])
+			continue
 		}
 	}
 }
@@ -1195,7 +1097,7 @@ func TestGetPoliciesByGroups(t *testing.T) {
 		groups           []Group
 		expectedPolicies []Policy
 		// Error to compare when we expect an error
-		wantError *Error
+		wantError error
 		// GetAttachedPolicies Method Out Arguments
 		getAttachedPoliciesResult []Policy
 		getAttachedPoliciesError  error
@@ -1257,39 +1159,21 @@ func TestGetPoliciesByGroups(t *testing.T) {
 		},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for n, test := range testcases {
+
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
 
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = test.getAttachedPoliciesResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = test.getAttachedPoliciesError
 
 		policies, err := testAPI.getPoliciesByGroups(test.groups)
-		if test.wantError != nil {
-			if apiError := err.(*Error); test.wantError.Code != apiError.Code {
-				t.Errorf("Test %v failed. Received different error codes (wanted:%v / received:%v)", n,
-					test.wantError.Code, apiError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", n, err)
-				continue
-			}
-
-			if param := testRepo.ArgsIn[GetAttachedPoliciesMethod][0]; len(test.groups) > 0 &&
-				param != test.groups[len(test.groups)-1].ID {
-				t.Errorf("Test %v failed. Received different group identifiers (wanted:%v / received:%v)",
-					n, test.groups[len(test.groups)-1].ID, testRepo.ArgsIn[GetAttachedPoliciesMethod][0])
-				continue
-			}
-
-			// Check result
-			if diff := pretty.Compare(policies, test.expectedPolicies); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+		CheckApiResponse(t, n, test.wantError, err, test.expectedPolicies, policies)
+		if param := testRepo.ArgsIn[GetAttachedPoliciesMethod][0]; test.wantError == nil && len(test.groups) > 0 &&
+			param != test.groups[len(test.groups)-1].ID {
+			t.Errorf("Test %v failed. Received different group identifiers (wanted:%v / received:%v)",
+				n, test.groups[len(test.groups)-1].ID, testRepo.ArgsIn[GetAttachedPoliciesMethod][0])
+			continue
 		}
 	}
 }
@@ -1392,19 +1276,9 @@ func TestGetStatementsByRequestedAction(t *testing.T) {
 	}
 
 	for n, test := range testcases {
-
 		statements := getStatementsByRequestedAction(test.policies, test.action)
-
-		// Check result
-		if diff := pretty.Compare(statements, test.expectedStatements); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
+		CheckApiResponse(t, n, nil, nil, test.expectedStatements, statements)
 	}
-}
-
-func TestCleanRepeatedRestrictions(t *testing.T) {
-
 }
 
 func TestIsActionContained(t *testing.T) {
@@ -1461,15 +1335,8 @@ func TestIsActionContained(t *testing.T) {
 	}
 
 	for n, test := range testcases {
-
 		isContained := isActionContained(test.actionRequested, test.statementActions)
-
-		// Check result
-		if test.expectedResponse != isContained {
-			t.Errorf("Test %v failed. Received different responses (wanted:%v / received:%v)",
-				n, test.expectedResponse, isContained)
-			continue
-		}
+		CheckApiResponse(t, n, nil, nil, test.expectedResponse, isContained)
 	}
 }
 
@@ -1497,15 +1364,8 @@ func TestIsResourceContained(t *testing.T) {
 	}
 
 	for n, test := range testcases {
-
 		isContained := isContainedOrEqual(test.resource, test.resourcePrefix)
-
-		// Check result
-		if test.expectedResponse != isContained {
-			t.Errorf("Test %v failed. Received different values (wanted:%v / received:%v)",
-				n, test.expectedResponse, isContained)
-			continue
-		}
+		CheckApiResponse(t, n, nil, nil, test.expectedResponse, isContained)
 	}
 }
 
@@ -1525,15 +1385,8 @@ func TestIsFullUrn(t *testing.T) {
 	}
 
 	for n, test := range testcases {
-
 		isFullUrn := isFullUrn(test.resource)
-
-		// Check result
-		if test.expectedResponse != isFullUrn {
-			t.Errorf("Test %v failed. Received different values (wanted:%v / received:%v)",
-				n, test.expectedResponse, isFullUrn)
-			continue
-		}
+		CheckApiResponse(t, n, nil, nil, test.expectedResponse, isFullUrn)
 	}
 }
 
@@ -2013,15 +1866,8 @@ func TestInsertRestriction(t *testing.T) {
 	}
 
 	for n, test := range testcases {
-
 		test.restrictions.insertRestriction(test.resource.isAllow, test.resource.isFullUrn, test.resource.urn)
-
-		// Check result
-		if diff := pretty.Compare(test.restrictions, test.expectedRestrictions); diff != "" {
-			t.Errorf("Test %v failed. Received different values (wanted / received): %v",
-				n, diff)
-			continue
-		}
+		CheckApiResponse(t, n, nil, nil, test.expectedRestrictions, test.restrictions)
 	}
 }
 
@@ -2123,14 +1969,8 @@ func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
 	}
 
 	for n, test := range testcases {
-
 		restrictions := getRestrictions(test.statements, test.resource, isFullUrn(test.resource))
-
-		// Check result
-		if diff := pretty.Compare(restrictions, test.expectedRestrictions); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
+		CheckApiResponse(t, n, nil, nil, test.expectedRestrictions, restrictions)
 	}
 }
 
@@ -2228,14 +2068,8 @@ func TestGetRestrictionsWhenResourceRequestedIsFullUrn(t *testing.T) {
 	}
 
 	for n, test := range testcases {
-
 		restrictions := getRestrictions(test.statements, test.resource, isFullUrn(test.resource))
-
-		// Check result
-		if diff := pretty.Compare(restrictions, test.expectedRestrictions); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
+		CheckApiResponse(t, n, nil, nil, test.expectedRestrictions, restrictions)
 	}
 }
 
@@ -2296,14 +2130,8 @@ func TestFilterResources(t *testing.T) {
 	}
 
 	for n, test := range testcases {
-
 		filteredResources := filterResources(test.resources, test.restrictions)
-
-		// Check result
-		if diff := pretty.Compare(filteredResources, test.expectedResources); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
+		CheckApiResponse(t, n, nil, nil, test.expectedResources, filteredResources)
 	}
 }
 
@@ -2416,13 +2244,7 @@ func TestIsAllowedResource(t *testing.T) {
 	}
 
 	for n, test := range testcases {
-
 		response := isAllowedResource(test.resource, test.restrictions)
-
-		// Check result
-		if diff := pretty.Compare(response, test.expectedData); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
+		CheckApiResponse(t, n, nil, nil, test.expectedData, response)
 	}
 }
