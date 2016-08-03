@@ -230,7 +230,7 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 		testRepo.ArgsOut[AddGroupMethod][0] = testcase.expectedGroup
 		testRepo.ArgsOut[AddGroupMethod][1] = testcase.addGroupMethodErr
 		group, err := testAPI.AddGroup(testcase.authUser, testcase.org, testcase.name, testcase.path)
-		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedGroup, group)
+		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedGroup, group)
 	}
 
 }
@@ -435,7 +435,7 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		group, err := testAPI.GetGroupByName(testcase.authUser, testcase.org, testcase.name)
-		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedGroup, group)
+		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedGroup, group)
 	}
 }
 
@@ -647,7 +647,7 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 
 		groups, err := testAPI.ListGroups(testcase.authUser, testcase.org, testcase.pathPrefix)
-		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedGroups, groups)
+		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedGroups, groups)
 	}
 }
 
@@ -1152,7 +1152,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		group, err := testAPI.UpdateGroup(testcase.authUser, testcase.org, testcase.groupName, testcase.newGroupName, testcase.newPath)
-		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedGroup, group)
+		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedGroup, group)
 	}
 }
 
@@ -1439,7 +1439,7 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[RemoveGroupMethod][0] = testcase.removeGroupMethodErr
 		err := testAPI.RemoveGroup(testcase.authUser, testcase.org, testcase.name)
-		CheckApiResponse(t, x, testcase.wantError, err, nil, nil)
+		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
 
@@ -1791,7 +1791,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 		testRepo.ArgsOut[IsMemberOfGroupMethod][1] = testcase.isMemberOfGroupMethodErr
 
 		err := testAPI.AddMember(testcase.authUser, testcase.userID, testcase.groupName, testcase.org)
-		CheckApiResponse(t, x, testcase.wantError, err, nil, nil)
+		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
 
@@ -2202,7 +2202,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 
 		err := testAPI.RemoveMember(testcase.authUser, testcase.userID, testcase.groupName, testcase.org)
-		CheckApiResponse(t, x, testcase.wantError, err, nil, nil)
+		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
 
@@ -2479,7 +2479,7 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 
 		members, err := testAPI.ListMembers(testcase.authUser, testcase.org, testcase.groupName)
-		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedMembers, members)
+		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedMembers, members)
 	}
 }
 
@@ -2878,7 +2878,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 		testRepo.ArgsOut[AttachPolicyMethod][0] = testcase.attachPolicyMethodErr
 
 		err := testAPI.AttachPolicyToGroup(testcase.authUser, testcase.org, testcase.groupName, testcase.policyName)
-		CheckApiResponse(t, x, testcase.wantError, err, nil, nil)
+		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
 
@@ -3277,7 +3277,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 		testRepo.ArgsOut[DetachPolicyMethod][0] = testcase.detachPolicyMethodErr
 
 		err := testAPI.DetachPolicyToGroup(testcase.authUser, testcase.org, testcase.groupName, testcase.policyName)
-		CheckApiResponse(t, x, testcase.wantError, err, nil, nil)
+		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
 
@@ -3575,6 +3575,6 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = testcase.getAttachedPoliciesErr
 		policies, err := testAPI.ListAttachedGroupPolicies(testcase.authUser, testcase.org, testcase.name)
-		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedPolicies, policies)
+		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedPolicies, policies)
 	}
 }

@@ -459,7 +459,7 @@ func GetRandomString(runeValue []rune, n int) string {
 	return string(b)
 }
 
-func CheckApiResponse(t *testing.T, testcase string, expectedError error, receivedError error, expectedResponse interface{}, receivedResponse interface{}) {
+func checkMethodResponse(t *testing.T, testcase string, expectedError error, receivedError error, expectedResponse interface{}, receivedResponse interface{}) {
 	if expectedError != nil {
 		apiError, ok := receivedError.(*Error)
 		if !ok || apiError == nil {
