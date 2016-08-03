@@ -82,7 +82,7 @@ func TestGetAuthorizedUsers(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
 
 		authorizedUsers, err := testAPI.GetAuthorizedUsers(test.authUser, test.resourceUrn, test.action, test.usersToAuthorize)
-		CheckApiResponse(t, n, test.wantError, err, test.usersAuthorized, authorizedUsers)
+		checkMethodResponse(t, n, test.wantError, err, test.usersAuthorized, authorizedUsers)
 		if !test.authUser.Admin {
 			// Check received authenticated user in method GetUserByExternalID
 			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
@@ -170,7 +170,7 @@ func TestGetAuthorizedGroups(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
 
 		authorizedGroups, err := testAPI.GetAuthorizedGroups(test.authUser, test.resourceUrn, test.action, test.groupsToAuthorize)
-		CheckApiResponse(t, n, test.wantError, err, test.groupsAuthorized, authorizedGroups)
+		checkMethodResponse(t, n, test.wantError, err, test.groupsAuthorized, authorizedGroups)
 		if !test.authUser.Admin {
 			// Check received authenticated user in method GetUserByExternalID
 			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
@@ -258,7 +258,7 @@ func TestGetAuthorizedPolicies(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
 
 		authorizedPolicies, err := testAPI.GetAuthorizedPolicies(test.authUser, test.resourceUrn, test.action, test.policiesToAuthorize)
-		CheckApiResponse(t, n, test.wantError, err, test.policiesAuthorized, authorizedPolicies)
+		checkMethodResponse(t, n, test.wantError, err, test.policiesAuthorized, authorizedPolicies)
 		if !test.authUser.Admin {
 			// Check received authenticated user in method GetUserByExternalID
 			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
@@ -535,7 +535,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = test.getAttachedPoliciesError
 
 		resources, err := testAPI.GetAuthorizedExternalResources(test.authUser, test.action, test.resourceUrns)
-		CheckApiResponse(t, n, test.wantError, err, test.expectedResources, resources)
+		checkMethodResponse(t, n, test.wantError, err, test.expectedResources, resources)
 		if !test.authUser.Admin {
 			// Check received authenticated user in method GetUserByExternalID
 			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
@@ -765,7 +765,7 @@ func TestGetAuthorizedResources(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = test.getAttachedPoliciesError
 
 		authorizedResources, err := testAPI.getAuthorizedResources(test.authUser, test.resourceUrn, test.action, test.resourcesToAuthorize)
-		CheckApiResponse(t, n, test.wantError, err, test.resourcesAuthorized, authorizedResources)
+		checkMethodResponse(t, n, test.wantError, err, test.resourcesAuthorized, authorizedResources)
 		if !test.authUser.Admin {
 			// Check received authenticated user in method GetUserByExternalID
 			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
@@ -1010,7 +1010,7 @@ func TestGetRestrictions(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = test.getAttachedPoliciesError
 
 		restrictions, err := testAPI.getRestrictions(test.authUserID, test.action, test.resourceUrn)
-		CheckApiResponse(t, n, test.wantError, err, test.expectedRestrictions, restrictions)
+		checkMethodResponse(t, n, test.wantError, err, test.expectedRestrictions, restrictions)
 		if test.wantError == nil && testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUserID {
 			t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
 				n, test.authUserID, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
@@ -1083,7 +1083,7 @@ func TestGetGroupsByUser(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = test.getGroupsByUserIDError
 
 		groups, err := testAPI.getGroupsByUser(test.userID)
-		CheckApiResponse(t, n, test.wantError, err, test.expectedGroups, groups)
+		checkMethodResponse(t, n, test.wantError, err, test.expectedGroups, groups)
 		if param := testRepo.ArgsIn[GetGroupsByUserIDMethod][0]; param != test.userID {
 			t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
 				n, test.userID, testRepo.ArgsIn[GetGroupsByUserIDMethod][0])
@@ -1168,7 +1168,7 @@ func TestGetPoliciesByGroups(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = test.getAttachedPoliciesError
 
 		policies, err := testAPI.getPoliciesByGroups(test.groups)
-		CheckApiResponse(t, n, test.wantError, err, test.expectedPolicies, policies)
+		checkMethodResponse(t, n, test.wantError, err, test.expectedPolicies, policies)
 		if param := testRepo.ArgsIn[GetAttachedPoliciesMethod][0]; test.wantError == nil && len(test.groups) > 0 &&
 			param != test.groups[len(test.groups)-1].ID {
 			t.Errorf("Test %v failed. Received different group identifiers (wanted:%v / received:%v)",
@@ -1277,7 +1277,7 @@ func TestGetStatementsByRequestedAction(t *testing.T) {
 
 	for n, test := range testcases {
 		statements := getStatementsByRequestedAction(test.policies, test.action)
-		CheckApiResponse(t, n, nil, nil, test.expectedStatements, statements)
+		checkMethodResponse(t, n, nil, nil, test.expectedStatements, statements)
 	}
 }
 
@@ -1336,7 +1336,7 @@ func TestIsActionContained(t *testing.T) {
 
 	for n, test := range testcases {
 		isContained := isActionContained(test.actionRequested, test.statementActions)
-		CheckApiResponse(t, n, nil, nil, test.expectedResponse, isContained)
+		checkMethodResponse(t, n, nil, nil, test.expectedResponse, isContained)
 	}
 }
 
@@ -1365,7 +1365,7 @@ func TestIsResourceContained(t *testing.T) {
 
 	for n, test := range testcases {
 		isContained := isContainedOrEqual(test.resource, test.resourcePrefix)
-		CheckApiResponse(t, n, nil, nil, test.expectedResponse, isContained)
+		checkMethodResponse(t, n, nil, nil, test.expectedResponse, isContained)
 	}
 }
 
@@ -1386,7 +1386,7 @@ func TestIsFullUrn(t *testing.T) {
 
 	for n, test := range testcases {
 		isFullUrn := isFullUrn(test.resource)
-		CheckApiResponse(t, n, nil, nil, test.expectedResponse, isFullUrn)
+		checkMethodResponse(t, n, nil, nil, test.expectedResponse, isFullUrn)
 	}
 }
 
@@ -1867,7 +1867,7 @@ func TestInsertRestriction(t *testing.T) {
 
 	for n, test := range testcases {
 		test.restrictions.insertRestriction(test.resource.isAllow, test.resource.isFullUrn, test.resource.urn)
-		CheckApiResponse(t, n, nil, nil, test.expectedRestrictions, test.restrictions)
+		checkMethodResponse(t, n, nil, nil, test.expectedRestrictions, test.restrictions)
 	}
 }
 
@@ -1970,7 +1970,7 @@ func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
 
 	for n, test := range testcases {
 		restrictions := getRestrictions(test.statements, test.resource, isFullUrn(test.resource))
-		CheckApiResponse(t, n, nil, nil, test.expectedRestrictions, restrictions)
+		checkMethodResponse(t, n, nil, nil, test.expectedRestrictions, restrictions)
 	}
 }
 
@@ -2069,7 +2069,7 @@ func TestGetRestrictionsWhenResourceRequestedIsFullUrn(t *testing.T) {
 
 	for n, test := range testcases {
 		restrictions := getRestrictions(test.statements, test.resource, isFullUrn(test.resource))
-		CheckApiResponse(t, n, nil, nil, test.expectedRestrictions, restrictions)
+		checkMethodResponse(t, n, nil, nil, test.expectedRestrictions, restrictions)
 	}
 }
 
@@ -2131,7 +2131,7 @@ func TestFilterResources(t *testing.T) {
 
 	for n, test := range testcases {
 		filteredResources := filterResources(test.resources, test.restrictions)
-		CheckApiResponse(t, n, nil, nil, test.expectedResources, filteredResources)
+		checkMethodResponse(t, n, nil, nil, test.expectedResources, filteredResources)
 	}
 }
 
@@ -2245,6 +2245,6 @@ func TestIsAllowedResource(t *testing.T) {
 
 	for n, test := range testcases {
 		response := isAllowedResource(test.resource, test.restrictions)
-		CheckApiResponse(t, n, nil, nil, test.expectedData, response)
+		checkMethodResponse(t, n, nil, nil, test.expectedData, response)
 	}
 }
