@@ -231,7 +231,7 @@ func TestAuthAPI_AddUser(t *testing.T) {
 		testRepo.ArgsOut[AddUserMethod][0] = testcase.expectedUser
 		testRepo.ArgsOut[AddUserMethod][1] = testcase.addUserMethodErr
 		user, err := testAPI.AddUser(testcase.authUser, testcase.externalID, testcase.path)
-		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedUser, user)
+		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedUser, user)
 	}
 
 }
@@ -385,7 +385,7 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDMethodResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesMethodResult
 		user, err := testAPI.GetUserByExternalID(testcase.authUser, testcase.externalID)
-		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedUser, user)
+		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedUser, user)
 	}
 
 }
@@ -478,7 +478,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 		testRepo.ArgsOut[GetUsersFilteredMethod][0] = testcase.getUsersFilteredMethodResult
 		testRepo.ArgsOut[GetUsersFilteredMethod][1] = testcase.GetUsersFilteredMethodErr
 		users, err := testAPI.ListUsers(testcase.authUser, testcase.pathPrefix)
-		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedResult, users)
+		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedResult, users)
 	}
 
 }
@@ -857,7 +857,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 		testRepo.ArgsOut[UpdateUserMethod][0] = testcase.expectedUser
 		testRepo.ArgsOut[UpdateUserMethod][1] = testcase.updateUserMethodErr
 		user, err := testAPI.UpdateUser(testcase.authUser, testcase.externalID, testcase.newPath)
-		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedUser, user)
+		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedUser, user)
 	}
 
 }
@@ -1062,7 +1062,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[RemoveUserMethod][0] = testcase.removeUserMethodErr
 		err := testAPI.RemoveUser(testcase.authUser, testcase.externalID)
-		CheckApiResponse(t, x, testcase.wantError, err, nil, nil)
+		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
 
@@ -1299,7 +1299,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = testcase.getGroupsByUserIDErr
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		groups, err := testAPI.ListGroupsByUser(testcase.authUser, testcase.externalID)
-		CheckApiResponse(t, x, testcase.wantError, err, testcase.expectedResponse, groups)
+		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedResponse, groups)
 	}
 
 }

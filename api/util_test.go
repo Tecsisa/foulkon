@@ -1,6 +1,9 @@
 package api
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestCreateUrn(t *testing.T) {
 	testcases := map[string]struct {
@@ -10,20 +13,20 @@ func TestCreateUrn(t *testing.T) {
 		name        string
 		expectedUrn string
 	}{
-		"UserResource": {
+		"OkCaseUserResource": {
 			resource:    RESOURCE_USER,
 			path:        "/mypath/",
 			name:        "user",
 			expectedUrn: "urn:iws:iam::user/mypath/user",
 		},
-		"GroupResource": {
+		"OkCaseGroupResource": {
 			resource:    RESOURCE_GROUP,
 			org:         "org1",
 			path:        "/mygrouppath/",
 			name:        "group",
 			expectedUrn: "urn:iws:iam:org1:group/mygrouppath/group",
 		},
-		"PolicyResource": {
+		"OkCasePolicyResource": {
 			resource:    RESOURCE_POLICY,
 			org:         "org1",
 			path:        "/policypath/",
@@ -34,11 +37,7 @@ func TestCreateUrn(t *testing.T) {
 
 	for x, testcase := range testcases {
 		urn := CreateUrn(testcase.org, testcase.resource, testcase.path, testcase.name)
-		if urn != testcase.expectedUrn {
-			t.Errorf("Test %v failed. Received different urns (wanted: %v / received: %v)",
-				x, testcase.expectedUrn, urn)
-			continue
-		}
+		checkMethodResponse(t, x, nil, nil, testcase.expectedUrn, urn)
 	}
 }
 
@@ -49,18 +48,18 @@ func TestGetUrnPrefix(t *testing.T) {
 		path        string
 		expectedUrn string
 	}{
-		"UserResourcePrefix": {
+		"OkCaseUserResourcePrefix": {
 			resource:    RESOURCE_USER,
 			path:        "/mypath/",
 			expectedUrn: "urn:iws:iam::user/mypath/*",
 		},
-		"GroupResourcePrefix": {
+		"OkCaseGroupResourcePrefix": {
 			resource:    RESOURCE_GROUP,
 			org:         "org1",
 			path:        "/mygrouppath",
 			expectedUrn: "urn:iws:iam:org1:group/mygrouppath*",
 		},
-		"PolicyResourcePrefix": {
+		"OkCasePolicyResourcePrefix": {
 			resource:    RESOURCE_POLICY,
 			org:         "org1",
 			path:        "/policypath/",
@@ -70,11 +69,7 @@ func TestGetUrnPrefix(t *testing.T) {
 
 	for x, testcase := range testcases {
 		urn := GetUrnPrefix(testcase.org, testcase.resource, testcase.path)
-		if urn != testcase.expectedUrn {
-			t.Errorf("Test %v failed. Received different urns (wanted: %v / received: %v)",
-				x, testcase.expectedUrn, urn)
-			continue
-		}
+		checkMethodResponse(t, x, nil, nil, testcase.expectedUrn, urn)
 	}
 }
 
@@ -83,47 +78,47 @@ func TestIsValidUserExternalID(t *testing.T) {
 		externalID string
 		valid      bool
 	}{
-		"Case1": {
+		"OkCaseEmpty": {
 			externalID: "",
 			valid:      false,
 		},
-		"Case2": {
+		"OkCaseFullPrefix": {
 			externalID: "*",
 			valid:      false,
 		},
-		"Case3": {
+		"OkCaseSlash1": {
 			externalID: "/",
 			valid:      false,
 		},
-		"Case4": {
+		"OkCaseSlash2": {
 			externalID: "something/",
 			valid:      false,
 		},
-		"Case5": {
+		"OkCasePrefix1": {
 			externalID: "prefix*",
 			valid:      false,
 		},
-		"Case6": {
+		"OkCasePrefix2": {
 			externalID: "pre*fix",
 			valid:      false,
 		},
-		"Case7": {
+		"OkCaseComma": {
 			externalID: "comma,",
 			valid:      false,
 		},
-		"Case8": {
+		"OkCaseMaxLimitExceed": {
 			externalID: GetRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), MAX_EXTERNAL_ID_LENGTH+1),
 			valid:      false,
 		},
-		"Case9": {
+		"OkCaseLetter": {
 			externalID: "good",
 			valid:      true,
 		},
-		"Case10": {
+		"OkCaseNumber": {
 			externalID: "123456",
 			valid:      true,
 		},
-		"Case11": {
+		"OkCaseFullExample": {
 			externalID: "example-of-user123@email.com-that-is-valid",
 			valid:      true,
 		},
@@ -131,11 +126,7 @@ func TestIsValidUserExternalID(t *testing.T) {
 
 	for x, testcase := range testcases {
 		valid := IsValidUserExternalID(testcase.externalID)
-		if valid != testcase.valid {
-			t.Errorf("Test %v failed. Received different values (wanted: %v / received: %v)",
-				x, testcase.valid, valid)
-			continue
-		}
+		checkMethodResponse(t, x, nil, nil, testcase.valid, valid)
 	}
 }
 
@@ -144,31 +135,31 @@ func TestIsValidOrg(t *testing.T) {
 		org   string
 		valid bool
 	}{
-		"Case1": {
+		"OkCaseEmpty": {
 			org:   "",
 			valid: false,
 		},
-		"Case2": {
+		"OkCaseInvalidDot": {
 			org:   "name.value",
 			valid: false,
 		},
-		"Case3": {
+		"OkCaseInvalid@": {
 			org:   "@",
 			valid: false,
 		},
-		"Case4": {
+		"OkCaseInvalidComma": {
 			org:   ",",
 			valid: false,
 		},
-		"Case5": {
+		"OkCaseInvalidSlash": {
 			org:   "/",
 			valid: false,
 		},
-		"Case6": {
+		"OkCaseMaxLimitExceed": {
 			org:   GetRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), MAX_NAME_LENGTH+1),
 			valid: false,
 		},
-		"Case7": {
+		"OkCase": {
 			org:   "validName",
 			valid: true,
 		},
@@ -176,11 +167,7 @@ func TestIsValidOrg(t *testing.T) {
 
 	for x, testcase := range testcases {
 		valid := IsValidOrg(testcase.org)
-		if valid != testcase.valid {
-			t.Errorf("Test %v failed. Received different values (wanted: %v / received: %v)",
-				x, testcase.valid, valid)
-			continue
-		}
+		checkMethodResponse(t, x, nil, nil, testcase.valid, valid)
 	}
 }
 
@@ -189,31 +176,31 @@ func TestIsValidName(t *testing.T) {
 		name  string
 		valid bool
 	}{
-		"Case1": {
+		"OkCaseEmpty": {
 			name:  "",
 			valid: false,
 		},
-		"Case2": {
+		"OkCaseInvalidDot": {
 			name:  "name.value",
 			valid: false,
 		},
-		"Case3": {
+		"OkCaseInvalid@": {
 			name:  "@",
 			valid: false,
 		},
-		"Case4": {
+		"OkCaseInvalidComma": {
 			name:  ",",
 			valid: false,
 		},
-		"Case5": {
+		"OkCaseInvalidSlash": {
 			name:  "/",
 			valid: false,
 		},
-		"Case6": {
+		"OkCaseMaxLimitExceed": {
 			name:  GetRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), MAX_NAME_LENGTH+1),
 			valid: false,
 		},
-		"Case7": {
+		"OkCase": {
 			name:  "validName",
 			valid: true,
 		},
@@ -221,11 +208,7 @@ func TestIsValidName(t *testing.T) {
 
 	for x, testcase := range testcases {
 		valid := IsValidName(testcase.name)
-		if valid != testcase.valid {
-			t.Errorf("Test %v failed. Received different values (wanted: %v / received: %v)",
-				x, testcase.valid, valid)
-			continue
-		}
+		checkMethodResponse(t, x, nil, nil, testcase.valid, valid)
 	}
 }
 
@@ -234,51 +217,51 @@ func TestIsValidPath(t *testing.T) {
 		path  string
 		valid bool
 	}{
-		"Case1": {
+		"OkCaseEmpty": {
 			path:  "",
 			valid: false,
 		},
-		"Case2": {
+		"OkCaseMalformedPath1": {
 			path:  "/path",
 			valid: false,
 		},
-		"Case3": {
+		"OkCaseMalformedPath2": {
 			path:  "path/",
 			valid: false,
 		},
-		"Case4": {
+		"OkCaseInvalidComma": {
 			path:  ",",
 			valid: false,
 		},
-		"Case5": {
+		"OkCaseInvalidPrefix": {
 			path:  "*",
 			valid: false,
 		},
-		"Case6": {
+		"OkCaseInvalidPrefix2": {
 			path:  "/*",
 			valid: false,
 		},
-		"Case7": {
+		"OkCaseInvalidPrefix3": {
 			path:  "*/",
 			valid: false,
 		},
-		"Case8": {
+		"OkCaseInvalidPrefix4": {
 			path:  "/*/",
 			valid: false,
 		},
-		"Case9": {
+		"OkCaseInvalidDot": {
 			path:  "path.value",
 			valid: false,
 		},
-		"Case10": {
+		"OkCaseMaxLimitExceed": {
 			path:  "/" + GetRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), MAX_PATH_LENGTH-1) + "/",
 			valid: false,
 		},
-		"Case11": {
+		"OkCaseRoot": {
 			path:  "/",
 			valid: true,
 		},
-		"Case12": {
+		"OkCaseWithPath": {
 			path:  "/path/",
 			valid: true,
 		},
@@ -286,11 +269,7 @@ func TestIsValidPath(t *testing.T) {
 
 	for x, testcase := range testcases {
 		valid := IsValidPath(testcase.path)
-		if valid != testcase.valid {
-			t.Errorf("Test %v failed. Received different values (wanted: %v / received: %v)",
-				x, testcase.valid, valid)
-			continue
-		}
+		checkMethodResponse(t, x, nil, nil, testcase.valid, valid)
 	}
 }
 
@@ -299,7 +278,7 @@ func TestIsValidEffect(t *testing.T) {
 		// Method args
 		effect string
 		// Expected results
-		wantError *Error
+		wantError error
 	}{
 		"OKCaseAllow": {
 			effect: "allow",
@@ -310,38 +289,25 @@ func TestIsValidEffect(t *testing.T) {
 		"ErrorCaseInvalidEffect": {
 			effect: "other",
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid effect: other - Only 'allow' and 'deny' accepted",
 			},
 		},
 	}
 
 	for x, testcase := range testcases {
 		err := IsValidEffect(testcase.effect)
-		if testcase.wantError != nil {
-			apiError, ok := err.(*Error)
-			if !ok || apiError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
-				continue
-			}
-			if apiError.Code != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", x, err)
-				continue
-			}
-		}
+		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
 
 func TestIsValidAction(t *testing.T) {
+	randomString := GetRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:*"), MAX_ACTION_LENGTH+1)
 	testcases := map[string]struct {
 		// Method args
 		actions []string
 		// Expected results
-		wantError *Error
+		wantError error
 	}{
 		"OKCaseValidAction": {
 			actions: []string{
@@ -354,7 +320,8 @@ func TestIsValidAction(t *testing.T) {
 				"iam:",
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in action: iam:",
 			},
 		},
 		"ErrorCaseMalformedAction2": {
@@ -362,7 +329,8 @@ func TestIsValidAction(t *testing.T) {
 				"*",
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in action: *",
 			},
 		},
 		"ErrorCaseInvalidCharacters": {
@@ -370,7 +338,8 @@ func TestIsValidAction(t *testing.T) {
 				"iam:**",
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in action: iam:**",
 			},
 		},
 		"ErrorCaseInvalidCharacters2": {
@@ -378,37 +347,24 @@ func TestIsValidAction(t *testing.T) {
 				"iam::",
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in action: iam::",
 			},
 		},
 		"ErrorCaseMaxLengthExceeded": {
 			actions: []string{
-				GetRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:*"), MAX_ACTION_LENGTH+1),
+				randomString,
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code:    REGEX_NO_MATCH,
+				Message: fmt.Sprintf("No regex match in action: %v", randomString),
 			},
 		},
 	}
 
 	for x, testcase := range testcases {
 		err := IsValidAction(testcase.actions)
-		if testcase.wantError != nil {
-			apiError, ok := err.(*Error)
-			if !ok || apiError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
-				continue
-			}
-			if apiError.Code != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", x, err)
-				continue
-			}
-		}
+		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
 
@@ -417,11 +373,11 @@ func TestIsValidStatement(t *testing.T) {
 		// Method args
 		Statements *[]Statement
 		// Expected results
-		wantError *Error
+		wantError error
 	}{
 		"OKCase": {
 			Statements: &[]Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -434,7 +390,7 @@ func TestIsValidStatement(t *testing.T) {
 		},
 		"ErrorCaseInvalidEffect": {
 			Statements: &[]Statement{
-				Statement{
+				{
 					Effect: "FAILallowZ",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -445,12 +401,13 @@ func TestIsValidStatement(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid effect: FAILallowZ - Only 'allow' and 'deny' accepted",
 			},
 		},
 		"ErrorCaseInvalidAction": {
 			Statements: &[]Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						"fail***",
@@ -461,12 +418,13 @@ func TestIsValidStatement(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in action: fail***",
 			},
 		},
 		"ErrorCaseInvalidResource": {
 			Statements: &[]Statement{
-				Statement{
+				{
 					Effect: "allow",
 					Action: []string{
 						USER_ACTION_GET_USER,
@@ -477,29 +435,15 @@ func TestIsValidStatement(t *testing.T) {
 				},
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in resource: urn:iws:iam::user/path/****",
 			},
 		},
 	}
 
 	for x, testcase := range testcases {
 		err := IsValidStatement(testcase.Statements)
-		if testcase.wantError != nil {
-			apiError, ok := err.(*Error)
-			if !ok || apiError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
-				continue
-			}
-			if apiError.Code != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", x, err)
-				continue
-			}
-		}
+		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
 
@@ -508,7 +452,7 @@ func TestIsValidResources(t *testing.T) {
 		// Method args
 		Resources []string
 		// Expected results
-		wantError *Error
+		wantError error
 	}{
 		"OKCase1block": {
 			Resources: []string{
@@ -520,7 +464,8 @@ func TestIsValidResources(t *testing.T) {
 				"fail",
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in resource: fail",
 			},
 		},
 		"OKCase2block": {
@@ -533,7 +478,8 @@ func TestIsValidResources(t *testing.T) {
 				"fail:asd",
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in resource: fail:asd",
 			},
 		},
 		"ErrorCase2block": {
@@ -541,7 +487,8 @@ func TestIsValidResources(t *testing.T) {
 				"urn:fail",
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in resource: urn:fail",
 			},
 		},
 		"OKCase3block": {
@@ -554,7 +501,8 @@ func TestIsValidResources(t *testing.T) {
 				"urn:iws***:something",
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in resource: urn:iws***:something",
 			},
 		},
 		"ErrorCase3block": {
@@ -562,7 +510,8 @@ func TestIsValidResources(t *testing.T) {
 				"urn:iws:fail",
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in resource: urn:iws:fail",
 			},
 		},
 		"OKCase4block": {
@@ -575,7 +524,8 @@ func TestIsValidResources(t *testing.T) {
 				"urn:iws:some***:fail",
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in resource: urn:iws:some***:fail",
 			},
 		},
 		"ErrorCase4block": {
@@ -583,7 +533,8 @@ func TestIsValidResources(t *testing.T) {
 				"urn:iws:iam:fail",
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in resource: urn:iws:iam:fail",
 			},
 		},
 		"OKCase5block": {
@@ -596,7 +547,8 @@ func TestIsValidResources(t *testing.T) {
 				"urn:iws:iam:some***:fail",
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in resource: urn:iws:iam:some***:fail",
 			},
 		},
 		"ErrorCase5block": {
@@ -604,7 +556,8 @@ func TestIsValidResources(t *testing.T) {
 				"urn:iws:iam:org1:fail**!^_#",
 			},
 			wantError: &Error{
-				Code: REGEX_NO_MATCH,
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in resource: urn:iws:iam:org1:fail**!^_#",
 			},
 		},
 		"ErrorCaseBadResource": {
@@ -612,28 +565,14 @@ func TestIsValidResources(t *testing.T) {
 				"urn:iws:iam:org1:fail:fail:fail",
 			},
 			wantError: &Error{
-				Code: INVALID_PARAMETER_ERROR,
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid resource definition: urn:iws:iam:org1:fail:fail:fail",
 			},
 		},
 	}
 
 	for x, testcase := range testcases {
 		err := IsValidResources(testcase.Resources)
-		if testcase.wantError != nil {
-			apiError, ok := err.(*Error)
-			if !ok || apiError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", x, err)
-				continue
-			}
-			if apiError.Code != testcase.wantError.Code {
-				t.Errorf("Test %v failed. Got error %v, expected %v", x, apiError, testcase.wantError.Code)
-				continue
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Error: %v", x, err)
-				continue
-			}
-		}
+		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
