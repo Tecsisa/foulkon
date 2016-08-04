@@ -77,7 +77,6 @@ func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalId strin
 				}
 			}
 
-			// Return user created
 			return createdUser, nil
 		default: // Unexpected error
 			return nil, &Error{
@@ -183,13 +182,6 @@ func (api AuthAPI) ListUsers(authenticatedUser AuthenticatedUser, pathPrefix str
 }
 
 func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalId string, newPath string) (*User, error) {
-	// Validate fields
-	if !IsValidUserExternalID(externalId) {
-		return nil, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: externalId %v", externalId),
-		}
-	}
 	if !IsValidPath(newPath) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -231,7 +223,6 @@ func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalId st
 		}
 	}
 
-	// Update user
 	user, err := api.UserRepo.UpdateUser(*userDB, newPath, userToUpdate.Urn)
 
 	// Check unexpected DB error
@@ -268,7 +259,6 @@ func (api AuthAPI) RemoveUser(authenticatedUser AuthenticatedUser, externalId st
 		}
 	}
 
-	// Remove user with given id
 	err = api.UserRepo.RemoveUser(user.ID)
 
 	// Error handling
