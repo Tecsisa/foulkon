@@ -16,9 +16,10 @@ func TestAuthAPI_AddUser(t *testing.T) {
 		expectedUser *User
 		wantError    error
 		// Manager Results
-		getUserByExternalIDMethodResult *User
-		getGroupsByUserIDResult         []Group
-		getAttachedPoliciesResult       []Policy
+		getUserByExternalIDMethodResult      *User
+		getUserByExternalIDMethodSpecialFunc func(string) (*User, error)
+		getGroupsByUserIDResult              []Group
+		getAttachedPoliciesResult            []Policy
 		// API Errors
 		addUserMethodErr             error
 		getUserByExternalIDMethodErr error
@@ -38,6 +39,62 @@ func TestAuthAPI_AddUser(t *testing.T) {
 			getUserByExternalIDMethodErr: &database.Error{
 				Code:    database.USER_NOT_FOUND,
 				Message: "User not found",
+			},
+		},
+		"OKCase": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			externalID: "1234",
+			path:       "/example/",
+			expectedUser: &User{
+				ID:         "USER_ID",
+				ExternalID: "1234",
+				Path:       "/example/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/example/", "1234"),
+			},
+			getUserByExternalIDMethodSpecialFunc: func(id string) (*User, error) {
+				if id == "123456" {
+					return &User{
+						ID:         "000",
+						ExternalID: "000",
+						Path:       "/path/",
+						Urn:        CreateUrn("", RESOURCE_USER, "/path/", "000"),
+					}, nil
+				} else {
+					return nil, &database.Error{
+						Code:    database.USER_NOT_FOUND,
+						Message: "User not found",
+					}
+				}
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_CREATE_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/example/"),
+							},
+						},
+					},
+				},
 			},
 		},
 		"ErrorCaseInvalidExtID": {
@@ -239,6 +296,7 @@ func TestAuthAPI_AddUser(t *testing.T) {
 
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDMethodResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
+		testRepo.SpecialFuncs[GetUserByExternalIDMethod] = testcase.getUserByExternalIDMethodSpecialFunc
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[AddUserMethod][0] = testcase.expectedUser
@@ -281,6 +339,52 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 				ExternalID: "123",
 				Path:       "/users/test/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/users/test/", "123"),
+			},
+		},
+		"OKCase": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			externalID: "000",
+			expectedUser: &User{
+				ID:         "000",
+				ExternalID: "000",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "000"),
+			},
+			getUserByExternalIDMethodResult: &User{
+				ID:         "000",
+				ExternalID: "000",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "000"),
+			},
+			getGroupsByUserIDMethodResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesMethodResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/path/"),
+							},
+						},
+					},
+				},
 			},
 		},
 		"ErrorCaseInvalidExtID": {
@@ -475,6 +579,125 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 				},
 			},
 		},
+		"OKCase": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			pathPrefix:     "",
+			expectedResult: []string{"123", "321"},
+			getUserByExternalIDMethodResult: &User{
+				ID:         "000",
+				ExternalID: "000",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "000"),
+			},
+			getUsersFilteredMethodResult: []User{
+				{
+					ID:         "123",
+					ExternalID: "123",
+					Path:       "/example/test/",
+					Urn:        CreateUrn("", RESOURCE_USER, "/example/test/", "123"),
+				},
+				{
+					ID:         "321",
+					ExternalID: "321",
+					Path:       "/example/test2/",
+					Urn:        CreateUrn("", RESOURCE_USER, "/example/test2/", "321"),
+				},
+			},
+			getGroupsByUserIDMethodResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesMethodResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_LIST_USERS,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, ""),
+							},
+						},
+					},
+				},
+			},
+		},
+		"OKCaseNoResourcesAllowed": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			pathPrefix:     "",
+			expectedResult: []string{},
+			getUserByExternalIDMethodResult: &User{
+				ID:         "000",
+				ExternalID: "000",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "000"),
+			},
+			getUsersFilteredMethodResult: []User{
+				{
+					ID:         "123",
+					ExternalID: "123",
+					Path:       "/example/test/",
+					Urn:        CreateUrn("", RESOURCE_USER, "/example/test/", "123"),
+				},
+				{
+					ID:         "321",
+					ExternalID: "321",
+					Path:       "/example/test2/",
+					Urn:        CreateUrn("", RESOURCE_USER, "/example/test2/", "321"),
+				},
+			},
+			getGroupsByUserIDMethodResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesMethodResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_LIST_USERS,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, ""),
+							},
+						},
+						{
+							Effect: "deny",
+							Action: []string{
+								USER_ACTION_LIST_USERS,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/example/"),
+							},
+						},
+					},
+				},
+			},
+		},
 		"ErrorCaseInvalidPath": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -484,19 +707,6 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
 				Message: "Invalid parameter: PathPrefix /^*$**~#!/",
-			},
-		},
-		"ErrorCaseFilterUsersDBErr": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			pathPrefix: "/example/",
-			wantError: &Error{
-				Code: UNKNOWN_API_ERROR,
-			},
-			GetUsersFilteredMethodErr: &database.Error{
-				Code: database.INTERNAL_ERROR,
 			},
 		},
 		"ErrorCaseNoAuth": {
@@ -513,17 +723,139 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
 			},
 		},
+		"ErrorCaseFilterUsersDBErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			pathPrefix: "/example/",
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+			GetUsersFilteredMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			pathPrefix: "",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam::user/*",
+			},
+			getUserByExternalIDMethodResult: &User{
+				ID:         "000",
+				ExternalID: "000",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "000"),
+			},
+			getUsersFilteredMethodResult: []User{
+				{
+					ID:         "123",
+					ExternalID: "123",
+					Path:       "/example/test/",
+					Urn:        CreateUrn("", RESOURCE_USER, "/example/test/", "123"),
+				},
+				{
+					ID:         "321",
+					ExternalID: "321",
+					Path:       "/example/test2/",
+					Urn:        CreateUrn("", RESOURCE_USER, "/example/test2/", "321"),
+				},
+			},
+			getGroupsByUserIDMethodResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesMethodResult: []Policy{
+				{
+					ID:         "POLICY-USER-ID",
+					Name:       "policyUser",
+					Path:       "/path/",
+					Urn:        CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{},
+				},
+			},
+		},
+		"ErrorCaseListNotAllowed": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			pathPrefix: "",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam::user/*",
+			},
+			getUserByExternalIDMethodResult: &User{
+				ID:         "000",
+				ExternalID: "000",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "000"),
+			},
+			getUsersFilteredMethodResult: []User{
+				{
+					ID:         "123",
+					ExternalID: "123",
+					Path:       "/example/test/",
+					Urn:        CreateUrn("", RESOURCE_USER, "/example/test/", "123"),
+				},
+			},
+			getGroupsByUserIDMethodResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesMethodResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_LIST_USERS,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/example/test/"),
+							},
+						},
+						{
+							Effect: "deny",
+							Action: []string{
+								USER_ACTION_LIST_USERS,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/example/test/"),
+							},
+						},
+					},
+				},
+			},
+		},
 		"ErrorCaseGetUserDbErrInAuth": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
 			},
 			pathPrefix: "/example/",
-			getUserByExternalIDMethodErr: &database.Error{
-				Code: database.INTERNAL_ERROR,
-			},
 			wantError: &Error{
 				Code: UNKNOWN_API_ERROR,
+			},
+			getUserByExternalIDMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
 			},
 		},
 	}
@@ -579,6 +911,54 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 				ExternalID: "1234",
 				Path:       "/example/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/example/", "1234"),
+			},
+		},
+		"OKCase": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			externalID: "000",
+			newPath:    "/newpath/",
+			expectedUser: &User{
+				ID:         "000",
+				ExternalID: "000",
+				Path:       "/newpath/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/newpath/", "000"),
+			},
+			getUserByExternalIDMethodResult: &User{
+				ID:         "000",
+				ExternalID: "000",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "000"),
+			},
+			getGroupsByUserIDMethodResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesMethodResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_GET_USER,
+								USER_ACTION_UPDATE_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, ""),
+							},
+						},
+					},
+				},
 			},
 		},
 		"ErrorCaseInvalidPath": {
@@ -963,6 +1343,47 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 				Path:       "/example/",
 			},
 		},
+		"OKCase": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			externalID: "1234",
+			getUserByExternalIDMethodResult: &User{
+				ID:         "1234",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_GET_USER,
+								USER_ACTION_DELETE_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/path/"),
+							},
+						},
+					},
+				},
+			},
+		},
 		"ErrorCaseInvalidExtID": {
 			externalID: "*%~#@|",
 			wantError: &Error{
@@ -1210,6 +1631,73 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 					Name: "groupUser2",
 					Path: "/path/",
 					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser1"),
+				},
+			},
+		},
+		"OKCase": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			externalID: "1234",
+			expectedResponse: []GroupIdentity{
+				{
+					Org:  "org1",
+					Name: "group1",
+				},
+				{
+					Org:  "org2",
+					Name: "group2",
+				},
+			},
+			getUserByExternalIDMethodResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			getGroupsByUserIDMethodResult: []Group{
+				{
+					ID:   "GROUP-USER-ID-1",
+					Name: "group1",
+					Path: "/path/1/",
+					Org:  "org1",
+					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/1/", "group1"),
+				},
+				{
+					ID:   "GROUP-USER-ID-2",
+					Name: "group2",
+					Path: "/path/2/",
+					Org:  "org2",
+					Urn:  CreateUrn("org2", RESOURCE_GROUP, "/path/2/", "group2"),
+				},
+			},
+			getAttachedPoliciesMethodResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+							},
+						},
+						{
+							Effect: "allow",
+							Action: []string{
+								USER_ACTION_LIST_GROUPS_FOR_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/path/"),
+							},
+						},
+					},
 				},
 			},
 		},

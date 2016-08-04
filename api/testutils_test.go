@@ -118,6 +118,9 @@ func makeTestAPI(testRepo *TestRepo) *AuthAPI {
 
 func (t TestRepo) GetUserByExternalID(id string) (*User, error) {
 	t.ArgsIn[GetUserByExternalIDMethod][0] = id
+	if specialFunc, ok := t.SpecialFuncs[GetUserByExternalIDMethod].(func(id string) (*User, error)); ok && specialFunc != nil {
+		return specialFunc(id)
+	}
 	var user *User
 	if t.ArgsOut[GetUserByExternalIDMethod][0] != nil {
 		user = t.ArgsOut[GetUserByExternalIDMethod][0].(*User)
