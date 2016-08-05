@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"reflect"
 	"testing"
 
 	"github.com/kylelemons/godebug/pretty"
@@ -72,6 +71,18 @@ func TestWorkerHandler_HandleGetAuthorizedExternalResources(t *testing.T) {
 				Message: "Error",
 			},
 		},
+		"ErrorCaseUnauthorizedErrorEmptyList": {
+			request: &AuthorizeResourcesRequest{
+				Resources: []string{},
+				Action:    api.USER_ACTION_GET_USER,
+			},
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId userID is not allowed to access to any resource",
+			},
+			getAuthorizedExternalResourcesResult: []string{},
+		},
 		"ErrorCaseUnknownApiError": {
 			request: &AuthorizeResourcesRequest{
 				Resources: []string{},
@@ -131,9 +142,8 @@ func TestWorkerHandler_HandleGetAuthorizedExternalResources(t *testing.T) {
 				continue
 			}
 			// Check result
-			if !reflect.DeepEqual(authorizeResourcesResponse, test.expectedResponse) {
-				t.Errorf("Test %v failed. Received different responses (wanted:%v / received:%v)",
-					n, test.expectedResponse, authorizeResourcesResponse)
+			if diff := pretty.Compare(authorizeResourcesResponse, test.expectedResponse); diff != "" {
+				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 				continue
 			}
 		case http.StatusInternalServerError: // Empty message so continue

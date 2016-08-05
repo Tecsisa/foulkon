@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"github.com/tecsisa/authorizr/api"
 )
@@ -55,6 +56,14 @@ func (a *WorkerHandler) HandleGetAuthorizedExternalResources(w http.ResponseWrit
 		default: // Unexpected API error
 			a.RespondInternalServerError(r, &userID, w)
 		}
+		return
+	}
+
+	if result == nil || len(result) < 1 {
+		a.RespondForbidden(r, &userID, w, &api.Error{
+			Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to any resource", userID.Identifier),
+		})
 		return
 	}
 
