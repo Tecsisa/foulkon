@@ -25,7 +25,7 @@ type = "${AUTHORIZR_DB}" #(postgres)
 	[database.postgres]
 	datasourcename = "${AUTHORIZR_DB_POSTGRES_DS}"
 	idleconns = "${AUTHORIZR_DB_POSTGRES_IDLECONNS}"
-	maxconns = "${AUTHORIZR_DB_POSTGRES_MAXCONNS}"
+	maxopenconns = "${AUTHORIZR_DB_POSTGRES_MAXCONNS}"
 	connttl = "${AUTHORIZR_DB_POSTGRES_CONNTTL}"  # in seconds
 
 # Authenticator config
