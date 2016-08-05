@@ -36,7 +36,7 @@ func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
 				Statements: []api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -55,7 +55,7 @@ func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -75,7 +75,7 @@ func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -100,7 +100,7 @@ func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
 				Statements: []api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -125,7 +125,7 @@ func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
 				Statements: []api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -150,7 +150,7 @@ func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
 				Statements: []api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -175,7 +175,7 @@ func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
 				Statements: []api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -314,7 +314,7 @@ func TestWorkerHandler_HandleGetPolicy(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -333,7 +333,7 @@ func TestWorkerHandler_HandleGetPolicy(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -774,7 +774,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				Statements: []api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -794,7 +794,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -813,7 +813,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -838,7 +838,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				Statements: []api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -880,7 +880,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				Statements: []api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -905,7 +905,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				Statements: []api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -930,7 +930,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				Statements: []api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{

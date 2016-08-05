@@ -33,7 +33,7 @@ type PolicyIdentity struct {
 
 type Statement struct {
 	Effect    string   `json:"effect, omitempty"`
-	Action    []string `json:"action, omitempty"`
+	Actions   []string `json:"actions, omitempty"`
 	Resources []string `json:"resources, omitempty"`
 }
 
@@ -60,7 +60,7 @@ func (api AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, p
 		}
 
 	}
-	err := IsValidStatement(&statements)
+	err := AreValidStatements(&statements)
 	if err != nil {
 		apiError := err.(*Error)
 		return nil, &Error{
@@ -248,7 +248,7 @@ func (api AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string,
 		}
 
 	}
-	err := IsValidStatement(&newStatements)
+	err := AreValidStatements(&newStatements)
 	if err != nil {
 		apiError := err.(*Error)
 		return nil, &Error{

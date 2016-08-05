@@ -14,7 +14,7 @@
           "example": "allow",
           "type": "string"
         },
-        "action": {
+        "actions": {
           "description": "Operations over resources",
           "example": ["iam:getUser", "iam:*"],
           "type": "array",
@@ -35,8 +35,8 @@
         "effect": {
           "$ref": "#/definitions/order1_statement/definitions/effect"
         },
-        "action": {
-          "$ref": "#/definitions/order1_statement/definitions/action"
+        "actions": {
+          "$ref": "#/definitions/order1_statement/definitions/actions"
         },
         "resources": {
           "$ref": "#/definitions/order1_statement/definitions/resources"

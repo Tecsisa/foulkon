@@ -41,7 +41,7 @@ func (p PostgresRepo) AddPolicy(policy api.Policy) (*api.Policy, error) {
 			ID:        uuid.NewV4().String(),
 			PolicyID:  policy.ID,
 			Effect:    statementApi.Effect,
-			Action:    stringArrayToString(statementApi.Action),
+			Actions:   stringArrayToString(statementApi.Actions),
 			Resources: stringArrayToString(statementApi.Resources),
 		}
 		if err := transaction.Create(statementDB).Error; err != nil {
@@ -229,7 +229,7 @@ func (p PostgresRepo) UpdatePolicy(policy api.Policy, name string, path string, 
 			ID:        uuid.NewV4().String(),
 			PolicyID:  policy.ID,
 			Effect:    s.Effect,
-			Action:    stringArrayToString(s.Action),
+			Actions:   stringArrayToString(s.Actions),
 			Resources: stringArrayToString(s.Resources),
 		}
 		if err := transaction.Create(statementDB).Error; err != nil {
@@ -337,7 +337,7 @@ func dbStatementsToAPIStatements(statements []Statement) *[]api.Statement {
 	statementsApi := make([]api.Statement, len(statements), cap(statements))
 	for i, s := range statements {
 		statementsApi[i] = api.Statement{
-			Action:    strings.Split(s.Action, ";"),
+			Actions:   strings.Split(s.Actions, ";"),
 			Effect:    s.Effect,
 			Resources: strings.Split(s.Resources, ";"),
 		}

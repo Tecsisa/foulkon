@@ -86,7 +86,7 @@ func TestAuthAPI_AddUser(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_CREATE_USER,
 							},
 							Resources: []string{
@@ -175,7 +175,7 @@ func TestAuthAPI_AddUser(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_CREATE_USER,
 							},
 							Resources: []string{
@@ -184,7 +184,7 @@ func TestAuthAPI_AddUser(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_CREATE_USER,
 							},
 							Resources: []string{
@@ -376,7 +376,7 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 							},
 							Resources: []string{
@@ -470,7 +470,7 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 							},
 							Resources: []string{
@@ -479,7 +479,7 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 							},
 							Resources: []string{
@@ -623,7 +623,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_LIST_USERS,
 							},
 							Resources: []string{
@@ -678,7 +678,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_LIST_USERS,
 							},
 							Resources: []string{
@@ -687,7 +687,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_LIST_USERS,
 							},
 							Resources: []string{
@@ -825,7 +825,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_LIST_USERS,
 							},
 							Resources: []string{
@@ -834,7 +834,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_LIST_USERS,
 							},
 							Resources: []string{
@@ -949,7 +949,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 								USER_ACTION_UPDATE_USER,
 							},
@@ -1069,7 +1069,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 							},
 							Resources: []string{
@@ -1114,7 +1114,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 							},
 							Resources: []string{
@@ -1123,7 +1123,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_UPDATE_USER,
 							},
 							Resources: []string{
@@ -1132,7 +1132,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_UPDATE_USER,
 							},
 							Resources: []string{
@@ -1177,7 +1177,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 							},
 							Resources: []string{
@@ -1186,7 +1186,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_UPDATE_USER,
 							},
 							Resources: []string{
@@ -1195,7 +1195,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 							},
 							Resources: []string{
@@ -1240,7 +1240,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 							},
 							Resources: []string{
@@ -1249,7 +1249,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_UPDATE_USER,
 							},
 							Resources: []string{
@@ -1258,7 +1258,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 							},
 							Resources: []string{
@@ -1267,7 +1267,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 							},
 							Resources: []string{
@@ -1372,7 +1372,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 								USER_ACTION_DELETE_USER,
 							},
@@ -1473,7 +1473,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 							},
 							Resources: []string{
@@ -1517,7 +1517,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 							},
 							Resources: []string{
@@ -1526,7 +1526,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_DELETE_USER,
 							},
 							Resources: []string{
@@ -1535,7 +1535,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_DELETE_USER,
 							},
 							Resources: []string{
@@ -1681,7 +1681,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 							},
 							Resources: []string{
@@ -1690,7 +1690,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_LIST_GROUPS_FOR_USER,
 							},
 							Resources: []string{
@@ -1795,7 +1795,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 							},
 							Resources: []string{
@@ -1804,7 +1804,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_LIST_GROUPS_FOR_USER,
 							},
 							Resources: []string{
@@ -1813,7 +1813,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_LIST_GROUPS_FOR_USER,
 							},
 							Resources: []string{
@@ -1857,7 +1857,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 							},
 							Resources: []string{

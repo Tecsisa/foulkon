@@ -398,7 +398,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -438,7 +438,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -447,7 +447,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -492,7 +492,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								"product:DoAction",
 							},
 							Resources: []string{
@@ -504,7 +504,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								"product:DoAction",
 							},
 							Resources: []string{
@@ -689,7 +689,7 @@ func TestGetAuthorizedResources(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 							},
 							Resources: []string{
@@ -737,7 +737,7 @@ func TestGetAuthorizedResources(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 							},
 							Resources: []string{
@@ -909,7 +909,7 @@ func TestGetRestrictions(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 							},
 							Resources: []string{
@@ -921,7 +921,7 @@ func TestGetRestrictions(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 							},
 							Resources: []string{
@@ -968,7 +968,7 @@ func TestGetRestrictions(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 							},
 							Resources: []string{
@@ -980,7 +980,7 @@ func TestGetRestrictions(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 							},
 							Resources: []string{
@@ -1200,7 +1200,7 @@ func TestGetStatementsByRequestedAction(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								"act*", "noaction",
 							},
 							Resources: []string{
@@ -1212,7 +1212,7 @@ func TestGetStatementsByRequestedAction(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								"noaction", "action",
 							},
 							Resources: []string{
@@ -1221,7 +1221,7 @@ func TestGetStatementsByRequestedAction(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								"noaction",
 							},
 							Resources: []string{
@@ -1235,7 +1235,7 @@ func TestGetStatementsByRequestedAction(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								"noact*",
 							},
 							Resources: []string{
@@ -1252,7 +1252,7 @@ func TestGetStatementsByRequestedAction(t *testing.T) {
 			expectedStatements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						"act*", "noaction",
 					},
 					Resources: []string{
@@ -1264,7 +1264,7 @@ func TestGetStatementsByRequestedAction(t *testing.T) {
 				},
 				{
 					Effect: "deny",
-					Action: []string{
+					Actions: []string{
 						"noaction", "action",
 					},
 					Resources: []string{
@@ -1900,7 +1900,7 @@ func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER, USER_ACTION_CREATE_USER,
 					},
 					Resources: []string{
@@ -1912,7 +1912,7 @@ func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
 				},
 				{
 					Effect: "deny",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_DELETE_USER,
 					},
 					Resources: []string{
@@ -1937,7 +1937,7 @@ func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER, USER_ACTION_CREATE_USER,
 					},
 					Resources: []string{
@@ -1946,7 +1946,7 @@ func TestGetRestrictionsWhenResourceRequestedIsPrefix(t *testing.T) {
 				},
 				{
 					Effect: "deny",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_DELETE_USER,
 					},
 					Resources: []string{
@@ -2003,7 +2003,7 @@ func TestGetRestrictionsWhenResourceRequestedIsFullUrn(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER, USER_ACTION_CREATE_USER,
 					},
 					Resources: []string{
@@ -2013,7 +2013,7 @@ func TestGetRestrictionsWhenResourceRequestedIsFullUrn(t *testing.T) {
 				},
 				{
 					Effect: "deny",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_DELETE_USER,
 					},
 					Resources: []string{
@@ -2036,7 +2036,7 @@ func TestGetRestrictionsWhenResourceRequestedIsFullUrn(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER, USER_ACTION_CREATE_USER,
 					},
 					Resources: []string{
@@ -2046,7 +2046,7 @@ func TestGetRestrictionsWhenResourceRequestedIsFullUrn(t *testing.T) {
 				},
 				{
 					Effect: "deny",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_DELETE_USER,
 					},
 					Resources: []string{

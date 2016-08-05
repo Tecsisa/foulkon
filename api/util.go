@@ -109,7 +109,7 @@ func IsValidEffect(effect string) error {
 	return nil
 }
 
-func IsValidAction(actions []string) error {
+func AreValidActions(actions []string) error {
 
 	for _, action := range actions {
 		if !rAction.MatchString(action) || rActionExclude.MatchString(action) || len(action) > MAX_ACTION_LENGTH {
@@ -122,7 +122,7 @@ func IsValidAction(actions []string) error {
 	return nil
 }
 
-func IsValidResources(resources []string) error {
+func AreValidResources(resources []string) error {
 	//err generator helper
 	errFunc := func(resource string) error {
 		return &Error{
@@ -191,17 +191,17 @@ func IsValidResources(resources []string) error {
 	return nil
 }
 
-func IsValidStatement(statements *[]Statement) error {
+func AreValidStatements(statements *[]Statement) error {
 	for _, statement := range *statements {
 		err := IsValidEffect(statement.Effect)
 		if err != nil {
 			return err
 		}
-		err = IsValidAction(statement.Action)
+		err = AreValidActions(statement.Actions)
 		if err != nil {
 			return err
 		}
-		err = IsValidResources(statement.Resources)
+		err = AreValidResources(statement.Resources)
 		if err != nil {
 			return err
 		}

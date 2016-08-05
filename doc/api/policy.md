@@ -7,7 +7,7 @@ Policy statement
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **action** | *array* | Operations over resources | `["iam:getUser","iam:*"]` |
+| **actions** | *array* | Operations over resources | `["iam:getUser","iam:*"]` |
 | **effect** | *string* | allow/deny resources | `"allow"` |
 | **resources** | *array* | resources | `["urn:everything:*"]` |
 
@@ -26,7 +26,7 @@ Policy API
 | **name** | *string* | Policy name | `"policy1"` |
 | **org** | *string* | Policy organization | `"tecsisa"` |
 | **path** | *string* | Policy location | `"/example/admin/"` |
-| **statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:getUser","iam:*"],"resources":["urn:everything:*"]}]` |
+| **statements** | *array* | Policy statements | `[{"effect":"allow","actions":["iam:getUser","iam:*"],"resources":["urn:everything:*"]}]` |
 | **urn** | *string* | Policy's Uniform Resource Name | `"urn:iws:iam:org1:policy/example/admin/policy1"` |
 
 ### Policy Create
@@ -43,7 +43,7 @@ POST /api/v1/organizations/{organization_id}/policies
 | ------- | ------- | ------- | ------- |
 | **name** | *string* | Policy name | `"policy1"` |
 | **path** | *string* | Policy location | `"/example/admin/"` |
-| **statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:getUser","iam:*"],"resources":["urn:everything:*"]}]` |
+| **statements** | *array* | Policy statements | `[{"effect":"allow","actions":["iam:getUser","iam:*"],"resources":["urn:everything:*"]}]` |
 
 
 
@@ -57,7 +57,7 @@ $ curl -n -X POST /api/v1/organizations/$ORGANIZATION_ID/policies \
   "statements": [
     {
       "effect": "allow",
-      "action": [
+      "actions": [
         "iam:getUser",
         "iam:*"
       ],
@@ -89,7 +89,7 @@ HTTP/1.1 201 Created
   "statements": [
     {
       "effect": "allow",
-      "action": [
+      "actions": [
         "iam:getUser",
         "iam:*"
       ],
@@ -115,7 +115,7 @@ PUT /api/v1/organizations/{organization_id}/policies/{policy_name}
 | ------- | ------- | ------- | ------- |
 | **name** | *string* | Policy name | `"policy1"` |
 | **path** | *string* | Policy location | `"/example/admin/"` |
-| **statements** | *array* | Policy statements | `[{"effect":"allow","action":["iam:getUser","iam:*"],"resources":["urn:everything:*"]}]` |
+| **statements** | *array* | Policy statements | `[{"effect":"allow","actions":["iam:getUser","iam:*"],"resources":["urn:everything:*"]}]` |
 
 
 
@@ -129,7 +129,7 @@ $ curl -n -X PUT /api/v1/organizations/$ORGANIZATION_ID/policies/$POLICY_NAME \
   "statements": [
     {
       "effect": "allow",
-      "action": [
+      "actions": [
         "iam:getUser",
         "iam:*"
       ],
@@ -161,7 +161,7 @@ HTTP/1.1 200 OK
   "statements": [
     {
       "effect": "allow",
-      "action": [
+      "actions": [
         "iam:getUser",
         "iam:*"
       ],
@@ -232,7 +232,7 @@ HTTP/1.1 200 OK
   "statements": [
     {
       "effect": "allow",
-      "action": [
+      "actions": [
         "iam:getUser",
         "iam:*"
       ],

@@ -91,7 +91,7 @@ func (api AuthAPI) GetAuthorizedPolicies(user AuthenticatedUser, resourceUrn str
 // Get the resources where the specified user has the action granted
 func (api AuthAPI) GetAuthorizedExternalResources(user AuthenticatedUser, action string, resources []string) ([]string, error) {
 	// Validate parameters
-	if err := IsValidAction([]string{action}); err != nil {
+	if err := AreValidActions([]string{action}); err != nil {
 		// Transform to API error
 		apiError := err.(*Error)
 		return nil, &Error{
@@ -113,7 +113,7 @@ func (api AuthAPI) GetAuthorizedExternalResources(user AuthenticatedUser, action
 				Message: fmt.Sprintf("Invalid parameter resource %v. Urn prefixes are not allowed here", res),
 			}
 		}
-		if err := IsValidResources([]string{res}); err != nil {
+		if err := AreValidResources([]string{res}); err != nil {
 			// Transform to API error
 			apiError := err.(*Error)
 			return nil, &Error{
@@ -272,7 +272,7 @@ func getStatementsByRequestedAction(policies []Policy, requestedAction string) [
 	statements := []Statement{}
 	for _, policy := range policies {
 		for _, statement := range *policy.Statements {
-			if isActionContained(requestedAction, statement.Action) {
+			if isActionContained(requestedAction, statement.Actions) {
 				statements = append(statements, statement)
 			}
 		}

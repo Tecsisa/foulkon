@@ -36,7 +36,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -56,7 +56,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -77,7 +77,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -94,7 +94,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -119,7 +119,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -143,7 +143,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -167,7 +167,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -191,7 +191,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "idufhefmfcasfluhf",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -215,7 +215,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -256,7 +256,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -288,7 +288,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -297,7 +297,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_CREATE_POLICY,
 							},
 							Resources: []string{
@@ -306,7 +306,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_CREATE_POLICY,
 							},
 							Resources: []string{
@@ -332,7 +332,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -361,7 +361,7 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -425,7 +425,7 @@ func TestAuthAPI_GetPolicyByName(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -503,7 +503,7 @@ func TestAuthAPI_GetPolicyByName(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "deny",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -547,7 +547,7 @@ func TestAuthAPI_GetPolicyByName(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "deny",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -580,7 +580,7 @@ func TestAuthAPI_GetPolicyByName(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -589,7 +589,7 @@ func TestAuthAPI_GetPolicyByName(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -666,7 +666,7 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -684,7 +684,7 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -718,7 +718,7 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -751,7 +751,7 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -769,7 +769,7 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -803,7 +803,7 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_LIST_POLICIES,
 							},
 							Resources: []string{
@@ -812,7 +812,7 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_LIST_POLICIES,
 							},
 							Resources: []string{
@@ -878,7 +878,7 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -950,7 +950,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -963,7 +963,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			newStatements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -980,7 +980,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -998,7 +998,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -1019,7 +1019,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1032,7 +1032,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			newStatements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1056,7 +1056,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1069,7 +1069,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			newStatements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1093,7 +1093,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1106,7 +1106,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			newStatements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1130,7 +1130,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1143,7 +1143,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			newStatements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1167,7 +1167,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1180,7 +1180,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			newStatements: []Statement{
 				{
 					Effect: "jblkasdjgp",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1204,7 +1204,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1217,7 +1217,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			newStatements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1243,7 +1243,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1256,7 +1256,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			newStatements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1282,7 +1282,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1295,7 +1295,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			newStatements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1312,7 +1312,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -1330,7 +1330,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -1358,7 +1358,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1371,7 +1371,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			newStatements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1388,7 +1388,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -1420,7 +1420,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -1429,7 +1429,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_UPDATE_POLICY,
 							},
 							Resources: []string{
@@ -1438,7 +1438,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_UPDATE_POLICY,
 							},
 							Resources: []string{
@@ -1464,7 +1464,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1477,7 +1477,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			newStatements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1494,7 +1494,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -1526,7 +1526,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -1552,7 +1552,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1565,7 +1565,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			newStatements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1584,7 +1584,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 						Statements: &[]Statement{
 							{
 								Effect: "allow",
-								Action: []string{
+								Actions: []string{
 									USER_ACTION_GET_USER,
 								},
 								Resources: []string{
@@ -1603,7 +1603,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 						Statements: &[]Statement{
 							{
 								Effect: "allow",
-								Action: []string{
+								Actions: []string{
 									USER_ACTION_GET_USER,
 								},
 								Resources: []string{
@@ -1637,7 +1637,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -1646,7 +1646,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_UPDATE_POLICY,
 							},
 							Resources: []string{
@@ -1672,7 +1672,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1685,7 +1685,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			newStatements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1704,7 +1704,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 						Statements: &[]Statement{
 							{
 								Effect: "allow",
-								Action: []string{
+								Actions: []string{
 									USER_ACTION_GET_USER,
 								},
 								Resources: []string{
@@ -1723,7 +1723,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 						Statements: &[]Statement{
 							{
 								Effect: "allow",
-								Action: []string{
+								Actions: []string{
 									USER_ACTION_GET_USER,
 								},
 								Resources: []string{
@@ -1757,7 +1757,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -1774,7 +1774,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_UPDATE_POLICY,
 							},
 							Resources: []string{
@@ -1800,7 +1800,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1813,7 +1813,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			newStatements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1832,7 +1832,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 						Statements: &[]Statement{
 							{
 								Effect: "allow",
-								Action: []string{
+								Actions: []string{
 									USER_ACTION_GET_USER,
 								},
 								Resources: []string{
@@ -1870,7 +1870,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -1887,7 +1887,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_UPDATE_POLICY,
 							},
 							Resources: []string{
@@ -1913,7 +1913,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1926,7 +1926,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			newStatements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -1945,7 +1945,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 						Statements: &[]Statement{
 							{
 								Effect: "allow",
-								Action: []string{
+								Actions: []string{
 									USER_ACTION_GET_USER,
 								},
 								Resources: []string{
@@ -1983,7 +1983,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -2000,7 +2000,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_UPDATE_POLICY,
 							},
 							Resources: []string{
@@ -2017,7 +2017,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -2034,7 +2034,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_UPDATE_POLICY,
 							},
 							Resources: []string{
@@ -2051,7 +2051,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_UPDATE_POLICY,
 							},
 							Resources: []string{
@@ -2077,7 +2077,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			statements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -2090,7 +2090,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 			newStatements: []Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -2109,7 +2109,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 						Statements: &[]Statement{
 							{
 								Effect: "allow",
-								Action: []string{
+								Actions: []string{
 									USER_ACTION_GET_USER,
 								},
 								Resources: []string{
@@ -2147,7 +2147,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -2164,7 +2164,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_UPDATE_POLICY,
 							},
 							Resources: []string{
@@ -2181,7 +2181,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -2198,7 +2198,7 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_UPDATE_POLICY,
 							},
 							Resources: []string{
@@ -2267,7 +2267,7 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -2335,7 +2335,7 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -2361,7 +2361,7 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -2392,7 +2392,7 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -2418,7 +2418,7 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -2427,7 +2427,7 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_DELETE_POLICY,
 							},
 							Resources: []string{
@@ -2436,7 +2436,7 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_DELETE_POLICY,
 							},
 							Resources: []string{
@@ -2466,7 +2466,7 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -2533,7 +2533,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -2614,7 +2614,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -2640,7 +2640,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -2671,7 +2671,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -2697,7 +2697,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_GET_POLICY,
 							},
 							Resources: []string{
@@ -2706,7 +2706,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_LIST_ATTACHED_GROUPS,
 							},
 							Resources: []string{
@@ -2715,7 +2715,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								POLICY_ACTION_LIST_ATTACHED_GROUPS,
 							},
 							Resources: []string{
@@ -2745,7 +2745,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
