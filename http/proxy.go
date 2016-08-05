@@ -136,11 +136,6 @@ func (h *ProxyHandler) checkAuthorization(r *http.Request, urn string, action st
 			return workerRequestID, getErrorMessage(api.UNKNOWN_API_ERROR, fmt.Sprintf("Error parsing authorizr response %v", err.Error()))
 		}
 
-		if len(authzResponse.ResourcesAllowed) < 1 {
-			return workerRequestID,
-				getErrorMessage(FORBIDDEN_ERROR, fmt.Sprintf("Restricted access to urn %v", urn))
-		}
-
 		// Check urns allowed to find target urn
 		allowed := false
 		for _, allowedRes := range authzResponse.ResourcesAllowed {
