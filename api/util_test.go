@@ -301,7 +301,7 @@ func TestIsValidEffect(t *testing.T) {
 	}
 }
 
-func TestIsValidAction(t *testing.T) {
+func TestAreValidActions(t *testing.T) {
 	randomString := GetRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:*"), MAX_ACTION_LENGTH+1)
 	testcases := map[string]struct {
 		// Method args
@@ -363,12 +363,12 @@ func TestIsValidAction(t *testing.T) {
 	}
 
 	for x, testcase := range testcases {
-		err := IsValidAction(testcase.actions)
+		err := AreValidActions(testcase.actions)
 		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
 
-func TestIsValidStatement(t *testing.T) {
+func TestAreValidStatements(t *testing.T) {
 	testcases := map[string]struct {
 		// Method args
 		Statements *[]Statement
@@ -379,7 +379,7 @@ func TestIsValidStatement(t *testing.T) {
 			Statements: &[]Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -392,7 +392,7 @@ func TestIsValidStatement(t *testing.T) {
 			Statements: &[]Statement{
 				{
 					Effect: "FAILallowZ",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -409,7 +409,7 @@ func TestIsValidStatement(t *testing.T) {
 			Statements: &[]Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						"fail***",
 					},
 					Resources: []string{
@@ -426,7 +426,7 @@ func TestIsValidStatement(t *testing.T) {
 			Statements: &[]Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -442,12 +442,12 @@ func TestIsValidStatement(t *testing.T) {
 	}
 
 	for x, testcase := range testcases {
-		err := IsValidStatement(testcase.Statements)
+		err := AreValidStatements(testcase.Statements)
 		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
 
-func TestIsValidResources(t *testing.T) {
+func TestAreValidResources(t *testing.T) {
 	testcases := map[string]struct {
 		// Method args
 		Resources []string
@@ -572,7 +572,7 @@ func TestIsValidResources(t *testing.T) {
 	}
 
 	for x, testcase := range testcases {
-		err := IsValidResources(testcase.Resources)
+		err := AreValidResources(testcase.Resources)
 		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }

@@ -29,7 +29,7 @@ func TestPostgresRepo_AddPolicy(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -48,7 +48,7 @@ func TestPostgresRepo_AddPolicy(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -69,7 +69,7 @@ func TestPostgresRepo_AddPolicy(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -88,7 +88,7 @@ func TestPostgresRepo_AddPolicy(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -153,7 +153,7 @@ func TestPostgresRepo_AddPolicy(t *testing.T) {
 					"",
 					"",
 					statement.Effect,
-					stringArrayToString(statement.Action),
+					stringArrayToString(statement.Actions),
 					stringArrayToString(statement.Resources))
 				if err != nil {
 					t.Errorf("Test %v failed. Unexpected error counting statements: %v", n, err)
@@ -196,7 +196,7 @@ func TestPostgresRepo_GetPolicyByName(t *testing.T) {
 					ID:        "0123",
 					Effect:    "allow",
 					PolicyID:  "1234",
-					Action:    api.USER_ACTION_GET_USER,
+					Actions:    api.USER_ACTION_GET_USER,
 					Resources: api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
 				},
 			},
@@ -210,7 +210,7 @@ func TestPostgresRepo_GetPolicyByName(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -294,7 +294,7 @@ func TestPostgresRepo_GetPolicyById(t *testing.T) {
 					ID:        "0123",
 					Effect:    "allow",
 					PolicyID:  "1234",
-					Action:    api.USER_ACTION_GET_USER,
+					Actions:    api.USER_ACTION_GET_USER,
 					Resources: api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
 				},
 			},
@@ -308,7 +308,7 @@ func TestPostgresRepo_GetPolicyById(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -393,7 +393,7 @@ func TestPostgresRepo_GetPoliciesFiltered(t *testing.T) {
 					ID:        "0123",
 					Effect:    "allow",
 					PolicyID:  "1234",
-					Action:    api.USER_ACTION_GET_USER,
+					Actions:    api.USER_ACTION_GET_USER,
 					Resources: api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
 				},
 			},
@@ -408,7 +408,7 @@ func TestPostgresRepo_GetPoliciesFiltered(t *testing.T) {
 					Statements: &[]api.Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								api.USER_ACTION_GET_USER,
 							},
 							Resources: []string{
@@ -475,7 +475,7 @@ func TestPostgresRepo_UpdatePolicy(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -494,7 +494,7 @@ func TestPostgresRepo_UpdatePolicy(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -509,7 +509,7 @@ func TestPostgresRepo_UpdatePolicy(t *testing.T) {
 			statements: []api.Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						api.USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -527,7 +527,7 @@ func TestPostgresRepo_UpdatePolicy(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -583,7 +583,7 @@ func TestPostgresRepo_RemovePolicy(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -693,7 +693,7 @@ func TestPostgresRepo_GetAttachedGroups(t *testing.T) {
 				Statements: &[]api.Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							api.USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -810,14 +810,14 @@ func Test_dbStatementsToAPIStatements(t *testing.T) {
 					ID:        "0123",
 					Effect:    "allow",
 					PolicyID:  "1234",
-					Action:    api.USER_ACTION_GET_USER,
+					Actions:    api.USER_ACTION_GET_USER,
 					Resources: api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
 				},
 			},
 			apiStatements: &[]api.Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						api.USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -832,21 +832,21 @@ func Test_dbStatementsToAPIStatements(t *testing.T) {
 					ID:        "0123",
 					Effect:    "allow",
 					PolicyID:  "1234",
-					Action:    api.USER_ACTION_GET_USER,
+					Actions:    api.USER_ACTION_GET_USER,
 					Resources: api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
 				},
 				{
 					ID:        "4321",
 					Effect:    "deny",
 					PolicyID:  "1234",
-					Action:    api.GROUP_ACTION_GET_GROUP + ";" + api.GROUP_ACTION_CREATE_GROUP,
+					Actions:    api.GROUP_ACTION_GET_GROUP + ";" + api.GROUP_ACTION_CREATE_GROUP,
 					Resources: api.GetUrnPrefix("", api.RESOURCE_GROUP, "/xxx/") + ";" + api.GetUrnPrefix("", api.RESOURCE_GROUP, "/xxx2/"),
 				},
 			},
 			apiStatements: &[]api.Statement{
 				{
 					Effect: "allow",
-					Action: []string{
+					Actions: []string{
 						api.USER_ACTION_GET_USER,
 					},
 					Resources: []string{
@@ -855,7 +855,7 @@ func Test_dbStatementsToAPIStatements(t *testing.T) {
 				},
 				{
 					Effect: "deny",
-					Action: []string{
+					Actions: []string{
 						api.GROUP_ACTION_GET_GROUP,
 						api.GROUP_ACTION_CREATE_GROUP,
 					},

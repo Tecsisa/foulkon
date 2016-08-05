@@ -108,7 +108,7 @@ type Statement struct {
 	ID        string `gorm:"primary_key"`
 	PolicyID  string `gorm:"not null"`
 	Effect    string `gorm:"not null"`
-	Action    string `gorm:"not null"`
+	Actions   string `gorm:"not null"`
 	Resources string `gorm:"not null"`
 }
 

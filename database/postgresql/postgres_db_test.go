@@ -246,7 +246,7 @@ func insertPolicy(id string, name string, org string, path string, createAt int6
 	}
 
 	for _, v := range statements {
-		err = insertStatements(v.ID, v.PolicyID, v.Action, v.Effect, v.Resources)
+		err = insertStatements(v.ID, v.PolicyID, v.Actions, v.Effect, v.Resources)
 		// Error handling
 		if err != nil {
 			return &database.Error{
@@ -259,9 +259,9 @@ func insertPolicy(id string, name string, org string, path string, createAt int6
 	return nil
 }
 
-func insertStatements(id string, policyId string, action string, effect string, resources string) error {
-	err := repoDB.Dbmap.Exec("INSERT INTO public.statements (id, policy_id, effect, action, resources) VALUES (?, ?, ?, ?, ?)",
-		id, policyId, effect, action, resources).Error
+func insertStatements(id string, policyId string, actions string, effect string, resources string) error {
+	err := repoDB.Dbmap.Exec("INSERT INTO public.statements (id, policy_id, effect, actions, resources) VALUES (?, ?, ?, ?, ?)",
+		id, policyId, effect, actions, resources).Error
 
 	// Error handling
 	if err != nil {
@@ -332,7 +332,7 @@ func insertGroupPolicyRelation(groupID string, policyID string) error {
 	return nil
 }
 
-func getStatementsCountFiltered(id string, policyId string, effect string, action string, resources string) (int, error) {
+func getStatementsCountFiltered(id string, policyId string, effect string, actions string, resources string) (int, error) {
 	query := repoDB.Dbmap.Table(Statement{}.TableName())
 	if id != "" {
 		query = query.Where("id = ?", id)
@@ -343,8 +343,8 @@ func getStatementsCountFiltered(id string, policyId string, effect string, actio
 	if effect != "" {
 		query = query.Where("effect = ?", effect)
 	}
-	if action != "" {
-		query = query.Where("action = ?", action)
+	if actions != "" {
+		query = query.Where("actions = ?", actions)
 	}
 	if resources != "" {
 		query = query.Where("resources = ?", resources)

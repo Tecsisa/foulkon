@@ -159,7 +159,7 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_CREATE_GROUP,
 							},
 							Resources: []string{
@@ -168,7 +168,7 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_CREATE_GROUP,
 							},
 							Resources: []string{
@@ -395,7 +395,7 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 							},
 							Resources: []string{
@@ -404,7 +404,7 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 							},
 							Resources: []string{
@@ -554,7 +554,7 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_LIST_GROUPS,
 							},
 							Resources: []string{
@@ -833,7 +833,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 							},
 							Resources: []string{
@@ -888,7 +888,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 								GROUP_ACTION_UPDATE_GROUP,
 							},
@@ -898,7 +898,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_UPDATE_GROUP,
 							},
 							Resources: []string{
@@ -1022,7 +1022,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 								GROUP_ACTION_UPDATE_GROUP,
 							},
@@ -1086,7 +1086,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 								GROUP_ACTION_UPDATE_GROUP,
 							},
@@ -1096,7 +1096,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_UPDATE_GROUP,
 							},
 							Resources: []string{
@@ -1224,7 +1224,7 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_DELETE_GROUP,
 								GROUP_ACTION_GET_GROUP,
 							},
@@ -1322,7 +1322,7 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 							},
 							Resources: []string{
@@ -1376,7 +1376,7 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_DELETE_GROUP,
 								GROUP_ACTION_GET_GROUP,
 							},
@@ -1386,7 +1386,7 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_DELETE_GROUP,
 							},
 							Resources: []string{
@@ -1576,7 +1576,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_ADD_MEMBER,
 							},
 							Resources: []string{
@@ -1585,7 +1585,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 							},
 							Resources: []string{
@@ -1640,7 +1640,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_ADD_MEMBER,
 							},
 							Resources: []string{
@@ -1649,7 +1649,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								"iam:*",
 							},
 							Resources: []string{
@@ -1934,7 +1934,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 							},
 							Resources: []string{
@@ -1988,7 +1988,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 								GROUP_ACTION_REMOVE_MEMBER,
 							},
@@ -1998,7 +1998,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_REMOVE_MEMBER,
 							},
 							Resources: []string{
@@ -2074,7 +2074,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 								GROUP_ACTION_REMOVE_MEMBER,
 							},
@@ -2084,7 +2084,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								USER_ACTION_GET_USER,
 							},
 							Resources: []string{
@@ -2363,7 +2363,7 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 							},
 							Resources: []string{
@@ -2416,7 +2416,7 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_LIST_MEMBERS,
 							},
 							Resources: []string{
@@ -2425,7 +2425,7 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 						},
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_LIST_MEMBERS,
 								GROUP_ACTION_GET_GROUP,
 							},
@@ -2529,7 +2529,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -2636,7 +2636,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 							},
 							Resources: []string{
@@ -2690,7 +2690,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 								GROUP_ACTION_ATTACH_GROUP_POLICY,
 							},
@@ -2700,7 +2700,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_ATTACH_GROUP_POLICY,
 							},
 							Resources: []string{
@@ -2744,7 +2744,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -2785,7 +2785,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -2845,7 +2845,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -2928,7 +2928,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -3035,7 +3035,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 							},
 							Resources: []string{
@@ -3089,7 +3089,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 								GROUP_ACTION_DETACH_GROUP_POLICY,
 							},
@@ -3099,7 +3099,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_DETACH_GROUP_POLICY,
 							},
 							Resources: []string{
@@ -3165,7 +3165,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -3206,7 +3206,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -3244,7 +3244,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 				Statements: &[]Statement{
 					{
 						Effect: "allow",
-						Action: []string{
+						Actions: []string{
 							USER_ACTION_GET_USER,
 						},
 						Resources: []string{
@@ -3350,7 +3350,7 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES,
 								GROUP_ACTION_GET_GROUP,
 							},
@@ -3449,7 +3449,7 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
 							},
 							Resources: []string{
@@ -3503,7 +3503,7 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 					Statements: &[]Statement{
 						{
 							Effect: "allow",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES,
 								GROUP_ACTION_GET_GROUP,
 							},
@@ -3513,7 +3513,7 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 						},
 						{
 							Effect: "deny",
-							Action: []string{
+							Actions: []string{
 								GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES,
 							},
 							Resources: []string{
