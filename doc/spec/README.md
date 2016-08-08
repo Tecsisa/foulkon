@@ -99,9 +99,9 @@ E.g:
 #### Default behaviour
 When there are some policies that apply to same action and resource for a user, system select effect in this way:
 
-__- If there is an explicit deny, system returns a deny.
-- If there is an allow and no explicit deny, system returns an allow.
-- If there isn’t a policy for that resource and action, system returns a deny by default.__
+- __If there is an explicit deny, system returns a deny.__
+- __If there is an allow and no explicit deny, system returns an allow.__
+- __If there isn’t a policy for that resource and action, system returns a deny by default.__
 
 ### IAM Policies
 IAM policies define system permissions for its internal resources. Each resource type has its own actions predefined by prefix “iam”. This actions are defined in [Action doc](action.md) with its dependencies. When you start the system at first time, you have a system admin user with a password. This user doesn’t have limitations and can’t be assigned to a group.
