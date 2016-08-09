@@ -77,7 +77,9 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 	// Retrieve resource tree from toml config file
 	tree, ok := config.Get("resources").([]*toml.TomlTree)
 	if !ok {
-		return nil, errors.New("No resources retrieved from file")
+		err := errors.New("No resources retrieved from file")
+		logger.Error(err)
+		return nil, err
 	}
 	for _, t := range tree {
 		resources = append(resources, APIResource{
@@ -91,11 +93,26 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 		logger.Infof("Added resource %v", getDefaultValue(t, "id", ""))
 	}
 
-	// Return created proxy
+	host, err := getMandatoryValue(config, "server.host")
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	port, err := getMandatoryValue(config, "server.port")
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	workerHost, err := getMandatoryValue(config, "server.worker-host")
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
 	return &Proxy{
-		Host:         getMandatoryValue(config, "server.host"),
-		Port:         getMandatoryValue(config, "server.port"),
-		WorkerHost:   getMandatoryValue(config, "server.worker-host"),
+		Host:         host,
+		Port:         port,
+		WorkerHost:   workerHost,
 		CertFile:     getDefaultValue(config, "server.certfile", ""),
 		KeyFile:      getDefaultValue(config, "server.keyfile", ""),
 		Logger:       logger,
@@ -103,11 +120,11 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 	}, nil
 }
 
-func CloseProxy() {
+func CloseProxy() int {
 	status := 0
 	if err := proxy_logfile.Close(); err != nil {
 		fmt.Fprintf(os.Stderr, "Couldn't close logfile: %v", err)
 		status = 1
 	}
-	os.Exit(status)
+	return status
 }
