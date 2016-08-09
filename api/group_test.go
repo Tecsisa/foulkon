@@ -45,11 +45,58 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 				Code: database.GROUP_NOT_FOUND,
 			},
 		},
-		"ErrorCaseInvalidName": {
+		"OKCase": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
-				Admin:      true,
+				Admin:      false,
 			},
+			name: "group1",
+			org:  "org1",
+			path: "/example/",
+			expectedGroup: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/example/",
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Actions: []string{
+								GROUP_ACTION_CREATE_GROUP,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, "/example/"),
+							},
+						},
+					},
+				},
+			},
+			getGroupByNameMethodErr: &database.Error{
+				Code: database.GROUP_NOT_FOUND,
+			},
+		},
+		"ErrorCaseInvalidName": {
 			name: "*%~#@|",
 			org:  "org1",
 			path: "/example/",
@@ -59,10 +106,6 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidOrg": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			name: "n1",
 			org:  "*%~#@|",
 			path: "/example/",
@@ -72,10 +115,6 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidPath": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			name: "group1",
 			org:  "org1",
 			path: "/**%%/*123",
@@ -182,6 +221,45 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 				Code: database.GROUP_NOT_FOUND,
 			},
 		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "group1",
+			org:  "org1",
+			path: "/test/asd/",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/test/asd/group1",
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:         "POLICY-USER-ID",
+					Name:       "policyUser",
+					Path:       "/path/",
+					Urn:        CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
+					Statements: &[]Statement{},
+				},
+			},
+			getGroupByNameMethodErr: &database.Error{
+				Code: database.GROUP_NOT_FOUND,
+			},
+		},
 		"ErrorCaseAddGroupDBErr": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -217,10 +295,10 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 		},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for x, testcase := range testcases {
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
+
 		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByName
 		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
@@ -229,10 +307,10 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[AddGroupMethod][0] = testcase.expectedGroup
 		testRepo.ArgsOut[AddGroupMethod][1] = testcase.addGroupMethodErr
+
 		group, err := testAPI.AddGroup(testcase.authUser, testcase.org, testcase.name, testcase.path)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedGroup, group)
 	}
-
 }
 
 func TestAuthAPI_GetGroupByName(t *testing.T) {
@@ -275,11 +353,63 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 				Path: "/example/",
 			},
 		},
-		"ErrorCaseInvalidName": {
+		"OKCase": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
-				Admin:      true,
+				Admin:      false,
 			},
+			name: "group1",
+			org:  "org1",
+			path: "/example/",
+			expectedGroup: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/test/asd/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/test/asd/", "group1"),
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Actions: []string{
+								GROUP_ACTION_GET_GROUP,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, "/test/"),
+							},
+						},
+					},
+				},
+			},
+			getGroupByNameMethodResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/test/asd/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/test/asd/", "group1"),
+			},
+		},
+		"ErrorCaseInvalidName": {
 			name: "*%~#@|",
 			org:  "org1",
 			path: "/example/",
@@ -289,10 +419,6 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidOrg": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			name: "n1",
 			org:  "*%~#@|",
 			path: "/example/",
@@ -302,10 +428,6 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 			},
 		},
 		"ErrorCaseGroupNotFound": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			name: "group1",
 			org:  "org1",
 			path: "/example/",
@@ -317,10 +439,6 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 			},
 		},
 		"ErrorCaseGetGroupDBErr": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			name: "group1",
 			org:  "org1",
 			path: "/example/",
@@ -422,18 +540,69 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/test/asd/", "group1"),
 			},
 		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "group1",
+			org:  "org1",
+			path: "/test/asd/",
+			expectedGroup: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/test/asd/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/test/asd/", "group1"),
+			},
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/test/asd/group1",
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/",
+					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:         "POLICY-USER-ID",
+					Name:       "policyUser",
+					Path:       "/path/",
+					Urn:        CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
+					Statements: &[]Statement{},
+				},
+			},
+			getGroupByNameMethodResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/test/asd/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/test/asd/", "group1"),
+			},
+		},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for x, testcase := range testcases {
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
+
 		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameMethodResult
 		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
+
 		group, err := testAPI.GetGroupByName(testcase.authUser, testcase.org, testcase.name)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedGroup, group)
 	}
@@ -457,7 +626,7 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 		getUserByExternalIDMethodErr error
 		getGroupsFilteredMethodErr   error
 	}{
-		"OkCaseAdmin": {
+		"OKCaseAdmin": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -479,7 +648,7 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 				},
 			},
 		},
-		"OkCaseAdminNoGroup": {
+		"OKCaseAdminNoGroup": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      true,
@@ -510,7 +679,7 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 				},
 			},
 		},
-		"OkTestCaseUser": {
+		"OKCase": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
@@ -572,10 +741,6 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidOrg": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			org:        "%org1",
 			pathPrefix: "/example/das/",
 			wantError: &Error{
@@ -584,10 +749,6 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidPath": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			org:        "org1",
 			pathPrefix: "/example/das",
 			wantError: &Error{
@@ -596,10 +757,6 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseInternalErrorGetGroupsFiltered": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			org:        "org1",
 			pathPrefix: "/path/",
 			wantError: &Error{
@@ -632,12 +789,128 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 				Code: database.USER_NOT_FOUND,
 			},
 		},
+		"ErrorCaseUnauthorizedResource": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org: "org1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/*",
+			},
+			getGroupsFilteredMethodResult: []Group{
+				{
+					Name: "group1",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "group1"),
+				},
+				{
+					Name: "group2",
+					Org:  "org2",
+					Path: "/path2/",
+					Urn:  CreateUrn("org2", RESOURCE_GROUP, "/path2/", "group2"),
+				},
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/1/",
+					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Actions: []string{
+								GROUP_ACTION_LIST_GROUPS,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+						{
+							Effect: "deny",
+							Actions: []string{
+								GROUP_ACTION_LIST_GROUPS,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org: "org1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/*",
+			},
+			getGroupsFilteredMethodResult: []Group{
+				{
+					Name: "group1",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "group1"),
+				},
+				{
+					Name: "group2",
+					Org:  "org2",
+					Path: "/path2/",
+					Urn:  CreateUrn("org2", RESOURCE_GROUP, "/path2/", "group2"),
+				},
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/path/1/",
+					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:         "POLICY-USER-ID",
+					Name:       "policyUser",
+					Org:        "org1",
+					Path:       "/path/",
+					Urn:        CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for x, testcase := range testcases {
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
 
 		testRepo.ArgsOut[GetGroupsFilteredMethod][0] = testcase.getGroupsFilteredMethodResult
 		testRepo.ArgsOut[GetGroupsFilteredMethod][1] = testcase.getGroupsFilteredMethodErr
@@ -705,11 +978,73 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 				Urn:  CreateUrn("123", RESOURCE_GROUP, "/new/", "test"),
 			},
 		},
-		"ErrorCaseInvalidName": {
+		"OKCase": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
-				Admin:      true,
+				Admin:      false,
 			},
+			org:          "org1",
+			groupName:    "group1",
+			newGroupName: "newName",
+			newPath:      "/new/",
+			expectedGroup: &Group{
+				ID:   "12345",
+				Name: "newName",
+				Org:  "org1",
+				Path: "/new/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/new/", "test"),
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/path/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "group1"),
+			},
+			updateGroupResult: &Group{
+				ID:   "12345",
+				Name: "newName",
+				Org:  "org1",
+				Path: "/new/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/new/", "test"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Org:  "org1",
+					Path: "/path/1/",
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Actions: []string{
+								GROUP_ACTION_GET_GROUP,
+								GROUP_ACTION_UPDATE_GROUP,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
+		"ErrorCaseInvalidName": {
 			org:          "123",
 			newGroupName: "%$%&&",
 			wantError: &Error{
@@ -718,10 +1053,6 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidPath": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			org:          "123",
 			newGroupName: "group1",
 			newPath:      "/$",
@@ -731,10 +1062,6 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidOrg": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			org:          "$^**!",
 			groupName:    "group1",
 			newGroupName: "newName",
@@ -745,10 +1072,6 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseGroupNotFound": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      false,
-			},
 			org:          "123",
 			groupName:    "group1",
 			newGroupName: "newName",
@@ -771,7 +1094,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 			newPath:      "/new/",
 			wantError: &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
-				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/path/groupUser",
+				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
 			},
 			getGroupByNameResult: &Group{
 				ID:   "GROUP-USER-ID",
@@ -780,19 +1103,69 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 				Path: "/path/1/",
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
 			},
-			getGroupsByUserIDResult: []Group{
-				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
-				},
+			getUserByExternalIDMethodErr: &database.Error{
+				Code: database.USER_NOT_FOUND,
 			},
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "1234",
-				Path:       "/path/",
-				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+		},
+		"ErrorCaseGroupAlreadyExist": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:          "123",
+			groupName:    "group1",
+			newGroupName: "newName",
+			newPath:      "/new/",
+			wantError: &Error{
+				Code:    GROUP_ALREADY_EXIST,
+				Message: "Group name: newName already exists",
+			},
+			getGroupByNameMethodSpecialFunc: func(org string, name string) (*Group, error) {
+				if org == "123" && name == "group1" {
+					return &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "group1",
+						Org:  "org1",
+						Path: "/new/",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/new/", "group1"),
+					}, nil
+				} else {
+					return &Group{
+						ID:   "GROUP-USER-ID2",
+						Name: name,
+						Org:  org,
+						Path: "/sdada/",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/sdada/", name),
+					}, nil
+				}
+			},
+		},
+		"ErrorCaseGetGroupDBErr": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:          "123",
+			groupName:    "group1",
+			newGroupName: "newName",
+			newPath:      "/new/",
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+			getGroupByNameMethodSpecialFunc: func(org string, name string) (*Group, error) {
+				if org == "123" && name == "group1" {
+					return &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "group1",
+						Org:  "123",
+						Path: "/new/",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/new/", "group1"),
+					}, nil
+				} else {
+					return nil, &database.Error{
+						Code: database.INTERNAL_ERROR,
+					}
+				}
 			},
 		},
 		"ErrorCaseUnauthorizedUpdateGroup": {
@@ -850,7 +1223,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 		},
-		"ErrorCaseNoPermission": {
+		"ErrorCaseDenyUpdateGroup": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
@@ -913,67 +1286,6 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 				ExternalID: "1234",
 				Path:       "/path/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
-			},
-		},
-		"ErrorCaseGroupAlreadyExist": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			org:          "123",
-			groupName:    "group1",
-			newGroupName: "newName",
-			newPath:      "/new/",
-			wantError: &Error{
-				Code:    GROUP_ALREADY_EXIST,
-				Message: "Group name: newName already exists",
-			},
-			getGroupByNameMethodSpecialFunc: func(org string, name string) (*Group, error) {
-				if org == "123" && name == "group1" {
-					return &Group{
-						ID:   "GROUP-USER-ID",
-						Name: "group1",
-						Org:  "org1",
-						Path: "/new/",
-						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/new/", "group1"),
-					}, nil
-				} else {
-					return &Group{
-						ID:   "GROUP-USER-ID2",
-						Name: name,
-						Org:  org,
-						Path: "/sdada/",
-						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/sdada/", name),
-					}, nil
-				}
-			},
-		},
-		"ErrorCaseGetGroupDBErr": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			org:          "123",
-			groupName:    "group1",
-			newGroupName: "newName",
-			newPath:      "/new/",
-			wantError: &Error{
-				Code: UNKNOWN_API_ERROR,
-			},
-			getGroupByNameMethodSpecialFunc: func(org string, name string) (*Group, error) {
-				if org == "123" && name == "group1" {
-					return &Group{
-						ID:   "GROUP-USER-ID",
-						Name: "group1",
-						Org:  "123",
-						Path: "/new/",
-						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/new/", "group1"),
-					}, nil
-				} else {
-					return nil, &database.Error{
-						Code: database.INTERNAL_ERROR,
-					}
-				}
 			},
 		},
 		"ErrorCaseNoPermissionsToUpdateTarget": {
@@ -1113,6 +1425,51 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 		},
+		"ErrorCaseNoPermission": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:          "org1",
+			groupName:    "group1",
+			newGroupName: "newName",
+			newPath:      "/new/",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/path/group1",
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/path/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "group1"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Org:  "org1",
+					Path: "/path/1/",
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:         "POLICY-USER-ID",
+					Name:       "policyUser",
+					Org:        "org1",
+					Path:       "/path/",
+					Urn:        CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
 		"ErrorCaseUpdateGroupDBErr": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -1138,10 +1495,10 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 		},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for x, testcase := range testcases {
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
+
 		testRepo.ArgsOut[UpdateGroupMethod][0] = testcase.updateGroupResult
 		testRepo.ArgsOut[UpdateGroupMethod][1] = testcase.updateGroupMethodErr
 		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameResult
@@ -1151,6 +1508,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
+
 		group, err := testAPI.UpdateGroup(testcase.authUser, testcase.org, testcase.groupName, testcase.newGroupName, testcase.newPath)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedGroup, group)
 	}
@@ -1170,9 +1528,10 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 		getAttachedPoliciesResult  []Policy
 		getGroupByNameMethodResult *Group
 		// API Errors
-		getGroupByNameMethodErr error
-		removeGroupMethodErr    error
-		getGroupsByUserIDError  error
+		getUserByExternalIDMethodErr error
+		getGroupByNameMethodErr      error
+		removeGroupMethodErr         error
+		getGroupsByUserIDError       error
 	}{
 		"OKCaseAdminUser": {
 			authUser: AuthenticatedUser{
@@ -1194,7 +1553,7 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
 			},
 		},
-		"OkCaseRegularUser": {
+		"OkCase": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
@@ -1246,10 +1605,6 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidName": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			name: "invalid*",
 			org:  "org1",
 			wantError: &Error{
@@ -1258,10 +1613,6 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidOrg": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			name: "n1",
 			org:  "**^!$%&",
 			wantError: &Error{
@@ -1270,10 +1621,6 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseGroupNotFound": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			name: "group1",
 			org:  "org1",
 			wantError: &Error{
@@ -1283,6 +1630,28 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 				Code: database.GROUP_NOT_FOUND,
 			},
 		},
+		"ErrorCaseUnauthorizedUser": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:  "123",
+			name: "group1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
+			},
+			getGroupByNameMethodResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/1/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+			},
+			getUserByExternalIDMethodErr: &database.Error{
+				Code: database.USER_NOT_FOUND,
+			},
+		},
 		"ErrorCaseImplicitUnauthorizedDeleteGroup": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -1290,6 +1659,10 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 			},
 			name: "group1",
 			org:  "org1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/example/group1",
+			},
 			getGroupByNameMethodResult: &Group{
 				ID:   "543210",
 				Name: "group1",
@@ -1332,10 +1705,6 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 					},
 				},
 			},
-			wantError: &Error{
-				Code:    UNAUTHORIZED_RESOURCES_ERROR,
-				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/example/group1",
-			},
 		},
 		"ErrorCaseExplicitUnauthorizedDeleteGroup": {
 			authUser: AuthenticatedUser{
@@ -1344,6 +1713,10 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 			},
 			name: "group1",
 			org:  "org1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/example/group1",
+			},
 			getGroupByNameMethodResult: &Group{
 				ID:   "543210",
 				Name: "group1",
@@ -1396,9 +1769,49 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 					},
 				},
 			},
+		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "group1",
+			org:  "org1",
 			wantError: &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/example/group1",
+			},
+			getGroupByNameMethodResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/example/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/example/",
+					Org:  "org1",
+					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:         "POLICY-USER-ID",
+					Name:       "policyUser",
+					Org:        "org1",
+					Path:       "/example/",
+					Urn:        CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+					Statements: &[]Statement{},
+				},
 			},
 		},
 		"ErrorCaseDeleteGroupDBErr": {
@@ -1408,6 +1821,9 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 			},
 			name: "group1",
 			org:  "org1",
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
 			getGroupByNameMethodResult: &Group{
 				ID:   "543210",
 				Name: "group1",
@@ -1423,21 +1839,22 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 			removeGroupMethodErr: &database.Error{
 				Code: database.INTERNAL_ERROR,
 			},
-			wantError: &Error{
-				Code: UNKNOWN_API_ERROR,
-			},
 		},
 	}
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
+
 	for x, testcase := range testcases {
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
+
 		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameMethodResult
 		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = testcase.getGroupsByUserIDError
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[RemoveGroupMethod][0] = testcase.removeGroupMethodErr
+
 		err := testAPI.RemoveGroup(testcase.authUser, testcase.org, testcase.name)
 		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
@@ -1485,6 +1902,59 @@ func TestAuthAPI_AddMember(t *testing.T) {
 			},
 			isMemberOfGroupResult: false,
 		},
+		"OKCase": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			userID:    "12345",
+			org:       "org1",
+			groupName: "group1",
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Actions: []string{
+								"iam:*",
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								GetUrnPrefix("", RESOURCE_USER, ""),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/path/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "group1"),
+			},
+			isMemberOfGroupResult: false,
+		},
 		"ErrorCaseInvalidExternalID": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -1506,10 +1976,6 @@ func TestAuthAPI_AddMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidOrg": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			userID:    "12345",
 			groupName: "group1",
 			org:       "!^**$%&",
@@ -1519,10 +1985,6 @@ func TestAuthAPI_AddMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidGroupName": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			userID:    "12345",
 			org:       "org1",
 			groupName: "d*%$",
@@ -1532,10 +1994,6 @@ func TestAuthAPI_AddMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseGroupNotFound": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			userID:    "12345",
 			org:       "org1",
 			groupName: "group1",
@@ -1547,6 +2005,29 @@ func TestAuthAPI_AddMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedUser": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			userID:    "12345",
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/1/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+			},
+			getUserByExternalIDMethodErr: &database.Error{
+				Code: database.USER_NOT_FOUND,
+			},
+		},
+		"ErrorCaseUnauthorizedResource": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
@@ -1575,15 +2056,6 @@ func TestAuthAPI_AddMember(t *testing.T) {
 					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
 					Statements: &[]Statement{
 						{
-							Effect: "deny",
-							Actions: []string{
-								GROUP_ACTION_ADD_MEMBER,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-						{
 							Effect: "allow",
 							Actions: []string{
 								GROUP_ACTION_GET_GROUP,
@@ -1609,7 +2081,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/1/", "group1"),
 			},
 		},
-		"ErrorCaseNoPermissions": {
+		"ErrorCaseDenyAddMember": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
@@ -1658,6 +2130,51 @@ func TestAuthAPI_AddMember(t *testing.T) {
 							},
 						},
 					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/path/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "group1"),
+			},
+		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			userID:    "12345",
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/path/group1",
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:         "POLICY-USER-ID",
+					Name:       "policyUser",
+					Org:        "org1",
+					Path:       "/path/",
+					Urn:        CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{},
 				},
 			},
 			getUserByExternalIDResult: &User{
@@ -1775,10 +2292,9 @@ func TestAuthAPI_AddMember(t *testing.T) {
 		},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for x, testcase := range testcases {
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
 
 		testRepo.ArgsOut[AddMemberMethod][0] = testcase.addMemberMethodErr
 		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameResult
@@ -1837,6 +2353,67 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 			},
 			isMemberOfGroupResult: true,
 		},
+		"OKCase": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			userID:    "12345",
+			groupName: "group1",
+			org:       "org1",
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Org:  "org1",
+					Path: "/path/1/",
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Actions: []string{
+								GROUP_ACTION_REMOVE_MEMBER,
+								GROUP_ACTION_GET_GROUP,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+						{
+							Effect: "allow",
+							Actions: []string{
+								USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, ""),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			isMemberOfGroupResult: true,
+		},
 		"ErrorCaseInvalidExternalID": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -1857,10 +2434,6 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidOrg": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			userID:    "12345",
 			org:       "$**^%&!",
 			groupName: "group1",
@@ -1870,10 +2443,6 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidName": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			userID:    "12345",
 			org:       "org1",
 			groupName: "$%&",
@@ -1883,10 +2452,6 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseGroupNotFound": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			userID:    "12345",
 			org:       "org1",
 			groupName: "group1",
@@ -1895,6 +2460,29 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 			},
 			getGroupByNameMethodErr: &database.Error{
 				Code: database.GROUP_NOT_FOUND,
+			},
+		},
+		"ErrorCaseUnauthorizedUser": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			userID:    "12345",
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/1/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+			},
+			getUserByExternalIDMethodErr: &database.Error{
+				Code: database.USER_NOT_FOUND,
 			},
 		},
 		"ErrorCaseUnauthorizedRemoveMember": {
@@ -1949,92 +2537,6 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 				ExternalID: "1234",
 				Path:       "/path/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
-			},
-		},
-		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      false,
-			},
-			userID:    "12345",
-			groupName: "group1",
-			org:       "org1",
-			wantError: &Error{
-				Code:    UNAUTHORIZED_RESOURCES_ERROR,
-				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/path/groupUser",
-			},
-			getGroupByNameResult: &Group{
-				ID:   "GROUP-USER-ID",
-				Name: "groupUser",
-				Org:  "org1",
-				Path: "/path/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
-			},
-			getGroupsByUserIDResult: []Group{
-				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
-				},
-			},
-			getAttachedPoliciesResult: []Policy{
-				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-								GROUP_ACTION_REMOVE_MEMBER,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "deny",
-							Actions: []string{
-								GROUP_ACTION_REMOVE_MEMBER,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, "/path/"),
-							},
-						},
-					},
-				},
-			},
-			getUserByExternalIDResult: &User{
-				ID:         "543210",
-				ExternalID: "1234",
-				Path:       "/path/",
-				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
-			},
-		},
-		"ErrorCaseUserNotFound": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			userID:    "12345",
-			groupName: "group1",
-			org:       "org1",
-			wantError: &Error{
-				Code: USER_BY_EXTERNAL_ID_NOT_FOUND,
-			},
-			getGroupByNameResult: &Group{
-				ID:   "GROUP-USER-ID",
-				Name: "groupUser",
-				Org:  "org1",
-				Path: "/path/",
-				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
-			},
-			getUserByExternalIDMethodErr: &database.Error{
-				Code: database.USER_NOT_FOUND,
 			},
 		},
 		"ErrorCaseUnauthorizedGetUser": {
@@ -2099,6 +2601,136 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 				ExternalID: "1234",
 				Path:       "/path/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
+		"ErrorCaseDenyRemoveMember": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			userID:    "12345",
+			groupName: "group1",
+			org:       "org1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/path/groupUser",
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Org:  "org1",
+					Path: "/path/1/",
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Actions: []string{
+								GROUP_ACTION_GET_GROUP,
+								GROUP_ACTION_REMOVE_MEMBER,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							},
+						},
+						{
+							Effect: "deny",
+							Actions: []string{
+								GROUP_ACTION_REMOVE_MEMBER,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, "/path/"),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			userID:    "12345",
+			groupName: "group1",
+			org:       "org1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/path/groupUser",
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Org:  "org1",
+					Path: "/path/1/",
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:         "POLICY-USER-ID",
+					Name:       "policyUser",
+					Org:        "org1",
+					Path:       "/path/",
+					Urn:        CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
+		"ErrorCaseUserNotFound": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			userID:    "12345",
+			groupName: "group1",
+			org:       "org1",
+			wantError: &Error{
+				Code: USER_BY_EXTERNAL_ID_NOT_FOUND,
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+			},
+			getUserByExternalIDMethodErr: &database.Error{
+				Code: database.USER_NOT_FOUND,
 			},
 		},
 		"ErrorCaseIsMemberDBErr": {
@@ -2187,10 +2819,10 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 		},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for x, testcase := range testcases {
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
+
 		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameResult
 		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
 		testRepo.ArgsOut[IsMemberOfGroupMethod][0] = testcase.isMemberOfGroupResult
@@ -2256,61 +2888,35 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				},
 			},
 		},
-		"ErrorCaseInvalidName": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			org:       "org1",
-			groupName: "*%$",
-			wantError: &Error{
-				Code:    INVALID_PARAMETER_ERROR,
-				Message: "Invalid parameter: name *%$",
-			},
-		},
-		"ErrorCaseInvalidOrg": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			org:       "!^**$%&",
-			groupName: "g1",
-			wantError: &Error{
-				Code:    INVALID_PARAMETER_ERROR,
-				Message: "Invalid parameter: org !^**$%&",
-			},
-		},
-		"ErrorCaseGroupNotFound": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
-			org:       "org1",
-			groupName: "group1",
-			getGroupByNameMethodErr: &database.Error{
-				Code: database.GROUP_NOT_FOUND,
-			},
-			wantError: &Error{
-				Code: GROUP_BY_ORG_AND_NAME_NOT_FOUND,
-			},
-		},
-		"ErrorCaseUnauthorizedGetGroup": {
+		"OKCase": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
 			},
 			org:       "org1",
 			groupName: "group1",
-			wantError: &Error{
-				Code:    UNAUTHORIZED_RESOURCES_ERROR,
-				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/path/groupUser",
+			expectedMembers: []string{
+				"member1",
+				"member2",
 			},
 			getGroupByNameResult: &Group{
 				ID:   "GROUP-USER-ID",
 				Name: "groupUser",
 				Org:  "org1",
-				Path: "/path/",
+				Path: "/path/1/",
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+			},
+			getGroupMembersResult: []User{
+				{
+					ID:         "12345",
+					ExternalID: "member1",
+					Path:       "/test/",
+				},
+				{
+					ID:         "123456",
+					ExternalID: "member2",
+					Path:       "/test/",
+				},
 			},
 			getGroupsByUserIDResult: []Group{
 				{
@@ -2320,6 +2926,27 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 					Path: "/path/1/",
 				},
 			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Actions: []string{
+								GROUP_ACTION_LIST_MEMBERS,
+								GROUP_ACTION_GET_GROUP,
+							},
+							Resources: []string{
+								GetUrnPrefix("org1", RESOURCE_GROUP, "/path/"),
+							},
+						},
+					},
+				},
+			},
 			getUserByExternalIDResult: &User{
 				ID:         "543210",
 				ExternalID: "1234",
@@ -2327,7 +2954,54 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 		},
-		"ErrorCaseUnauthorizedListMembers": {
+		"ErrorCaseInvalidName": {
+			org:       "org1",
+			groupName: "*%$",
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: name *%$",
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			org:       "!^**$%&",
+			groupName: "g1",
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: org !^**$%&",
+			},
+		},
+		"ErrorCaseGroupNotFound": {
+			org:       "org1",
+			groupName: "group1",
+			getGroupByNameMethodErr: &database.Error{
+				Code: database.GROUP_NOT_FOUND,
+			},
+			wantError: &Error{
+				Code: GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+			},
+		},
+		"ErrorCaseNotAuthenticatedUser": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
+			},
+			getGroupByNameResult: &Group{
+				Name: "group1",
+				Org:  "org1",
+				Path: "/path/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "group1"),
+			},
+			getUserByExternalIDMethodErr: &database.Error{
+				Code: database.USER_NOT_FOUND,
+			},
+		},
+		"ErrorCaseUnauthorizedResource": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
@@ -2380,7 +3054,7 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 		},
-		"ErrorCaseNoPermissions": {
+		"ErrorCaseDenyListMembers": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
@@ -2443,6 +3117,49 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
 			},
 		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:       "org1",
+			groupName: "group1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/path/groupUser",
+			},
+			getGroupByNameResult: &Group{
+				ID:   "GROUP-USER-ID",
+				Name: "groupUser",
+				Org:  "org1",
+				Path: "/path/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Org:  "org1",
+					Path: "/path/1/",
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:         "POLICY-USER-ID",
+					Name:       "policyUser",
+					Org:        "org1",
+					Path:       "/path/",
+					Urn:        CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
 		"ErrorCaseListMembersDBErr": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -2465,10 +3182,10 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 		},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for x, testcase := range testcases {
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
+
 		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameResult
 		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
 		testRepo.ArgsOut[GetGroupMembersMethod][0] = testcase.getGroupMembersResult
@@ -2540,6 +3257,85 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 			},
 			isAttachedToGroupResult: false,
 		},
+		"OKCase": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:        "123",
+			groupName:  "group1",
+			policyName: "policy1",
+			getGroupByNameResult: &Group{
+				ID:   "12345",
+				Name: "group1",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "test"),
+			},
+			getPolicyByNameResult: &Policy{
+				ID:   "test1",
+				Name: "test",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]Statement{
+					{
+						Effect: "allow",
+						Actions: []string{
+							USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							GetUrnPrefix("", RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "group1",
+					Org:  "123",
+					Path: "/path/",
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "123",
+					Path: "/path/",
+					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Actions: []string{
+								GROUP_ACTION_GET_GROUP,
+								GROUP_ACTION_ATTACH_GROUP_POLICY,
+							},
+							Resources: []string{
+								GetUrnPrefix("123", RESOURCE_GROUP, "/path/"),
+							},
+						},
+						{
+							Effect: "allow",
+							Actions: []string{
+								POLICY_ACTION_GET_POLICY,
+							},
+							Resources: []string{
+								GetUrnPrefix("123", RESOURCE_POLICY, "/path/"),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			isAttachedToGroupResult: false,
+		},
 		"ErrorCaseInvalidGroupName": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -2585,10 +3381,6 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseGroupNotFound": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			org:        "123",
 			groupName:  "group1",
 			policyName: "policy1",
@@ -2599,7 +3391,29 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 				Code: database.GROUP_NOT_FOUND,
 			},
 		},
-		"ErrorCaseNoPermissionsToAttach": {
+		"ErrorCaseNotAuthenticatedUser": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:        "123",
+			groupName:  "group1",
+			policyName: "policy1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
+			},
+			getGroupByNameResult: &Group{
+				Name: "group1",
+				Org:  "org1",
+				Path: "/path/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "group1"),
+			},
+			getUserByExternalIDMethodErr: &database.Error{
+				Code: database.USER_NOT_FOUND,
+			},
+		},
+		"ErrorCaseUnauthorizedToAttach": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
@@ -2708,6 +3522,50 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 							},
 						},
 					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:        "123",
+			groupName:  "group1",
+			policyName: "policy1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:123:group/path/group1",
+			},
+			getGroupByNameResult: &Group{
+				ID:   "12345",
+				Name: "group1",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "group1"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "group1",
+					Org:  "123",
+					Path: "/path/",
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:         "POLICY-USER-ID",
+					Name:       "policyUser",
+					Org:        "123",
+					Path:       "/path/",
+					Urn:        CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{},
 				},
 			},
 			getUserByExternalIDResult: &User{
@@ -2861,10 +3719,10 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 		},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for x, testcase := range testcases {
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
+
 		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameResult
 		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
 		testRepo.ArgsOut[GetPolicyByNameMethod][0] = testcase.getPolicyByNameResult
@@ -2939,11 +3797,86 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 			},
 			isAttachedToGroupResult: true,
 		},
-		"ErrorCaseInvalidGroupName": {
+		"OkCase": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
-				Admin:      true,
+				Admin:      false,
 			},
+			org:        "123",
+			groupName:  "group1",
+			policyName: "policy1",
+			getGroupByNameResult: &Group{
+				ID:   "12345",
+				Name: "group1",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "group1"),
+			},
+			getPolicyByNameResult: &Policy{
+				ID:   "test1",
+				Name: "test",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
+				Statements: &[]Statement{
+					{
+						Effect: "allow",
+						Actions: []string{
+							USER_ACTION_GET_USER,
+						},
+						Resources: []string{
+							GetUrnPrefix("", RESOURCE_USER, "/path/"),
+						},
+					},
+				},
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "group1",
+					Org:  "123",
+					Path: "/path/",
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:   "POLICY-USER-ID",
+					Name: "policyUser",
+					Org:  "123",
+					Path: "/path/",
+					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Actions: []string{
+								GROUP_ACTION_GET_GROUP,
+								GROUP_ACTION_DETACH_GROUP_POLICY,
+							},
+							Resources: []string{
+								GetUrnPrefix("123", RESOURCE_GROUP, ""),
+							},
+						},
+						{
+							Effect: "allow",
+							Actions: []string{
+								POLICY_ACTION_GET_POLICY,
+							},
+							Resources: []string{
+								GetUrnPrefix("123", RESOURCE_POLICY, ""),
+							},
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			isAttachedToGroupResult: true,
+		},
+		"ErrorCaseInvalidGroupName": {
 			org:       "123",
 			groupName: "$%·",
 			wantError: &Error{
@@ -2952,10 +3885,6 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidOrg": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			org:       "$%·",
 			groupName: "g1",
 			wantError: &Error{
@@ -2984,10 +3913,6 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseGroupNotFound": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			org:        "123",
 			groupName:  "group1",
 			policyName: "policy1",
@@ -2998,7 +3923,29 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 				Code: database.GROUP_NOT_FOUND,
 			},
 		},
-		"ErrorCaseNoPermissionsToDetach": {
+		"ErrorCaseNotAuthenticatedUser": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:        "123",
+			groupName:  "group1",
+			policyName: "policy1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
+			},
+			getGroupByNameResult: &Group{
+				Name: "group1",
+				Org:  "org1",
+				Path: "/path/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "group1"),
+			},
+			getUserByExternalIDMethodErr: &database.Error{
+				Code: database.USER_NOT_FOUND,
+			},
+		},
+		"ErrorCaseUnauthorizedToDetach": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
@@ -3107,6 +4054,50 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 							},
 						},
 					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:        "123",
+			groupName:  "group1",
+			policyName: "policy1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:123:group/path/group1",
+			},
+			getGroupByNameResult: &Group{
+				ID:   "12345",
+				Name: "group1",
+				Org:  "123",
+				Path: "/path/",
+				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "group1"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "group1",
+					Org:  "123",
+					Path: "/path/",
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:         "POLICY-USER-ID",
+					Name:       "policyUser",
+					Org:        "123",
+					Path:       "/path/",
+					Urn:        CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
+					Statements: &[]Statement{},
 				},
 			},
 			getUserByExternalIDResult: &User{
@@ -3260,10 +4251,10 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 		},
 	}
 
-	testRepo := makeTestRepo()
-	testAPI := makeTestAPI(testRepo)
-
 	for x, testcase := range testcases {
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
+
 		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameResult
 		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
 		testRepo.ArgsOut[GetPolicyByNameMethod][0] = testcase.getPolicyByNameResult
@@ -3296,8 +4287,9 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 		getAttachedPoliciesResult  []Policy
 		getGroupByNameMethodResult *Group
 		// API Errors
-		getAttachedPoliciesErr  error
-		getGroupByNameMethodErr error
+		getUserByExternalIDMethodErr error
+		getAttachedPoliciesErr       error
+		getGroupByNameMethodErr      error
 	}{
 		"OKCaseAdminUser": {
 			authUser: AuthenticatedUser{
@@ -3320,7 +4312,7 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 			},
 			expectedPolicies: []string{},
 		},
-		"OkCaseRegularUser": {
+		"OKCase": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
 				Admin:      false,
@@ -3373,10 +4365,6 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 			expectedPolicies: []string{"policyUser"},
 		},
 		"ErrorCaseInvalidName": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			name: "invalid*",
 			org:  "org1",
 			wantError: &Error{
@@ -3385,10 +4373,6 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidOrg": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			name: "n1",
 			org:  "!**$%&",
 			wantError: &Error{
@@ -3397,10 +4381,6 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 			},
 		},
 		"ErrorCaseGroupNotFound": {
-			authUser: AuthenticatedUser{
-				Identifier: "123456",
-				Admin:      true,
-			},
 			name: "group1",
 			org:  "org1",
 			wantError: &Error{
@@ -3408,6 +4388,27 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 			},
 			getGroupByNameMethodErr: &database.Error{
 				Code: database.GROUP_NOT_FOUND,
+			},
+		},
+		"ErrorCaseNotAuthenticatedUser": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "group1",
+			org:  "org1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
+			},
+			getGroupByNameMethodResult: &Group{
+				Name: "group1",
+				Org:  "org1",
+				Path: "/path/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "group1"),
+			},
+			getUserByExternalIDMethodErr: &database.Error{
+				Code: database.USER_NOT_FOUND,
 			},
 		},
 		"ErrorCaseImplicitUnauthorizedListAttachedGroupPolicies": {
@@ -3528,6 +4529,50 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/example/group1",
 			},
 		},
+		"ErrorCaseNoPermissions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "group1",
+			org:  "org1",
+			getGroupByNameMethodResult: &Group{
+				ID:   "543210",
+				Name: "group1",
+				Org:  "org1",
+				Path: "/example/",
+				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
+			},
+			getGroupsByUserIDResult: []Group{
+				{
+					ID:   "GROUP-USER-ID",
+					Name: "groupUser",
+					Path: "/example/",
+					Org:  "org1",
+					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "groupUser"),
+				},
+			},
+			getAttachedPoliciesResult: []Policy{
+				{
+					ID:         "POLICY-USER-ID",
+					Name:       "policyUser",
+					Org:        "org1",
+					Path:       "/example/",
+					Urn:        CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+					Statements: &[]Statement{},
+				},
+			},
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/example/group1",
+			},
+		},
 		"ErrorCaseGetPoliciesDBErr": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
@@ -3568,12 +4613,15 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 	for x, testcase := range testcases {
 		testRepo := makeTestRepo()
 		testAPI := makeTestAPI(testRepo)
+
 		testRepo.ArgsOut[GetGroupByNameMethod][0] = testcase.getGroupByNameMethodResult
 		testRepo.ArgsOut[GetGroupByNameMethod][1] = testcase.getGroupByNameMethodErr
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = testcase.getAttachedPoliciesErr
+
 		policies, err := testAPI.ListAttachedGroupPolicies(testcase.authUser, testcase.org, testcase.name)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedPolicies, policies)
 	}
