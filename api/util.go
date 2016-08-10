@@ -51,15 +51,15 @@ const (
 )
 
 var (
-	rUserExtID, _          = regexp.Compile(`^[\w+.@\-]+$`)
-	rName, _               = regexp.Compile(`^[\w\-]+$`)
-	rOrg, _                = regexp.Compile(`^[\w\-]+$`)
-	rPath, _               = regexp.Compile(`^/$|^/[\w+/\-]+\w+/$`)
+	rUserExtID, _          = regexp.Compile(`^[\w+.@=\-_]+$`)
+	rName, _               = regexp.Compile(`^[\w\-_]+$`)
+	rOrg, _                = regexp.Compile(`^[\w\-_]+$`)
+	rPath, _               = regexp.Compile(`^/$|^/[\w+/\-_]+\w+/$`)
 	rPathExclude, _        = regexp.Compile(`[/]{2,}`)
-	rAction, _             = regexp.Compile(`^[\w\-:]+[\w-*]+$`)
+	rAction, _             = regexp.Compile(`^[\w\-_:]+[\w\-_*]+$`)
 	rActionExclude, _      = regexp.Compile(`[*]{2,}|[:]{2,}`)
-	rWordResource, _       = regexp.Compile(`^[\w+\-.@]+$`)
-	rWordResourcePrefix, _ = regexp.Compile(`^[\w+\-.@]+\*$`)
+	rWordResource, _       = regexp.Compile(`^[\w+\-_.@]+$`)
+	rWordResourcePrefix, _ = regexp.Compile(`^[\w+\-_.@]+\*$`)
 	rUrn, _                = regexp.Compile(`^\*$|^[\w+\-@.]+\*?$|^[\w+\-@.]+\*?$|^[\w+\-@.]+(/?([\w+\-@.]+/)*([\w+\-@.]|[*])+)?$`)
 	rUrnExclude, _         = regexp.Compile(`[/]{2,}|[:]{2,}|[*]{2,}`)
 )
@@ -197,13 +197,27 @@ func AreValidStatements(statements *[]Statement) error {
 		if err != nil {
 			return err
 		}
-		err = AreValidActions(statement.Actions)
-		if err != nil {
-			return err
+		if len(statement.Actions) < 1 {
+			return &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Empty actions",
+			}
+		} else {
+			err = AreValidActions(statement.Actions)
+			if err != nil {
+				return err
+			}
 		}
-		err = AreValidResources(statement.Resources)
-		if err != nil {
-			return err
+		if len(statement.Resources) < 1 {
+			return &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Empty resources",
+			}
+		} else {
+			err = AreValidResources(statement.Resources)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

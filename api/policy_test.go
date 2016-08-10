@@ -132,6 +132,50 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 				Message: "Invalid parameter: name **!^#~",
 			},
 		},
+		"ErrorCaseEmptyActions": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "123",
+			policyName: "p1",
+			path:       "/path/",
+			statements: []Statement{
+				{
+					Effect:  "allow",
+					Actions: []string{},
+					Resources: []string{
+						GetUrnPrefix("", RESOURCE_USER, "/path/"),
+					},
+				},
+			},
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Empty actions",
+			},
+		},
+		"ErrorCaseEmptyResources": {
+			authUser: AuthenticatedUser{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "123",
+			policyName: "p1",
+			path:       "/path/",
+			statements: []Statement{
+				{
+					Effect: "allow",
+					Actions: []string{
+						USER_ACTION_GET_USER,
+					},
+					Resources: []string{},
+				},
+			},
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Empty resources",
+			},
+		},
 		"ErrorCaseBadOrgName": {
 			authUser: AuthenticatedUser{
 				Identifier: "123456",
