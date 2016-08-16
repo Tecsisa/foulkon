@@ -18,7 +18,7 @@ import (
 func main() {
 	// Retrieve config file
 	fs := flag.NewFlagSet("authorizr", flag.ExitOnError)
-	configFile := fs.String("config-file", "", "Config file for Authorizr")
+	configFile := fs.String("config-file", "", "Config file for worker")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
@@ -65,6 +65,6 @@ func main() {
 		core.Logger.Error(http.ListenAndServe(core.Host+":"+core.Port, internalhttp.WorkerHandlerRouter(core)).Error())
 	}
 
-	authorizr.CloseWorker()
+	os.Exit(authorizr.CloseWorker())
 
 }

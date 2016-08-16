@@ -63,6 +63,6 @@ func main() {
 		proxy.Logger.Error(http.ListenAndServe(proxy.Host+":"+proxy.Port, internalhttp.ProxyHandlerRouter(proxy)).Error())
 	}
 
-	authorizr.CloseProxy()
+	os.Exit(authorizr.CloseProxy())
 
 }
