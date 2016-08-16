@@ -24,10 +24,8 @@ type AuthorizeResourcesResponse struct {
 
 // HANDLERS
 
-func (a *WorkerHandler) HandleGetAuthorizedExternalResources(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	userID := a.worker.Authenticator.RetrieveUserID(*r)
-	requestID := r.Header.Get(REQUEST_ID_HEADER)
-
+func (h *WorkerHandler) HandleGetAuthorizedExternalResources(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	requestInfo := h.GetRequestInfo(r)
 	// Decode request
 	request := AuthorizeResourcesRequest{}
 	err := json.NewDecoder(r.Body).Decode(&request)
@@ -36,33 +34,32 @@ func (a *WorkerHandler) HandleGetAuthorizedExternalResources(w http.ResponseWrit
 			Code:    api.INVALID_PARAMETER_ERROR,
 			Message: err.Error(),
 		}
-		api.LogErrorMessage(a.worker.Logger, requestID, apiError)
-		a.RespondBadRequest(r, &userID, w, apiError)
+		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
+		h.RespondBadRequest(r, requestInfo, w, apiError)
 		return
 	}
 
 	// Retrieve allowed resources
-	a.worker.Logger.Debugf("Request ID %v. Action %v, Resources %v", requestID, request.Action, request.Resources)
-	result, err := a.worker.AuthzApi.GetAuthorizedExternalResources(userID, request.Action, request.Resources)
+	result, err := h.worker.AuthzApi.GetAuthorizedExternalResources(requestInfo, request.Action, request.Resources)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
-		api.LogErrorMessage(a.worker.Logger, requestID, apiError)
+		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
 		switch apiError.Code {
 		case api.INVALID_PARAMETER_ERROR:
-			a.RespondBadRequest(r, &userID, w, apiError)
+			h.RespondBadRequest(r, requestInfo, w, apiError)
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			a.RespondForbidden(r, &userID, w, apiError)
+			h.RespondForbidden(r, requestInfo, w, apiError)
 		default: // Unexpected API error
-			a.RespondInternalServerError(r, &userID, w)
+			h.RespondInternalServerError(r, requestInfo, w)
 		}
 		return
 	}
 
 	if result == nil || len(result) < 1 {
-		a.RespondForbidden(r, &userID, w, &api.Error{
+		h.RespondForbidden(r, requestInfo, w, &api.Error{
 			Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with externalId %v is not allowed to access to any resource", userID.Identifier),
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to any resource", requestInfo.Identifier),
 		})
 		return
 	}
@@ -71,5 +68,5 @@ func (a *WorkerHandler) HandleGetAuthorizedExternalResources(w http.ResponseWrit
 		ResourcesAllowed: result,
 	}
 
-	a.RespondOk(r, &userID, w, response)
+	h.RespondOk(r, requestInfo, w, response)
 }

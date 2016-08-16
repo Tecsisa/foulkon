@@ -72,7 +72,7 @@ func TestLogErrorMessage(t *testing.T) {
 	}
 
 	for x, testcase := range testcases {
-		LogErrorMessage(&logger, "RequestID", testcase.err)
+		LogErrorMessage(&logger, RequestInfo{Admin: true, RequestID: "RequestID", Identifier: "123"}, testcase.err)
 		logMessage := testOut.String()
 		diff := pretty.Compare(logMessage, testcase.expectedMessage)
 		if !strings.Contains(logMessage, testcase.expectedMessage) {

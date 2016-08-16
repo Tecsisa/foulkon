@@ -9,10 +9,10 @@ import (
 func TestAuthAPI_AddGroup(t *testing.T) {
 	testcases := map[string]struct {
 		// API Method args
-		authUser AuthenticatedUser
-		name     string
-		org      string
-		path     string
+		requestInfo RequestInfo
+		name        string
+		org         string
+		path        string
 		// Expected results
 		expectedGroup *Group
 		wantError     error
@@ -28,7 +28,7 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 		addGroupMethodErr            error
 	}{
 		"OKCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -46,7 +46,7 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 			},
 		},
 		"OKCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -124,7 +124,7 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseGroupAlreadyExists": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -148,7 +148,7 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseNotAuthenticatedUser": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -164,7 +164,7 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedResource": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -222,7 +222,7 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -261,7 +261,7 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseAddGroupDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -279,7 +279,7 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseGetGroupDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -308,7 +308,7 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 		testRepo.ArgsOut[AddGroupMethod][0] = testcase.expectedGroup
 		testRepo.ArgsOut[AddGroupMethod][1] = testcase.addGroupMethodErr
 
-		group, err := testAPI.AddGroup(testcase.authUser, testcase.org, testcase.name, testcase.path)
+		group, err := testAPI.AddGroup(testcase.requestInfo, testcase.org, testcase.name, testcase.path)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedGroup, group)
 	}
 }
@@ -316,10 +316,10 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 func TestAuthAPI_GetGroupByName(t *testing.T) {
 	testcases := map[string]struct {
 		// API Method args
-		authUser AuthenticatedUser
-		name     string
-		org      string
-		path     string
+		requestInfo RequestInfo
+		name        string
+		org         string
+		path        string
 		// Expected result
 		expectedGroup *Group
 		wantError     error
@@ -333,7 +333,7 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 		getGroupByNameMethodErr      error
 	}{
 		"OKCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -354,7 +354,7 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 			},
 		},
 		"OKCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -450,7 +450,7 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 			},
 		},
 		"ErrorCaseNotAuthenticatedUser": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -472,7 +472,7 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedResource": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -541,7 +541,7 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -603,7 +603,7 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 
-		group, err := testAPI.GetGroupByName(testcase.authUser, testcase.org, testcase.name)
+		group, err := testAPI.GetGroupByName(testcase.requestInfo, testcase.org, testcase.name)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedGroup, group)
 	}
 }
@@ -611,9 +611,9 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 func TestAuthAPI_ListGroups(t *testing.T) {
 	testcases := map[string]struct {
 		// API Method args
-		authUser   AuthenticatedUser
-		org        string
-		pathPrefix string
+		requestInfo RequestInfo
+		org         string
+		pathPrefix  string
 		// Expected result
 		expectedGroups []GroupIdentity
 		wantError      error
@@ -627,7 +627,7 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 		getGroupsFilteredMethodErr   error
 	}{
 		"OKCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -649,7 +649,7 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 			},
 		},
 		"OKCaseAdminNoGroup": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -680,7 +680,7 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 			},
 		},
 		"OKCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -767,7 +767,7 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseNotAuthenticatedUser": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -790,7 +790,7 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedResource": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -858,7 +858,7 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -919,14 +919,14 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 
-		groups, err := testAPI.ListGroups(testcase.authUser, testcase.org, testcase.pathPrefix)
+		groups, err := testAPI.ListGroups(testcase.requestInfo, testcase.org, testcase.pathPrefix)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedGroups, groups)
 	}
 }
 
 func TestAuthAPI_UpdateGroup(t *testing.T) {
 	testcases := map[string]struct {
-		authUser     AuthenticatedUser
+		requestInfo  RequestInfo
 		org          string
 		groupName    string
 		newGroupName string
@@ -948,7 +948,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 		updateGroupMethodErr         error
 	}{
 		"OKCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -979,7 +979,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 			},
 		},
 		"OKCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1084,7 +1084,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedUser": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1108,7 +1108,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseGroupAlreadyExist": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -1141,7 +1141,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseGetGroupDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -1169,7 +1169,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedUpdateGroup": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1224,7 +1224,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseDenyUpdateGroup": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1289,7 +1289,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissionsToUpdateTarget": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1353,7 +1353,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseDenyToUpdateTarget": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1426,7 +1426,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermission": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1471,7 +1471,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseUpdateGroupDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -1509,7 +1509,7 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 
-		group, err := testAPI.UpdateGroup(testcase.authUser, testcase.org, testcase.groupName, testcase.newGroupName, testcase.newPath)
+		group, err := testAPI.UpdateGroup(testcase.requestInfo, testcase.org, testcase.groupName, testcase.newGroupName, testcase.newPath)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedGroup, group)
 	}
 }
@@ -1517,9 +1517,9 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 func TestAuthAPI_RemoveGroup(t *testing.T) {
 	testcases := map[string]struct {
 		//API method args
-		authUser AuthenticatedUser
-		name     string
-		org      string
+		requestInfo RequestInfo
+		name        string
+		org         string
 		// Expected result
 		wantError error
 		// Manager Results
@@ -1534,7 +1534,7 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 		getGroupsByUserIDError       error
 	}{
 		"OKCaseAdminUser": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -1554,7 +1554,7 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 			},
 		},
 		"OkCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1631,7 +1631,7 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedUser": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1653,7 +1653,7 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseImplicitUnauthorizedDeleteGroup": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1707,7 +1707,7 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseExplicitUnauthorizedDeleteGroup": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1771,7 +1771,7 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1815,7 +1815,7 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseDeleteGroupDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -1855,7 +1855,7 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[RemoveGroupMethod][0] = testcase.removeGroupMethodErr
 
-		err := testAPI.RemoveGroup(testcase.authUser, testcase.org, testcase.name)
+		err := testAPI.RemoveGroup(testcase.requestInfo, testcase.org, testcase.name)
 		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
@@ -1863,10 +1863,10 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 func TestAuthAPI_AddMember(t *testing.T) {
 	testcases := map[string]struct {
 		// API Method args
-		authUser  AuthenticatedUser
-		userID    string
-		org       string
-		groupName string
+		requestInfo RequestInfo
+		userID      string
+		org         string
+		groupName   string
 		// Expected result
 		wantError error
 		// Manager Results
@@ -1882,7 +1882,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 		isMemberOfGroupMethodErr     error
 	}{
 		"OkCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -1903,7 +1903,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 			isMemberOfGroupResult: false,
 		},
 		"OKCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1956,7 +1956,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 			isMemberOfGroupResult: false,
 		},
 		"ErrorCaseInvalidExternalID": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -2005,7 +2005,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedUser": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -2028,7 +2028,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedResource": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -2082,7 +2082,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseDenyAddMember": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -2147,7 +2147,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -2192,7 +2192,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseUserNotFound": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -2213,7 +2213,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseIsAlreadyMember": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -2238,7 +2238,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 			isMemberOfGroupResult: true,
 		},
 		"ErrorCaseIsMemberDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -2264,7 +2264,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseAddMemberDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -2306,7 +2306,7 @@ func TestAuthAPI_AddMember(t *testing.T) {
 		testRepo.ArgsOut[IsMemberOfGroupMethod][0] = testcase.isMemberOfGroupResult
 		testRepo.ArgsOut[IsMemberOfGroupMethod][1] = testcase.isMemberOfGroupMethodErr
 
-		err := testAPI.AddMember(testcase.authUser, testcase.userID, testcase.groupName, testcase.org)
+		err := testAPI.AddMember(testcase.requestInfo, testcase.userID, testcase.groupName, testcase.org)
 		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
@@ -2314,10 +2314,10 @@ func TestAuthAPI_AddMember(t *testing.T) {
 func TestAuthAPI_RemoveMember(t *testing.T) {
 	testcases := map[string]struct {
 		// API Method args
-		authUser  AuthenticatedUser
-		userID    string
-		groupName string
-		org       string
+		requestInfo RequestInfo
+		userID      string
+		groupName   string
+		org         string
 		// Expected result
 		wantError error
 		// Manager Results
@@ -2333,7 +2333,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 		removeMemberMethodErr        error
 	}{
 		"OkCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -2354,7 +2354,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 			isMemberOfGroupResult: true,
 		},
 		"OKCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -2415,7 +2415,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 			isMemberOfGroupResult: true,
 		},
 		"ErrorCaseInvalidExternalID": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -2463,7 +2463,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedUser": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -2486,7 +2486,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedRemoveMember": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -2540,7 +2540,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedGetUser": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -2604,7 +2604,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseDenyRemoveMember": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -2668,7 +2668,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -2712,7 +2712,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseUserNotFound": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -2734,7 +2734,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseIsMemberDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -2762,7 +2762,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 			},
 		},
 		"ErrorCaseIsNotMember": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -2789,7 +2789,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 			isMemberOfGroupResult: false,
 		},
 		"ErrorCaseRemoveMemberDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -2833,7 +2833,7 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 
-		err := testAPI.RemoveMember(testcase.authUser, testcase.userID, testcase.groupName, testcase.org)
+		err := testAPI.RemoveMember(testcase.requestInfo, testcase.userID, testcase.groupName, testcase.org)
 		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
@@ -2841,9 +2841,9 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 func TestAuthAPI_ListMembers(t *testing.T) {
 	testcases := map[string]struct {
 		// API Method args
-		authUser  AuthenticatedUser
-		org       string
-		groupName string
+		requestInfo RequestInfo
+		org         string
+		groupName   string
 		// Expected result
 		expectedMembers []string
 		wantError       error
@@ -2859,7 +2859,7 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 		getGroupMembersMethodErr     error
 	}{
 		"OkCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -2889,7 +2889,7 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 			},
 		},
 		"OKCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -2981,7 +2981,7 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 			},
 		},
 		"ErrorCaseNotAuthenticatedUser": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -3002,7 +3002,7 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedResource": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -3055,7 +3055,7 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 			},
 		},
 		"ErrorCaseDenyListMembers": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -3118,7 +3118,7 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -3161,7 +3161,7 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 			},
 		},
 		"ErrorCaseListMembersDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -3195,17 +3195,17 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 
-		members, err := testAPI.ListMembers(testcase.authUser, testcase.org, testcase.groupName)
+		members, err := testAPI.ListMembers(testcase.requestInfo, testcase.org, testcase.groupName)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedMembers, members)
 	}
 }
 
 func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 	testcases := map[string]struct {
-		authUser   AuthenticatedUser
-		org        string
-		groupName  string
-		policyName string
+		requestInfo RequestInfo
+		org         string
+		groupName   string
+		policyName  string
 		// Expected result
 		wantError error
 		// Manager Results
@@ -3223,7 +3223,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 		attachPolicyMethodErr        error
 	}{
 		"OkCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -3258,7 +3258,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 			isAttachedToGroupResult: false,
 		},
 		"OKCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -3337,7 +3337,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 			isAttachedToGroupResult: false,
 		},
 		"ErrorCaseInvalidGroupName": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -3349,7 +3349,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidOrg": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -3361,7 +3361,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidPolicyName": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -3392,7 +3392,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseNotAuthenticatedUser": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -3414,7 +3414,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedToAttach": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -3468,7 +3468,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseDenyToAttach": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -3532,7 +3532,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -3576,7 +3576,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseIsAttachedDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -3616,7 +3616,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCasePolicyIsAlreadyAttached": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -3655,7 +3655,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 			isAttachedToGroupResult: true,
 		},
 		"ErrorCasePolicyNotFound": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -3677,7 +3677,7 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseAttachPolicyDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -3735,17 +3735,17 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 		testRepo.ArgsOut[IsAttachedToGroupMethod][1] = testcase.isAttachedToGroupMethodErr
 		testRepo.ArgsOut[AttachPolicyMethod][0] = testcase.attachPolicyMethodErr
 
-		err := testAPI.AttachPolicyToGroup(testcase.authUser, testcase.org, testcase.groupName, testcase.policyName)
+		err := testAPI.AttachPolicyToGroup(testcase.requestInfo, testcase.org, testcase.groupName, testcase.policyName)
 		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
 
 func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 	testcases := map[string]struct {
-		authUser   AuthenticatedUser
-		org        string
-		groupName  string
-		policyName string
+		requestInfo RequestInfo
+		org         string
+		groupName   string
+		policyName  string
 		// Expected result
 		wantError error
 		// Manager Results
@@ -3763,7 +3763,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 		detachPolicyMethodErr        error
 	}{
 		"OkCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -3798,7 +3798,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 			isAttachedToGroupResult: true,
 		},
 		"OkCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -3893,7 +3893,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidPolicyName": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -3924,7 +3924,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseNotAuthenticatedUser": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -3946,7 +3946,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedToDetach": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -4000,7 +4000,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseDenyToDetach": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -4064,7 +4064,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -4108,7 +4108,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCasePolicyNotFound": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -4130,7 +4130,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCaseIsAttachedDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -4170,7 +4170,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 			},
 		},
 		"ErrorCasePolicyIsNotAttached": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -4209,7 +4209,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 			isAttachedToGroupResult: false,
 		},
 		"ErrorCaseDetachPolicyDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -4267,7 +4267,7 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 		testRepo.ArgsOut[IsAttachedToGroupMethod][1] = testcase.isAttachedToGroupMethodErr
 		testRepo.ArgsOut[DetachPolicyMethod][0] = testcase.detachPolicyMethodErr
 
-		err := testAPI.DetachPolicyToGroup(testcase.authUser, testcase.org, testcase.groupName, testcase.policyName)
+		err := testAPI.DetachPolicyToGroup(testcase.requestInfo, testcase.org, testcase.groupName, testcase.policyName)
 		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
@@ -4275,9 +4275,9 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 	testcases := map[string]struct {
 		//API method args
-		authUser AuthenticatedUser
-		name     string
-		org      string
+		requestInfo RequestInfo
+		name        string
+		org         string
 		// Expected result
 		expectedPolicies []string
 		wantError        error
@@ -4292,7 +4292,7 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 		getGroupByNameMethodErr      error
 	}{
 		"OKCaseAdminUser": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -4313,7 +4313,7 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 			expectedPolicies: []string{},
 		},
 		"OKCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -4391,7 +4391,7 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 			},
 		},
 		"ErrorCaseNotAuthenticatedUser": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -4412,7 +4412,7 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 			},
 		},
 		"ErrorCaseImplicitUnauthorizedListAttachedGroupPolicies": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -4466,7 +4466,7 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 			},
 		},
 		"ErrorCaseExplicitUnauthorizedListAttachedGroupPolicies": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -4530,7 +4530,7 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -4574,7 +4574,7 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 			},
 		},
 		"ErrorCaseGetPoliciesDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -4622,7 +4622,7 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = testcase.getAttachedPoliciesErr
 
-		policies, err := testAPI.ListAttachedGroupPolicies(testcase.authUser, testcase.org, testcase.name)
+		policies, err := testAPI.ListAttachedGroupPolicies(testcase.requestInfo, testcase.org, testcase.name)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedPolicies, policies)
 	}
 }

@@ -9,7 +9,7 @@ import (
 func TestGetAuthorizedUsers(t *testing.T) {
 	testcases := map[string]struct {
 		// Authenticated user
-		authUser AuthenticatedUser
+		requestInfo RequestInfo
 		// Resource urn that user wants to access
 		resourceUrn string
 		// Action to do
@@ -25,7 +25,7 @@ func TestGetAuthorizedUsers(t *testing.T) {
 		getUserByExternalIDError  error
 	}{
 		"OKtestCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -45,7 +45,7 @@ func TestGetAuthorizedUsers(t *testing.T) {
 			},
 		},
 		"OKtestCaseAdminWithEmptyResources": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -55,7 +55,7 @@ func TestGetAuthorizedUsers(t *testing.T) {
 			usersAuthorized:  []User{},
 		},
 		"ErrortestCaseAuthenticatedUserNotExist": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "notAdminUser",
 				Admin:      false,
 			},
@@ -81,13 +81,13 @@ func TestGetAuthorizedUsers(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = test.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
 
-		authorizedUsers, err := testAPI.GetAuthorizedUsers(test.authUser, test.resourceUrn, test.action, test.usersToAuthorize)
+		authorizedUsers, err := testAPI.GetAuthorizedUsers(test.requestInfo, test.resourceUrn, test.action, test.usersToAuthorize)
 		checkMethodResponse(t, n, test.wantError, err, test.usersAuthorized, authorizedUsers)
-		if !test.authUser.Admin {
+		if !test.requestInfo.Admin {
 			// Check received authenticated user in method GetUserByExternalID
-			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
+			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.requestInfo.Identifier {
 				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-					n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
+					n, test.requestInfo.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
 				continue
 			}
 		}
@@ -97,7 +97,7 @@ func TestGetAuthorizedUsers(t *testing.T) {
 func TestGetAuthorizedGroups(t *testing.T) {
 	testcases := map[string]struct {
 		// Authenticated user
-		authUser AuthenticatedUser
+		requestInfo RequestInfo
 		// Resource urn that user wants to access
 		resourceUrn string
 		// Action to do
@@ -113,7 +113,7 @@ func TestGetAuthorizedGroups(t *testing.T) {
 		getUserByExternalIDError  error
 	}{
 		"OKtestCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -133,7 +133,7 @@ func TestGetAuthorizedGroups(t *testing.T) {
 			},
 		},
 		"OKtestCaseAdminWithEmptyResources": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -143,7 +143,7 @@ func TestGetAuthorizedGroups(t *testing.T) {
 			groupsAuthorized:  []Group{},
 		},
 		"ErrortestCaseAuthenticatedUserNotExist": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "notAdminUser",
 				Admin:      false,
 			},
@@ -169,13 +169,13 @@ func TestGetAuthorizedGroups(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = test.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
 
-		authorizedGroups, err := testAPI.GetAuthorizedGroups(test.authUser, test.resourceUrn, test.action, test.groupsToAuthorize)
+		authorizedGroups, err := testAPI.GetAuthorizedGroups(test.requestInfo, test.resourceUrn, test.action, test.groupsToAuthorize)
 		checkMethodResponse(t, n, test.wantError, err, test.groupsAuthorized, authorizedGroups)
-		if !test.authUser.Admin {
+		if !test.requestInfo.Admin {
 			// Check received authenticated user in method GetUserByExternalID
-			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
+			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.requestInfo.Identifier {
 				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-					n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
+					n, test.requestInfo.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
 				continue
 			}
 		}
@@ -185,7 +185,7 @@ func TestGetAuthorizedGroups(t *testing.T) {
 func TestGetAuthorizedPolicies(t *testing.T) {
 	testcases := map[string]struct {
 		// Authenticated user
-		authUser AuthenticatedUser
+		requestInfo RequestInfo
 		// Resource urn that user wants to access
 		resourceUrn string
 		// Action to do
@@ -201,7 +201,7 @@ func TestGetAuthorizedPolicies(t *testing.T) {
 		getUserByExternalIDError  error
 	}{
 		"OKtestCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -221,7 +221,7 @@ func TestGetAuthorizedPolicies(t *testing.T) {
 			},
 		},
 		"OKtestCaseAdminWithEmptyResources": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -231,7 +231,7 @@ func TestGetAuthorizedPolicies(t *testing.T) {
 			policiesAuthorized:  []Policy{},
 		},
 		"ErrortestCaseDatabaseError": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "USER-AUTHENTICATED",
 				Admin:      false,
 			},
@@ -257,13 +257,13 @@ func TestGetAuthorizedPolicies(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = test.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
 
-		authorizedPolicies, err := testAPI.GetAuthorizedPolicies(test.authUser, test.resourceUrn, test.action, test.policiesToAuthorize)
+		authorizedPolicies, err := testAPI.GetAuthorizedPolicies(test.requestInfo, test.resourceUrn, test.action, test.policiesToAuthorize)
 		checkMethodResponse(t, n, test.wantError, err, test.policiesAuthorized, authorizedPolicies)
-		if !test.authUser.Admin {
+		if !test.requestInfo.Admin {
 			// Check received authenticated user in method GetUserByExternalID
-			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
+			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.requestInfo.Identifier {
 				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-					n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
+					n, test.requestInfo.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
 				continue
 			}
 		}
@@ -273,7 +273,7 @@ func TestGetAuthorizedPolicies(t *testing.T) {
 func TestGetAuthorizedExternalResources(t *testing.T) {
 	testcases := map[string]struct {
 		// Authenticated user
-		authUser AuthenticatedUser
+		requestInfo RequestInfo
 		// Resource urns that user wants to access
 		resourceUrns []string
 		// Action to do
@@ -293,7 +293,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 		getAttachedPoliciesError  error
 	}{
 		"ErrortestCaseInvalidAction": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Admin: true,
 			},
 			action: "valid::Action",
@@ -303,7 +303,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 			},
 		},
 		"ErrortestCaseInvalidResource": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Admin: true,
 			},
 			action: "product:DoSomething",
@@ -316,7 +316,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 			},
 		},
 		"ErrortestCaseInvalidResourceWithPrefix": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Admin: true,
 			},
 			action: "product:DoSomething",
@@ -329,7 +329,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 			},
 		},
 		"ErrortestCaseEmptyResources": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -353,7 +353,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 			},
 		},
 		"ErrortestCaseActionPrefix": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -367,7 +367,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 			},
 		},
 		"OktestCaseFullUrnAllow": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -410,7 +410,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 			},
 		},
 		"OktestCaseFullUrnDeny": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -460,7 +460,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 			},
 		},
 		"OktestCaseWithRestrictions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -534,13 +534,13 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = test.getAttachedPoliciesResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = test.getAttachedPoliciesError
 
-		resources, err := testAPI.GetAuthorizedExternalResources(test.authUser, test.action, test.resourceUrns)
+		resources, err := testAPI.GetAuthorizedExternalResources(test.requestInfo, test.action, test.resourceUrns)
 		checkMethodResponse(t, n, test.wantError, err, test.expectedResources, resources)
-		if !test.authUser.Admin {
+		if !test.requestInfo.Admin {
 			// Check received authenticated user in method GetUserByExternalID
-			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
+			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.requestInfo.Identifier {
 				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-					n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
+					n, test.requestInfo.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
 				continue
 			}
 		}
@@ -552,7 +552,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 func TestGetAuthorizedResources(t *testing.T) {
 	testcases := map[string]struct {
 		// Authenticated user
-		authUser AuthenticatedUser
+		requestInfo RequestInfo
 		// Resource urn that user wants to access
 		resourceUrn string
 		// Action to do
@@ -574,7 +574,7 @@ func TestGetAuthorizedResources(t *testing.T) {
 		getAttachedPoliciesError  error
 	}{
 		"OKtestCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -594,7 +594,7 @@ func TestGetAuthorizedResources(t *testing.T) {
 			},
 		},
 		"ErrortestCaseGetRestrictions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -622,7 +622,7 @@ func TestGetAuthorizedResources(t *testing.T) {
 			},
 		},
 		"ErrortestCaseNotAllowedResources": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -650,7 +650,7 @@ func TestGetAuthorizedResources(t *testing.T) {
 			},
 		},
 		"OKtestCaseResourcesFiltered": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -703,7 +703,7 @@ func TestGetAuthorizedResources(t *testing.T) {
 		"OKtestCaseResourcesFilteredReturnEmpty": {
 			// This test case checks if user has access to groups in /path2/ prefix, but there are groups
 			// only in /path/, so we expect a empty slice of groups authorized
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -764,13 +764,13 @@ func TestGetAuthorizedResources(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = test.getAttachedPoliciesResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = test.getAttachedPoliciesError
 
-		authorizedResources, err := testAPI.getAuthorizedResources(test.authUser, test.resourceUrn, test.action, test.resourcesToAuthorize)
+		authorizedResources, err := testAPI.getAuthorizedResources(test.requestInfo, test.resourceUrn, test.action, test.resourcesToAuthorize)
 		checkMethodResponse(t, n, test.wantError, err, test.resourcesAuthorized, authorizedResources)
-		if !test.authUser.Admin {
+		if !test.requestInfo.Admin {
 			// Check received authenticated user in method GetUserByExternalID
-			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUser.Identifier {
+			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.requestInfo.Identifier {
 				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-					n, test.authUser.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
+					n, test.requestInfo.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
 				continue
 			}
 		}

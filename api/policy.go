@@ -16,9 +16,14 @@ type Policy struct {
 	Name       string       `json:"name, omitempty"`
 	Path       string       `json:"path, omitempty"`
 	Org        string       `json:"org, omitempty"`
-	CreateAt   time.Time    `json:"createAt, omitempty"`
 	Urn        string       `json:"urn, omitempty"`
+	CreateAt   time.Time    `json:"createAt, omitempty"`
 	Statements *[]Statement `json:"statements, omitempty"`
+}
+
+func (p Policy) String() string {
+	return fmt.Sprintf("[id: %v, name: %v, path: %v, org: %v, urn: %v, createAt: %v, statements: %v]",
+		p.ID, p.Name, p.Path, p.Org, p.Urn, p.CreateAt.Format("2006-01-02 15:04:05 MST"), p.Statements)
 }
 
 func (p Policy) GetUrn() string {
@@ -37,9 +42,13 @@ type Statement struct {
 	Resources []string `json:"resources, omitempty"`
 }
 
+func (s Statement) String() string {
+	return fmt.Sprintf("[effect: %v, actions: %v, resources: %v]", s.Effect, s.Actions, s.Resources)
+}
+
 // POLICY API IMPLEMENTATION
 
-func (api AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, path string, org string, statements []Statement) (*Policy, error) {
+func (api AuthAPI) AddPolicy(requestInfo RequestInfo, name string, path string, org string, statements []Statement) (*Policy, error) {
 	// Validate fields
 	if !IsValidName(name) {
 		return nil, &Error{
@@ -73,7 +82,7 @@ func (api AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, p
 	policy := createPolicy(name, path, org, &statements)
 
 	// Check restrictions
-	policiesFiltered, err := api.GetAuthorizedPolicies(authenticatedUser, policy.Urn, POLICY_ACTION_CREATE_POLICY, []Policy{policy})
+	policiesFiltered, err := api.GetAuthorizedPolicies(requestInfo, policy.Urn, POLICY_ACTION_CREATE_POLICY, []Policy{policy})
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +90,7 @@ func (api AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, p
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, policy.Urn),
+				requestInfo.Identifier, policy.Urn),
 		}
 	}
 
@@ -108,7 +117,7 @@ func (api AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, p
 				}
 			}
 
-			// Return policy created
+			LogOperation(&api.Logger, requestInfo, fmt.Sprintf("Policy created %+v", createdPolicy))
 			return createdPolicy, nil
 		default: // Unexpected error
 			return nil, &Error{
@@ -124,7 +133,7 @@ func (api AuthAPI) AddPolicy(authenticatedUser AuthenticatedUser, name string, p
 	}
 }
 
-func (api AuthAPI) GetPolicyByName(authenticatedUser AuthenticatedUser, org string, policyName string) (*Policy, error) {
+func (api AuthAPI) GetPolicyByName(requestInfo RequestInfo, org string, policyName string) (*Policy, error) {
 	// Validate fields
 	if !IsValidName(policyName) {
 		return nil, &Error{
@@ -162,7 +171,7 @@ func (api AuthAPI) GetPolicyByName(authenticatedUser AuthenticatedUser, org stri
 	}
 
 	// Check restrictions
-	policiesFiltered, err := api.GetAuthorizedPolicies(authenticatedUser, policy.Urn, POLICY_ACTION_GET_POLICY, []Policy{*policy})
+	policiesFiltered, err := api.GetAuthorizedPolicies(requestInfo, policy.Urn, POLICY_ACTION_GET_POLICY, []Policy{*policy})
 	if err != nil {
 		return nil, err
 	}
@@ -173,12 +182,12 @@ func (api AuthAPI) GetPolicyByName(authenticatedUser AuthenticatedUser, org stri
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, policy.Urn),
+				requestInfo.Identifier, policy.Urn),
 		}
 	}
 }
 
-func (api AuthAPI) ListPolicies(authenticatedUser AuthenticatedUser, org string, pathPrefix string) ([]PolicyIdentity, error) {
+func (api AuthAPI) ListPolicies(requestInfo RequestInfo, org string, pathPrefix string) ([]PolicyIdentity, error) {
 	// Validate fields
 	if len(org) > 0 && !IsValidOrg(org) {
 		return nil, &Error{
@@ -216,7 +225,7 @@ func (api AuthAPI) ListPolicies(authenticatedUser AuthenticatedUser, org string,
 	} else {
 		urnPrefix = GetUrnPrefix(org, RESOURCE_POLICY, pathPrefix)
 	}
-	policiesFiltered, err := api.GetAuthorizedPolicies(authenticatedUser, urnPrefix, POLICY_ACTION_LIST_POLICIES, policies)
+	policiesFiltered, err := api.GetAuthorizedPolicies(requestInfo, urnPrefix, POLICY_ACTION_LIST_POLICIES, policies)
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +241,7 @@ func (api AuthAPI) ListPolicies(authenticatedUser AuthenticatedUser, org string,
 	return policyIDs, nil
 }
 
-func (api AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string, policyName string, newName string, newPath string,
+func (api AuthAPI) UpdatePolicy(requestInfo RequestInfo, org string, policyName string, newName string, newPath string,
 	newStatements []Statement) (*Policy, error) {
 	// Validate fields
 	if !IsValidName(newName) {
@@ -259,13 +268,13 @@ func (api AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string,
 	}
 
 	// Call repo to retrieve the policy
-	policyDB, err := api.GetPolicyByName(authenticatedUser, org, policyName)
+	policyDB, err := api.GetPolicyByName(requestInfo, org, policyName)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check restrictions
-	policiesFiltered, err := api.GetAuthorizedPolicies(authenticatedUser, policyDB.Urn, POLICY_ACTION_UPDATE_POLICY, []Policy{*policyDB})
+	policiesFiltered, err := api.GetAuthorizedPolicies(requestInfo, policyDB.Urn, POLICY_ACTION_UPDATE_POLICY, []Policy{*policyDB})
 	if err != nil {
 		return nil, err
 	}
@@ -273,12 +282,12 @@ func (api AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string,
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, policyDB.Urn),
+				requestInfo.Identifier, policyDB.Urn),
 		}
 	}
 
 	// Check if policy with "newName" exists
-	targetPolicy, err := api.GetPolicyByName(authenticatedUser, org, newName)
+	targetPolicy, err := api.GetPolicyByName(requestInfo, org, newName)
 
 	if err == nil && targetPolicy.ID != policyDB.ID {
 		// Policy already exists
@@ -297,7 +306,7 @@ func (api AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string,
 	policyToUpdate := createPolicy(newName, newPath, org, &newStatements)
 
 	// Check restrictions
-	policiesFiltered, err = api.GetAuthorizedPolicies(authenticatedUser, policyToUpdate.Urn, POLICY_ACTION_UPDATE_POLICY, []Policy{policyToUpdate})
+	policiesFiltered, err = api.GetAuthorizedPolicies(requestInfo, policyToUpdate.Urn, POLICY_ACTION_UPDATE_POLICY, []Policy{policyToUpdate})
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +314,7 @@ func (api AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string,
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, policyToUpdate.Urn),
+				requestInfo.Identifier, policyToUpdate.Urn),
 		}
 	}
 
@@ -322,19 +331,20 @@ func (api AuthAPI) UpdatePolicy(authenticatedUser AuthenticatedUser, org string,
 		}
 	}
 
+	LogOperation(&api.Logger, requestInfo, fmt.Sprintf("Policy updated from %+v to %+v", policyDB, policy))
 	return policy, nil
 }
 
-func (api AuthAPI) RemovePolicy(authenticatedUser AuthenticatedUser, org string, name string) error {
+func (api AuthAPI) RemovePolicy(requestInfo RequestInfo, org string, name string) error {
 
 	// Call repo to retrieve the policy
-	policy, err := api.GetPolicyByName(authenticatedUser, org, name)
+	policy, err := api.GetPolicyByName(requestInfo, org, name)
 	if err != nil {
 		return err
 	}
 
 	// Check restrictions
-	policiesFiltered, err := api.GetAuthorizedPolicies(authenticatedUser, policy.Urn, POLICY_ACTION_DELETE_POLICY, []Policy{*policy})
+	policiesFiltered, err := api.GetAuthorizedPolicies(requestInfo, policy.Urn, POLICY_ACTION_DELETE_POLICY, []Policy{*policy})
 	if err != nil {
 		return err
 	}
@@ -342,7 +352,7 @@ func (api AuthAPI) RemovePolicy(authenticatedUser AuthenticatedUser, org string,
 		return &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, policy.Urn),
+				requestInfo.Identifier, policy.Urn),
 		}
 	}
 
@@ -356,20 +366,20 @@ func (api AuthAPI) RemovePolicy(authenticatedUser AuthenticatedUser, org string,
 		}
 	}
 
-	// Return no error
+	LogOperation(&api.Logger, requestInfo, fmt.Sprintf("Policy deleted %+v", policy))
 	return nil
 }
 
-func (api AuthAPI) ListAttachedGroups(authenticatedUser AuthenticatedUser, org string, name string) ([]string, error) {
+func (api AuthAPI) ListAttachedGroups(requestInfo RequestInfo, org string, name string) ([]string, error) {
 
 	// Call repo to retrieve the policy
-	policy, err := api.GetPolicyByName(authenticatedUser, org, name)
+	policy, err := api.GetPolicyByName(requestInfo, org, name)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check restrictions
-	policiesFiltered, err := api.GetAuthorizedPolicies(authenticatedUser, policy.Urn, POLICY_ACTION_LIST_ATTACHED_GROUPS, []Policy{*policy})
+	policiesFiltered, err := api.GetAuthorizedPolicies(requestInfo, policy.Urn, POLICY_ACTION_LIST_ATTACHED_GROUPS, []Policy{*policy})
 	if err != nil {
 		return nil, err
 	}
@@ -377,7 +387,7 @@ func (api AuthAPI) ListAttachedGroups(authenticatedUser AuthenticatedUser, org s
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, policy.Urn),
+				requestInfo.Identifier, policy.Urn),
 		}
 	}
 

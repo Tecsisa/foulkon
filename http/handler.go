@@ -136,7 +136,8 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 		r.Header.Set(REQUEST_ID_HEADER, requestID)
 		w.Header().Add(REQUEST_ID_HEADER, requestID)
 		worker.Authenticator.Authenticate(router).ServeHTTP(w, r)
-		workerHandler.TransactionLog(r, requestID, worker.Authenticator.RetrieveUserID(*r).Identifier, "")
+		userID, _ := worker.Authenticator.GetAuthenticatedUser(r)
+		workerHandler.TransactionLog(r, requestID, userID, "")
 	})
 }
 
@@ -144,10 +145,10 @@ func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
 
 // 2xx RESPONSES
 
-func (a *WorkerHandler) RespondOk(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, value interface{}) {
+func (a *WorkerHandler) RespondOk(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, value interface{}) {
 	b, err := json.Marshal(value)
 	if err != nil {
-		a.RespondInternalServerError(r, authenticatedUser, w)
+		a.RespondInternalServerError(r, requestInfo, w)
 		return
 	}
 
@@ -155,10 +156,10 @@ func (a *WorkerHandler) RespondOk(r *http.Request, authenticatedUser *api.Authen
 	w.Write(b)
 }
 
-func (a *WorkerHandler) RespondCreated(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, value interface{}) {
+func (a *WorkerHandler) RespondCreated(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, value interface{}) {
 	b, err := json.Marshal(value)
 	if err != nil {
-		a.RespondInternalServerError(r, authenticatedUser, w)
+		a.RespondInternalServerError(r, requestInfo, w)
 		return
 	}
 
@@ -167,57 +168,67 @@ func (a *WorkerHandler) RespondCreated(r *http.Request, authenticatedUser *api.A
 	w.Write(b)
 }
 
-func (a *WorkerHandler) RespondNoContent(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter) {
+func (a *WorkerHandler) RespondNoContent(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
 // 4xx RESPONSES
 
-func (a *WorkerHandler) RespondNotFound(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, apiError *api.Error) {
+func (a *WorkerHandler) RespondNotFound(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, apiError *api.Error) {
 	w, err := writeErrorWithStatus(w, apiError, http.StatusNotFound)
 	if err != nil {
-		a.RespondInternalServerError(r, authenticatedUser, w)
+		a.RespondInternalServerError(r, requestInfo, w)
 		return
 	}
 }
 
-func (a *WorkerHandler) RespondBadRequest(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, apiError *api.Error) {
+func (a *WorkerHandler) RespondBadRequest(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, apiError *api.Error) {
 	w, err := writeErrorWithStatus(w, apiError, http.StatusBadRequest)
 	if err != nil {
-		a.RespondInternalServerError(r, authenticatedUser, w)
+		a.RespondInternalServerError(r, requestInfo, w)
 		return
 	}
 }
 
-func (a *WorkerHandler) RespondConflict(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, apiError *api.Error) {
+func (a *WorkerHandler) RespondConflict(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, apiError *api.Error) {
 	w, err := writeErrorWithStatus(w, apiError, http.StatusConflict)
 	if err != nil {
-		a.RespondInternalServerError(r, authenticatedUser, w)
+		a.RespondInternalServerError(r, requestInfo, w)
 		return
 	}
 }
 
-func (a *WorkerHandler) RespondForbidden(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter, apiError *api.Error) {
+func (a *WorkerHandler) RespondForbidden(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, apiError *api.Error) {
 	w, err := writeErrorWithStatus(w, apiError, http.StatusForbidden)
 	if err != nil {
-		a.RespondInternalServerError(r, authenticatedUser, w)
+		a.RespondInternalServerError(r, requestInfo, w)
 		return
 	}
 }
 
 // 5xx RESPONSES
 
-func (a *WorkerHandler) RespondInternalServerError(r *http.Request, authenticatedUser *api.AuthenticatedUser, w http.ResponseWriter) {
-	requestID := r.Header.Get(REQUEST_ID_HEADER)
+func (a *WorkerHandler) RespondInternalServerError(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter) {
 	a.worker.Logger.WithFields(logrus.Fields{
-		"requestID": requestID,
+		"requestID": requestInfo.RequestID,
 		"method":    r.Method,
 		"URI":       r.RequestURI,
 		"address":   r.RemoteAddr,
-		"user":      authenticatedUser.Identifier,
+		"user":      requestInfo.Identifier,
 		"status":    http.StatusInternalServerError,
 	}).Error("Internal server error")
 	w.WriteHeader(http.StatusInternalServerError)
+}
+
+// Worker Aux method
+
+func (w *WorkerHandler) GetRequestInfo(r *http.Request) api.RequestInfo {
+	userID, admin := w.worker.Authenticator.GetAuthenticatedUser(r)
+	return api.RequestInfo{
+		Identifier: userID,
+		Admin:      admin,
+		RequestID:  r.Header.Get(REQUEST_ID_HEADER),
+	}
 }
 
 // PROXY

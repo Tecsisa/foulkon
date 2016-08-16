@@ -260,7 +260,7 @@ func makeTestApi() *TestAPI {
 
 // USER API
 
-func (t TestAPI) AddUser(authenticatedUser api.AuthenticatedUser, externalID string, path string) (*api.User, error) {
+func (t TestAPI) AddUser(authenticatedUser api.RequestInfo, externalID string, path string) (*api.User, error) {
 	t.ArgsIn[AddUserMethod][0] = authenticatedUser
 	t.ArgsIn[AddUserMethod][1] = externalID
 	t.ArgsIn[AddUserMethod][2] = path
@@ -275,7 +275,7 @@ func (t TestAPI) AddUser(authenticatedUser api.AuthenticatedUser, externalID str
 	return user, err
 }
 
-func (t TestAPI) GetUserByExternalID(authenticatedUser api.AuthenticatedUser, id string) (*api.User, error) {
+func (t TestAPI) GetUserByExternalID(authenticatedUser api.RequestInfo, id string) (*api.User, error) {
 	t.ArgsIn[GetUserByExternalIdMethod][0] = authenticatedUser
 	t.ArgsIn[GetUserByExternalIdMethod][1] = id
 	var user *api.User
@@ -289,7 +289,7 @@ func (t TestAPI) GetUserByExternalID(authenticatedUser api.AuthenticatedUser, id
 	return user, err
 }
 
-func (t TestAPI) ListUsers(authenticatedUser api.AuthenticatedUser, pathPrefix string) ([]string, error) {
+func (t TestAPI) ListUsers(authenticatedUser api.RequestInfo, pathPrefix string) ([]string, error) {
 	t.ArgsIn[ListUsersMethod][0] = authenticatedUser
 	t.ArgsIn[ListUsersMethod][1] = pathPrefix
 	var externalIDs []string
@@ -303,7 +303,7 @@ func (t TestAPI) ListUsers(authenticatedUser api.AuthenticatedUser, pathPrefix s
 	return externalIDs, err
 }
 
-func (t TestAPI) UpdateUser(authenticatedUser api.AuthenticatedUser, externalID string, newPath string) (*api.User, error) {
+func (t TestAPI) UpdateUser(authenticatedUser api.RequestInfo, externalID string, newPath string) (*api.User, error) {
 	t.ArgsIn[UpdateUserMethod][0] = authenticatedUser
 	t.ArgsIn[UpdateUserMethod][1] = externalID
 	t.ArgsIn[UpdateUserMethod][2] = newPath
@@ -318,7 +318,7 @@ func (t TestAPI) UpdateUser(authenticatedUser api.AuthenticatedUser, externalID 
 	return user, err
 }
 
-func (t TestAPI) RemoveUser(authenticatedUser api.AuthenticatedUser, id string) error {
+func (t TestAPI) RemoveUser(authenticatedUser api.RequestInfo, id string) error {
 	t.ArgsIn[RemoveUserMethod][0] = authenticatedUser
 	t.ArgsIn[RemoveUserMethod][1] = id
 	var err error
@@ -328,7 +328,7 @@ func (t TestAPI) RemoveUser(authenticatedUser api.AuthenticatedUser, id string) 
 	return err
 }
 
-func (t TestAPI) ListGroupsByUser(authenticatedUser api.AuthenticatedUser, id string) ([]api.GroupIdentity, error) {
+func (t TestAPI) ListGroupsByUser(authenticatedUser api.RequestInfo, id string) ([]api.GroupIdentity, error) {
 	t.ArgsIn[ListGroupsByUserMethod][0] = authenticatedUser
 	t.ArgsIn[ListGroupsByUserMethod][1] = id
 	var groups []api.GroupIdentity
@@ -344,7 +344,7 @@ func (t TestAPI) ListGroupsByUser(authenticatedUser api.AuthenticatedUser, id st
 
 // GROUP API
 
-func (t TestAPI) AddGroup(authenticatedUser api.AuthenticatedUser, org string, name string, path string) (*api.Group, error) {
+func (t TestAPI) AddGroup(authenticatedUser api.RequestInfo, org string, name string, path string) (*api.Group, error) {
 	t.ArgsIn[AddGroupMethod][0] = authenticatedUser
 	t.ArgsIn[AddGroupMethod][1] = org
 	t.ArgsIn[AddGroupMethod][2] = name
@@ -360,7 +360,7 @@ func (t TestAPI) AddGroup(authenticatedUser api.AuthenticatedUser, org string, n
 	return group, err
 }
 
-func (t TestAPI) GetGroupByName(authenticatedUser api.AuthenticatedUser, org string, name string) (*api.Group, error) {
+func (t TestAPI) GetGroupByName(authenticatedUser api.RequestInfo, org string, name string) (*api.Group, error) {
 	t.ArgsIn[GetGroupByNameMethod][0] = authenticatedUser
 	t.ArgsIn[GetGroupByNameMethod][1] = org
 	t.ArgsIn[GetGroupByNameMethod][2] = name
@@ -375,7 +375,7 @@ func (t TestAPI) GetGroupByName(authenticatedUser api.AuthenticatedUser, org str
 	return group, err
 }
 
-func (t TestAPI) ListGroups(authenticatedUser api.AuthenticatedUser, org string, pathPrefix string) ([]api.GroupIdentity, error) {
+func (t TestAPI) ListGroups(authenticatedUser api.RequestInfo, org string, pathPrefix string) ([]api.GroupIdentity, error) {
 	t.ArgsIn[ListGroupsMethod][0] = authenticatedUser
 	t.ArgsIn[ListGroupsMethod][1] = org
 	t.ArgsIn[ListGroupsMethod][2] = pathPrefix
@@ -390,7 +390,7 @@ func (t TestAPI) ListGroups(authenticatedUser api.AuthenticatedUser, org string,
 	return groups, err
 }
 
-func (t TestAPI) UpdateGroup(authenticatedUser api.AuthenticatedUser, org string, groupName string, newName string, newPath string) (*api.Group, error) {
+func (t TestAPI) UpdateGroup(authenticatedUser api.RequestInfo, org string, groupName string, newName string, newPath string) (*api.Group, error) {
 	t.ArgsIn[UpdateGroupMethod][0] = authenticatedUser
 	t.ArgsIn[UpdateGroupMethod][1] = org
 	t.ArgsIn[UpdateGroupMethod][2] = groupName
@@ -407,7 +407,7 @@ func (t TestAPI) UpdateGroup(authenticatedUser api.AuthenticatedUser, org string
 	return group, err
 }
 
-func (t TestAPI) RemoveGroup(authenticatedUser api.AuthenticatedUser, org string, name string) error {
+func (t TestAPI) RemoveGroup(authenticatedUser api.RequestInfo, org string, name string) error {
 	t.ArgsIn[RemoveGroupMethod][0] = authenticatedUser
 	t.ArgsIn[RemoveGroupMethod][1] = org
 	t.ArgsIn[RemoveGroupMethod][2] = name
@@ -418,7 +418,7 @@ func (t TestAPI) RemoveGroup(authenticatedUser api.AuthenticatedUser, org string
 	return err
 }
 
-func (t TestAPI) AddMember(authenticatedUser api.AuthenticatedUser, userID string, groupName string, org string) error {
+func (t TestAPI) AddMember(authenticatedUser api.RequestInfo, userID string, groupName string, org string) error {
 	t.ArgsIn[AddMemberMethod][0] = authenticatedUser
 	t.ArgsIn[AddMemberMethod][1] = userID
 	t.ArgsIn[AddMemberMethod][2] = groupName
@@ -430,7 +430,7 @@ func (t TestAPI) AddMember(authenticatedUser api.AuthenticatedUser, userID strin
 	return err
 }
 
-func (t TestAPI) RemoveMember(authenticatedUser api.AuthenticatedUser, userID string, groupName string, org string) error {
+func (t TestAPI) RemoveMember(authenticatedUser api.RequestInfo, userID string, groupName string, org string) error {
 	t.ArgsIn[RemoveMemberMethod][0] = authenticatedUser
 	t.ArgsIn[RemoveMemberMethod][1] = userID
 	t.ArgsIn[RemoveMemberMethod][2] = groupName
@@ -442,7 +442,7 @@ func (t TestAPI) RemoveMember(authenticatedUser api.AuthenticatedUser, userID st
 	return err
 }
 
-func (t TestAPI) ListMembers(authenticatedUser api.AuthenticatedUser, org string, groupName string) ([]string, error) {
+func (t TestAPI) ListMembers(authenticatedUser api.RequestInfo, org string, groupName string) ([]string, error) {
 	t.ArgsIn[ListMembersMethod][0] = authenticatedUser
 	t.ArgsIn[ListMembersMethod][1] = org
 	t.ArgsIn[ListMembersMethod][2] = groupName
@@ -457,7 +457,7 @@ func (t TestAPI) ListMembers(authenticatedUser api.AuthenticatedUser, org string
 	return externalIDs, err
 }
 
-func (t TestAPI) AttachPolicyToGroup(authenticatedUser api.AuthenticatedUser, org string, groupName string, policyName string) error {
+func (t TestAPI) AttachPolicyToGroup(authenticatedUser api.RequestInfo, org string, groupName string, policyName string) error {
 	t.ArgsIn[AttachPolicyToGroupMethod][0] = authenticatedUser
 	t.ArgsIn[AttachPolicyToGroupMethod][1] = org
 	t.ArgsIn[AttachPolicyToGroupMethod][2] = groupName
@@ -469,7 +469,7 @@ func (t TestAPI) AttachPolicyToGroup(authenticatedUser api.AuthenticatedUser, or
 	return err
 }
 
-func (t TestAPI) DetachPolicyToGroup(authenticatedUser api.AuthenticatedUser, org string, groupName string, policyName string) error {
+func (t TestAPI) DetachPolicyToGroup(authenticatedUser api.RequestInfo, org string, groupName string, policyName string) error {
 	t.ArgsIn[DetachPolicyToGroupMethod][0] = authenticatedUser
 	t.ArgsIn[DetachPolicyToGroupMethod][1] = org
 	t.ArgsIn[DetachPolicyToGroupMethod][2] = groupName
@@ -481,7 +481,7 @@ func (t TestAPI) DetachPolicyToGroup(authenticatedUser api.AuthenticatedUser, or
 	return err
 }
 
-func (t TestAPI) ListAttachedGroupPolicies(authenticatedUser api.AuthenticatedUser, org string, groupName string) ([]string, error) {
+func (t TestAPI) ListAttachedGroupPolicies(authenticatedUser api.RequestInfo, org string, groupName string) ([]string, error) {
 	t.ArgsIn[ListAttachedGroupPoliciesMethod][0] = authenticatedUser
 	t.ArgsIn[ListAttachedGroupPoliciesMethod][1] = org
 	t.ArgsIn[ListAttachedGroupPoliciesMethod][2] = groupName
@@ -498,7 +498,7 @@ func (t TestAPI) ListAttachedGroupPolicies(authenticatedUser api.AuthenticatedUs
 
 // POLICY API
 
-func (t TestAPI) AddPolicy(authenticatedUser api.AuthenticatedUser, name string, path string, org string, statements []api.Statement) (*api.Policy, error) {
+func (t TestAPI) AddPolicy(authenticatedUser api.RequestInfo, name string, path string, org string, statements []api.Statement) (*api.Policy, error) {
 	t.ArgsIn[AddPolicyMethod][0] = authenticatedUser
 	t.ArgsIn[AddPolicyMethod][1] = name
 	t.ArgsIn[AddPolicyMethod][2] = path
@@ -515,7 +515,7 @@ func (t TestAPI) AddPolicy(authenticatedUser api.AuthenticatedUser, name string,
 	return policy, err
 }
 
-func (t TestAPI) GetPolicyByName(authenticatedUser api.AuthenticatedUser, org string, policyName string) (*api.Policy, error) {
+func (t TestAPI) GetPolicyByName(authenticatedUser api.RequestInfo, org string, policyName string) (*api.Policy, error) {
 	t.ArgsIn[GetPolicyByNameMethod][0] = authenticatedUser
 	t.ArgsIn[GetPolicyByNameMethod][1] = org
 	t.ArgsIn[GetPolicyByNameMethod][2] = policyName
@@ -530,7 +530,7 @@ func (t TestAPI) GetPolicyByName(authenticatedUser api.AuthenticatedUser, org st
 	return policy, err
 }
 
-func (t TestAPI) ListPolicies(authenticatedUser api.AuthenticatedUser, org string, pathPrefix string) ([]api.PolicyIdentity, error) {
+func (t TestAPI) ListPolicies(authenticatedUser api.RequestInfo, org string, pathPrefix string) ([]api.PolicyIdentity, error) {
 	t.ArgsIn[ListPoliciesMethod][0] = authenticatedUser
 	t.ArgsIn[ListPoliciesMethod][1] = org
 	t.ArgsIn[ListPoliciesMethod][2] = pathPrefix
@@ -545,7 +545,7 @@ func (t TestAPI) ListPolicies(authenticatedUser api.AuthenticatedUser, org strin
 	return policies, err
 }
 
-func (t TestAPI) UpdatePolicy(authenticatedUser api.AuthenticatedUser, org string, policyName string, newName string, newPath string,
+func (t TestAPI) UpdatePolicy(authenticatedUser api.RequestInfo, org string, policyName string, newName string, newPath string,
 	newStatements []api.Statement) (*api.Policy, error) {
 	t.ArgsIn[UpdatePolicyMethod][0] = authenticatedUser
 	t.ArgsIn[UpdatePolicyMethod][1] = org
@@ -565,7 +565,7 @@ func (t TestAPI) UpdatePolicy(authenticatedUser api.AuthenticatedUser, org strin
 	return policy, err
 }
 
-func (t TestAPI) RemovePolicy(authenticatedUser api.AuthenticatedUser, org string, name string) error {
+func (t TestAPI) RemovePolicy(authenticatedUser api.RequestInfo, org string, name string) error {
 	t.ArgsIn[RemovePolicyMethod][0] = authenticatedUser
 	t.ArgsIn[RemovePolicyMethod][1] = org
 	t.ArgsIn[RemovePolicyMethod][2] = name
@@ -576,7 +576,7 @@ func (t TestAPI) RemovePolicy(authenticatedUser api.AuthenticatedUser, org strin
 	return err
 }
 
-func (t TestAPI) ListAttachedGroups(authenticatedUser api.AuthenticatedUser, org string, policyName string) ([]string, error) {
+func (t TestAPI) ListAttachedGroups(authenticatedUser api.RequestInfo, org string, policyName string) ([]string, error) {
 	t.ArgsIn[ListAttachedGroupsMethod][0] = authenticatedUser
 	t.ArgsIn[ListAttachedGroupsMethod][1] = org
 	t.ArgsIn[ListAttachedGroupsMethod][2] = policyName
@@ -593,19 +593,19 @@ func (t TestAPI) ListAttachedGroups(authenticatedUser api.AuthenticatedUser, org
 
 // AUTHZ API
 
-func (t TestAPI) GetAuthorizedUsers(authenticatedUser api.AuthenticatedUser, resourceUrn string, action string, users []api.User) ([]api.User, error) {
+func (t TestAPI) GetAuthorizedUsers(authenticatedUser api.RequestInfo, resourceUrn string, action string, users []api.User) ([]api.User, error) {
 	return nil, nil
 }
 
-func (t TestAPI) GetAuthorizedGroups(authenticatedUser api.AuthenticatedUser, resourceUrn string, action string, groups []api.Group) ([]api.Group, error) {
+func (t TestAPI) GetAuthorizedGroups(authenticatedUser api.RequestInfo, resourceUrn string, action string, groups []api.Group) ([]api.Group, error) {
 	return nil, nil
 }
 
-func (t TestAPI) GetAuthorizedPolicies(authenticatedUser api.AuthenticatedUser, resourceUrn string, action string, policies []api.Policy) ([]api.Policy, error) {
+func (t TestAPI) GetAuthorizedPolicies(authenticatedUser api.RequestInfo, resourceUrn string, action string, policies []api.Policy) ([]api.Policy, error) {
 	return nil, nil
 }
 
-func (t TestAPI) GetAuthorizedExternalResources(authenticatedUser api.AuthenticatedUser, action string, resources []string) ([]string, error) {
+func (t TestAPI) GetAuthorizedExternalResources(authenticatedUser api.RequestInfo, action string, resources []string) ([]string, error) {
 	t.ArgsIn[GetAuthorizedExternalResourcesMethod][0] = authenticatedUser
 	t.ArgsIn[GetAuthorizedExternalResourcesMethod][1] = action
 	t.ArgsIn[GetAuthorizedExternalResourcesMethod][2] = resources
