@@ -45,9 +45,9 @@ func (e Error) Error() string {
 	return fmt.Sprintf("Code: %v, Message: %v", e.Code, e.Message)
 }
 
-func LogErrorMessage(logger *logrus.Logger, requestID string, err *Error) {
+func LogErrorMessage(logger *logrus.Logger, requestInfo RequestInfo, err *Error) {
 	logger.WithFields(logrus.Fields{
-		"requestID": requestID,
+		"requestID": requestInfo.RequestID,
 		"code":      err.Code,
 	}).Error(err.Message)
 }

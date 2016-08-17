@@ -9,9 +9,9 @@ import (
 func TestAuthAPI_AddUser(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		authUser   AuthenticatedUser
-		externalID string
-		path       string
+		requestInfo RequestInfo
+		externalID  string
+		path        string
 		// Expected result
 		expectedUser *User
 		wantError    error
@@ -25,7 +25,7 @@ func TestAuthAPI_AddUser(t *testing.T) {
 		getUserByExternalIDMethodErr error
 	}{
 		"OKCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -42,7 +42,7 @@ func TestAuthAPI_AddUser(t *testing.T) {
 			},
 		},
 		"OKCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -126,7 +126,7 @@ func TestAuthAPI_AddUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoAuth": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -142,7 +142,7 @@ func TestAuthAPI_AddUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseAddUserNotAllowed": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "000",
 				Admin:      false,
 			},
@@ -196,7 +196,7 @@ func TestAuthAPI_AddUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "000",
 				Admin:      false,
 			},
@@ -231,7 +231,7 @@ func TestAuthAPI_AddUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseAddUserDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -255,7 +255,7 @@ func TestAuthAPI_AddUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseGetUserDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -277,7 +277,7 @@ func TestAuthAPI_AddUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseUserAlreadyExist": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -301,7 +301,7 @@ func TestAuthAPI_AddUser(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[AddUserMethod][0] = testcase.expectedUser
 		testRepo.ArgsOut[AddUserMethod][1] = testcase.addUserMethodErr
-		user, err := testAPI.AddUser(testcase.authUser, testcase.externalID, testcase.path)
+		user, err := testAPI.AddUser(testcase.requestInfo, testcase.externalID, testcase.path)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedUser, user)
 	}
 
@@ -310,8 +310,8 @@ func TestAuthAPI_AddUser(t *testing.T) {
 func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		authUser   AuthenticatedUser
-		externalID string
+		requestInfo RequestInfo
+		externalID  string
 		// Expected result
 		expectedUser *User
 		wantError    error
@@ -323,7 +323,7 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 		getUserByExternalIDMethodErr error
 	}{
 		"OKCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -342,7 +342,7 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 			},
 		},
 		"OKCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -421,7 +421,7 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoAuth": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "notAdminUser",
 				Admin:      false,
 			},
@@ -438,7 +438,7 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 			},
 		},
 		"ErrorCaseGetUserNotAllowed": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -491,7 +491,7 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -534,7 +534,7 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDMethodResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesMethodResult
-		user, err := testAPI.GetUserByExternalID(testcase.authUser, testcase.externalID)
+		user, err := testAPI.GetUserByExternalID(testcase.requestInfo, testcase.externalID)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedUser, user)
 	}
 
@@ -543,8 +543,8 @@ func TestAuthAPI_GetUserByExternalID(t *testing.T) {
 func TestAuthAPI_ListUsers(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		authUser   AuthenticatedUser
-		pathPrefix string
+		requestInfo RequestInfo
+		pathPrefix  string
 		// Expected result
 		expectedResult []string
 		wantError      error
@@ -558,7 +558,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 		getUserByExternalIDMethodErr error
 	}{
 		"OKCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -580,7 +580,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 			},
 		},
 		"OKCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -635,7 +635,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 			},
 		},
 		"OKCaseNoResourcesAllowed": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -699,7 +699,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidPath": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -710,7 +710,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoAuth": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -724,7 +724,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 			},
 		},
 		"ErrorCaseFilterUsersDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -737,7 +737,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -785,7 +785,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 			},
 		},
 		"ErrorCaseListNotAllowed": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -846,7 +846,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 			},
 		},
 		"ErrorCaseGetUserDbErrInAuth": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -870,7 +870,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesMethodResult
 		testRepo.ArgsOut[GetUsersFilteredMethod][0] = testcase.getUsersFilteredMethodResult
 		testRepo.ArgsOut[GetUsersFilteredMethod][1] = testcase.GetUsersFilteredMethodErr
-		users, err := testAPI.ListUsers(testcase.authUser, testcase.pathPrefix)
+		users, err := testAPI.ListUsers(testcase.requestInfo, testcase.pathPrefix)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedResult, users)
 	}
 
@@ -879,9 +879,9 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 func TestAuthAPI_UpdateUser(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		authUser   AuthenticatedUser
-		externalID string
-		newPath    string
+		requestInfo RequestInfo
+		externalID  string
+		newPath     string
 		// Expected result
 		expectedUser *User
 		wantError    error
@@ -894,7 +894,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 		getUserByExternalIDMethodErr error
 	}{
 		"OKCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -914,7 +914,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 			},
 		},
 		"OKCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -990,7 +990,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoAuth": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "1234",
 				Admin:      false,
 			},
@@ -1008,7 +1008,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseUserNotFound": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "1234",
 				Admin:      false,
 			},
@@ -1022,7 +1022,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseGetUserExtIDDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -1036,7 +1036,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseUpdateNotAllowed": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1081,7 +1081,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1144,7 +1144,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseGetNewPathNotAllowed": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1207,7 +1207,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseNewPathNotAllowed": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1279,7 +1279,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseUpdateUserDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -1310,7 +1310,7 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesMethodResult
 		testRepo.ArgsOut[UpdateUserMethod][0] = testcase.expectedUser
 		testRepo.ArgsOut[UpdateUserMethod][1] = testcase.updateUserMethodErr
-		user, err := testAPI.UpdateUser(testcase.authUser, testcase.externalID, testcase.newPath)
+		user, err := testAPI.UpdateUser(testcase.requestInfo, testcase.externalID, testcase.newPath)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedUser, user)
 	}
 
@@ -1319,8 +1319,8 @@ func TestAuthAPI_UpdateUser(t *testing.T) {
 func TestAuthAPI_RemoveUser(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		authUser   AuthenticatedUser
-		externalID string
+		requestInfo RequestInfo
+		externalID  string
 		// Expected result
 		wantError error
 		// Manager Results
@@ -1332,7 +1332,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 		removeUserMethodErr          error
 	}{
 		"OKCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -1344,7 +1344,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 			},
 		},
 		"OKCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1398,7 +1398,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoAuth": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "1234",
 				Admin:      false,
 			},
@@ -1415,7 +1415,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseUserNotFound": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "1234",
 				Admin:      false,
 			},
@@ -1428,7 +1428,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseGetUserExtIDDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -1441,7 +1441,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseRemoveNotAllowedInPath": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "1234",
 				Admin:      false,
 			},
@@ -1485,7 +1485,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "1234",
 				Admin:      false,
 			},
@@ -1547,7 +1547,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseRemoveUserDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -1575,7 +1575,7 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[RemoveUserMethod][0] = testcase.removeUserMethodErr
-		err := testAPI.RemoveUser(testcase.authUser, testcase.externalID)
+		err := testAPI.RemoveUser(testcase.requestInfo, testcase.externalID)
 		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
@@ -1583,9 +1583,9 @@ func TestAuthAPI_RemoveUser(t *testing.T) {
 func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 	testcases := map[string]struct {
 		// API Method args
-		authUser   AuthenticatedUser
-		externalID string
-		wantError  error
+		requestInfo RequestInfo
+		externalID  string
+		wantError   error
 		// Expected result
 		expectedResponse []GroupIdentity
 		// Manager Results
@@ -1597,7 +1597,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 		getUserByExternalIDMethodErr error
 	}{
 		"OKCaseAdmin": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -1635,7 +1635,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 			},
 		},
 		"OKCase": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      false,
 			},
@@ -1702,7 +1702,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoAuth": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "1234",
 				Admin:      false,
 			},
@@ -1719,7 +1719,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseUserNotFound": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "1234",
 				Admin:      false,
 			},
@@ -1732,7 +1732,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseGetUserExtIDDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -1745,7 +1745,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseGetGroupsDBErr": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
@@ -1763,7 +1763,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseNoPermissions": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "1234",
 				Admin:      false,
 			},
@@ -1825,7 +1825,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedListGroups": {
-			authUser: AuthenticatedUser{
+			requestInfo: RequestInfo{
 				Identifier: "1234",
 				Admin:      false,
 			},
@@ -1879,7 +1879,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDMethodResult
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = testcase.getGroupsByUserIDMethodErr
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesMethodResult
-		groups, err := testAPI.ListGroupsByUser(testcase.authUser, testcase.externalID)
+		groups, err := testAPI.ListGroupsByUser(testcase.requestInfo, testcase.externalID)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedResponse, groups)
 	}
 

@@ -10,9 +10,10 @@ import (
 
 // TYPE DEFINITIONS
 
-type AuthenticatedUser struct {
+type RequestInfo struct {
 	Identifier string
 	Admin      bool
+	RequestID  string
 }
 
 type EffectRestriction struct {
@@ -38,12 +39,12 @@ func (e ExternalResource) GetUrn() string {
 // AUTHZ API IMPLEMENTATION
 
 // Return authorized users for specified resource+action
-func (api AuthAPI) GetAuthorizedUsers(user AuthenticatedUser, resourceUrn string, action string, users []User) ([]User, error) {
+func (api AuthAPI) GetAuthorizedUsers(requestInfo RequestInfo, resourceUrn string, action string, users []User) ([]User, error) {
 	resourcesToAuthorize := []Resource{}
 	for _, usr := range users {
 		resourcesToAuthorize = append(resourcesToAuthorize, usr)
 	}
-	resources, err := api.getAuthorizedResources(user, resourceUrn, action, resourcesToAuthorize)
+	resources, err := api.getAuthorizedResources(requestInfo, resourceUrn, action, resourcesToAuthorize)
 	if err != nil {
 		return nil, err
 	}
@@ -55,12 +56,12 @@ func (api AuthAPI) GetAuthorizedUsers(user AuthenticatedUser, resourceUrn string
 }
 
 // Return authorized users for specified user combined with resource+action
-func (api AuthAPI) GetAuthorizedGroups(user AuthenticatedUser, resourceUrn string, action string, groups []Group) ([]Group, error) {
+func (api AuthAPI) GetAuthorizedGroups(requestInfo RequestInfo, resourceUrn string, action string, groups []Group) ([]Group, error) {
 	resourcesToAuthorize := []Resource{}
 	for _, group := range groups {
 		resourcesToAuthorize = append(resourcesToAuthorize, group)
 	}
-	resources, err := api.getAuthorizedResources(user, resourceUrn, action, resourcesToAuthorize)
+	resources, err := api.getAuthorizedResources(requestInfo, resourceUrn, action, resourcesToAuthorize)
 	if err != nil {
 		return nil, err
 	}
@@ -72,12 +73,12 @@ func (api AuthAPI) GetAuthorizedGroups(user AuthenticatedUser, resourceUrn strin
 }
 
 // Return authorized policies for specified user combined with resource+action
-func (api AuthAPI) GetAuthorizedPolicies(user AuthenticatedUser, resourceUrn string, action string, policies []Policy) ([]Policy, error) {
+func (api AuthAPI) GetAuthorizedPolicies(requestInfo RequestInfo, resourceUrn string, action string, policies []Policy) ([]Policy, error) {
 	resourcesToAuthorize := []Resource{}
 	for _, policy := range policies {
 		resourcesToAuthorize = append(resourcesToAuthorize, policy)
 	}
-	resources, err := api.getAuthorizedResources(user, resourceUrn, action, resourcesToAuthorize)
+	resources, err := api.getAuthorizedResources(requestInfo, resourceUrn, action, resourcesToAuthorize)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +90,7 @@ func (api AuthAPI) GetAuthorizedPolicies(user AuthenticatedUser, resourceUrn str
 }
 
 // Get the resources where the specified user has the action granted
-func (api AuthAPI) GetAuthorizedExternalResources(user AuthenticatedUser, action string, resources []string) ([]string, error) {
+func (api AuthAPI) GetAuthorizedExternalResources(requestInfo RequestInfo, action string, resources []string) ([]string, error) {
 	// Validate parameters
 	if err := AreValidActions([]string{action}); err != nil {
 		// Transform to API error
@@ -130,7 +131,7 @@ func (api AuthAPI) GetAuthorizedExternalResources(user AuthenticatedUser, action
 		}
 	}
 
-	allowedUrns, err := api.getAuthorizedResources(user, "urn:*", action, externalResources)
+	allowedUrns, err := api.getAuthorizedResources(requestInfo, "urn:*", action, externalResources)
 	if err != nil {
 		return nil, err
 	}
@@ -146,15 +147,14 @@ func (api AuthAPI) GetAuthorizedExternalResources(user AuthenticatedUser, action
 // PRIVATE HELPER METHODS
 
 // This method retrieves filtered resources where the authenticated user has permissions
-func (api AuthAPI) getAuthorizedResources(user AuthenticatedUser, resourceUrn string, action string, resources []Resource) ([]Resource, error) {
-
+func (api AuthAPI) getAuthorizedResources(requestInfo RequestInfo, resourceUrn string, action string, resources []Resource) ([]Resource, error) {
 	// If user is an admin return all resources without restriction
-	if user.Admin {
+	if requestInfo.Admin {
 		return resources, nil
 	}
 
 	// Check authorization for this user
-	restrictions, err := api.getRestrictions(user.Identifier, action, resourceUrn)
+	restrictions, err := api.getRestrictions(requestInfo.Identifier, action, resourceUrn)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (api AuthAPI) getAuthorizedResources(user AuthenticatedUser, resourceUrn st
 	if len(restrictions.AllowedFullUrns) < 1 && len(restrictions.AllowedUrnPrefixes) < 1 {
 		return nil, &Error{
 			Code:    UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v", user.Identifier, resourceUrn),
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v", requestInfo.Identifier, resourceUrn),
 		}
 	}
 

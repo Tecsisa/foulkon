@@ -15,8 +15,13 @@ type User struct {
 	ID         string    `json:"id, omitempty"`
 	ExternalID string    `json:"externalId, omitempty"`
 	Path       string    `json:"path, omitempty"`
-	CreateAt   time.Time `json:"createAt, omitempty"`
 	Urn        string    `json:"urn, omitempty"`
+	CreateAt   time.Time `json:"createAt, omitempty"`
+}
+
+func (u User) String() string {
+	return fmt.Sprintf("[id: %v, externalId: %v, path: %v, urn: %v, createAt: %v]",
+		u.ID, u.ExternalID, u.Path, u.Urn, u.CreateAt.Format("2006-01-02 15:04:05 MST"))
 }
 
 func (u User) GetUrn() string {
@@ -25,7 +30,7 @@ func (u User) GetUrn() string {
 
 // USER API IMPLEMENTATION
 
-func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalId string, path string) (*User, error) {
+func (api AuthAPI) AddUser(requestInfo RequestInfo, externalId string, path string) (*User, error) {
 	// Validate fields
 	if !IsValidUserExternalID(externalId) {
 		return nil, &Error{
@@ -43,7 +48,7 @@ func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalId strin
 	user := createUser(externalId, path)
 
 	// Check restrictions
-	usersFiltered, err := api.GetAuthorizedUsers(authenticatedUser, user.Urn, USER_ACTION_CREATE_USER, []User{user})
+	usersFiltered, err := api.GetAuthorizedUsers(requestInfo, user.Urn, USER_ACTION_CREATE_USER, []User{user})
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +56,7 @@ func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalId strin
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, user.Urn),
+				requestInfo.Identifier, user.Urn),
 		}
 	}
 
@@ -76,7 +81,7 @@ func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalId strin
 					Message: dbError.Message,
 				}
 			}
-
+			LogOperation(&api.Logger, requestInfo, fmt.Sprintf("User created %+v", createdUser))
 			return createdUser, nil
 		default: // Unexpected error
 			return nil, &Error{
@@ -90,10 +95,9 @@ func (api AuthAPI) AddUser(authenticatedUser AuthenticatedUser, externalId strin
 			Message: fmt.Sprintf("Unable to create user, user with externalId %v already exist", externalId),
 		}
 	}
-
 }
 
-func (api AuthAPI) GetUserByExternalID(authenticatedUser AuthenticatedUser, externalId string) (*User, error) {
+func (api AuthAPI) GetUserByExternalID(requestInfo RequestInfo, externalId string) (*User, error) {
 	if !IsValidUserExternalID(externalId) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -122,7 +126,7 @@ func (api AuthAPI) GetUserByExternalID(authenticatedUser AuthenticatedUser, exte
 	}
 
 	// Check restrictions
-	filteredUsers, err := api.GetAuthorizedUsers(authenticatedUser, user.Urn, USER_ACTION_GET_USER, []User{*user})
+	filteredUsers, err := api.GetAuthorizedUsers(requestInfo, user.Urn, USER_ACTION_GET_USER, []User{*user})
 	if err != nil {
 		return nil, err
 	}
@@ -133,13 +137,13 @@ func (api AuthAPI) GetUserByExternalID(authenticatedUser AuthenticatedUser, exte
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, user.Urn),
+				requestInfo.Identifier, user.Urn),
 		}
 	}
 
 }
 
-func (api AuthAPI) ListUsers(authenticatedUser AuthenticatedUser, pathPrefix string) ([]string, error) {
+func (api AuthAPI) ListUsers(requestInfo RequestInfo, pathPrefix string) ([]string, error) {
 	// Check parameters
 	if len(pathPrefix) > 0 && !IsValidPath(pathPrefix) {
 		return nil, &Error{
@@ -167,7 +171,7 @@ func (api AuthAPI) ListUsers(authenticatedUser AuthenticatedUser, pathPrefix str
 
 	// Check restrictions
 	urnPrefix := GetUrnPrefix("", RESOURCE_USER, pathPrefix)
-	usersFiltered, err := api.GetAuthorizedUsers(authenticatedUser, urnPrefix, USER_ACTION_LIST_USERS, users)
+	usersFiltered, err := api.GetAuthorizedUsers(requestInfo, urnPrefix, USER_ACTION_LIST_USERS, users)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +185,7 @@ func (api AuthAPI) ListUsers(authenticatedUser AuthenticatedUser, pathPrefix str
 	return externalIds, nil
 }
 
-func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalId string, newPath string) (*User, error) {
+func (api AuthAPI) UpdateUser(requestInfo RequestInfo, externalId string, newPath string) (*User, error) {
 	if !IsValidPath(newPath) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -190,13 +194,13 @@ func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalId st
 	}
 
 	// Call repo to retrieve the user
-	userDB, err := api.GetUserByExternalID(authenticatedUser, externalId)
+	userDB, err := api.GetUserByExternalID(requestInfo, externalId)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check restrictions
-	usersFiltered, err := api.GetAuthorizedUsers(authenticatedUser, userDB.Urn, USER_ACTION_UPDATE_USER, []User{*userDB})
+	usersFiltered, err := api.GetAuthorizedUsers(requestInfo, userDB.Urn, USER_ACTION_UPDATE_USER, []User{*userDB})
 	if err != nil {
 		return nil, err
 	}
@@ -204,14 +208,14 @@ func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalId st
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, userDB.Urn),
+				requestInfo.Identifier, userDB.Urn),
 		}
 	}
 
 	userToUpdate := createUser(externalId, newPath)
 
 	// Check restrictions
-	usersFiltered, err = api.GetAuthorizedUsers(authenticatedUser, userToUpdate.Urn, USER_ACTION_GET_USER, []User{userToUpdate})
+	usersFiltered, err = api.GetAuthorizedUsers(requestInfo, userToUpdate.Urn, USER_ACTION_GET_USER, []User{userToUpdate})
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +223,7 @@ func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalId st
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, userToUpdate.Urn),
+				requestInfo.Identifier, userToUpdate.Urn),
 		}
 	}
 
@@ -235,19 +239,20 @@ func (api AuthAPI) UpdateUser(authenticatedUser AuthenticatedUser, externalId st
 		}
 	}
 
+	LogOperation(&api.Logger, requestInfo, fmt.Sprintf("User updated from %+v to %+v", userDB, user))
 	return user, nil
 
 }
 
-func (api AuthAPI) RemoveUser(authenticatedUser AuthenticatedUser, externalId string) error {
+func (api AuthAPI) RemoveUser(requestInfo RequestInfo, externalId string) error {
 	// Call repo to retrieve the user
-	user, err := api.GetUserByExternalID(authenticatedUser, externalId)
+	user, err := api.GetUserByExternalID(requestInfo, externalId)
 	if err != nil {
 		return err
 	}
 
 	// Check restrictions
-	usersFiltered, err := api.GetAuthorizedUsers(authenticatedUser, user.Urn, USER_ACTION_DELETE_USER, []User{*user})
+	usersFiltered, err := api.GetAuthorizedUsers(requestInfo, user.Urn, USER_ACTION_DELETE_USER, []User{*user})
 	if err != nil {
 		return err
 	}
@@ -255,7 +260,7 @@ func (api AuthAPI) RemoveUser(authenticatedUser AuthenticatedUser, externalId st
 		return &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, user.Urn),
+				requestInfo.Identifier, user.Urn),
 		}
 	}
 
@@ -270,19 +275,19 @@ func (api AuthAPI) RemoveUser(authenticatedUser AuthenticatedUser, externalId st
 			Message: dbError.Message,
 		}
 	}
-
+	LogOperation(&api.Logger, requestInfo, fmt.Sprintf("User deleted %+v", user))
 	return nil
 }
 
-func (api AuthAPI) ListGroupsByUser(authenticatedUser AuthenticatedUser, externalId string) ([]GroupIdentity, error) {
+func (api AuthAPI) ListGroupsByUser(requestInfo RequestInfo, externalId string) ([]GroupIdentity, error) {
 	// Call repo to retrieve the user
-	user, err := api.GetUserByExternalID(authenticatedUser, externalId)
+	user, err := api.GetUserByExternalID(requestInfo, externalId)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check restrictions
-	usersFiltered, err := api.GetAuthorizedUsers(authenticatedUser, user.Urn, USER_ACTION_LIST_GROUPS_FOR_USER, []User{*user})
+	usersFiltered, err := api.GetAuthorizedUsers(requestInfo, user.Urn, USER_ACTION_LIST_GROUPS_FOR_USER, []User{*user})
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +295,7 @@ func (api AuthAPI) ListGroupsByUser(authenticatedUser AuthenticatedUser, externa
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				authenticatedUser.Identifier, user.Urn),
+				requestInfo.Identifier, user.Urn),
 		}
 	}
 

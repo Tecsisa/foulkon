@@ -2,6 +2,8 @@ package api
 
 import (
 	"fmt"
+	//"github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"regexp"
 	"strings"
 )
@@ -221,4 +223,11 @@ func AreValidStatements(statements *[]Statement) error {
 		}
 	}
 	return nil
+}
+
+func LogOperation(logger *logrus.Logger, requestInfo RequestInfo, message string) {
+	logger.WithFields(logrus.Fields{
+		"requestID": requestInfo.RequestID,
+		"userID":    requestInfo.Identifier,
+	}).Info(message)
 }

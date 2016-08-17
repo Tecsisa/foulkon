@@ -2,8 +2,6 @@ package auth
 
 import (
 	"net/http"
-
-	"github.com/tecsisa/authorizr/api"
 )
 
 // Authenticator system, with connector and basic admin authentication
@@ -31,7 +29,7 @@ type AuthConnector interface {
 func (a *Authenticator) Authenticate(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var handler http.Handler
-		if isAdmin(*r, a.adminUser, a.adminPassword) {
+		if isAdmin(r, a.adminUser, a.adminPassword) {
 			// Admin check
 			handler = h
 
@@ -45,21 +43,15 @@ func (a *Authenticator) Authenticate(h http.Handler) http.Handler {
 }
 
 // Retrieve user from request.
-func (a *Authenticator) RetrieveUserID(r http.Request) api.AuthenticatedUser {
+func (a *Authenticator) GetAuthenticatedUser(r *http.Request) (string, bool) {
 	if isAdmin(r, a.adminUser, a.adminPassword) {
-		return api.AuthenticatedUser{
-			Identifier: a.adminUser,
-			Admin:      true,
-		}
+		return a.adminUser, true
 	} else {
-		return api.AuthenticatedUser{
-			Identifier: a.Connector.RetrieveUserID(r),
-			Admin:      false,
-		}
+		return a.Connector.RetrieveUserID(*r), false
 	}
 }
 
-func isAdmin(r http.Request, adminUser string, adminPassword string) bool {
+func isAdmin(r *http.Request, adminUser string, adminPassword string) bool {
 	username, password, ok := r.BasicAuth()
 	// Password is never stored in DB
 	return ok && username == adminUser && password == adminPassword
