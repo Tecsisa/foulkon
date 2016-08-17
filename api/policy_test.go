@@ -9,21 +9,21 @@ import (
 func TestAuthAPI_AddPolicy(t *testing.T) {
 	testcases := map[string]struct {
 		requestInfo RequestInfo
-		org                         string
-		policyName                  string
-		path                        string
-		statements                  []Statement
+		org         string
+		policyName  string
+		path        string
+		statements  []Statement
 
-		getGroupsByUserIDResult     []Group
-		getAttachedPoliciesResult   []Policy
-		getUserByExternalIDResult   *User
+		getGroupsByUserIDResult   []Group
+		getAttachedPoliciesResult []Policy
+		getUserByExternalIDResult *User
 
 		addPolicyMethodResult       *Policy
 		getPolicyByNameMethodResult *Policy
 		wantError                   error
 
-		getPolicyByNameMethodErr    error
-		addPolicyMethodErr          error
+		getPolicyByNameMethodErr error
+		addPolicyMethodErr       error
 	}{
 		"OKCase": {
 			requestInfo: RequestInfo{
@@ -441,17 +441,17 @@ func TestAuthAPI_AddPolicy(t *testing.T) {
 func TestAuthAPI_GetPolicyByName(t *testing.T) {
 	testcases := map[string]struct {
 		requestInfo RequestInfo
-		org                         string
-		policyName                  string
+		org         string
+		policyName  string
 
-		getGroupsByUserIDResult     []Group
-		getAttachedPoliciesResult   []Policy
-		getUserByExternalIDResult   *User
+		getGroupsByUserIDResult   []Group
+		getAttachedPoliciesResult []Policy
+		getUserByExternalIDResult *User
 
 		getPolicyByNameMethodResult *Policy
 		wantError                   error
 
-		getPolicyByNameMethodErr    error
+		getPolicyByNameMethodErr error
 	}{
 		"OKCase": {
 			requestInfo: RequestInfo{
@@ -668,20 +668,20 @@ func TestAuthAPI_GetPolicyByName(t *testing.T) {
 func TestAuthAPI_ListPolicies(t *testing.T) {
 	testcases := map[string]struct {
 		requestInfo RequestInfo
-		org                             string
-		pathPrefix                      string
+		org         string
+		pathPrefix  string
 
-		expectedPolicies                []PolicyIdentity
+		expectedPolicies []PolicyIdentity
 
-		getGroupsByUserIDResult         []Group
-		getAttachedPoliciesResult       []Policy
-		getUserByExternalIDResult       *User
-		getUserByExternalIDErr          error
+		getGroupsByUserIDResult   []Group
+		getAttachedPoliciesResult []Policy
+		getUserByExternalIDResult *User
+		getUserByExternalIDErr    error
 
 		getPoliciesFilteredMethodResult []Policy
 		getPoliciesFilteredMethodErr    error
 
-		wantError                       error
+		wantError error
 	}{
 		"OkCaseAdmin": {
 			requestInfo: RequestInfo{
@@ -960,26 +960,26 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 
 func TestAuthAPI_UpdatePolicy(t *testing.T) {
 	testcases := map[string]struct {
-		requestInfo RequestInfo
-		org                              string
-		policyName                       string
-		path                             string
-		newPolicyName                    string
-		newPath                          string
-		statements                       []Statement
-		newStatements                    []Statement
+		requestInfo   RequestInfo
+		org           string
+		policyName    string
+		path          string
+		newPolicyName string
+		newPath       string
+		statements    []Statement
+		newStatements []Statement
 
-		getPolicyByNameMethodResult      *Policy
-		getGroupsByUserIDResult          []Group
-		getAttachedPoliciesResult        []Policy
-		getUserByExternalIDResult        *User
-		updatePolicyMethodResult         *Policy
+		getPolicyByNameMethodResult *Policy
+		getGroupsByUserIDResult     []Group
+		getAttachedPoliciesResult   []Policy
+		getUserByExternalIDResult   *User
+		updatePolicyMethodResult    *Policy
 
-		wantError                        error
+		wantError error
 
-		getPolicyByNameMethodErr         error
-		getUserByExternalIDErr           error
-		updatePolicyMethodErr            error
+		getPolicyByNameMethodErr error
+		getUserByExternalIDErr   error
+		updatePolicyMethodErr    error
 
 		getPolicyByNameMethodSpecialFunc func(string, string) (*Policy, error)
 	}{
@@ -2282,8 +2282,8 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 func TestAuthAPI_RemovePolicy(t *testing.T) {
 	testcases := map[string]struct {
 		requestInfo RequestInfo
-		org                         string
-		name                        string
+		org         string
+		name        string
 
 		getPolicyByNameMethodResult *Policy
 		getPolicyByNameMethodErr    error
@@ -2293,7 +2293,7 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 		getUserByExternalIDErr      error
 		deletePolicyErr             error
 
-		wantError                   error
+		wantError error
 	}{
 		"OkCase": {
 			requestInfo: RequestInfo{
@@ -2544,22 +2544,22 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 
 func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 	testcases := map[string]struct {
-		requestInfo RequestInfo
-		org                         string
-		policyName                  string
-		expectedGroups              []string
+		requestInfo    RequestInfo
+		org            string
+		policyName     string
+		expectedGroups []string
 
-		getGroupsByUserIDResult     []Group
-		getAttachedPoliciesResult   []Policy
-		getUserByExternalIDResult   *User
+		getGroupsByUserIDResult   []Group
+		getAttachedPoliciesResult []Policy
+		getUserByExternalIDResult *User
 
-		getAttachedGroupsResult     []Group
-		getAttachedGroupsErr        error
+		getAttachedGroupsResult []Group
+		getAttachedGroupsErr    error
 
 		getPolicyByNameMethodResult *Policy
 		wantError                   error
 
-		getPolicyByNameMethodErr    error
+		getPolicyByNameMethodErr error
 	}{
 		"OkCase": {
 			requestInfo: RequestInfo{
