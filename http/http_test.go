@@ -8,9 +8,9 @@ import (
 
 	"bytes"
 	log "github.com/Sirupsen/logrus"
-	"github.com/tecsisa/authorizr/api"
-	"github.com/tecsisa/authorizr/auth"
-	"github.com/tecsisa/authorizr/authorizr"
+	"github.com/tecsisa/foulkon/api"
+	"github.com/tecsisa/foulkon/auth"
+	"github.com/tecsisa/foulkon/foulkon"
 )
 
 const (
@@ -110,7 +110,7 @@ func TestMain(m *testing.M) {
 	authenticator := auth.NewAuthenticator(authConnector, adminUser, adminPassword)
 
 	// Return created core
-	worker := &authorizr.Worker{
+	worker := &foulkon.Worker{
 		Logger:        logger,
 		Authenticator: authenticator,
 		UserApi:       testApi,
@@ -121,10 +121,10 @@ func TestMain(m *testing.M) {
 
 	server = httptest.NewServer(WorkerHandlerRouter(worker))
 
-	proxy_core := &authorizr.Proxy{
+	proxy_core := &foulkon.Proxy{
 		Logger:     logger,
 		WorkerHost: server.URL,
-		APIResources: []authorizr.APIResource{
+		APIResources: []foulkon.APIResource{
 			{
 				Id:     "resource1",
 				Host:   server.URL,

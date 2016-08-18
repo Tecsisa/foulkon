@@ -10,7 +10,7 @@ type Resource interface {
 	GetUrn() string
 }
 
-// Authorizr API that implements API interfaces using repositories
+// Foulkon API that implements API interfaces using repositories
 type AuthAPI struct {
 	UserRepo   UserRepo
 	GroupRepo  GroupRepo

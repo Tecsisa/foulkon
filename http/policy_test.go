@@ -10,7 +10,7 @@ import (
 	"fmt"
 
 	"github.com/kylelemons/godebug/pretty"
-	"github.com/tecsisa/authorizr/api"
+	"github.com/tecsisa/foulkon/api"
 )
 
 func TestWorkerHandler_HandleAddPolicy(t *testing.T) {

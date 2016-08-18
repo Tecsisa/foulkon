@@ -1,19 +1,19 @@
 # Server config
 [server]
-host = "${AUTHORIZR_PROXY_HOST}"
-port = "${AUTHORIZR_PROXY_PORT}"
-certfile = "${AUTHORIZR_PROXY_CERT_FILE_PATH}"
-keyfile = "${AUTHORIZR_PROXY_KEY_FILE_PATH}"
-worker-host = "${AUTHORIZR_WORKER_URL}"
+host = "${FOULKON_PROXY_HOST}"
+port = "${FOULKON_PROXY_PORT}"
+certfile = "${FOULKON_PROXY_CERT_FILE_PATH}"
+keyfile = "${FOULKON_PROXY_KEY_FILE_PATH}"
+worker-host = "${FOULKON_WORKER_URL}"
 
 # Logger
 [logger]
-type = "${AUTHORIZR_PROXY_LOG_TYPE}" #If not specified default is StdOut
-#type = "${AUTHORIZR_PROXY_LOG_LEVEL}" #If not specified default is StdOut
+type = "${FOULKON_PROXY_LOG_TYPE}" #If not specified default is StdOut
+#type = "${FOULKON_PROXY_LOG_LEVEL}" #If not specified default is StdOut
 level = "debug"
 	# Directory for file configuration
 	[logger.file]
-	dir = "${AUTHORIZR_PROXY_LOG_PATH}"
+	dir = "${FOULKON_PROXY_LOG_PATH}"
 
 # Resources definition example
 [[resources]]

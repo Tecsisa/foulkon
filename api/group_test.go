@@ -3,7 +3,7 @@ package api
 import (
 	"testing"
 
-	"github.com/tecsisa/authorizr/database"
+	"github.com/tecsisa/foulkon/database"
 )
 
 func TestAuthAPI_AddGroup(t *testing.T) {

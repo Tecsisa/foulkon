@@ -3,7 +3,7 @@ package api
 import (
 	"testing"
 
-	"github.com/tecsisa/authorizr/database"
+	"github.com/tecsisa/foulkon/database"
 )
 
 func TestGetAuthorizedUsers(t *testing.T) {
@@ -547,7 +547,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 	}
 }
 
-// Test for aux methods of Authorizr
+// Test for aux methods of Foulkon
 
 func TestGetAuthorizedResources(t *testing.T) {
 	testcases := map[string]struct {

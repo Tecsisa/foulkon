@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/kylelemons/godebug/pretty"
-	"github.com/tecsisa/authorizr/api"
-	"github.com/tecsisa/authorizr/database"
+	"github.com/tecsisa/foulkon/api"
+	"github.com/tecsisa/foulkon/database"
 )
 
 func TestPostgresRepo_AddUser(t *testing.T) {

@@ -8,7 +8,7 @@ EXTERNAL_TOOLS=\
 
 GOFILES_NOVENDOR = $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
-all: test
+all: test vet
 
 dev: format generate
 	@sh -c "'$(PWD)/scripts/build.sh'"
@@ -30,7 +30,6 @@ test: generate
 		exit 1; \
 	fi
 	@sh -c "'$(PWD)/scripts/test.sh'"
-	@$(MAKE) vet
 
 cover:
 	go list ./... | xargs -n1 go test --cover
@@ -47,15 +46,17 @@ vet:
 	@go tool vet 2>/dev/null ; if [ $$? -eq 3 ]; then \
 		go get golang.org/x/tools/cmd/vet; \
 	fi
-	@echo "--> Running go tool vet $(VETARGS) ${GOFILES_NOVENDOR}"
+	@echo "--> Running go tool vet"
 	@go tool vet $(VETARGS) ${GOFILES_NOVENDOR} ; if [ $$? -eq 1 ]; then \
 		echo ""; \
 		echo "[LINT] Vet found suspicious constructs. Please check the reported constructs"; \
 		echo "and fix them if necessary before submitting the code for review."; \
+		echo ""; \
 	fi
 
 	@git grep -n `echo "log"".Print"` | grep -v 'vendor/' ; if [ $$? -eq 0 ]; then \
-		echo "[LINT] Found "log"".Printf" calls. These should use authorizr's logger instead."; \
+		echo "[LINT] Found "log"".Printf" calls. These should use foulkon's logger instead."; \
+		echo ""; \
 	fi
 
 # bootstrap the build by downloading additional tools

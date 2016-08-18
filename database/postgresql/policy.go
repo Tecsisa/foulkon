@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/satori/go.uuid"
-	"github.com/tecsisa/authorizr/api"
-	"github.com/tecsisa/authorizr/database"
+	"github.com/tecsisa/foulkon/api"
+	"github.com/tecsisa/foulkon/database"
 )
 
 // POLICY REPOSITORY IMPLEMENTATION

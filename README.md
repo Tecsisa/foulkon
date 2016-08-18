@@ -1,6 +1,6 @@
-# authorizr
+# foulkon
 
-authorizr is an authorization server that allows or denies the access to web resources.
+foulkon is an authorization server that allows or denies the access to web resources.
 
 ## Installation / usage
 
@@ -16,12 +16,12 @@ sh build.sh
 ```
 Then, you can run the docker image, mounting (-v) a config.toml or proxy.toml inside the container (you could also make a custom Dockerfile with "ADD my-custom-conf.toml /my-custom-conf.toml")
 ```
-docker run -v /home/myuser/authorizr/config.toml:/config.toml tecsisa/authorizr-worker -config-file=/config.toml
-docker run -v /home/myuser/authorizr/proxy_config.toml:/proxy_config.toml tecsisa/authorizr-proxy -config-file=/proxy_config.toml
+docker run -v /home/myuser/foulkon/config.toml:/config.toml tecsisa/foulkon-worker -config-file=/config.toml
+docker run -v /home/myuser/foulkon/proxy_config.toml:/proxy_config.toml tecsisa/foulkon-proxy -config-file=/proxy_config.toml
 ```
 
 ## Configuration
-You have to specify configuration file using flag -config-file (authorizr -config-file=/path/config.toml). This config file is a TOML file that has five parts:
+You have to specify configuration file using flag -config-file (foulkon -config-file=/path/config.toml). This config file is a TOML file that has five parts:
 
 
 #### [server]:
@@ -54,8 +54,8 @@ You can use OS Environment vars, using syntax ${ENV_VAR}. This is a config file 
 [server]
 host = "localhost"
 port = "8000"
-certfile = "${AUTHORIZR_CERT_FILE_PATH}"
-keyfile = "${AUTHORIZR_KEY_FILE_PATH}"
+certfile = "${FOULKON_CERT_FILE_PATH}"
+keyfile = "${FOULKON_KEY_FILE_PATH}"
 
 # Logger
 [logger]
@@ -63,14 +63,14 @@ type = "default"
 level = "debug"
     # Directory for file configuration
     [logger.file]
-    dir = "/tmp/authorizr/authorizr.log"
+    dir = "/tmp/foulkon/foulkon.log"
 
 # Database config
 [database]
 type = "postgres"
     # Postgres database config
     [database.postgres]
-    datasourcename = "postgres://authorizr:password@localhost:5432/authorizrdb?sslmode=disable"
+    datasourcename = "postgres://foulkon:password@localhost:5432/foulkondb?sslmode=disable"
 
 # Authenticator config
 [authenticator]

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/satori/go.uuid"
-	"github.com/tecsisa/authorizr/database"
+	"github.com/tecsisa/foulkon/database"
 )
 
 // TYPE DEFINITIONS

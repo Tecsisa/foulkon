@@ -9,13 +9,13 @@ import (
 	"syscall"
 
 	"github.com/pelletier/go-toml"
-	"github.com/tecsisa/authorizr/authorizr"
-	internalhttp "github.com/tecsisa/authorizr/http"
+	"github.com/tecsisa/foulkon/foulkon"
+	internalhttp "github.com/tecsisa/foulkon/http"
 )
 
 func main() {
 	// Retrieve config file
-	fs := flag.NewFlagSet("authorizr", flag.ExitOnError)
+	fs := flag.NewFlagSet("foulkon", flag.ExitOnError)
 	configFile := fs.String("proxy-file", "", "Config file for proxy")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {
@@ -31,7 +31,7 @@ func main() {
 	}
 
 	// Create Proxy
-	proxy, err := authorizr.NewProxy(config)
+	proxy, err := foulkon.NewProxy(config)
 	if err != nil {
 		fmt.Fprint(os.Stderr, err.Error())
 		os.Exit(1)
@@ -50,7 +50,7 @@ func main() {
 		switch sigrecv {
 		case syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT:
 			proxy.Logger.Infof("Signal '%v' received, closing proxy...", sigrecv.String())
-			authorizr.CloseProxy()
+			foulkon.CloseProxy()
 		default:
 			proxy.Logger.Warnf("Unknown OS signal received, ignoring...")
 		}
@@ -63,6 +63,6 @@ func main() {
 		proxy.Logger.Error(http.ListenAndServe(proxy.Host+":"+proxy.Port, internalhttp.ProxyHandlerRouter(proxy)).Error())
 	}
 
-	os.Exit(authorizr.CloseProxy())
+	os.Exit(foulkon.CloseProxy())
 
 }

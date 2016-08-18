@@ -2,8 +2,8 @@
 [server]
 host = "localhost"
 port = "8000"
-#certfile = "${AUTHORIZR_CERT_FILE_PATH}"
-#keyfile = "${AUTHORIZR_KEY_FILE_PATH}"
+#certfile = "${FOULKON_CERT_FILE_PATH}"
+#keyfile = "${FOULKON_KEY_FILE_PATH}"
 
 # Logger
 [logger]
@@ -12,14 +12,14 @@ type = "default" #If not specified default is StdOut
 level = "debug"
 	# Directory for file configuration
 	[logger.file]
-	dir = "/tmp/authorizr/authorizr.log"
+	dir = "/tmp/foulkon/foulkon.log"
 
 # Database config
 [database]
 type = "postgres"
 	# Postgres database config
 	[database.postgres]
-	datasourcename = "postgres://authorizr:password@localhost:5432/authorizrdb?sslmode=disable"
+	datasourcename = "postgres://foulkon:password@localhost:5432/foulkondb?sslmode=disable"
 
 # Authenticator config
 [authenticator]

@@ -11,8 +11,8 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/satori/go.uuid"
-	"github.com/tecsisa/authorizr/api"
-	"github.com/tecsisa/authorizr/authorizr"
+	"github.com/tecsisa/foulkon/api"
+	"github.com/tecsisa/foulkon/foulkon"
 )
 
 const (
@@ -25,7 +25,7 @@ const (
 
 var rUrnParam, _ = regexp.Compile(`\{(\w+)\}`)
 
-func (h *ProxyHandler) HandleRequest(resource authorizr.APIResource) httprouter.Handle {
+func (h *ProxyHandler) HandleRequest(resource foulkon.APIResource) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		requestID := uuid.NewV4().String()
 		w.Header().Set(REQUEST_ID_HEADER, requestID)
@@ -133,7 +133,7 @@ func (h *ProxyHandler) checkAuthorization(r *http.Request, urn string, action st
 		authzResponse := AuthorizeResourcesResponse{}
 		err = json.NewDecoder(res.Body).Decode(&authzResponse)
 		if err != nil {
-			return workerRequestID, getErrorMessage(api.UNKNOWN_API_ERROR, fmt.Sprintf("Error parsing authorizr response %v", err.Error()))
+			return workerRequestID, getErrorMessage(api.UNKNOWN_API_ERROR, fmt.Sprintf("Error parsing foulkon response %v", err.Error()))
 		}
 
 		// Check urns allowed to find target urn

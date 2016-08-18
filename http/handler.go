@@ -7,8 +7,8 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/julienschmidt/httprouter"
 	"github.com/satori/go.uuid"
-	"github.com/tecsisa/authorizr/api"
-	"github.com/tecsisa/authorizr/authorizr"
+	"github.com/tecsisa/foulkon/api"
+	"github.com/tecsisa/foulkon/foulkon"
 )
 
 const (
@@ -56,7 +56,7 @@ const (
 // WORKER
 
 type WorkerHandler struct {
-	worker *authorizr.Worker
+	worker *foulkon.Worker
 }
 
 func (a *WorkerHandler) TransactionLog(r *http.Request, requestID string, userID string, msg string) {
@@ -76,7 +76,7 @@ func (a *WorkerHandler) TransactionLog(r *http.Request, requestID string, userID
 }
 
 // Handler returns http.Handler for the APIs.
-func WorkerHandlerRouter(worker *authorizr.Worker) http.Handler {
+func WorkerHandlerRouter(worker *foulkon.Worker) http.Handler {
 	// Create the muxer to handle the actual endpoints
 	router := httprouter.New()
 
@@ -234,7 +234,7 @@ func (w *WorkerHandler) GetRequestInfo(r *http.Request) api.RequestInfo {
 // PROXY
 
 type ProxyHandler struct {
-	proxy  *authorizr.Proxy
+	proxy  *foulkon.Proxy
 	client *http.Client
 }
 
@@ -304,7 +304,7 @@ func (h *ProxyHandler) RespondInternalServerError(w http.ResponseWriter, proxyEr
 }
 
 // Handler returns an http.Handler for the Proxy including all resources defined in proxy file.
-func ProxyHandlerRouter(proxy *authorizr.Proxy) http.Handler {
+func ProxyHandlerRouter(proxy *foulkon.Proxy) http.Handler {
 	// Create the muxer to handle the actual endpoints
 	router := httprouter.New()
 

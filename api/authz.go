@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/tecsisa/authorizr/database"
+	"github.com/tecsisa/foulkon/database"
 )
 
 // TYPE DEFINITIONS

@@ -9,7 +9,7 @@ import (
 	"errors"
 
 	"github.com/kylelemons/godebug/pretty"
-	"github.com/tecsisa/authorizr/database"
+	"github.com/tecsisa/foulkon/database"
 )
 
 var repoDB PostgresRepo
@@ -63,7 +63,7 @@ func TestInitDb(t *testing.T) {
 	for n, test := range testcases {
 		_, err := InitDb("postgres://postgres:password@localhost:54320/postgres?sslmode=disable", test.idle, test.max, test.ttl)
 		if diff := pretty.Compare(err, test.expectedError); diff != "" {
-			fmt.Fprintln(os.Stderr, "Test %v failed. Received different responses (received/wanted) %v", n, diff)
+			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
 			continue
 		}
 	}

@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/kylelemons/godebug/pretty"
-	"github.com/tecsisa/authorizr/api"
+	"github.com/tecsisa/foulkon/api"
 )
 
 func TestWorkerHandler_HandleGetAuthorizedExternalResources(t *testing.T) {

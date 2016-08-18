@@ -11,13 +11,13 @@ import (
 	"syscall"
 
 	"github.com/pelletier/go-toml"
-	"github.com/tecsisa/authorizr/authorizr"
-	internalhttp "github.com/tecsisa/authorizr/http"
+	"github.com/tecsisa/foulkon/foulkon"
+	internalhttp "github.com/tecsisa/foulkon/http"
 )
 
 func main() {
 	// Retrieve config file
-	fs := flag.NewFlagSet("authorizr", flag.ExitOnError)
+	fs := flag.NewFlagSet("foulkon", flag.ExitOnError)
 	configFile := fs.String("config-file", "", "Config file for worker")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {
@@ -33,7 +33,7 @@ func main() {
 	}
 
 	// Create Worker
-	core, err := authorizr.NewWorker(config)
+	core, err := foulkon.NewWorker(config)
 	if err != nil {
 		fmt.Fprint(os.Stderr, err.Error())
 		os.Exit(1)
@@ -52,7 +52,7 @@ func main() {
 		switch sigrecv {
 		case syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT:
 			core.Logger.Infof("Signal '%v' received, closing worker...", sigrecv.String())
-			authorizr.CloseWorker()
+			foulkon.CloseWorker()
 		default:
 			core.Logger.Warnf("Unknown OS signal received, ignoring...")
 		}
@@ -65,6 +65,6 @@ func main() {
 		core.Logger.Error(http.ListenAndServe(core.Host+":"+core.Port, internalhttp.WorkerHandlerRouter(core)).Error())
 	}
 
-	os.Exit(authorizr.CloseWorker())
+	os.Exit(foulkon.CloseWorker())
 
 }

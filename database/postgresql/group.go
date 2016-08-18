@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tecsisa/authorizr/api"
-	"github.com/tecsisa/authorizr/database"
+	"github.com/tecsisa/foulkon/api"
+	"github.com/tecsisa/foulkon/database"
 )
 
 // GROUP REPOSITORY IMPLEMENTATION

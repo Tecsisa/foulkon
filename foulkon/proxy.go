@@ -1,4 +1,4 @@
-package authorizr
+package foulkon
 
 import (
 	"io"
@@ -51,7 +51,7 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 	logOut = os.Stdout
 	loggerType := getDefaultValue(config, "logger.type", "Stdout")
 	if loggerType == "file" {
-		logFileDir := getDefaultValue(config, "logger.file.dir", "/tmp/authorizr.log")
+		logFileDir := getDefaultValue(config, "logger.file.dir", "/tmp/foulkon.log")
 		proxy_logfile, err = os.OpenFile(logFileDir, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
 		if err != nil {
 			return nil, err

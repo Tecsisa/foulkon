@@ -6,7 +6,7 @@ import (
 
 	"fmt"
 	"github.com/julienschmidt/httprouter"
-	"github.com/tecsisa/authorizr/api"
+	"github.com/tecsisa/foulkon/api"
 )
 
 // REQUESTS

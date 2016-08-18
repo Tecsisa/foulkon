@@ -2,8 +2,8 @@
 [server]
 host = "localhost"
 port = "8001"
-#certfile = "${AUTHORIZR_PROXY_CERT_FILE_PATH}"
-#keyfile = "${AUTHORIZR_PROXY_KEY_FILE_PATH}"
+#certfile = "${FOULKON_PROXY_CERT_FILE_PATH}"
+#keyfile = "${FOULKON_PROXY_KEY_FILE_PATH}"
 worker-host = "http://localhost:8000"
 
 # Logger
@@ -13,7 +13,7 @@ type = "default" #If not specified default is StdOut
 level = "debug"
 	# Directory for file configuration
 	[logger.file]
-	dir = "/tmp/authorizr/proxy.log"
+	dir = "/tmp/foulkon/proxy.log"
 
 # Resources definition example
 [[resources]]

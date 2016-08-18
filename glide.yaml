@@ -1,4 +1,4 @@
-package: github.com/tecsisa/authorizr
+package: github.com/tecsisa/foulkon
 ignore:
 - golang.org/x/sys/unix
 import:
