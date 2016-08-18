@@ -16,5 +16,3 @@ that you can use to do the authorization.
 8. AuthZ sends the resulting effect associated to resources + action + user (extracted from OIDC token).
     - If a resource or some resources are allowed, the resource provider serves the resources to the client.
     - If there isn't any resource allowed, AuthZ response will be 403 forbidden.
-
-
