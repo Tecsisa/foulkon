@@ -3,7 +3,6 @@ package http
 import (
 	"encoding/json"
 	"net/http"
-	"reflect"
 	"testing"
 	"time"
 
@@ -185,9 +184,8 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 				continue
 			}
 			// Check result
-			if !reflect.DeepEqual(apiError, test.expectedError) {
-				t.Errorf("Test %v failed. Received different error response (wanted:%v / received:%v)",
-					n, test.expectedError, apiError)
+			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
 				continue
 			}
 		}
