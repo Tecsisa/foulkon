@@ -1,6 +1,6 @@
 # Deploy Foulkon Worker
 
- You have to specify configuration file using flag -config-file. Using binary file command is `worker -config-file=/path/config.toml`
+ You have to specify configuration file using flag `-config-file`. Using binary file command is `worker -config-file=/path/config.toml`
  
 ## Deploy with docker
 Then, you can run the docker image, mounting (-v) a config.toml inside the container (you could also make a custom Dockerfile with "ADD my-custom-conf.toml /my-custom-conf.toml").
