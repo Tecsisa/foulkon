@@ -1,5 +1,7 @@
 # Foulkon
 
+[![Join the chat at https://gitter.im/Tecsisa/foulkon](https://badges.gitter.im/Tecsisa/foulkon.svg)](https://gitter.im/Tecsisa/foulkon?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 __Foulkon__ is an authorization server that allows or denies the access to web resources.
 
 ## Installation / usage
