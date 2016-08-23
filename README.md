@@ -104,7 +104,8 @@ You can import this [Postman collection](schema/postman.json) file with all API 
 ## Limitations
 
 Since validation is different in each identity provider, Foulkon needs __ID Token__ instead of __Access Token__ in order to check user permissions
-in Authorization header with type bearer. E.g.
+in Authorization header with type bearer.
+E.g.:
 
 ```
 GET /example/resource HTTP/1.1
@@ -118,19 +119,20 @@ GET /example/resource HTTP/1.1
 
 ## Testing
 
+`make test`
 
 ## Contribution policy
 
 Contributions via GitHub pull requests are gladly accepted from their original author. Along with any pull requests, please state that the contribution is your original work and that you license the work to the project under the project's open source license. Whether or not you state this explicitly, by submitting any copyrighted material via pull request, email, or other means you agree to license the material under the project's open source license and warrant that you have the legal authority to do so.
 
 Please make sure to follow these conventions:
-- For each contribution there must be a ticket (GitHub issue) with a short descriptive name, e.g. "Respect seed-nodes configuration setting"
-- Work should happen in a branch named "ISSUE-DESCRIPTION", e.g. "32-respect-seed-nodes"
-- Before a PR can be merged, all commits must be squashed into one with its message made up from the ticket name and the ticket id, e.g. "Respect seed-nodes configuration setting (closes #32)"
+- For each contribution there must be a ticket (GitHub issue) with a short descriptive name, e.g. "run go imports in Makefile"
+- Work should happen in a branch named "ISSUE-DESCRIPTION", e.g. "32-go-imports-in-Makefile"
+- Before a PR can be merged, all commits must be squashed into one with its message made up from the ticket name and the ticket id, e.g. "better go files formatting: run go imports in Makefile (closes #32)"
 
 #### Questions
 
-If you have a question, preferably use the [mailing list](mailto:dev.whiterabbit@tecsisa.com) or Google Hangouts. As an alternative, prepend your issue with `[question]`.
+If you have a question, preferably use Gitter chat. As an alternative, prepend your issue with `[question]`.
 
 ## License
 
