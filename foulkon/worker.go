@@ -229,6 +229,8 @@ func getDefaultValue(config *toml.TomlTree, key string, def string) string {
 	value := def
 	if config.Has(key) {
 		value = getVar(config, key)
+	} else {
+		fmt.Fprintf(os.Stdout, "WARN: using default value in key %v - default value: %v\n", key, def)
 	}
 	return value
 }
