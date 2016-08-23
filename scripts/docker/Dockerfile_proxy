@@ -5,9 +5,9 @@ USER root
 RUN apk update && apk add ca-certificates
 # Proxy
 COPY bin/proxy /go/bin/proxy
-COPY proxy_env_vars.toml /proxy_env_vars.toml
+COPY dist/proxy_env_vars.toml /proxy_env_vars.toml
 
-ADD entrypoint.sh /go/bin/entrypoint.sh
+ADD scripts/docker/entrypoint.sh /go/bin/entrypoint.sh
 RUN chmod 750 /go/bin/*
 
 EXPOSE 8000 8001
