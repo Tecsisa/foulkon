@@ -5,19 +5,9 @@ __Foulkon__ is an authorization server that allows or denies the access to web r
 ## Installation / usage
 
 This project generates 2 apps:
+
 - Worker: This is the authorization server itself.
 - Proxy: This proxies the requests to the authorization server (worker).
-
-### Docker
-
-In order to build the docker images, run:
-```
-make bin
-```
-Then, you can run the docker image, mounting (-v) a config.toml or proxy.toml inside the container (you could also make a custom Dockerfile with "ADD my-custom-conf.toml /my-custom-conf.toml")
-```
-docker run -v /home/myuser/foulkon/proxy_config.toml:/proxy_config.toml tecsisa/foulkon-proxy -config-file=/proxy_config.toml
-```
 
 ## Documentation
 
@@ -45,7 +35,7 @@ API docs:<br />
 
 <br />
 
-Installation/deployment docs:<br />
+Installation/deployment docs using Go binaries or Docker:<br />
 
 - [Worker](doc/deploy/worker.md)
 
