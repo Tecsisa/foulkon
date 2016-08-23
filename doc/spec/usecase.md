@@ -99,7 +99,8 @@ To avoid implementing permissions logic in the APIs, we created a Foulkon Proxy 
 
 ```
 
-You can configure this using the proxy toml config file:
+You can configure this using the proxy toml config file.
+Add as many resources as you need:
 ```
 [[resources]]
     id = "resource1"
@@ -109,4 +110,13 @@ You can configure this using the proxy toml config file:
     urn = "urn:examplews:app1:v1:resource/company1/Resource"
     action = "app1:read"
 ```
-
+You can also use placeholders in URNs to match with URL values:
+```
+[[resources]]
+    id = "resource2"
+    host = "https://httpbin.org/"
+    url = "/status/:code"
+    method = "GET"
+    urn = "urn:ews:example:instance1:resource/status/{code}"
+    action = "example:getCode"
+```
