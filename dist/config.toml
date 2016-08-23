@@ -2,14 +2,18 @@
 [server]
 host = "localhost"
 port = "8000"
-#certfile = "${FOULKON_CERT_FILE_PATH}"
-#keyfile = "${FOULKON_KEY_FILE_PATH}"
+certfile = "/etc/secret/public.pem"
+keyfile = "/etc/secret/private.pem"
+
+# Admin user config
+[admin]
+username = "admin"
+password = "admin"
 
 # Logger
 [logger]
-type = "default" #If not specified default is StdOut
-#type = "file" #If not specified default is StdOut
-level = "debug"
+type = "default"
+level = "info"
 	# Directory for file configuration
 	[logger.file]
 	dir = "/tmp/foulkon/foulkon.log"
@@ -20,6 +24,9 @@ type = "postgres"
 	# Postgres database config
 	[database.postgres]
 	datasourcename = "postgres://foulkon:password@localhost:5432/foulkondb?sslmode=disable"
+    idleconns = "5"
+    maxopenconns = "20"
+    connttl = "300"
 
 # Authenticator config
 [authenticator]
@@ -29,8 +36,3 @@ type = "oidc"
 	[authenticator.oidc]
 	issuer = "https://discovery.wr.tecsisa.com:5556"
 	clientids = "9jCU4aaDHjV-y59SSlGwfrmpdo4mIkGBW4E41QvI-X0=@127.0.0.1"
-
-# Admin user config
-[admin]
-username = "admin"
-password = "admin"

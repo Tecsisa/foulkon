@@ -122,7 +122,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		return nil, err
 	}
 
-	authApi.Logger = *logger
+	authApi.Logger = logger
 
 	// Instantiate Auth Connector
 	var authConnector auth.AuthConnector

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/Sirupsen/logrus"
 	"github.com/kylelemons/godebug/pretty"
 	"math/rand"
 	"testing"
@@ -108,6 +109,7 @@ func makeTestAPI(testRepo *TestRepo) *AuthAPI {
 		UserRepo:   testRepo,
 		GroupRepo:  testRepo,
 		PolicyRepo: testRepo,
+		Logger:     logrus.StandardLogger(),
 	}
 	return api
 }
