@@ -15,7 +15,7 @@ type AuthAPI struct {
 	UserRepo   UserRepo
 	GroupRepo  GroupRepo
 	PolicyRepo PolicyRepo
-	Logger     log.Logger
+	Logger     *log.Logger
 }
 
 // API INTERFACES WITH AUTHORIZATION

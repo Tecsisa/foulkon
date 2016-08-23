@@ -81,7 +81,7 @@ func (api AuthAPI) AddUser(requestInfo RequestInfo, externalId string, path stri
 					Message: dbError.Message,
 				}
 			}
-			LogOperation(&api.Logger, requestInfo, fmt.Sprintf("User created %+v", createdUser))
+			LogOperation(api.Logger, requestInfo, fmt.Sprintf("User created %+v", createdUser))
 			return createdUser, nil
 		default: // Unexpected error
 			return nil, &Error{
@@ -239,7 +239,7 @@ func (api AuthAPI) UpdateUser(requestInfo RequestInfo, externalId string, newPat
 		}
 	}
 
-	LogOperation(&api.Logger, requestInfo, fmt.Sprintf("User updated from %+v to %+v", userDB, user))
+	LogOperation(api.Logger, requestInfo, fmt.Sprintf("User updated from %+v to %+v", userDB, user))
 	return user, nil
 
 }
@@ -275,7 +275,7 @@ func (api AuthAPI) RemoveUser(requestInfo RequestInfo, externalId string) error 
 			Message: dbError.Message,
 		}
 	}
-	LogOperation(&api.Logger, requestInfo, fmt.Sprintf("User deleted %+v", user))
+	LogOperation(api.Logger, requestInfo, fmt.Sprintf("User deleted %+v", user))
 	return nil
 }
 

@@ -117,7 +117,7 @@ func (api AuthAPI) AddPolicy(requestInfo RequestInfo, name string, path string, 
 				}
 			}
 
-			LogOperation(&api.Logger, requestInfo, fmt.Sprintf("Policy created %+v", createdPolicy))
+			LogOperation(api.Logger, requestInfo, fmt.Sprintf("Policy created %+v", createdPolicy))
 			return createdPolicy, nil
 		default: // Unexpected error
 			return nil, &Error{
@@ -331,7 +331,7 @@ func (api AuthAPI) UpdatePolicy(requestInfo RequestInfo, org string, policyName 
 		}
 	}
 
-	LogOperation(&api.Logger, requestInfo, fmt.Sprintf("Policy updated from %+v to %+v", policyDB, policy))
+	LogOperation(api.Logger, requestInfo, fmt.Sprintf("Policy updated from %+v to %+v", policyDB, policy))
 	return policy, nil
 }
 
@@ -366,7 +366,7 @@ func (api AuthAPI) RemovePolicy(requestInfo RequestInfo, org string, name string
 		}
 	}
 
-	LogOperation(&api.Logger, requestInfo, fmt.Sprintf("Policy deleted %+v", policy))
+	LogOperation(api.Logger, requestInfo, fmt.Sprintf("Policy deleted %+v", policy))
 	return nil
 }
 

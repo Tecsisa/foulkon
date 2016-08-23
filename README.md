@@ -1,6 +1,6 @@
-# foulkon
+# Foulkon
 
-__foulkon__ is an authorization server that allows or denies the access to web resources.
+__Foulkon__ is an authorization server that allows or denies the access to web resources.
 
 ## Installation / usage
 
@@ -16,38 +16,40 @@ make bin
 ```
 Then, you can run the docker image, mounting (-v) a config.toml or proxy.toml inside the container (you could also make a custom Dockerfile with "ADD my-custom-conf.toml /my-custom-conf.toml")
 ```
-docker run -v /home/myuser/foulkon/config.toml:/config.toml tecsisa/foulkon-worker -config-file=/config.toml
 docker run -v /home/myuser/foulkon/proxy_config.toml:/proxy_config.toml tecsisa/foulkon-proxy -config-file=/proxy_config.toml
 ```
 
 ## Documentation
 
 Specification docs:<br />
-[Main doc](doc/spec/README.md)
 
-[Use case doc](doc/spec/usecase.md)
+- [Specification](doc/spec/README.md)
 
-[Internal Actions doc](doc/spec/action.md)
+- [Use case](doc/spec/usecase.md)
 
-[Authorization flow doc](doc/spec/authorization.md)
+- [Internal IAM Actions](doc/spec/action.md)
+
+- [Authorization flow](doc/spec/authorization.md)
 
 <br />
 
 API docs:<br />
-[User API](doc/api/user.md)
 
-[Group API](doc/api/group.md)
+- [User](doc/api/user.md)
 
-[Policy API](doc/api/policy.md)
+- [Group](doc/api/group.md)
 
-[Resource API](doc/api/resource.md)
+- [Policy](doc/api/policy.md)
+
+- [Resource](doc/api/resource.md)
 
 <br />
 
 Installation/deployment docs:<br />
-[Worker deployment](doc/deploy/worker.md)
 
-[Proxy deployment](doc/deploy/proxy.md)
+- [Worker](doc/deploy/worker.md)
+
+- [Proxy](doc/deploy/proxy.md)
 
 You can also import this [Postman collection](schema/postman.json) file with all API methods.
 
