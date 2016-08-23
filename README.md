@@ -1,5 +1,7 @@
 # Foulkon
 
+[![Join the chat at https://gitter.im/foulkon/Lobby](https://badges.gitter.im/foulkon/Lobby.svg)](https://gitter.im/foulkon/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 __Foulkon__ is an authorization server that allows or denies the access to web resources.
 
 ## Installation / usage
