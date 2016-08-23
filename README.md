@@ -1,6 +1,6 @@
 # foulkon
 
-foulkon is an authorization server that allows or denies the access to web resources.
+__foulkon__ is an authorization server that allows or denies the access to web resources.
 
 ## Installation / usage
 
@@ -10,9 +10,9 @@ This project generates 2 apps:
 
 ### Docker
 
-In order to build the docker image, run:
+In order to build the docker images, run:
 ```
-sh build.sh
+make bin
 ```
 Then, you can run the docker image, mounting (-v) a config.toml or proxy.toml inside the container (you could also make a custom Dockerfile with "ADD my-custom-conf.toml /my-custom-conf.toml")
 ```
@@ -20,75 +20,20 @@ docker run -v /home/myuser/foulkon/config.toml:/config.toml tecsisa/foulkon-work
 docker run -v /home/myuser/foulkon/proxy_config.toml:/proxy_config.toml tecsisa/foulkon-proxy -config-file=/proxy_config.toml
 ```
 
-## Configuration
-You have to specify configuration file using flag -config-file (foulkon -config-file=/path/config.toml). This config file is a TOML file that has five parts:
-
-
-#### [server]:
-    - host : "localhost"
-    - port : "8000"
-    - certfile : "/public.pem" (PEM file with certificate chain)
-    - keyfile : "/private.pem" (PEM file with decrypted private key)
-#### [logger]:
-    - type : file | default (If it isn't specified it uses stdout)
-    - level: "debug" (Only log the debug or above)
-    [logger.file]
-    - dir: /path/file.log (If you select log_type file you have to specify the log dir file)
-#### [database]:
-    - type : postgres (Only postgres right now)
-    [database.postgres]
-    - datasourcename: dsn (Datasource name for connecting to postgres)
-#### [authenticator]:
-    - type : oidc (Only OIDC protocol right now)
-    [authenticator.oidc]
-    - issuer: www.example.com (Your selected issuer for OIDC tokens)
-    - client_ids: clientid1;clientid2 (Client IDs that you accept separated by ",")
-#### [admin]:
-    - username : admin (Admin username)
-    - password: password (Admin password)
-
-You can use OS Environment vars, using syntax ${ENV_VAR}. This is a config file example:
-
-```
-# Server config
-[server]
-host = "localhost"
-port = "8000"
-certfile = "${FOULKON_CERT_FILE_PATH}"
-keyfile = "${FOULKON_KEY_FILE_PATH}"
-
-# Logger
-[logger]
-type = "default"
-level = "debug"
-    # Directory for file configuration
-    [logger.file]
-    dir = "/tmp/foulkon/foulkon.log"
-
-# Database config
-[database]
-type = "postgres"
-    # Postgres database config
-    [database.postgres]
-    datasourcename = "postgres://foulkon:password@localhost:5432/foulkondb?sslmode=disable"
-
-# Authenticator config
-[authenticator]
-type = "oidc"
-
-    # OIDC connector config
-    [authenticator.oidc]
-    issuer = "http://localhost:5556"
-    clientids = "9jCU4aaDHjV-y59SSlGwfrmpdo4mIkGBW4E41QvI-X0=@127.0.0.1"
-
-# Admin user config
-[admin]
-username = "admin"
-password = "admin"
-```
-
 ## Documentation
 
+Specification docs:<br />
+[Main doc](doc/spec/README.md)
+
+[Use case doc](doc/spec/usecase.md)
+
+[Internal Actions doc](doc/spec/action.md)
+
+[Authorization flow doc](doc/spec/authorization.md)
+
+<br />
+
+API docs:<br />
 [User API](doc/api/user.md)
 
 [Group API](doc/api/group.md)
@@ -97,14 +42,20 @@ password = "admin"
 
 [Resource API](doc/api/resource.md)
 
-[IAM Actions](doc/spec/action.md)
+<br />
 
-You can import this [Postman collection](schema/postman.json) file with all API methods.
+Installation/deployment docs:<br />
+[Worker deployment](doc/deploy/worker.md)
+
+[Proxy deployment](doc/deploy/proxy.md)
+
+You can also import this [Postman collection](schema/postman.json) file with all API methods.
 
 ## Limitations
 
 Since validation is different in each identity provider, Foulkon needs __ID Token__ instead of __Access Token__ in order to check user permissions
-in Authorization header with type bearer. E.g.
+in Authorization header with type bearer.
+E.g.:
 
 ```
 GET /example/resource HTTP/1.1
@@ -118,19 +69,20 @@ GET /example/resource HTTP/1.1
 
 ## Testing
 
+run `make` in project root path
 
 ## Contribution policy
 
 Contributions via GitHub pull requests are gladly accepted from their original author. Along with any pull requests, please state that the contribution is your original work and that you license the work to the project under the project's open source license. Whether or not you state this explicitly, by submitting any copyrighted material via pull request, email, or other means you agree to license the material under the project's open source license and warrant that you have the legal authority to do so.
 
 Please make sure to follow these conventions:
-- For each contribution there must be a ticket (GitHub issue) with a short descriptive name, e.g. "Respect seed-nodes configuration setting"
-- Work should happen in a branch named "ISSUE-DESCRIPTION", e.g. "32-respect-seed-nodes"
-- Before a PR can be merged, all commits must be squashed into one with its message made up from the ticket name and the ticket id, e.g. "Respect seed-nodes configuration setting (closes #32)"
+- For each contribution there must be a ticket (GitHub issue) with a short descriptive name, e.g. "run go imports in Makefile"
+- Work should happen in a branch named "ISSUE-DESCRIPTION", e.g. "32-go-imports-in-Makefile"
+- Before a PR can be merged, all commits must be squashed into one with its message made up from the ticket name and the ticket id, e.g. "better go files formatting: run go imports in Makefile (closes #32)"
 
 #### Questions
 
-If you have a question, preferably use the [mailing list](mailto:dev.whiterabbit@tecsisa.com) or Google Hangouts. As an alternative, prepend your issue with `[question]`.
+If you have a question, preferably use Gitter chat. As an alternative, prepend your issue with `[question]`.
 
 ## License
 
