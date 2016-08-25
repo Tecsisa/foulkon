@@ -203,9 +203,11 @@ func CloseWorker() int {
 		logger.Errorf("Couldn't close DB connection: %v", err)
 		status = 1
 	}
-	if err := workerLogfile.Close(); err != nil {
-		fmt.Fprintf(os.Stderr, "Couldn't close logfile: %v", err)
-		status = 1
+	if workerLogfile != nil {
+		if err := workerLogfile.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "Couldn't close logfile: %v", err)
+			status = 1
+		}
 	}
 	return status
 }

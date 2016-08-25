@@ -38,7 +38,6 @@ func main() {
 	}
 
 	sig := make(chan os.Signal, 1)
-	defer close(sig)
 	signal.Notify(sig,
 		syscall.SIGHUP,
 		syscall.SIGINT,
@@ -46,13 +45,15 @@ func main() {
 		syscall.SIGQUIT)
 
 	go func() {
-		sigrecv := <-sig
-		switch sigrecv {
-		case syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT:
-			proxy.Logger.Infof("Signal '%v' received, closing proxy...", sigrecv.String())
-			foulkon.CloseProxy()
-		default:
-			proxy.Logger.Warnf("Unknown OS signal received, ignoring...")
+		for {
+			sigrecv := <-sig
+			switch sigrecv {
+			case syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT:
+				proxy.Logger.Infof("Signal '%v' received, closing proxy...", sigrecv.String())
+				os.Exit(foulkon.CloseProxy())
+			default:
+				proxy.Logger.Warnf("Unknown OS signal received, ignoring...")
+			}
 		}
 	}()
 
