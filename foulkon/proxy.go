@@ -122,9 +122,11 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 
 func CloseProxy() int {
 	status := 0
-	if err := proxyLogfile.Close(); err != nil {
-		fmt.Fprintf(os.Stderr, "Couldn't close logfile: %v", err)
-		status = 1
+	if proxyLogfile != nil {
+		if err := proxyLogfile.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "Couldn't close logfile: %v", err)
+			status = 1
+		}
 	}
 	return status
 }
