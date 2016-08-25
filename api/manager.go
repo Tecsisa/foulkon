@@ -141,7 +141,7 @@ type AuthzAPI interface {
 
 // REPOSITORY INTERFACES
 
-// User repository that contains all database operations
+// UserRepo contains all database operations
 type UserRepo interface {
 	// Store user in database if there aren't errors.
 	AddUser(user User) (*User, error)
@@ -166,7 +166,7 @@ type UserRepo interface {
 	GetGroupsByUserID(id string) ([]Group, error)
 }
 
-// Group repository that contains all database operations
+// GroupRepo contains all database operations
 type GroupRepo interface {
 	// Store group in database if there aren't errors.
 	AddGroup(group Group) (*Group, error)
@@ -217,7 +217,7 @@ type GroupRepo interface {
 	GetAttachedPolicies(groupID string) ([]Policy, error)
 }
 
-// Policy repository that contains all database operations
+// PolicyRepo contains all database operations
 type PolicyRepo interface {
 	// Store policy in database if there aren't errors.
 	AddPolicy(policy Policy) (*Policy, error)

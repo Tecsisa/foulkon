@@ -479,15 +479,16 @@ func TestPostgresRepo_UpdateUser(t *testing.T) {
 }
 
 func TestPostgresRepo_RemoveUser(t *testing.T) {
+	type relation struct {
+		userID        string
+		groupIDs      []string
+		groupNotFound bool
+	}
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
 		previousUser *api.User
-		relation     *struct {
-			user_id       string
-			group_ids     []string
-			groupNotFound bool
-		}
+		relation     *relation
 		// Postgres Repo Args
 		userToDelete string
 	}{
@@ -499,13 +500,9 @@ func TestPostgresRepo_RemoveUser(t *testing.T) {
 				Urn:        "Oldurn",
 				CreateAt:   now,
 			},
-			relation: &struct {
-				user_id       string
-				group_ids     []string
-				groupNotFound bool
-			}{
-				user_id:   "UserID",
-				group_ids: []string{"GroupID1", "GroupID2"},
+			relation: &relation{
+				userID:   "UserID",
+				groupIDs: []string{"GroupID1", "GroupID2"},
 			},
 			userToDelete: "UserID",
 		},
@@ -525,8 +522,8 @@ func TestPostgresRepo_RemoveUser(t *testing.T) {
 			}
 		}
 		if test.relation != nil {
-			for _, id := range test.relation.group_ids {
-				if err := insertGroupUserRelation(test.relation.user_id, id); err != nil {
+			for _, id := range test.relation.groupIDs {
+				if err := insertGroupUserRelation(test.relation.userID, id); err != nil {
 					t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
 					continue
 				}
@@ -561,14 +558,15 @@ func TestPostgresRepo_RemoveUser(t *testing.T) {
 }
 
 func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
+	type relation struct {
+		userID        string
+		groups        []api.Group
+		groupNotFound bool
+	}
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
-		relation *struct {
-			user_id       string
-			groups        []api.Group
-			groupNotFound bool
-		}
+		relation *relation
 		// Postgres Repo Args
 		userID string
 		// Expected result
@@ -576,12 +574,8 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 		expectedError    *database.Error
 	}{
 		"OkCase": {
-			relation: &struct {
-				user_id       string
-				groups        []api.Group
-				groupNotFound bool
-			}{
-				user_id: "UserID",
+			relation: &relation{
+				userID: "UserID",
 				groups: []api.Group{
 					{
 						ID:       "GroupID1",
@@ -622,12 +616,8 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 			},
 		},
 		"ErrorCase": {
-			relation: &struct {
-				user_id       string
-				groups        []api.Group
-				groupNotFound bool
-			}{
-				user_id: "UserID",
+			relation: &relation{
+				userID: "UserID",
 				groups: []api.Group{
 					{
 						ID: "GroupID1",
@@ -655,7 +645,7 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 		// Insert previous data
 		if test.relation != nil {
 			for _, group := range test.relation.groups {
-				if err := insertGroupUserRelation(test.relation.user_id, group.ID); err != nil {
+				if err := insertGroupUserRelation(test.relation.userID, group.ID); err != nil {
 					t.Errorf("Test %v failed. Unexpected error inserting prevoius group user relations: %v", n, err)
 					continue
 				}

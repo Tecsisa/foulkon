@@ -22,7 +22,7 @@ import (
 // aux var for ${OS_ENV_VAR} regex
 var rEnvVar, _ = regexp.Compile(`^\$\{(\w+)\}$`)
 var db *sql.DB
-var worker_logfile *os.File
+var workerLogfile *os.File
 var logger *log.Logger
 
 // Worker is the Authorization server.
@@ -48,7 +48,7 @@ type Worker struct {
 	Authenticator *auth.Authenticator
 }
 
-// Create a Worker using configuration values
+// NewWorker creates a Worker using configuration values
 func NewWorker(config *toml.TomlTree) (*Worker, error) {
 
 	// Create logger
@@ -58,11 +58,11 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 	loggerType := getDefaultValue(config, "logger.type", "Stdout")
 	if loggerType == "file" {
 		logFileDir := getDefaultValue(config, "logger.file.dir", "/tmp/foulkon.log")
-		worker_logfile, err = os.OpenFile(logFileDir, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+		workerLogfile, err = os.OpenFile(logFileDir, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
 		if err != nil {
 			return nil, err
 		}
-		logOut = worker_logfile
+		logOut = workerLogfile
 	}
 	// Logger level. Defaults to INFO
 	loglevel, err := log.ParseLevel(getDefaultValue(config, "logger.level", "info"))
@@ -164,7 +164,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		return nil, err
 	}
 	if len(strings.TrimSpace(adminUser)) < 1 || len(strings.TrimSpace(adminPassword)) < 1 {
-		err := errors.New(fmt.Sprintf("Admin user config unexpected adminUser:%v, adminpassword:%v", adminUser, adminPassword))
+		err := fmt.Errorf("Admin user config unexpected adminUser:%v, adminpassword:%v", adminUser, adminPassword)
 		logger.Error(err)
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func CloseWorker() int {
 		logger.Errorf("Couldn't close DB connection: %v", err)
 		status = 1
 	}
-	if err := worker_logfile.Close(); err != nil {
+	if err := workerLogfile.Close(); err != nil {
 		fmt.Fprintf(os.Stderr, "Couldn't close logfile: %v", err)
 		status = 1
 	}
@@ -213,15 +213,14 @@ func CloseWorker() int {
 // This aux method returns mandatory config value or any error occurred
 func getMandatoryValue(config *toml.TomlTree, key string) (string, error) {
 	if !config.Has(key) {
-		return "", errors.New(fmt.Sprintf("Cannot retrieve configuration value %v", key))
-	} else {
-		value := getVar(config, key)
-		if value == "" {
-			return "", errors.New(fmt.Sprintf("Cannot retrieve configuration value %v", key))
-		}
-		return value, nil
+		return "", fmt.Errorf("Cannot retrieve configuration value %v", key)
 	}
 
+	value := getVar(config, key)
+	if value == "" {
+		return "", fmt.Errorf("Cannot retrieve configuration value %v", key)
+	}
+	return value, nil
 }
 
 // This aux method returns a value if defined in config file. Else, returns default value

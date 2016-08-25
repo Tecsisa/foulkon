@@ -199,27 +199,29 @@ func AreValidStatements(statements *[]Statement) error {
 		if err != nil {
 			return err
 		}
+
+		// check actions
 		if len(statement.Actions) < 1 {
 			return &Error{
 				Code:    INVALID_PARAMETER_ERROR,
 				Message: "Empty actions",
 			}
-		} else {
-			err = AreValidActions(statement.Actions)
-			if err != nil {
-				return err
-			}
 		}
+		err = AreValidActions(statement.Actions)
+		if err != nil {
+			return err
+		}
+
+		// check resources
 		if len(statement.Resources) < 1 {
 			return &Error{
 				Code:    INVALID_PARAMETER_ERROR,
 				Message: "Empty resources",
 			}
-		} else {
-			err = AreValidResources(statement.Resources)
-			if err != nil {
-				return err
-			}
+		}
+		err = AreValidResources(statement.Resources)
+		if err != nil {
+			return err
 		}
 	}
 	return nil

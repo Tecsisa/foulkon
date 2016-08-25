@@ -1,15 +1,12 @@
 package postgresql
 
 import (
+	"fmt"
+	"strconv"
 	"time"
 
-	"strconv"
-
-	"errors"
-	"fmt"
-
 	"github.com/jinzhu/gorm"
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" //GORM needs to import the lib/pq driver
 )
 
 type PostgresRepo struct {
@@ -26,15 +23,15 @@ func InitDb(datasourcename string, idleConns string, maxOpenConns string, connTT
 	// construct a gorp DbMap
 	idle, err := strconv.Atoi(idleConns)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Invalid postgresql idleConns param: %v", idleConns))
+		return nil, fmt.Errorf("Invalid postgresql idleConns param: %v", idleConns)
 	}
 	maxOpen, err := strconv.Atoi(maxOpenConns)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Invalid postgresql maxOpenConns param: %v", maxOpenConns))
+		return nil, fmt.Errorf("Invalid postgresql maxOpenConns param: %v", maxOpenConns)
 	}
 	ttl, err := strconv.Atoi(connTTL)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Invalid postgresql connTTL param: %v", connTTL))
+		return nil, fmt.Errorf("Invalid postgresql connTTL param: %v", connTTL)
 	}
 	db.DB().SetMaxIdleConns(idle)
 	db.DB().SetMaxOpenConns(maxOpen)

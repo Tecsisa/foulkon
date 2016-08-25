@@ -13,7 +13,7 @@ const (
 	USER_ID_HEADER = "USER-ID"
 )
 
-// This struct represents an OIDC connector that implements interface of auth connector
+// OIDCAuthConnector represents an OIDC connector that implements interface of auth connector
 type OIDCAuthConnector struct {
 	configuration openid.Configuration
 }
@@ -30,11 +30,11 @@ func InitOIDCConnector(logger *log.Logger, provider string, clientids []string) 
 	}
 	errorHandler := func(e error, rw http.ResponseWriter, r *http.Request) bool {
 		requestID := r.Header.Get("Request-ID")
-		if verr, ok := e.(*openid.ValidationError); ok {
+		if validationErr, ok := e.(*openid.ValidationError); ok {
 			logger.WithFields(log.Fields{
 				"requestID": requestID,
-			}).Error(verr.Message)
-			http.Error(rw, fmt.Sprintf("Error %v", verr.Message), verr.HTTPStatus)
+			}).Error(validationErr.Message)
+			http.Error(rw, fmt.Sprintf("Error %v", validationErr.Message), validationErr.HTTPStatus)
 		} else {
 			logger.WithFields(log.Fields{
 				"requestID": requestID,

@@ -121,7 +121,7 @@ func TestMain(m *testing.M) {
 
 	server = httptest.NewServer(WorkerHandlerRouter(worker))
 
-	proxy_core := &foulkon.Proxy{
+	proxyCore := &foulkon.Proxy{
 		Logger:     logger,
 		WorkerHost: server.URL,
 		APIResources: []foulkon.APIResource{
@@ -176,7 +176,7 @@ func TestMain(m *testing.M) {
 		},
 	}
 
-	proxy = httptest.NewServer(ProxyHandlerRouter(proxy_core))
+	proxy = httptest.NewServer(ProxyHandlerRouter(proxyCore))
 
 	// Run tests
 	result := m.Run()

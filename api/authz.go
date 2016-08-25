@@ -38,7 +38,7 @@ func (e ExternalResource) GetUrn() string {
 
 // AUTHZ API IMPLEMENTATION
 
-// Return authorized users for specified resource+action
+// GetAuthorizedUsers returns authorized users for specified resource+action
 func (api AuthAPI) GetAuthorizedUsers(requestInfo RequestInfo, resourceUrn string, action string, users []User) ([]User, error) {
 	resourcesToAuthorize := []Resource{}
 	for _, usr := range users {
@@ -55,7 +55,7 @@ func (api AuthAPI) GetAuthorizedUsers(requestInfo RequestInfo, resourceUrn strin
 	return usersFiltered, nil
 }
 
-// Return authorized users for specified user combined with resource+action
+// GetAuthorizedGroups returns authorized users for specified user combined with resource+action
 func (api AuthAPI) GetAuthorizedGroups(requestInfo RequestInfo, resourceUrn string, action string, groups []Group) ([]Group, error) {
 	resourcesToAuthorize := []Resource{}
 	for _, group := range groups {
@@ -72,7 +72,7 @@ func (api AuthAPI) GetAuthorizedGroups(requestInfo RequestInfo, resourceUrn stri
 	return groupsFiltered, nil
 }
 
-// Return authorized policies for specified user combined with resource+action
+// GetAuthorizedPolicies returns authorized policies for specified user combined with resource+action
 func (api AuthAPI) GetAuthorizedPolicies(requestInfo RequestInfo, resourceUrn string, action string, policies []Policy) ([]Policy, error) {
 	resourcesToAuthorize := []Resource{}
 	for _, policy := range policies {
@@ -89,7 +89,7 @@ func (api AuthAPI) GetAuthorizedPolicies(requestInfo RequestInfo, resourceUrn st
 	return policiesFiltered, nil
 }
 
-// Get the resources where the specified user has the action granted
+// GetAuthorizedExternalResources returns the resources where the specified user has the action granted
 func (api AuthAPI) GetAuthorizedExternalResources(requestInfo RequestInfo, action string, resources []string) ([]string, error) {
 	// Validate parameters
 	if err := AreValidActions([]string{action}); err != nil {
@@ -146,7 +146,7 @@ func (api AuthAPI) GetAuthorizedExternalResources(requestInfo RequestInfo, actio
 
 // PRIVATE HELPER METHODS
 
-// This method retrieves filtered resources where the authenticated user has permissions
+// getAuthorizedResources retrieves filtered resources where the authenticated user has permissions
 func (api AuthAPI) getAuthorizedResources(requestInfo RequestInfo, resourceUrn string, action string, resources []Resource) ([]Resource, error) {
 	// If user is an admin return all resources without restriction
 	if requestInfo.Admin {
@@ -306,9 +306,8 @@ func isContainedOrEqual(resource string, resourcePrefix string) bool {
 	prefix := strings.Trim(resourcePrefix, "*")
 	if len(prefix) < 1 {
 		return true
-	} else {
-		return strings.HasPrefix(resource, prefix)
 	}
+	return strings.HasPrefix(resource, prefix)
 }
 
 func isFullUrn(resource string) bool {

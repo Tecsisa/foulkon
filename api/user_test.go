@@ -62,12 +62,12 @@ func TestAuthAPI_AddUser(t *testing.T) {
 						Path:       "/path/",
 						Urn:        CreateUrn("", RESOURCE_USER, "/path/", "000"),
 					}, nil
-				} else {
-					return nil, &database.Error{
-						Code:    database.USER_NOT_FOUND,
-						Message: "User not found",
-					}
 				}
+				return nil, &database.Error{
+					Code:    database.USER_NOT_FOUND,
+					Message: "User not found",
+				}
+
 			},
 			getGroupsByUserIDResult: []Group{
 				{

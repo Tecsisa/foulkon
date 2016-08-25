@@ -12,7 +12,7 @@ import (
 	"github.com/pelletier/go-toml"
 )
 
-var proxy_logfile *os.File
+var proxyLogfile *os.File
 
 // Proxy - Authorize resources using definitions in proxy config file
 type Proxy struct {
@@ -34,7 +34,7 @@ type Proxy struct {
 	APIResources []APIResource
 }
 
-// Representation of external API resources to authorize
+// APIResource represents external API resources to authorize
 type APIResource struct {
 	Id     string
 	Host   string
@@ -52,11 +52,11 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 	loggerType := getDefaultValue(config, "logger.type", "Stdout")
 	if loggerType == "file" {
 		logFileDir := getDefaultValue(config, "logger.file.dir", "/tmp/foulkon.log")
-		proxy_logfile, err = os.OpenFile(logFileDir, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+		proxyLogfile, err = os.OpenFile(logFileDir, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
 		if err != nil {
 			return nil, err
 		}
-		logOut = proxy_logfile
+		logOut = proxyLogfile
 	}
 	// Loglevel. defaults to INFO
 	loglevel, err := log.ParseLevel(getDefaultValue(config, "logger.level", "info"))
@@ -122,7 +122,7 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 
 func CloseProxy() int {
 	status := 0
-	if err := proxy_logfile.Close(); err != nil {
+	if err := proxyLogfile.Close(); err != nil {
 		fmt.Fprintf(os.Stderr, "Couldn't close logfile: %v", err)
 		status = 1
 	}

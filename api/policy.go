@@ -162,11 +162,10 @@ func (api AuthAPI) GetPolicyByName(requestInfo RequestInfo, org string, policyNa
 				Code:    POLICY_BY_ORG_AND_NAME_NOT_FOUND,
 				Message: dbError.Message,
 			}
-		} else { // Unexpected error
-			return nil, &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
+		}
+		return nil, &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
 		}
 	}
 
@@ -175,15 +174,15 @@ func (api AuthAPI) GetPolicyByName(requestInfo RequestInfo, org string, policyNa
 	if err != nil {
 		return nil, err
 	}
+
 	if len(policiesFiltered) > 0 {
 		policyFiltered := policiesFiltered[0]
 		return &policyFiltered, nil
-	} else {
-		return nil, &Error{
-			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				requestInfo.Identifier, policy.Urn),
-		}
+	}
+	return nil, &Error{
+		Code: UNAUTHORIZED_RESOURCES_ERROR,
+		Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
+			requestInfo.Identifier, policy.Urn),
 	}
 }
 
