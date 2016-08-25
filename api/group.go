@@ -163,14 +163,12 @@ func (api AuthAPI) GetGroupByName(requestInfo RequestInfo, org string, name stri
 	if len(groupsFiltered) > 0 {
 		groupsFiltered := groupsFiltered[0]
 		return &groupsFiltered, nil
-	} else {
-		return nil, &Error{
-			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				requestInfo.Identifier, group.Urn),
-		}
 	}
-
+	return nil, &Error{
+		Code: UNAUTHORIZED_RESOURCES_ERROR,
+		Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
+			requestInfo.Identifier, group.Urn),
+	}
 }
 
 func (api AuthAPI) ListGroups(requestInfo RequestInfo, org string, pathPrefix string) ([]GroupIdentity, error) {

@@ -176,10 +176,9 @@ func getErrorMessage(errorCode string, message string) *api.Error {
 			Code:    errorCode,
 			Message: "Forbidden resource. If you need access, contact the administrator",
 		}
-	} else {
-		return &api.Error{
-			Code:    errorCode,
-			Message: message,
-		}
+	}
+	return &api.Error{
+		Code:    errorCode,
+		Message: message,
 	}
 }

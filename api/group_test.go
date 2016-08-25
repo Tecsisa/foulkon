@@ -1129,15 +1129,14 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 						Path: "/new/",
 						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/new/", "group1"),
 					}, nil
-				} else {
-					return &Group{
-						ID:   "GROUP-USER-ID2",
-						Name: name,
-						Org:  org,
-						Path: "/sdada/",
-						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/sdada/", name),
-					}, nil
 				}
+				return &Group{
+					ID:   "GROUP-USER-ID2",
+					Name: name,
+					Org:  org,
+					Path: "/sdada/",
+					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/sdada/", name),
+				}, nil
 			},
 		},
 		"ErrorCaseGetGroupDBErr": {
@@ -1161,10 +1160,10 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 						Path: "/new/",
 						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/new/", "group1"),
 					}, nil
-				} else {
-					return nil, &database.Error{
-						Code: database.INTERNAL_ERROR,
-					}
+				}
+
+				return nil, &database.Error{
+					Code: database.INTERNAL_ERROR,
 				}
 			},
 		},
@@ -1310,10 +1309,9 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 						Path: "/path/",
 						Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "group1"),
 					}, nil
-				} else {
-					return nil, &database.Error{
-						Code: database.GROUP_NOT_FOUND,
-					}
+				}
+				return nil, &database.Error{
+					Code: database.GROUP_NOT_FOUND,
 				}
 			},
 			getGroupsByUserIDResult: []Group{
@@ -1374,10 +1372,9 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 						Path: "/path/",
 						Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "group1"),
 					}, nil
-				} else {
-					return nil, &database.Error{
-						Code: database.GROUP_NOT_FOUND,
-					}
+				}
+				return nil, &database.Error{
+					Code: database.GROUP_NOT_FOUND,
 				}
 			},
 			getGroupsByUserIDResult: []Group{

@@ -1637,26 +1637,25 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 							},
 						},
 					}, nil
-				} else {
-					return &Policy{
-						ID:   "test2",
-						Name: "test2",
-						Org:  "123",
-						Path: "/path/",
-						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
-						Statements: &[]Statement{
-							{
-								Effect: "allow",
-								Actions: []string{
-									USER_ACTION_GET_USER,
-								},
-								Resources: []string{
-									GetUrnPrefix("", RESOURCE_USER, "/path/"),
-								},
+				}
+				return &Policy{
+					ID:   "test2",
+					Name: "test2",
+					Org:  "123",
+					Path: "/path/",
+					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "test"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Actions: []string{
+								USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/path/"),
 							},
 						},
-					}, nil
-				}
+					},
+				}, nil
 			},
 			getUserByExternalIDResult: &User{
 				ID:         "543210",
@@ -1757,26 +1756,25 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 							},
 						},
 					}, nil
-				} else {
-					return &Policy{
-						ID:   "test2",
-						Name: "test2",
-						Org:  "123",
-						Path: "/path2/",
-						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path2/", "test"),
-						Statements: &[]Statement{
-							{
-								Effect: "allow",
-								Actions: []string{
-									USER_ACTION_GET_USER,
-								},
-								Resources: []string{
-									GetUrnPrefix("", RESOURCE_USER, "/path2/"),
-								},
+				}
+				return &Policy{
+					ID:   "test2",
+					Name: "test2",
+					Org:  "123",
+					Path: "/path2/",
+					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path2/", "test"),
+					Statements: &[]Statement{
+						{
+							Effect: "allow",
+							Actions: []string{
+								USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								GetUrnPrefix("", RESOURCE_USER, "/path2/"),
 							},
 						},
-					}, nil
-				}
+					},
+				}, nil
 			},
 			getUserByExternalIDResult: &User{
 				ID:         "543210",
@@ -1885,10 +1883,9 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 							},
 						},
 					}, nil
-				} else {
-					return nil, &database.Error{
-						Code: database.POLICY_NOT_FOUND,
-					}
+				}
+				return nil, &database.Error{
+					Code: database.POLICY_NOT_FOUND,
 				}
 			},
 			getUserByExternalIDResult: &User{
@@ -1998,10 +1995,9 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 							},
 						},
 					}, nil
-				} else {
-					return nil, &database.Error{
-						Code: database.POLICY_NOT_FOUND,
-					}
+				}
+				return nil, &database.Error{
+					Code: database.POLICY_NOT_FOUND,
 				}
 			},
 			getUserByExternalIDResult: &User{
@@ -2162,10 +2158,9 @@ func TestAuthAPI_UpdatePolicy(t *testing.T) {
 							},
 						},
 					}, nil
-				} else {
-					return nil, &database.Error{
-						Code: database.POLICY_NOT_FOUND,
-					}
+				}
+				return nil, &database.Error{
+					Code: database.POLICY_NOT_FOUND,
 				}
 			},
 			getUserByExternalIDResult: &User{

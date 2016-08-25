@@ -59,14 +59,14 @@ type WorkerHandler struct {
 	worker *foulkon.Worker
 }
 
-func (a *WorkerHandler) TransactionLog(r *http.Request, requestID string, userID string, msg string) {
+func (wh *WorkerHandler) TransactionLog(r *http.Request, requestID string, userID string, msg string) {
 
 	// TODO: X-Forwarded headers?
 	//for header, _ := range r.Header {
 	//	println(header, ": ", r.Header.Get(header))
 	//}
 
-	a.worker.Logger.WithFields(logrus.Fields{
+	wh.worker.Logger.WithFields(logrus.Fields{
 		"requestID": requestID,
 		"method":    r.Method,
 		"URI":       r.RequestURI,
@@ -75,7 +75,7 @@ func (a *WorkerHandler) TransactionLog(r *http.Request, requestID string, userID
 	}).Info(msg)
 }
 
-// Handler returns http.Handler for the APIs.
+// WorkerHandlerRouter returns http.Handler for the APIs.
 func WorkerHandlerRouter(worker *foulkon.Worker) http.Handler {
 	// Create the muxer to handle the actual endpoints
 	router := httprouter.New()
@@ -145,10 +145,10 @@ func WorkerHandlerRouter(worker *foulkon.Worker) http.Handler {
 
 // 2xx RESPONSES
 
-func (a *WorkerHandler) RespondOk(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, value interface{}) {
+func (wh *WorkerHandler) RespondOk(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, value interface{}) {
 	b, err := json.Marshal(value)
 	if err != nil {
-		a.RespondInternalServerError(r, requestInfo, w)
+		wh.RespondInternalServerError(r, requestInfo, w)
 		return
 	}
 
@@ -156,10 +156,10 @@ func (a *WorkerHandler) RespondOk(r *http.Request, requestInfo api.RequestInfo, 
 	w.Write(b)
 }
 
-func (a *WorkerHandler) RespondCreated(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, value interface{}) {
+func (wh *WorkerHandler) RespondCreated(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, value interface{}) {
 	b, err := json.Marshal(value)
 	if err != nil {
-		a.RespondInternalServerError(r, requestInfo, w)
+		wh.RespondInternalServerError(r, requestInfo, w)
 		return
 	}
 
@@ -168,48 +168,48 @@ func (a *WorkerHandler) RespondCreated(r *http.Request, requestInfo api.RequestI
 	w.Write(b)
 }
 
-func (a *WorkerHandler) RespondNoContent(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter) {
+func (wh *WorkerHandler) RespondNoContent(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
 // 4xx RESPONSES
 
-func (a *WorkerHandler) RespondNotFound(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, apiError *api.Error) {
+func (wh *WorkerHandler) RespondNotFound(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, apiError *api.Error) {
 	w, err := writeErrorWithStatus(w, apiError, http.StatusNotFound)
 	if err != nil {
-		a.RespondInternalServerError(r, requestInfo, w)
+		wh.RespondInternalServerError(r, requestInfo, w)
 		return
 	}
 }
 
-func (a *WorkerHandler) RespondBadRequest(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, apiError *api.Error) {
+func (wh *WorkerHandler) RespondBadRequest(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, apiError *api.Error) {
 	w, err := writeErrorWithStatus(w, apiError, http.StatusBadRequest)
 	if err != nil {
-		a.RespondInternalServerError(r, requestInfo, w)
+		wh.RespondInternalServerError(r, requestInfo, w)
 		return
 	}
 }
 
-func (a *WorkerHandler) RespondConflict(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, apiError *api.Error) {
+func (wh *WorkerHandler) RespondConflict(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, apiError *api.Error) {
 	w, err := writeErrorWithStatus(w, apiError, http.StatusConflict)
 	if err != nil {
-		a.RespondInternalServerError(r, requestInfo, w)
+		wh.RespondInternalServerError(r, requestInfo, w)
 		return
 	}
 }
 
-func (a *WorkerHandler) RespondForbidden(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, apiError *api.Error) {
+func (wh *WorkerHandler) RespondForbidden(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, apiError *api.Error) {
 	w, err := writeErrorWithStatus(w, apiError, http.StatusForbidden)
 	if err != nil {
-		a.RespondInternalServerError(r, requestInfo, w)
+		wh.RespondInternalServerError(r, requestInfo, w)
 		return
 	}
 }
 
 // 5xx RESPONSES
 
-func (a *WorkerHandler) RespondInternalServerError(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter) {
-	a.worker.Logger.WithFields(logrus.Fields{
+func (wh *WorkerHandler) RespondInternalServerError(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter) {
+	wh.worker.Logger.WithFields(logrus.Fields{
 		"requestID": requestInfo.RequestID,
 		"method":    r.Method,
 		"URI":       r.RequestURI,
@@ -222,8 +222,8 @@ func (a *WorkerHandler) RespondInternalServerError(r *http.Request, requestInfo 
 
 // Worker Aux method
 
-func (w *WorkerHandler) GetRequestInfo(r *http.Request) api.RequestInfo {
-	userID, admin := w.worker.Authenticator.GetAuthenticatedUser(r)
+func (wh *WorkerHandler) GetRequestInfo(r *http.Request) api.RequestInfo {
+	userID, admin := wh.worker.Authenticator.GetAuthenticatedUser(r)
 	return api.RequestInfo{
 		Identifier: userID,
 		Admin:      admin,
@@ -238,14 +238,14 @@ type ProxyHandler struct {
 	client *http.Client
 }
 
-func (h *ProxyHandler) TransactionErrorLog(r *http.Request, requestID string, workerRequestID string, msg string) {
+func (ph *ProxyHandler) TransactionErrorLog(r *http.Request, requestID string, workerRequestID string, msg string) {
 
 	// TODO: X-Forwarded headers
 	//for header, _ := range r.Header {
 	//	println(header, ": ", r.Header.Get(header))
 	//}
 
-	h.proxy.Logger.WithFields(logrus.Fields{
+	ph.proxy.Logger.WithFields(logrus.Fields{
 		"requestID":       requestID,
 		"method":          r.Method,
 		"URI":             r.URL.EscapedPath(),
@@ -254,14 +254,14 @@ func (h *ProxyHandler) TransactionErrorLog(r *http.Request, requestID string, wo
 	}).Error(msg)
 }
 
-func (h *ProxyHandler) TransactionLog(r *http.Request, requestID string, workerRequestID string, msg string) {
+func (ph *ProxyHandler) TransactionLog(r *http.Request, requestID string, workerRequestID string, msg string) {
 
 	// TODO: X-Forwarded headers
 	//for header, _ := range r.Header {
 	//	println(header, ": ", r.Header.Get(header))
 	//}
 
-	h.proxy.Logger.WithFields(logrus.Fields{
+	ph.proxy.Logger.WithFields(logrus.Fields{
 		"requestID":       requestID,
 		"method":          r.Method,
 		"URI":             r.URL.EscapedPath(),
@@ -270,7 +270,7 @@ func (h *ProxyHandler) TransactionLog(r *http.Request, requestID string, workerR
 	}).Info(msg)
 }
 
-func (h *ProxyHandler) RespondForbidden(w http.ResponseWriter, proxyErr *api.Error) {
+func (ph *ProxyHandler) RespondForbidden(w http.ResponseWriter, proxyErr *api.Error) {
 	b, err := json.Marshal(proxyErr)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -281,7 +281,7 @@ func (h *ProxyHandler) RespondForbidden(w http.ResponseWriter, proxyErr *api.Err
 	w.Write(b)
 }
 
-func (h *ProxyHandler) RespondBadRequest(w http.ResponseWriter, proxyErr *api.Error) {
+func (ph *ProxyHandler) RespondBadRequest(w http.ResponseWriter, proxyErr *api.Error) {
 	b, err := json.Marshal(proxyErr)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -292,7 +292,7 @@ func (h *ProxyHandler) RespondBadRequest(w http.ResponseWriter, proxyErr *api.Er
 	w.Write(b)
 }
 
-func (h *ProxyHandler) RespondInternalServerError(w http.ResponseWriter, proxyErr *api.Error) {
+func (ph *ProxyHandler) RespondInternalServerError(w http.ResponseWriter, proxyErr *api.Error) {
 	b, err := json.Marshal(proxyErr)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

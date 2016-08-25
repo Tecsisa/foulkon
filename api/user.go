@@ -117,11 +117,10 @@ func (api AuthAPI) GetUserByExternalID(requestInfo RequestInfo, externalId strin
 				Code:    USER_BY_EXTERNAL_ID_NOT_FOUND,
 				Message: dbError.Message,
 			}
-		} else { // Unexpected error
-			return nil, &Error{
-				Code:    UNKNOWN_API_ERROR,
-				Message: dbError.Message,
-			}
+		}
+		return nil, &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
 		}
 	}
 
@@ -130,17 +129,16 @@ func (api AuthAPI) GetUserByExternalID(requestInfo RequestInfo, externalId strin
 	if err != nil {
 		return nil, err
 	}
+
 	if len(filteredUsers) > 0 {
 		filteredUser := filteredUsers[0]
 		return &filteredUser, nil
-	} else {
-		return nil, &Error{
-			Code: UNAUTHORIZED_RESOURCES_ERROR,
-			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				requestInfo.Identifier, user.Urn),
-		}
 	}
-
+	return nil, &Error{
+		Code: UNAUTHORIZED_RESOURCES_ERROR,
+		Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
+			requestInfo.Identifier, user.Urn),
+	}
 }
 
 func (api AuthAPI) ListUsers(requestInfo RequestInfo, pathPrefix string) ([]string, error) {

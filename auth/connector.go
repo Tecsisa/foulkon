@@ -11,7 +11,7 @@ type Authenticator struct {
 	adminPassword string
 }
 
-// Returns a configured Authenticator with associated connector
+// NewAuthenticator returns a configured Authenticator with associated connector
 func NewAuthenticator(connector AuthConnector, adminUser string, adminPassword string) *Authenticator {
 	return &Authenticator{
 		Connector:     connector,
@@ -42,13 +42,12 @@ func (a *Authenticator) Authenticate(h http.Handler) http.Handler {
 	})
 }
 
-// Retrieve user from request.
+// GetAuthenticatedUser retrieves user from request
 func (a *Authenticator) GetAuthenticatedUser(r *http.Request) (string, bool) {
 	if isAdmin(r, a.adminUser, a.adminPassword) {
 		return a.adminUser, true
-	} else {
-		return a.Connector.RetrieveUserID(*r), false
 	}
+	return a.Connector.RetrieveUserID(*r), false
 }
 
 func isAdmin(r *http.Request, adminUser string, adminPassword string) bool {

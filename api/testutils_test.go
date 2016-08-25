@@ -479,11 +479,10 @@ func checkMethodResponse(t *testing.T, testcase string, expectedError error, rec
 		if receivedError != nil {
 			t.Errorf("Test %v failed: %v", testcase, receivedError)
 			return
-		} else {
-			if diff := pretty.Compare(receivedResponse, expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", testcase, diff)
-				return
-			}
+		}
+		if diff := pretty.Compare(receivedResponse, expectedResponse); diff != "" {
+			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", testcase, diff)
+			return
 		}
 	}
 }
