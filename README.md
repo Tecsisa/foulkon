@@ -12,37 +12,23 @@ This project generates 2 apps:
 - Worker: This is the authorization server itself.
 - Proxy: This proxies the requests to the authorization server (worker).
 
+Installation/deployment docs using Go binaries or Docker:<br />
+- [Worker](doc/deploy/worker.md)
+- [Proxy](doc/deploy/proxy.md)
+
 ## Documentation
 
-Specification docs:<br />
-
+Specification docs:
 - [Specification](doc/spec/README.md)
-
 - [Use case](doc/spec/usecase.md)
-
 - [Internal IAM Actions](doc/spec/action.md)
-
 - [Authorization flow](doc/spec/authorization.md)
 
-<br />
-
-API docs:<br />
-
+API docs:
 - [User](doc/api/user.md)
-
 - [Group](doc/api/group.md)
-
 - [Policy](doc/api/policy.md)
-
 - [Resource](doc/api/resource.md)
-
-<br />
-
-Installation/deployment docs using Go binaries or Docker:<br />
-
-- [Worker](doc/deploy/worker.md)
-
-- [Proxy](doc/deploy/proxy.md)
 
 You can also import this [Postman collection](schema/postman.json) file with all API methods.
 
