@@ -3,7 +3,7 @@ package api
 import (
 	"testing"
 
-	"github.com/tecsisa/foulkon/database"
+	"github.com/Tecsisa/foulkon/database"
 )
 
 func TestGetAuthorizedUsers(t *testing.T) {

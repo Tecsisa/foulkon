@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tecsisa/foulkon/api"
+	"github.com/Tecsisa/foulkon/database"
 	"github.com/satori/go.uuid"
-	"github.com/tecsisa/foulkon/api"
-	"github.com/tecsisa/foulkon/database"
 )
 
 // POLICY REPOSITORY IMPLEMENTATION

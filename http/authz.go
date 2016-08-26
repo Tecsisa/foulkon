@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"fmt"
+	"github.com/Tecsisa/foulkon/api"
 	"github.com/julienschmidt/httprouter"
-	"github.com/tecsisa/foulkon/api"
 )
 
 // REQUESTS

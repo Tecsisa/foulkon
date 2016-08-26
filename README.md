@@ -1,5 +1,6 @@
 # Foulkon
 
+[![Build Status](https://travis-ci.org/Tecsisa/foulkon.svg?branch=master)](https://travis-ci.org/Tecsisa/foulkon)
 [![Join the chat at https://gitter.im/Tecsisa/foulkon](https://badges.gitter.im/Tecsisa/foulkon.svg)](https://gitter.im/Tecsisa/foulkon?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tecsisa/foulkon)](https://goreportcard.com/report/github.com/tecsisa/foulkon)
 

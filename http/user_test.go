@@ -10,8 +10,8 @@ import (
 
 	"fmt"
 
+	"github.com/Tecsisa/foulkon/api"
 	"github.com/kylelemons/godebug/pretty"
-	"github.com/tecsisa/foulkon/api"
 )
 
 func TestWorkerHandler_HandleAddUser(t *testing.T) {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Tecsisa/foulkon/database"
 	"github.com/satori/go.uuid"
-	"github.com/tecsisa/foulkon/database"
 )
 
 // TYPE DEFINITIONS

@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+export PATH=$TEMPDIR:$PATH
+export GOPATH=$GOPATH
+
 echo "--> Running tests"
 echo -e '----> Running unit tests'
 go list ./... | grep -v '/vendor/' | egrep -v '/database/|auth|cmd/|foulkon/foulkon' | PATH=$TEMPDIR:$PATH xargs -n1 go test ${GOTEST_FLAGS:--cover -timeout=900s}
