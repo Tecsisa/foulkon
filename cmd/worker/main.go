@@ -10,9 +10,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/Tecsisa/foulkon/foulkon"
+	internalhttp "github.com/Tecsisa/foulkon/http"
 	"github.com/pelletier/go-toml"
-	"github.com/tecsisa/foulkon/foulkon"
-	internalhttp "github.com/tecsisa/foulkon/http"
 )
 
 func main() {

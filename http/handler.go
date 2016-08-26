@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/Tecsisa/foulkon/api"
+	"github.com/Tecsisa/foulkon/foulkon"
 	"github.com/julienschmidt/httprouter"
 	"github.com/satori/go.uuid"
-	"github.com/tecsisa/foulkon/api"
-	"github.com/tecsisa/foulkon/foulkon"
 )
 
 const (

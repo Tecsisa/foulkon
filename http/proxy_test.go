@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Tecsisa/foulkon/api"
 	"github.com/kylelemons/godebug/pretty"
-	"github.com/tecsisa/foulkon/api"
 )
 
 func TestProxyHandler_HandleRequest(t *testing.T) {

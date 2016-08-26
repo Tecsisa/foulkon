@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tecsisa/foulkon/api"
-	"github.com/tecsisa/foulkon/database"
+	"github.com/Tecsisa/foulkon/api"
+	"github.com/Tecsisa/foulkon/database"
 )
 
 // USER REPOSITORY IMPLEMENTATION

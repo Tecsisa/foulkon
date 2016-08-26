@@ -13,10 +13,10 @@ import (
 	"database/sql"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/Tecsisa/foulkon/api"
+	"github.com/Tecsisa/foulkon/auth"
+	"github.com/Tecsisa/foulkon/database/postgresql"
 	"github.com/pelletier/go-toml"
-	"github.com/tecsisa/foulkon/api"
-	"github.com/tecsisa/foulkon/auth"
-	"github.com/tecsisa/foulkon/database/postgresql"
 )
 
 // aux var for ${OS_ENV_VAR} regex

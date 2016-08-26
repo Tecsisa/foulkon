@@ -3,7 +3,7 @@ package api
 import (
 	"testing"
 
-	"github.com/tecsisa/foulkon/database"
+	"github.com/Tecsisa/foulkon/database"
 )
 
 func TestAuthAPI_AddUser(t *testing.T) {

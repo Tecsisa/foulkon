@@ -8,9 +8,9 @@ import (
 
 	"bytes"
 	log "github.com/Sirupsen/logrus"
-	"github.com/tecsisa/foulkon/api"
-	"github.com/tecsisa/foulkon/auth"
-	"github.com/tecsisa/foulkon/foulkon"
+	"github.com/Tecsisa/foulkon/api"
+	"github.com/Tecsisa/foulkon/auth"
+	"github.com/Tecsisa/foulkon/foulkon"
 )
 
 const (

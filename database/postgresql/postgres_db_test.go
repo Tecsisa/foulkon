@@ -8,8 +8,8 @@ import (
 
 	"errors"
 
+	"github.com/Tecsisa/foulkon/database"
 	"github.com/kylelemons/godebug/pretty"
-	"github.com/tecsisa/foulkon/database"
 )
 
 var repoDB PostgresRepo
