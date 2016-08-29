@@ -71,6 +71,7 @@ func (h *ProxyHandler) HandleRequest(resource foulkon.APIResource) httprouter.Ha
 				h.RespondInternalServerError(w, getErrorMessage(INTERNAL_SERVER_ERROR, "Error reading response from destination"))
 				return
 			}
+			w.WriteHeader(res.StatusCode)
 			w.Write(buffer.Bytes())
 			h.TransactionLog(r, requestID, workerRequestID, "Request accepted")
 		} else {
