@@ -7,7 +7,7 @@ services:
 language: go
 
 go:
-  - tip
+  - 1.7
 
 branches:
   only:
@@ -15,7 +15,8 @@ branches:
 
 before_install:
     - sudo apt-get update
-    - sudo apt-get install -y docker-engine curl
+    - sudo apt-get install -y docker-engine
+    - sudo service docker restart
 
 install:
   - make bootstrap
