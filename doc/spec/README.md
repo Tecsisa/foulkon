@@ -49,7 +49,7 @@ IAM urns are reserved for AuthZ self-management, so, in order to prevent conflic
 urn:ews:product:instance:resource/resourcepath
 ```
 
-- urn: universal resource name
+- urn: uniform resource name
 - ews: external web service (googlews, facebookws, etc).
 - product: product name.
 - instance: instance of your product.

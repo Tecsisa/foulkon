@@ -1,16 +1,10 @@
 #!/bin/sh
 
-usage() { echo "Usage: $0 [-w] [-p]" 1>&2; exit 1; }
-while getopts "wp" arg; do
-case "${arg}" in
-	w)
-/go/bin/worker -config-file=/config_env_vars.toml
-    ;;
-	p)
-/go/bin/proxy -proxy-file=/proxy_env_vars.toml
-    ;;
-	*)
+usage() { echo "Usage: worker|proxy" 1>&2; exit 1; }
+if [ "$1" = 'worker' ]; then
+    worker -config-file=/worker.toml
+elif [ "$1" = 'proxy' ]; then
+    proxy -proxy-file=/proxy.toml
+else
 	usage
-	;;
-esac
-done
+fi

@@ -6,7 +6,7 @@
 Then, you can run the docker image, mounting (-v) a config.toml inside the container (you could also make a custom Dockerfile with "ADD my-custom-conf.toml /my-custom-conf.toml").
 E.g. 
  ```
- docker run -v /home/myuser/foulkon/config.toml:/config.toml tecsisa/foulkon-worker -config-file=/config.toml
+ docker run -v /home/myuser/foulkon/config.toml:/worker.toml tecsisa/foulkon worker
  ```
  
 ## Worker configuration file 

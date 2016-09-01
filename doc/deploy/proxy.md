@@ -6,7 +6,7 @@
 Then, you can run the docker image, mounting (-v) a proxy_config.toml inside the container (you could also make a custom Dockerfile with "ADD my-custom-proxy-config.toml /my-custom-proxy-config.toml").
 E.g. 
  ```
- docker run -v /home/myuser/foulkon/proxy_config.toml:/proxy_config.toml tecsisa/foulkon-proxy -proxy-file=/proxy_config.toml
+ docker run -v /home/myuser/foulkon/proxy_config.toml:/proxy.toml tecsisa/foulkon proxy
  ```
  
 ## Proxy configuration file 
