@@ -11,7 +11,7 @@
       "links": [
         {
           "description": "Get authorized resources according selected action and resources",
-          "href": "/api/v1/authorize",
+          "href": "/api/v1/resource",
           "method": "POST",
           "rel": "self",
           "http_header": {

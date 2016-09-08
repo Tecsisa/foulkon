@@ -143,7 +143,7 @@
       "links": [
         {
           "description": "List all organization's groups",
-          "href": "/api/v1/organizations/{organization_id}/groups?PathPrefix={optional_path_prefix}",
+          "href": "/api/v1/organizations/{organization_id}/groups?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}",
           "method": "GET",
           "rel": "self",
           "http_header": {
@@ -160,6 +160,21 @@
           "items": {
             "type": "string"
           }
+        },
+        "offset": {
+          "description": "The offset of the items returned (as set in the query or by default)",
+          "example": 0,
+          "type": "integer"
+        },
+        "limit": {
+          "description": "The maximum number of items in the response (as set in the query or by default)",
+          "example": 20,
+          "type": "integer"
+        },
+        "total": {
+          "description": "The total number of items available to return",
+          "example": 50,
+          "type": "integer"
         }
       }
     },
@@ -172,7 +187,7 @@
       "links": [
         {
           "description": "List all groups",
-          "href": "/api/v1/groups?PathPrefix={optional_path_prefix}",
+          "href": "/api/v1/groups?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}",
           "method": "GET",
           "rel": "self",
           "http_header": {
@@ -195,6 +210,21 @@
               }
             }
           }
+        },
+        "offset": {
+          "description": "The offset of the items returned (as set in the query or by default)",
+          "example": 0,
+          "type": "integer"
+        },
+        "limit": {
+          "description": "The maximum number of items in the response (as set in the query or by default)",
+          "example": 20,
+          "type": "integer"
+        },
+        "total": {
+          "description": "The total number of items available to return",
+          "example": 50,
+          "type": "integer"
         }
       }
     },
@@ -227,7 +257,7 @@
         },
         {
           "description": "List members of a group",
-          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/users",
+          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/users?Offset={optional_offset}&Limit={optional_limit}",
           "method": "GET",
           "rel": "self",
           "http_header": {
@@ -244,6 +274,21 @@
           "items": {
             "type": "string"
           }
+        },
+        "offset": {
+          "description": "The offset of the items returned (as set in the query or by default)",
+          "example": 0,
+          "type": "integer"
+        },
+        "limit": {
+          "description": "The maximum number of items in the response (as set in the query or by default)",
+          "example": 20,
+          "type": "integer"
+        },
+        "total": {
+          "description": "The total number of items available to return",
+          "example": 50,
+          "type": "integer"
         }
       }
     },
@@ -276,7 +321,7 @@
         },
         {
           "description": "List attach policies",
-          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/policies",
+          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/policies?Offset={optional_offset}&Limit={optional_limit}",
           "method": "GET",
           "rel": "self",
           "http_header": {
@@ -293,6 +338,21 @@
           "items": {
             "type": "string"
           }
+        },
+        "offset": {
+          "description": "The offset of the items returned (as set in the query or by default)",
+          "example": 0,
+          "type": "integer"
+        },
+        "limit": {
+          "description": "The maximum number of items in the response (as set in the query or by default)",
+          "example": 20,
+          "type": "integer"
+        },
+        "total": {
+          "description": "The total number of items available to return",
+          "example": 50,
+          "type": "integer"
         }
       }
     }

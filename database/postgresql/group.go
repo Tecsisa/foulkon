@@ -82,34 +82,36 @@ func (g PostgresRepo) GetGroupById(id string) (*api.Group, error) {
 	return dbGroupToAPIGroup(group), nil
 }
 
-func (g PostgresRepo) GetGroupsFiltered(org string, pathPrefix string) ([]api.Group, error) {
+func (g PostgresRepo) GetGroupsFiltered(org string, filter *api.Filter) ([]api.Group, int, error) {
+	var total int
 	groups := []Group{}
 	query := g.Dbmap
 	if len(org) > 0 {
 		query = query.Where("org like ? ", org)
 	}
-	if len(pathPrefix) > 0 {
-		query = query.Where("path like ? ", pathPrefix+"%")
+	if len(filter.PathPrefix) > 0 {
+		query = query.Where("path like ? ", filter.PathPrefix+"%")
 	}
 	// Error handling
-	if err := query.Find(&groups).Error; err != nil {
-		return nil, &database.Error{
+	if err := query.Find(&groups).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&groups).Error; err != nil {
+		return nil, total, &database.Error{
 			Code:    database.INTERNAL_ERROR,
 			Message: err.Error(),
 		}
 	}
 
 	// Transform users for API
+	var apiGroups []api.Group
 	if groups != nil {
-		apiGroups := make([]api.Group, len(groups), cap(groups))
+		apiGroups = make([]api.Group, len(groups), cap(groups))
 		for i, g := range groups {
 			apiGroups[i] = *dbGroupToAPIGroup(&g)
 		}
-		return apiGroups, nil
+		return apiGroups, total, nil
 	}
 
 	// No data to return
-	return nil, nil
+	return apiGroups, total, nil
 }
 
 func (g PostgresRepo) UpdateGroup(group api.Group, newName string, newPath string, urn string) (*api.Group, error) {
@@ -237,13 +239,14 @@ func (g PostgresRepo) IsMemberOfGroup(userID string, groupID string) (bool, erro
 	return true, nil
 }
 
-func (g PostgresRepo) GetGroupMembers(groupID string) ([]api.User, error) {
+func (g PostgresRepo) GetGroupMembers(groupID string, filter *api.Filter) ([]api.User, int, error) {
+	var total int
 	members := []GroupUserRelation{}
 	query := g.Dbmap.Where("group_id like ?", groupID)
 
 	// Error handling
-	if err := query.Find(&members).Error; err != nil {
-		return nil, &database.Error{
+	if err := query.Find(&members).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&members).Error; err != nil {
+		return nil, total, &database.Error{
 			Code:    database.INTERNAL_ERROR,
 			Message: err.Error(),
 		}
@@ -257,7 +260,7 @@ func (g PostgresRepo) GetGroupMembers(groupID string) ([]api.User, error) {
 			user, err := g.GetUserByID(m.UserID)
 			// Error handling
 			if err != nil {
-				return nil, &database.Error{
+				return nil, total, &database.Error{
 					Code:    database.INTERNAL_ERROR,
 					Message: err.Error(),
 				}
@@ -267,7 +270,7 @@ func (g PostgresRepo) GetGroupMembers(groupID string) ([]api.User, error) {
 		}
 	}
 
-	return apiUsers, nil
+	return apiUsers, total, nil
 }
 
 func (g PostgresRepo) AttachPolicy(groupID string, policyID string) error {
@@ -326,13 +329,14 @@ func (g PostgresRepo) IsAttachedToGroup(groupID string, policyID string) (bool, 
 	return true, nil
 }
 
-func (g PostgresRepo) GetAttachedPolicies(groupID string) ([]api.Policy, error) {
+func (g PostgresRepo) GetAttachedPolicies(groupID string, filter *api.Filter) ([]api.Policy, int, error) {
+	var total int
 	relations := []GroupPolicyRelation{}
-	query := g.Dbmap.Where("group_id like ?", groupID).Find(&relations)
+	query := g.Dbmap.Where("group_id like ?", groupID)
 
 	// Error Handling
-	if err := query.Error; err != nil {
-		return nil, &database.Error{
+	if err := query.Find(&relations).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&relations).Error; err != nil {
+		return nil, total, &database.Error{
 			Code:    database.INTERNAL_ERROR,
 			Message: err.Error(),
 		}
@@ -345,7 +349,7 @@ func (g PostgresRepo) GetAttachedPolicies(groupID string) ([]api.Policy, error) 
 			policy, err := g.GetPolicyById(r.PolicyID)
 			// Error handling
 			if err != nil {
-				return nil, &database.Error{
+				return nil, total, &database.Error{
 					Code:    database.INTERNAL_ERROR,
 					Message: err.Error(),
 				}
@@ -355,7 +359,7 @@ func (g PostgresRepo) GetAttachedPolicies(groupID string) ([]api.Policy, error) 
 		}
 	}
 
-	return apiPolicies, nil
+	return apiPolicies, total, nil
 }
 
 // PRIVATE HELPER METHODS

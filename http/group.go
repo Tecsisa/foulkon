@@ -24,18 +24,30 @@ type UpdateGroupRequest struct {
 
 type ListGroupsResponse struct {
 	Groups []string `json:"groups, omitempty"`
+	Limit  int      `json:"limit, omitempty"`
+	Offset int      `json:"offset, omitempty"`
+	Total  int      `json:"total, omitempty"`
 }
 
 type ListAllGroupsResponse struct {
 	Groups []api.GroupIdentity `json:"groups, omitempty"`
+	Limit  int                 `json:"limit, omitempty"`
+	Offset int                 `json:"offset, omitempty"`
+	Total  int                 `json:"total, omitempty"`
 }
 
 type ListMembersResponse struct {
 	Members []string `json:"members, omitempty"`
+	Limit   int      `json:"limit, omitempty"`
+	Offset  int      `json:"offset, omitempty"`
+	Total   int      `json:"total, omitempty"`
 }
 
 type ListAttachedGroupPoliciesResponse struct {
 	AttachedPolicies []string `json:"policies, omitempty"`
+	Limit            int      `json:"limit, omitempty"`
+	Offset           int      `json:"offset, omitempty"`
+	Total            int      `json:"total, omitempty"`
 }
 
 // HANDLERS
@@ -117,11 +129,17 @@ func (h *WorkerHandler) HandleListGroups(w http.ResponseWriter, r *http.Request,
 	// Retrieve group org from path
 	org := ps.ByName(ORG_NAME)
 
-	// Retrieve query param if exists
-	pathPrefix := r.URL.Query().Get("PathPrefix")
+	// Retrieve filterData
+	filterData, err := getFilterData(r)
+	if err != nil {
+		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
+		h.RespondBadRequest(r, requestInfo, w, apiError)
+		return
+	}
 
 	// Call group API to retrieve groups
-	result, err := h.worker.GroupApi.ListGroups(requestInfo, org, pathPrefix)
+	result, total, err := h.worker.GroupApi.ListGroups(requestInfo, org, filterData)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -145,6 +163,9 @@ func (h *WorkerHandler) HandleListGroups(w http.ResponseWriter, r *http.Request,
 	// Create response
 	response := &ListGroupsResponse{
 		Groups: groups,
+		Offset: filterData.Offset,
+		Limit:  filterData.Limit,
+		Total:  total,
 	}
 
 	// Return groups
@@ -153,11 +174,18 @@ func (h *WorkerHandler) HandleListGroups(w http.ResponseWriter, r *http.Request,
 
 func (h *WorkerHandler) HandleListAllGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	requestInfo := h.GetRequestInfo(r)
-	// get PathPrefix from request, so the query can be filtered
-	pathPrefix := r.URL.Query().Get("PathPrefix")
+
+	// Retrieve filterData
+	filterData, err := getFilterData(r)
+	if err != nil {
+		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
+		h.RespondBadRequest(r, requestInfo, w, apiError)
+		return
+	}
 
 	// Call group API to retrieve groups
-	result, err := h.worker.GroupApi.ListGroups(requestInfo, "", pathPrefix)
+	result, total, err := h.worker.GroupApi.ListGroups(requestInfo, "", filterData)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -176,6 +204,9 @@ func (h *WorkerHandler) HandleListAllGroups(w http.ResponseWriter, r *http.Reque
 	// Create response
 	response := &ListAllGroupsResponse{
 		Groups: result,
+		Offset: filterData.Offset,
+		Limit:  filterData.Limit,
+		Total:  total,
 	}
 
 	// Return groups
@@ -326,8 +357,17 @@ func (h *WorkerHandler) HandleListMembers(w http.ResponseWriter, r *http.Request
 	org := ps.ByName(ORG_NAME)
 	group := ps.ByName(GROUP_NAME)
 
+	// Retrieve filterData
+	filterData, err := getFilterData(r)
+	if err != nil {
+		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
+		h.RespondBadRequest(r, requestInfo, w, apiError)
+		return
+	}
+
 	// Call group API to list members
-	result, err := h.worker.GroupApi.ListMembers(requestInfo, org, group)
+	result, total, err := h.worker.GroupApi.ListMembers(requestInfo, org, group, filterData)
 
 	// Check errors
 	if err != nil {
@@ -350,6 +390,9 @@ func (h *WorkerHandler) HandleListMembers(w http.ResponseWriter, r *http.Request
 	// Create response
 	response := &ListMembersResponse{
 		Members: result,
+		Offset:  filterData.Offset,
+		Limit:   filterData.Limit,
+		Total:   total,
 	}
 
 	// Write GroupMembers to response
@@ -428,8 +471,17 @@ func (h *WorkerHandler) HandleListAttachedGroupPolicies(w http.ResponseWriter, r
 	org := ps.ByName(ORG_NAME)
 	groupName := ps.ByName(GROUP_NAME)
 
+	// Retrieve filterData
+	filterData, err := getFilterData(r)
+	if err != nil {
+		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
+		h.RespondBadRequest(r, requestInfo, w, apiError)
+		return
+	}
+
 	// Call group API to retrieve attached policies
-	result, err := h.worker.GroupApi.ListAttachedGroupPolicies(requestInfo, org, groupName)
+	result, total, err := h.worker.GroupApi.ListAttachedGroupPolicies(requestInfo, org, groupName, filterData)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -450,6 +502,9 @@ func (h *WorkerHandler) HandleListAttachedGroupPolicies(w http.ResponseWriter, r
 	// Create response
 	response := &ListAttachedGroupPoliciesResponse{
 		AttachedPolicies: result,
+		Offset:           filterData.Offset,
+		Limit:            filterData.Limit,
+		Total:            total,
 	}
 
 	// Return group policies

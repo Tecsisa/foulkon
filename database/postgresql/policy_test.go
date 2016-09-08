@@ -372,14 +372,18 @@ func TestPostgresRepo_GetPoliciesFiltered(t *testing.T) {
 		policy     *Policy
 		statements []Statement
 		// Postgres Repo Args
-		org        string
-		pathPrefix string
+		org    string
+		filter *api.Filter
 		// Expected result
 		expectedResponse []api.Policy
 	}{
 		"OkCase": {
-			org:        "org1",
-			pathPrefix: "/path/",
+			org: "org1",
+			filter: &api.Filter{
+				PathPrefix: "/path/",
+				Offset:     0,
+				Limit:      20,
+			},
 			policy: &Policy{
 				ID:       "1234",
 				Name:     "test",
@@ -420,8 +424,12 @@ func TestPostgresRepo_GetPoliciesFiltered(t *testing.T) {
 			},
 		},
 		"OKCaseNotFound": {
-			org:              "org1",
-			pathPrefix:       "test",
+			org: "org1",
+			filter: &api.Filter{
+				PathPrefix: "test",
+				Offset:     0,
+				Limit:      20,
+			},
 			expectedResponse: []api.Policy{},
 		},
 	}
@@ -439,9 +447,14 @@ func TestPostgresRepo_GetPoliciesFiltered(t *testing.T) {
 			}
 		}
 		// Call to repository to get a policy
-		receivedPolicy, err := repoDB.GetPoliciesFiltered(test.org, test.pathPrefix)
+		receivedPolicy, total, err := repoDB.GetPoliciesFiltered(test.org, test.filter)
 		if err != nil {
 			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+			continue
+		}
+		// Check total
+		if total != len(test.expectedResponse) {
+			t.Errorf("Test %v failed. Received different total elements: %v", n, total)
 			continue
 		}
 		// Check response
@@ -679,6 +692,7 @@ func TestPostgresRepo_GetAttachedGroups(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		previousPolicy   *api.Policy
+		filter           *api.Filter
 		group            *api.Group
 		expectedResponse []api.Group
 	}{
@@ -702,6 +716,7 @@ func TestPostgresRepo_GetAttachedGroups(t *testing.T) {
 					},
 				},
 			},
+			filter: testFilter,
 			group: &api.Group{
 				ID:       "GroupID",
 				Name:     "Name",
@@ -750,9 +765,14 @@ func TestPostgresRepo_GetAttachedGroups(t *testing.T) {
 			}
 		}
 
-		groups, err := repoDB.GetAttachedGroups(test.previousPolicy.ID)
+		groups, total, err := repoDB.GetAttachedGroups(test.previousPolicy.ID, test.filter)
 		if err != nil {
 			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+			continue
+		}
+		// Check total
+		if total != len(test.expectedResponse) {
+			t.Errorf("Test %v failed. Received different total elements: %v", n, total)
 			continue
 		}
 		// Check response

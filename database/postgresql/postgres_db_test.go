@@ -8,11 +8,17 @@ import (
 
 	"errors"
 
+	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/database"
 	"github.com/kylelemons/godebug/pretty"
 )
 
 var repoDB PostgresRepo
+var testFilter = &api.Filter{
+	PathPrefix: "",
+	Offset:     0,
+	Limit:      0,
+}
 
 func TestMain(m *testing.M) {
 	// Wait for DB

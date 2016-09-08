@@ -344,26 +344,50 @@ func TestWorkerHandler_HandleGetUserByExternalID(t *testing.T) {
 func TestWorkerHandler_HandleListUsers(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		pathPrefix string
+		filter       *api.Filter
+		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
 		expectedResponse   GetUserExternalIDsResponse
 		expectedError      api.Error
 		// Manager Results
 		getUserListResult []string
+		totalResult       int
 		// Manager Errors
 		getUserListErr error
 	}{
 		"OkCase": {
-			pathPrefix:         "myPath",
+			filter: &api.Filter{
+				PathPrefix: "myPath",
+				Offset:     0,
+				Limit:      0,
+			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: GetUserExternalIDsResponse{
 				ExternalIDs: []string{"userId1", "userId2"},
+				Offset:      0,
+				Limit:       0,
+				Total:       2,
 			},
 			getUserListResult: []string{"userId1", "userId2"},
+			totalResult:       2,
+		},
+		"ErrorCaseInvalidFilterParams": {
+			filter: &api.Filter{
+				PathPrefix: "",
+				Limit:      -1,
+			},
+			ignoreArgsIn:       true,
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Limit -1",
+			},
 		},
 		"ErrorCaseUnauthorizedError": {
-			pathPrefix:         "myPath",
+			filter: &api.Filter{
+				PathPrefix: "myPath",
+			},
 			expectedStatusCode: http.StatusForbidden,
 			expectedError: api.Error{
 				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
@@ -374,7 +398,24 @@ func TestWorkerHandler_HandleListUsers(t *testing.T) {
 				Message: "Error",
 			},
 		},
+		"ErrorCaseInvalidParameterError": {
+			filter: &api.Filter{
+				PathPrefix: "Invalid",
+				Offset:     0,
+				Limit:      0,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid Path",
+			},
+			getUserListErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid Path",
+			},
+		},
 		"ErrorCaseUnknownApiError": {
+			filter:             testFilter,
 			expectedStatusCode: http.StatusInternalServerError,
 			getUserListErr: &api.Error{
 				Code:    api.UNKNOWN_API_ERROR,
@@ -388,7 +429,8 @@ func TestWorkerHandler_HandleListUsers(t *testing.T) {
 	for n, test := range testcases {
 
 		testApi.ArgsOut[ListUsersMethod][0] = test.getUserListResult
-		testApi.ArgsOut[ListUsersMethod][1] = test.getUserListErr
+		testApi.ArgsOut[ListUsersMethod][1] = test.totalResult
+		testApi.ArgsOut[ListUsersMethod][2] = test.getUserListErr
 
 		url := fmt.Sprintf(server.URL + USER_ROOT_URL)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -397,22 +439,23 @@ func TestWorkerHandler_HandleListUsers(t *testing.T) {
 			continue
 		}
 
-		if test.pathPrefix != "" {
-			q := req.URL.Query()
-			q.Add("PathPrefix", test.pathPrefix)
-			req.URL.RawQuery = q.Encode()
-		}
+		addQueryParams(test.filter, req)
 
 		res, err := client.Do(req)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
 			continue
 		}
-
-		// Check received parameter
-		if testApi.ArgsIn[ListUsersMethod][1] != test.pathPrefix {
-			t.Errorf("Test case %v. Received different PathPrefix (wanted:%v / received:%v)", n, test.pathPrefix, testApi.ArgsIn[ListUsersMethod][1])
-			continue
+		if !test.ignoreArgsIn {
+			// Check received parameter
+			filterData, ok := testApi.ArgsIn[ListUsersMethod][1].(*api.Filter)
+			if ok {
+				// Check result
+				if diff := pretty.Compare(filterData, test.filter); diff != "" {
+					t.Errorf("Test %v failed. Received different filters (received/wanted) %v", n, diff)
+					continue
+				}
+			}
 		}
 
 		// check status code
@@ -750,18 +793,22 @@ func TestWorkerHandler_HandleRemoveUser(t *testing.T) {
 func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		externalID string
+		externalID   string
+		filter       *api.Filter
+		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
 		expectedResponse   GetGroupsByUserIdResponse
 		expectedError      api.Error
 		// Manager Results
 		getGroupsByUserIdResult []api.GroupIdentity
+		totalGroupsResult       int
 		// Manager Errors
 		getGroupsByUserIdErr error
 	}{
 		"OkCase": {
 			externalID:         "UserID",
+			filter:             testFilter,
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: GetGroupsByUserIdResponse{
 				Groups: []api.GroupIdentity{
@@ -774,6 +821,9 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 						Name: "group2",
 					},
 				},
+				Offset: 0,
+				Limit:  0,
+				Total:  2,
 			},
 			getGroupsByUserIdResult: []api.GroupIdentity{
 				{
@@ -785,9 +835,24 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 					Name: "group2",
 				},
 			},
+			totalGroupsResult: 2,
+		},
+		"ErrorCaseInvalidFilterParams": {
+			externalID: "UserID",
+			filter: &api.Filter{
+				PathPrefix: "",
+				Limit:      -1,
+			},
+			ignoreArgsIn:       true,
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Limit -1",
+			},
 		},
 		"ErrorCaseUserNotExist": {
 			externalID:         "UserID",
+			filter:             testFilter,
 			expectedStatusCode: http.StatusNotFound,
 			expectedError: api.Error{
 				Code:    api.USER_BY_EXTERNAL_ID_NOT_FOUND,
@@ -800,6 +865,7 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 		},
 		"ErrorCaseInvalidParameterError": {
 			externalID:         "InvalidID",
+			filter:             testFilter,
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
@@ -812,6 +878,7 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 		},
 		"ErrorCaseUnauthorizedResourcesError": {
 			externalID:         "UnauthorizedID",
+			filter:             testFilter,
 			expectedStatusCode: http.StatusForbidden,
 			expectedError: api.Error{
 				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
@@ -824,6 +891,7 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 		},
 		"ErrorCaseUnknownApiError": {
 			externalID:         "ExceptionID",
+			filter:             testFilter,
 			expectedStatusCode: http.StatusInternalServerError,
 			getGroupsByUserIdErr: &api.Error{
 				Code:    api.UNKNOWN_API_ERROR,
@@ -837,7 +905,8 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 	for n, test := range testcases {
 
 		testApi.ArgsOut[ListGroupsByUserMethod][0] = test.getGroupsByUserIdResult
-		testApi.ArgsOut[ListGroupsByUserMethod][1] = test.getGroupsByUserIdErr
+		testApi.ArgsOut[ListGroupsByUserMethod][1] = test.totalGroupsResult
+		testApi.ArgsOut[ListGroupsByUserMethod][2] = test.getGroupsByUserIdErr
 
 		url := fmt.Sprintf(server.URL+USER_ROOT_URL+"/%v/groups", test.externalID)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -846,16 +915,27 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 			continue
 		}
 
+		addQueryParams(test.filter, req)
+
 		res, err := client.Do(req)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
 			continue
 		}
-
-		// Check received parameters
-		if testApi.ArgsIn[ListGroupsByUserMethod][1] != test.externalID {
-			t.Errorf("Test case %v. Received different ExternalID (wanted:%v / received:%v)", n, test.externalID, testApi.ArgsIn[ListGroupsByUserMethod][1])
-			continue
+		if !test.ignoreArgsIn {
+			// Check received parameters
+			if testApi.ArgsIn[ListGroupsByUserMethod][1] != test.externalID {
+				t.Errorf("Test case %v. Received different ExternalID (wanted:%v / received:%v)", n, test.externalID, testApi.ArgsIn[ListGroupsByUserMethod][1])
+				continue
+			}
+			filterData, ok := testApi.ArgsIn[ListGroupsByUserMethod][2].(*api.Filter)
+			if ok {
+				// Check result
+				if diff := pretty.Compare(filterData, test.filter); diff != "" {
+					t.Errorf("Test %v failed. Received different filters (received/wanted) %v", n, diff)
+					continue
+				}
+			}
 		}
 
 		// check status code

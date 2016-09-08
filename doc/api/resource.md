@@ -14,7 +14,7 @@ Resource API
 Get authorized resources according selected action and resources
 
 ```
-POST /api/v1/authorize
+POST /api/v1/resource
 ```
 
 #### Required Parameters
@@ -29,7 +29,7 @@ POST /api/v1/authorize
 #### Curl Example
 
 ```bash
-$ curl -n -X POST /api/v1/authorize \
+$ curl -n -X POST /api/v1/resource \
   -d '{
   "action": "example:Read",
   "resources": [

@@ -282,7 +282,7 @@ func TestPostgresRepo_GetUsersFiltered(t *testing.T) {
 		// Previous data
 		previousUsers []api.User
 		// Postgres Repo Args
-		pathPrefix string
+		filter *api.Filter
 		// Expected result
 		expectedResponse []api.User
 	}{
@@ -303,7 +303,11 @@ func TestPostgresRepo_GetUsersFiltered(t *testing.T) {
 					CreateAt:   now,
 				},
 			},
-			pathPrefix: "Path",
+			filter: &api.Filter{
+				PathPrefix: "Path",
+				Offset:     0,
+				Limit:      20,
+			},
 			expectedResponse: []api.User{
 				{
 					ID:         "UserID1",
@@ -338,7 +342,11 @@ func TestPostgresRepo_GetUsersFiltered(t *testing.T) {
 					CreateAt:   now,
 				},
 			},
-			pathPrefix: "Path123",
+			filter: &api.Filter{
+				PathPrefix: "Path123",
+				Offset:     0,
+				Limit:      20,
+			},
 			expectedResponse: []api.User{
 				{
 					ID:         "UserID1",
@@ -366,7 +374,11 @@ func TestPostgresRepo_GetUsersFiltered(t *testing.T) {
 					CreateAt:   now,
 				},
 			},
-			pathPrefix:       "NoPath",
+			filter: &api.Filter{
+				PathPrefix: "NoPath",
+				Offset:     0,
+				Limit:      20,
+			},
 			expectedResponse: []api.User{},
 		},
 	}
@@ -386,9 +398,14 @@ func TestPostgresRepo_GetUsersFiltered(t *testing.T) {
 			}
 		}
 		// Call to repository to get users
-		receivedUsers, err := repoDB.GetUsersFiltered(test.pathPrefix)
+		receivedUsers, total, err := repoDB.GetUsersFiltered(test.filter)
 		if err != nil {
 			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+			continue
+		}
+		// Check total
+		if total != len(test.expectedResponse) {
+			t.Errorf("Test %v failed. Received different total elements: %v", n, total)
 			continue
 		}
 		// Check response
@@ -569,6 +586,7 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 		relation *relation
 		// Postgres Repo Args
 		userID string
+		filter *api.Filter
 		// Expected result
 		expectedResponse []api.Group
 		expectedError    *database.Error
@@ -596,6 +614,7 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 				},
 			},
 			userID: "UserID",
+			filter: testFilter,
 			expectedResponse: []api.Group{
 				{
 					ID:       "GroupID1",
@@ -629,6 +648,7 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 				groupNotFound: true,
 			},
 			userID: "UserID",
+			filter: testFilter,
 			expectedError: &database.Error{
 				Code:    database.INTERNAL_ERROR,
 				Message: "Code: GroupNotFound, Message: Group with id GroupID1 not found",
@@ -659,7 +679,7 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 			}
 		}
 		// Call to repository to get groups associated
-		receivedUsers, err := repoDB.GetGroupsByUserID(test.userID)
+		receivedUsers, total, err := repoDB.GetGroupsByUserID(test.userID, test.filter)
 		if test.expectedError != nil {
 			dbError, ok := err.(*database.Error)
 			if !ok || dbError == nil {
@@ -673,6 +693,11 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 		} else {
 			if err != nil {
 				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
+				continue
+			}
+			// Check total
+			if total != len(test.expectedResponse) {
+				t.Errorf("Test %v failed. Received different total elements: %v", n, total)
 				continue
 			}
 			// Check response

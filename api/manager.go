@@ -18,6 +18,14 @@ type AuthAPI struct {
 	Logger     *log.Logger
 }
 
+// Filter properties for database search
+type Filter struct {
+	PathPrefix string
+	// Pagination
+	Offset int
+	Limit  int
+}
+
 // API INTERFACES WITH AUTHORIZATION
 
 type UserAPI interface {
@@ -31,7 +39,7 @@ type UserAPI interface {
 
 	// Retrieve user identifiers from database filtered by pathPrefix (optional parameter). Throw error
 	// if pathPrefix is invalid or unexpected error happen.
-	ListUsers(requestInfo RequestInfo, pathPrefix string) ([]string, error)
+	ListUsers(requestInfo RequestInfo, filter *Filter) ([]string, int, error)
 
 	// Update user stored in database with new pathPrefix. Throw error if the input parameters
 	// are invalid, user doesn't exist or unexpected error happen.
@@ -43,7 +51,7 @@ type UserAPI interface {
 
 	// Retrieve groups that belongs to the user. Throw error if externalId parameter is invalid, user
 	// doesn't exist or unexpected error happen.
-	ListGroupsByUser(requestInfo RequestInfo, externalId string) ([]GroupIdentity, error)
+	ListGroupsByUser(requestInfo RequestInfo, externalId string, filter *Filter) ([]GroupIdentity, int, error)
 }
 
 type GroupAPI interface {
@@ -57,7 +65,7 @@ type GroupAPI interface {
 
 	// Retrieve group identifiers from database filtered by org and pathPrefix parameters. These input parameters are optional.
 	// Throw error if the input parameters are invalid or unexpected error happen.
-	ListGroups(requestInfo RequestInfo, org string, pathPrefix string) ([]GroupIdentity, error)
+	ListGroups(requestInfo RequestInfo, org string, filter *Filter) ([]GroupIdentity, int, error)
 
 	// Update group stored in database with new name and pathPrefix.
 	// Throw error if the input parameters are invalid, group to update doesn't exist,
@@ -78,7 +86,7 @@ type GroupAPI interface {
 
 	// List user identifiers that belong to the group. Throw error if the input parameters are invalid,
 	// group doesn't exist or unexpected error happen.
-	ListMembers(requestInfo RequestInfo, org string, groupName string) ([]string, error)
+	ListMembers(requestInfo RequestInfo, org string, groupName string, filter *Filter) ([]string, int, error)
 
 	// Attach policy to group. Throw error if the input parameters are invalid, policy doesn't exist,
 	// group doesn't exist, policy is already attached to the group or unexpected error happen.
@@ -90,7 +98,7 @@ type GroupAPI interface {
 
 	// Retrieve name of policies that are attached to the group. Throw error if the input parameters are invalid,
 	// group doesn't exist or unexpected error happen.
-	ListAttachedGroupPolicies(requestInfo RequestInfo, org string, groupName string) ([]string, error)
+	ListAttachedGroupPolicies(requestInfo RequestInfo, org string, groupName string, filter *Filter) ([]string, int, error)
 }
 
 type PolicyAPI interface {
@@ -104,7 +112,7 @@ type PolicyAPI interface {
 
 	// Retrieve policy identifiers from database filtered by org and pathPrefix parameters. These input parameters are optional.
 	// Throw error if the input parameters are invalid or unexpected error happen.
-	ListPolicies(requestInfo RequestInfo, org string, pathPrefix string) ([]PolicyIdentity, error)
+	ListPolicies(requestInfo RequestInfo, org string, filter *Filter) ([]PolicyIdentity, int, error)
 
 	// Update policy stored in database with new name, new pathPrefix and new statements.
 	// It overrides older statements. Throw error if the input parameters are invalid,
@@ -118,7 +126,7 @@ type PolicyAPI interface {
 
 	// Retrieve name of groups that are attached to the policy. Throw error if the input parameters are invalid,
 	// policy doesn't exist or unexpected error happen.
-	ListAttachedGroups(requestInfo RequestInfo, org string, name string) ([]string, error)
+	ListAttachedGroups(requestInfo RequestInfo, org string, name string, filter *Filter) ([]string, int, error)
 }
 
 type AuthzAPI interface {
@@ -151,7 +159,7 @@ type UserRepo interface {
 
 	// Retrieve user list from database filtered by pathPrefix optional parameter. Throw error
 	// if there are problems with database.
-	GetUsersFiltered(pathPrefix string) ([]User, error)
+	GetUsersFiltered(filter *Filter) ([]User, int, error)
 
 	// Update user stored in database with new pathPrefix. Throw error if the database restrictions
 	// are not satisfied or unexpected error happen.
@@ -163,7 +171,7 @@ type UserRepo interface {
 
 	// Retrieve groups that belong to the user. Throw error
 	// if there are problems with database.
-	GetGroupsByUserID(id string) ([]Group, error)
+	GetGroupsByUserID(id string, filter *Filter) ([]Group, int, error)
 }
 
 // GroupRepo contains all database operations
@@ -176,7 +184,7 @@ type GroupRepo interface {
 
 	// Retrieve groups from database filtered by org and pathPrefix optional parameters. Throw error
 	// if there are problems with database.
-	GetGroupsFiltered(org string, pathPrefix string) ([]Group, error)
+	GetGroupsFiltered(org string, filter *Filter) ([]Group, int, error)
 
 	// Update group stored in database with new name and pathPrefix.
 	// Throw error if there are problems with database.
@@ -199,7 +207,7 @@ type GroupRepo interface {
 	IsMemberOfGroup(userID string, groupID string) (bool, error)
 
 	// Retrieve users that belong to the group. Throw error if there are problems with database.
-	GetGroupMembers(groupID string) ([]User, error)
+	GetGroupMembers(groupID string, filter *Filter) ([]User, int, error)
 
 	// Attach policy to group. It doesn't check restrictions about existence of group or policy. It throws
 	// errors if there are problems with database.
@@ -214,7 +222,7 @@ type GroupRepo interface {
 	IsAttachedToGroup(groupID string, policyID string) (bool, error)
 
 	// Retrieve policies that are attached to the group. Throw error if there are problems with database.
-	GetAttachedPolicies(groupID string) ([]Policy, error)
+	GetAttachedPolicies(groupID string, filter *Filter) ([]Policy, int, error)
 }
 
 // PolicyRepo contains all database operations
@@ -227,7 +235,7 @@ type PolicyRepo interface {
 
 	// Retrieve policies from database filtered by org and pathPrefix optional parameters. Throw error
 	// if there are problems with database.
-	GetPoliciesFiltered(org string, pathPrefix string) ([]Policy, error)
+	GetPoliciesFiltered(org string, filter *Filter) ([]Policy, int, error)
 
 	// Update policy stored in database with new name and pathPrefix. Also it overrides statements.
 	// Throw error if there are problems with database.
@@ -238,5 +246,5 @@ type PolicyRepo interface {
 	RemovePolicy(id string) error
 
 	// Retrieve groups that are attached to the policy. Throw error if there are problems with database.
-	GetAttachedGroups(policyID string) ([]Group, error)
+	GetAttachedGroups(policyID string, filter *Filter) ([]Group, int, error)
 }

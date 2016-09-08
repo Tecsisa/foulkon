@@ -360,23 +360,32 @@ func TestWorkerHandler_HandleGetGroupByName(t *testing.T) {
 func TestWorkerHandler_HandleListGroups(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		org        string
-		pathPrefix string
+		org          string
+		filter       *api.Filter
+		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
 		expectedResponse   ListGroupsResponse
 		expectedError      api.Error
 		// Manager Results
 		getListGroupResult []api.GroupIdentity
+		totalGroupsResult  int
 		// Manager Errors
 		getListGroupsErr error
 	}{
 		"OkCase": {
-			org:                "org1",
-			pathPrefix:         "path",
+			org: "org1",
+			filter: &api.Filter{
+				PathPrefix: "path",
+				Offset:     0,
+				Limit:      0,
+			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: ListGroupsResponse{
 				Groups: []string{"group1"},
+				Offset: 0,
+				Limit:  0,
+				Total:  1,
 			},
 			getListGroupResult: []api.GroupIdentity{
 				{
@@ -384,10 +393,27 @@ func TestWorkerHandler_HandleListGroups(t *testing.T) {
 					Name: "group1",
 				},
 			},
+			totalGroupsResult: 1,
+		},
+		"ErrorCaseInvalidFilterParams": {
+			filter: &api.Filter{
+				PathPrefix: "",
+				Offset:     -1,
+			},
+			ignoreArgsIn:       true,
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
 		},
 		"ErrorCaseUnauthorizedError": {
-			org:                "org1",
-			pathPrefix:         "Path",
+			org: "org1",
+			filter: &api.Filter{
+				PathPrefix: "Path",
+				Offset:     0,
+				Limit:      0,
+			},
 			expectedStatusCode: http.StatusForbidden,
 			expectedError: api.Error{
 				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
@@ -399,8 +425,12 @@ func TestWorkerHandler_HandleListGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidParameterError": {
-			org:                "org1",
-			pathPrefix:         "Invalid",
+			org: "org1",
+			filter: &api.Filter{
+				PathPrefix: "Invalid",
+				Offset:     0,
+				Limit:      0,
+			},
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
@@ -412,8 +442,12 @@ func TestWorkerHandler_HandleListGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnknownApiError": {
-			org:                "org1",
-			pathPrefix:         "path",
+			org: "org1",
+			filter: &api.Filter{
+				PathPrefix: "path",
+				Offset:     0,
+				Limit:      0,
+			},
 			expectedStatusCode: http.StatusInternalServerError,
 			getListGroupsErr: &api.Error{
 				Code:    api.UNKNOWN_API_ERROR,
@@ -427,20 +461,17 @@ func TestWorkerHandler_HandleListGroups(t *testing.T) {
 	for n, test := range testcases {
 
 		testApi.ArgsOut[ListGroupsMethod][0] = test.getListGroupResult
-		testApi.ArgsOut[ListGroupsMethod][1] = test.getListGroupsErr
+		testApi.ArgsOut[ListGroupsMethod][1] = test.totalGroupsResult
+		testApi.ArgsOut[ListGroupsMethod][2] = test.getListGroupsErr
 
-		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/groups?PathPrefix=", test.org, test.pathPrefix)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/groups", test.org)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
 		}
 
-		if test.pathPrefix != "" {
-			q := req.URL.Query()
-			q.Add("PathPrefix", test.pathPrefix)
-			req.URL.RawQuery = q.Encode()
-		}
+		addQueryParams(test.filter, req)
 
 		res, err := client.Do(req)
 		if err != nil {
@@ -448,14 +479,20 @@ func TestWorkerHandler_HandleListGroups(t *testing.T) {
 			continue
 		}
 
-		// Check received parameter
-		if testApi.ArgsIn[ListGroupsMethod][1] != test.org {
-			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[ListGroupsMethod][1])
-			continue
-		}
-		if testApi.ArgsIn[ListGroupsMethod][2] != test.pathPrefix {
-			t.Errorf("Test case %v. Received different PathPrefix (wanted:%v / received:%v)", n, test.pathPrefix, testApi.ArgsIn[ListGroupsMethod][2])
-			continue
+		if !test.ignoreArgsIn {
+			// Check received parameter
+			if testApi.ArgsIn[ListGroupsMethod][1] != test.org {
+				t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[ListGroupsMethod][1])
+				continue
+			}
+			filterData, ok := testApi.ArgsIn[ListGroupsMethod][2].(*api.Filter)
+			if ok {
+				// Check result
+				if diff := pretty.Compare(filterData, test.filter); diff != "" {
+					t.Errorf("Test %v failed. Received different filters (received/wanted) %v", n, diff)
+					continue
+				}
+			}
 		}
 
 		// check status code
@@ -498,26 +535,33 @@ func TestWorkerHandler_HandleListGroups(t *testing.T) {
 func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		pathPrefix string
+		filter       *api.Filter
+		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
 		expectedResponse   ListAllGroupsResponse
 		expectedError      api.Error
 		// Manager Results
 		getListAllGroupResult []api.GroupIdentity
+		totalGroupsResult     int
 		// Manager Errors
 		getListAllGroupErr error
 	}{
 		"OkCase": {
-			pathPrefix:         "/path/",
+			filter: &api.Filter{
+				PathPrefix: "/path/",
+			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: ListAllGroupsResponse{
-				[]api.GroupIdentity{
+				Groups: []api.GroupIdentity{
 					{
 						Org:  "org1",
 						Name: "group1",
 					},
 				},
+				Offset: 0,
+				Limit:  0,
+				Total:  1,
 			},
 			getListAllGroupResult: []api.GroupIdentity{
 				{
@@ -525,9 +569,26 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 					Name: "group1",
 				},
 			},
+			totalGroupsResult: 1,
+		},
+		"ErrorCaseInvalidFilterParams": {
+			filter: &api.Filter{
+				PathPrefix: "",
+				Offset:     -1,
+			},
+			ignoreArgsIn:       true,
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
 		},
 		"ErrorCaseUnauthorizedError": {
-			pathPrefix:         "/path/",
+			filter: &api.Filter{
+				PathPrefix: "/path/",
+				Offset:     0,
+				Limit:      0,
+			},
 			expectedStatusCode: http.StatusForbidden,
 			expectedError: api.Error{
 				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
@@ -539,7 +600,11 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidParameterError": {
-			pathPrefix:         "Invalid",
+			filter: &api.Filter{
+				PathPrefix: "Invalid",
+				Offset:     0,
+				Limit:      0,
+			},
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
@@ -551,7 +616,11 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnknownApiError": {
-			pathPrefix:         "/path/",
+			filter: &api.Filter{
+				PathPrefix: "/path/",
+				Offset:     0,
+				Limit:      0,
+			},
 			expectedStatusCode: http.StatusInternalServerError,
 			getListAllGroupErr: &api.Error{
 				Code:    api.UNKNOWN_API_ERROR,
@@ -565,14 +634,17 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 	for n, test := range testcases {
 
 		testApi.ArgsOut[ListGroupsMethod][0] = test.getListAllGroupResult
-		testApi.ArgsOut[ListGroupsMethod][1] = test.getListAllGroupErr
+		testApi.ArgsOut[ListGroupsMethod][1] = test.totalGroupsResult
+		testApi.ArgsOut[ListGroupsMethod][2] = test.getListAllGroupErr
 
-		url := fmt.Sprintf(server.URL+API_VERSION_1+"/groups?PathPrefix=%v", test.pathPrefix)
+		url := fmt.Sprintf(server.URL + API_VERSION_1 + "/groups")
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
 		}
+
+		addQueryParams(test.filter, req)
 
 		res, err := client.Do(req)
 		if err != nil {
@@ -580,14 +652,20 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 			continue
 		}
 
-		// Check received parameter
-		if testApi.ArgsIn[ListGroupsMethod][1] != "" {
-			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, "", testApi.ArgsIn[ListGroupsMethod][1])
-			continue
-		}
-		if testApi.ArgsIn[ListGroupsMethod][2] != test.pathPrefix {
-			t.Errorf("Test case %v. Received different PathPrefix (wanted:%v / received:%v)", n, test.pathPrefix, testApi.ArgsIn[ListGroupsMethod][2])
-			continue
+		if !test.ignoreArgsIn {
+			// Check received parameter
+			if testApi.ArgsIn[ListGroupsMethod][1] != "" {
+				t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, "", testApi.ArgsIn[ListGroupsMethod][1])
+				continue
+			}
+			filterData, ok := testApi.ArgsIn[ListGroupsMethod][2].(*api.Filter)
+			if ok {
+				// Check result
+				if diff := pretty.Compare(filterData, test.filter); diff != "" {
+					t.Errorf("Test %v failed. Received different filters (received/wanted) %v", n, diff)
+					continue
+				}
+			}
 		}
 
 		// check status code
@@ -1283,29 +1361,50 @@ func TestWorkerHandler_HandleRemoveMember(t *testing.T) {
 func TestWorkerHandler_HandleListMembers(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		org  string
-		name string
+		org          string
+		name         string
+		filter       *api.Filter
+		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
 		expectedResponse   ListMembersResponse
 		expectedError      api.Error
 		// Manager Results
 		getListMembersResult []string
+		totalGroupsResult    int
 		// Manager Errors
 		getListMembersErr error
 	}{
 		"OkCase": {
 			org:                "org1",
 			name:               "group1",
+			filter:             testFilter,
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: ListMembersResponse{
 				Members: []string{"member1", "member2"},
+				Offset:  0,
+				Limit:   0,
+				Total:   2,
 			},
 			getListMembersResult: []string{"member1", "member2"},
+			totalGroupsResult:    2,
+		},
+		"ErrorCaseInvalidFilterParams": {
+			filter: &api.Filter{
+				PathPrefix: "",
+				Offset:     -1,
+			},
+			ignoreArgsIn:       true,
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
 		},
 		"ErrorCaseGroupNotFoundErr": {
 			org:                "org1",
 			name:               "group1",
+			filter:             testFilter,
 			expectedStatusCode: http.StatusNotFound,
 			expectedError: api.Error{
 				Code:    api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
@@ -1319,6 +1418,7 @@ func TestWorkerHandler_HandleListMembers(t *testing.T) {
 		"ErrorCaseInvalidParameterErr": {
 			org:                "org1",
 			name:               "group1",
+			filter:             testFilter,
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
@@ -1332,6 +1432,7 @@ func TestWorkerHandler_HandleListMembers(t *testing.T) {
 		"ErrorCaseUnauthorizedError": {
 			org:                "org1",
 			name:               "group1",
+			filter:             testFilter,
 			expectedStatusCode: http.StatusForbidden,
 			expectedError: api.Error{
 				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
@@ -1343,6 +1444,7 @@ func TestWorkerHandler_HandleListMembers(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnknownApiError": {
+			filter:             testFilter,
 			expectedStatusCode: http.StatusInternalServerError,
 			getListMembersErr: &api.Error{
 				Code:    api.UNKNOWN_API_ERROR,
@@ -1356,7 +1458,8 @@ func TestWorkerHandler_HandleListMembers(t *testing.T) {
 	for n, test := range testcases {
 
 		testApi.ArgsOut[ListMembersMethod][0] = test.getListMembersResult
-		testApi.ArgsOut[ListMembersMethod][1] = test.getListMembersErr
+		testApi.ArgsOut[ListMembersMethod][1] = test.totalGroupsResult
+		testApi.ArgsOut[ListMembersMethod][2] = test.getListMembersErr
 
 		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/groups/%v/users", test.org, test.name)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -1365,20 +1468,32 @@ func TestWorkerHandler_HandleListMembers(t *testing.T) {
 			continue
 		}
 
+		addQueryParams(test.filter, req)
+
 		res, err := client.Do(req)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
 			continue
 		}
+		if !test.ignoreArgsIn {
+			// Check received parameter
+			if testApi.ArgsIn[ListMembersMethod][1] != test.org {
+				t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[ListMembersMethod][1])
+				continue
+			}
+			if testApi.ArgsIn[ListMembersMethod][2] != test.name {
+				t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.name, testApi.ArgsIn[ListMembersMethod][2])
+				continue
+			}
+			filterData, ok := testApi.ArgsIn[ListMembersMethod][3].(*api.Filter)
+			if ok {
+				// Check result
+				if diff := pretty.Compare(filterData, test.filter); diff != "" {
+					t.Errorf("Test %v failed. Received different filters (received/wanted) %v", n, diff)
+					continue
+				}
+			}
 
-		// Check received parameter
-		if testApi.ArgsIn[ListMembersMethod][1] != test.org {
-			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[ListMembersMethod][1])
-			continue
-		}
-		if testApi.ArgsIn[ListMembersMethod][2] != test.name {
-			t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.name, testApi.ArgsIn[ListMembersMethod][2])
-			continue
 		}
 
 		// check status code
@@ -1743,29 +1858,46 @@ func TestWorkerHandler_HandleDetachPolicyToGroup(t *testing.T) {
 func TestWorkerHandler_HandleListAttachedGroupPolicies(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		org  string
-		name string
+		org          string
+		name         string
+		filter       *api.Filter
+		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
 		expectedResponse   ListAttachedGroupPoliciesResponse
 		expectedError      api.Error
 		// Manager Results
 		getListAttachedGroupPoliciesResult []string
+		totalGroupsResult                  int
 		// Manager Errors
 		getListAttachedGroupPoliciesErr error
 	}{
 		"OkCase": {
 			org:                "org1",
 			name:               "group1",
+			filter:             testFilter,
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: ListAttachedGroupPoliciesResponse{
 				AttachedPolicies: []string{"policy1", "policy2"},
 			},
 			getListAttachedGroupPoliciesResult: []string{"policy1", "policy2"},
 		},
+		"ErrorCaseInvalidFilterParams": {
+			filter: &api.Filter{
+				PathPrefix: "",
+				Offset:     -1,
+			},
+			ignoreArgsIn:       true,
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
+		},
 		"ErrorCaseGroupNotFoundErr": {
 			org:                "org1",
 			name:               "group1",
+			filter:             testFilter,
 			expectedStatusCode: http.StatusNotFound,
 			expectedError: api.Error{
 				Code:    api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
@@ -1779,6 +1911,7 @@ func TestWorkerHandler_HandleListAttachedGroupPolicies(t *testing.T) {
 		"ErrorCaseInvalidParameterErr": {
 			org:                "org1",
 			name:               "group1",
+			filter:             testFilter,
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
@@ -1792,6 +1925,7 @@ func TestWorkerHandler_HandleListAttachedGroupPolicies(t *testing.T) {
 		"ErrorCaseUnauthorizedError": {
 			org:                "org1",
 			name:               "group1",
+			filter:             testFilter,
 			expectedStatusCode: http.StatusForbidden,
 			expectedError: api.Error{
 				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
@@ -1803,6 +1937,7 @@ func TestWorkerHandler_HandleListAttachedGroupPolicies(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnknownApiError": {
+			filter:             testFilter,
 			expectedStatusCode: http.StatusInternalServerError,
 			getListAttachedGroupPoliciesErr: &api.Error{
 				Code:    api.UNKNOWN_API_ERROR,
@@ -1816,7 +1951,8 @@ func TestWorkerHandler_HandleListAttachedGroupPolicies(t *testing.T) {
 	for n, test := range testcases {
 
 		testApi.ArgsOut[ListAttachedGroupPoliciesMethod][0] = test.getListAttachedGroupPoliciesResult
-		testApi.ArgsOut[ListAttachedGroupPoliciesMethod][1] = test.getListAttachedGroupPoliciesErr
+		testApi.ArgsOut[ListAttachedGroupPoliciesMethod][1] = test.totalGroupsResult
+		testApi.ArgsOut[ListAttachedGroupPoliciesMethod][2] = test.getListAttachedGroupPoliciesErr
 
 		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/groups/%v/policies", test.org, test.name)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -1825,20 +1961,33 @@ func TestWorkerHandler_HandleListAttachedGroupPolicies(t *testing.T) {
 			continue
 		}
 
+		addQueryParams(test.filter, req)
+
 		res, err := client.Do(req)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
 			continue
 		}
 
-		// Check received parameter
-		if testApi.ArgsIn[ListAttachedGroupPoliciesMethod][1] != test.org {
-			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[ListAttachedGroupPoliciesMethod][1])
-			continue
-		}
-		if testApi.ArgsIn[ListAttachedGroupPoliciesMethod][2] != test.name {
-			t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.name, testApi.ArgsIn[ListAttachedGroupPoliciesMethod][2])
-			continue
+		if !test.ignoreArgsIn {
+			// Check received parameter
+			if testApi.ArgsIn[ListAttachedGroupPoliciesMethod][1] != test.org {
+				t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[ListAttachedGroupPoliciesMethod][1])
+				continue
+			}
+			if testApi.ArgsIn[ListAttachedGroupPoliciesMethod][2] != test.name {
+				t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.name, testApi.ArgsIn[ListAttachedGroupPoliciesMethod][2])
+				continue
+			}
+
+			filterData, ok := testApi.ArgsIn[ListAttachedGroupPoliciesMethod][3].(*api.Filter)
+			if ok {
+				// Check result
+				if diff := pretty.Compare(filterData, test.filter); diff != "" {
+					t.Errorf("Test %v failed. Received different filters (received/wanted) %v", n, diff)
+					continue
+				}
+			}
 		}
 
 		// check status code

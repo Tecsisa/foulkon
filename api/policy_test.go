@@ -667,29 +667,30 @@ func TestAuthAPI_GetPolicyByName(t *testing.T) {
 
 func TestAuthAPI_ListPolicies(t *testing.T) {
 	testcases := map[string]struct {
+		// API Method args
 		requestInfo RequestInfo
 		org         string
-		pathPrefix  string
-
+		filter      *Filter
+		// Expected result
 		expectedPolicies []PolicyIdentity
-
+		totalResult      int
+		wantError        error
+		// Manager Results
 		getGroupsByUserIDResult   []Group
 		getAttachedPoliciesResult []Policy
 		getUserByExternalIDResult *User
 		getUserByExternalIDErr    error
-
+		// Manager Errors
 		getPoliciesFilteredMethodResult []Policy
 		getPoliciesFilteredMethodErr    error
-
-		wantError error
 	}{
 		"OkCaseAdmin": {
 			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
-			org:        "123",
-			pathPrefix: "/",
+			org:    "123",
+			filter: &testFilter,
 			expectedPolicies: []PolicyIdentity{
 				{
 					Org:  "example",
@@ -700,6 +701,7 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 					Name: "policyDenied",
 				},
 			},
+			totalResult: 2,
 			getPoliciesFilteredMethodResult: []Policy{
 				{
 					ID:   "PolicyAllowed",
@@ -744,14 +746,15 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 				Identifier: "123456",
 				Admin:      true,
 			},
-			org:        "",
-			pathPrefix: "/",
+			org:    "",
+			filter: &testFilter,
 			expectedPolicies: []PolicyIdentity{
 				{
 					Org:  "example",
 					Name: "policyAllowed",
 				},
 			},
+			totalResult: 1,
 			getPoliciesFilteredMethodResult: []Policy{
 				{
 					ID:   "PolicyAllowed",
@@ -778,13 +781,15 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			org: "example",
+			org:    "example",
+			filter: &testFilter,
 			expectedPolicies: []PolicyIdentity{
 				{
 					Org:  "example",
 					Name: "policyAllowed",
 				},
 			},
+			totalResult: 1,
 			getPoliciesFilteredMethodResult: []Policy{
 				{
 					ID:   "PolicyAllowed",
@@ -867,16 +872,33 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 				},
 			},
 		},
+		"ErrorCaseMaxLimitSize": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org: "123",
+			filter: &Filter{
+				Limit: 10000,
+			},
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Limit 10000, max limit allowed: 1000",
+			},
+		},
 		"ErrorCaseInvalidPath": {
 			requestInfo: RequestInfo{
 				Identifier: "123456",
 				Admin:      true,
 			},
-			org:        "123",
-			pathPrefix: "/path*/",
+			org: "123",
+			filter: &Filter{
+				PathPrefix: "/path*/ /*",
+				Limit:      0,
+			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: "Invalid parameter: PathPrefix /path*/",
+				Message: "Invalid parameter: PathPrefix /path*/ /*",
 			},
 		},
 		"ErrorCaseInvalidOrg": {
@@ -884,8 +906,8 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 				Identifier: "123456",
 				Admin:      true,
 			},
-			org:        "!#$$%**^",
-			pathPrefix: "/",
+			org:    "!#$$%**^",
+			filter: &testFilter,
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
 				Message: "Invalid parameter: org !#$$%**^",
@@ -896,8 +918,10 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 				Identifier: "123456",
 				Admin:      true,
 			},
-			org:        "",
-			pathPrefix: "/path/",
+			org: "",
+			filter: &Filter{
+				PathPrefix: "/path/",
+			},
 			getPoliciesFilteredMethodErr: &database.Error{
 				Code: database.INTERNAL_ERROR,
 			},
@@ -910,8 +934,10 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			org:        "123",
-			pathPrefix: "/path/",
+			org: "123",
+			filter: &Filter{
+				PathPrefix: "/path/",
+			},
 			getPoliciesFilteredMethodResult: []Policy{
 				{
 					ID:   "POLICY-USER-ID",
@@ -948,13 +974,17 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 		testAPI := makeTestAPI(testRepo)
 
 		testRepo.ArgsOut[GetPoliciesFilteredMethod][0] = testcase.getPoliciesFilteredMethodResult
-		testRepo.ArgsOut[GetPoliciesFilteredMethod][1] = testcase.getPoliciesFilteredMethodErr
+		testRepo.ArgsOut[GetPoliciesFilteredMethod][1] = testcase.totalResult
+		testRepo.ArgsOut[GetPoliciesFilteredMethod][2] = testcase.getPoliciesFilteredMethodErr
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDErr
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
-		policies, err := testAPI.ListPolicies(testcase.requestInfo, testcase.org, testcase.pathPrefix)
+		policies, total, err := testAPI.ListPolicies(testcase.requestInfo, testcase.org, testcase.filter)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedPolicies, policies)
+		if testcase.totalResult != total {
+			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", testcase, testcase.totalResult, total)
+		}
 	}
 }
 
@@ -2539,21 +2569,23 @@ func TestAuthAPI_RemovePolicy(t *testing.T) {
 
 func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 	testcases := map[string]struct {
-		requestInfo    RequestInfo
-		org            string
-		policyName     string
+		// API Method args
+		requestInfo RequestInfo
+		org         string
+		policyName  string
+		filter      *Filter
+		// Expected result
 		expectedGroups []string
-
-		getGroupsByUserIDResult   []Group
-		getAttachedPoliciesResult []Policy
-		getUserByExternalIDResult *User
-
-		getAttachedGroupsResult []Group
-		getAttachedGroupsErr    error
-
+		totalResult    int
+		wantError      error
+		// Manager Results
+		getGroupsByUserIDResult     []Group
+		getAttachedPoliciesResult   []Policy
+		getUserByExternalIDResult   *User
+		getAttachedGroupsResult     []Group
 		getPolicyByNameMethodResult *Policy
-		wantError                   error
-
+		// Manager Errors
+		getAttachedGroupsErr     error
 		getPolicyByNameMethodErr error
 	}{
 		"OkCase": {
@@ -2563,6 +2595,9 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 			},
 			org:        "example",
 			policyName: "test",
+			filter: &Filter{
+				Limit: 0,
+			},
 			getPolicyByNameMethodResult: &Policy{
 				ID:   "test1",
 				Name: "test",
@@ -2595,6 +2630,21 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 			},
 			expectedGroups: []string{"group1", "group2"},
 		},
+		"ErrorCaseMaxLimitSize": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:        "123",
+			policyName: "p1",
+			filter: &Filter{
+				Limit: 10000,
+			},
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Limit 10000, max limit allowed: 1000",
+			},
+		},
 		"ErrorCaseInvalidName": {
 			requestInfo: RequestInfo{
 				Identifier: "123456",
@@ -2602,6 +2652,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 			},
 			org:        "123",
 			policyName: "invalid*",
+			filter:     &testFilter,
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
 				Message: "Invalid parameter: name invalid*",
@@ -2614,6 +2665,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 			},
 			org:        "!*^**~$%",
 			policyName: "p1",
+			filter:     &testFilter,
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
 				Message: "Invalid parameter: org !*^**~$%",
@@ -2626,6 +2678,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 			},
 			org:        "123",
 			policyName: "policy",
+			filter:     &testFilter,
 			wantError: &Error{
 				Code: POLICY_BY_ORG_AND_NAME_NOT_FOUND,
 			},
@@ -2640,6 +2693,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 			},
 			org:        "example",
 			policyName: "test",
+			filter:     &testFilter,
 			wantError: &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:example:policy/path/test",
@@ -2697,6 +2751,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 			},
 			org:        "example",
 			policyName: "test",
+			filter:     &testFilter,
 			wantError: &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:example:policy/path/test",
@@ -2772,6 +2827,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 			},
 			org:        "example",
 			policyName: "test",
+			filter:     &testFilter,
 			wantError: &Error{
 				Code: UNKNOWN_API_ERROR,
 			},
@@ -2800,7 +2856,6 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 	}
 
 	for x, testcase := range testcases {
-
 		testRepo := makeTestRepo()
 		testAPI := makeTestAPI(testRepo)
 
@@ -2810,8 +2865,12 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		testRepo.ArgsOut[GetAttachedGroupsMethod][0] = testcase.getAttachedGroupsResult
-		testRepo.ArgsOut[GetAttachedGroupsMethod][1] = testcase.getAttachedGroupsErr
-		groups, err := testAPI.ListAttachedGroups(testcase.requestInfo, testcase.org, testcase.policyName)
+		testRepo.ArgsOut[GetAttachedGroupsMethod][1] = testcase.totalResult
+		testRepo.ArgsOut[GetAttachedGroupsMethod][2] = testcase.getAttachedGroupsErr
+		groups, total, err := testAPI.ListAttachedGroups(testcase.requestInfo, testcase.org, testcase.policyName, testcase.filter)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedGroups, groups)
+		if testcase.totalResult != total {
+			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", testcase, testcase.totalResult, total)
+		}
 	}
 }

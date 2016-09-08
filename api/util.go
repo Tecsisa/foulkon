@@ -19,6 +19,8 @@ const (
 	MAX_NAME_LENGTH        = 128
 	MAX_ACTION_LENGTH      = 128
 	MAX_PATH_LENGTH        = 512
+	MAX_LIMIT_SIZE         = 1000
+	DEFAULT_LIMIT_SIZE     = 20
 
 	// Actions
 

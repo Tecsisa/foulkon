@@ -219,7 +219,7 @@ func (api AuthAPI) getRestrictions(externalID string, action string, resource st
 }
 
 func (api AuthAPI) getGroupsByUser(userID string) ([]Group, error) {
-	groups, err := api.UserRepo.GetGroupsByUserID(userID)
+	groups, _, err := api.UserRepo.GetGroupsByUserID(userID, &Filter{})
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
@@ -244,7 +244,7 @@ func (api AuthAPI) getPoliciesByGroups(groups []Group) ([]Policy, error) {
 	// Retrieve per each group its attached policies
 	for _, group := range groups {
 		// Retrieve policies for this group
-		policiesAttached, err := api.GroupRepo.GetAttachedPolicies(group.ID)
+		policiesAttached, _, err := api.GroupRepo.GetAttachedPolicies(group.ID, &Filter{})
 		if err != nil {
 			//Transform to DB error
 			dbError := err.(*database.Error)
