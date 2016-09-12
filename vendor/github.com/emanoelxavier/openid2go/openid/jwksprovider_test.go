@@ -92,8 +92,8 @@ func Test_getJwkSet_WhenDecodeResponseSucceeds(t *testing.T) {
 	c := NewHTTPClientMock(t)
 	jwksProvider := httpJwksProvider{c.httpGet, c.decodeResponse}
 	keys := []jose.JsonWebKey{
-		{"key1", "keyid1", "algo1", "use1"},
-		{"key2", "keyid2", "algo2", "use2"},
+		{Key: "key1", Certificates: nil, KeyID: "keyid1", Algorithm: "algo1", Use: "use1"},
+		{Key: "key2", Certificates: nil, KeyID: "keyid2", Algorithm: "algo2", Use: "use2"},
 	}
 	jwks := &jose.JsonWebKeySet{Keys: keys}
 	respBody := "jwk set"
