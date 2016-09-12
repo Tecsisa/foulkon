@@ -3,7 +3,7 @@ package openid
 import (
 	"net/http"
 
-	"gopkg.in/dgrijalva/jwt-go.v2"
+	"github.com/dgrijalva/jwt-go"
 )
 
 // User represents the authenticated user encapsulating information obtained from the validated ID token.
@@ -40,6 +40,6 @@ func newUser(t *jwt.Token) (*User, error) {
 	u := new(User)
 	u.Issuer = iss
 	u.ID = sub
-	u.Claims = t.Claims
+	u.Claims = t.Claims.(jwt.MapClaims)
 	return u, nil
 }

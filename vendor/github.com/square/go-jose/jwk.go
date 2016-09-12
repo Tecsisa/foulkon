@@ -23,10 +23,13 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"math/big"
 	"reflect"
 	"strings"
+
+	"github.com/square/go-jose/json"
 )
 
 // rawJsonWebKey represents a public or private key in JWK format, used for parsing/serializing.
@@ -96,13 +99,13 @@ func (k JsonWebKey) MarshalJSON() ([]byte, error) {
 		raw.X5c = append(raw.X5c, base64.StdEncoding.EncodeToString(cert.Raw))
 	}
 
-	return MarshalJSON(raw)
+	return json.Marshal(raw)
 }
 
 // UnmarshalJSON reads a key from its JSON representation.
 func (k *JsonWebKey) UnmarshalJSON(data []byte) (err error) {
 	var raw rawJsonWebKey
-	err = UnmarshalJSON(data, &raw)
+	err = json.Unmarshal(data, &raw)
 	if err != nil {
 		return err
 	}
@@ -275,13 +278,20 @@ func (key rawJsonWebKey) ecPublicKey() (*ecdsa.PublicKey, error) {
 	}
 
 	if key.X == nil || key.Y == nil {
-		return nil, fmt.Errorf("square/go-jose: invalid EC key, missing x/y values")
+		return nil, errors.New("square/go-jose: invalid EC key, missing x/y values")
+	}
+
+	x := key.X.bigInt()
+	y := key.Y.bigInt()
+
+	if !curve.IsOnCurve(x, y) {
+		return nil, errors.New("square/go-jose: invalid EC key, X/Y are not on declared curve")
 	}
 
 	return &ecdsa.PublicKey{
 		Curve: curve,
-		X:     key.X.bigInt(),
-		Y:     key.Y.bigInt(),
+		X:     x,
+		Y:     y,
 	}, nil
 }
 
@@ -390,11 +400,18 @@ func (key rawJsonWebKey) ecPrivateKey() (*ecdsa.PrivateKey, error) {
 		return nil, fmt.Errorf("square/go-jose: invalid EC private key, missing x/y/d values")
 	}
 
+	x := key.X.bigInt()
+	y := key.Y.bigInt()
+
+	if !curve.IsOnCurve(x, y) {
+		return nil, errors.New("square/go-jose: invalid EC key, X/Y are not on declared curve")
+	}
+
 	return &ecdsa.PrivateKey{
 		PublicKey: ecdsa.PublicKey{
 			Curve: curve,
-			X:     key.X.bigInt(),
-			Y:     key.Y.bigInt(),
+			X:     x,
+			Y:     y,
 		},
 		D: key.D.bigInt(),
 	}, nil

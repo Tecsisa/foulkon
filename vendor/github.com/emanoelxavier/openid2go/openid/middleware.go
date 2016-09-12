@@ -3,7 +3,7 @@ package openid
 import (
 	"net/http"
 
-	"gopkg.in/dgrijalva/jwt-go.v2"
+	"github.com/dgrijalva/jwt-go"
 )
 
 // The Configuration contains the entities needed to perform ID token validation.
@@ -26,7 +26,7 @@ func NewConfiguration(options ...option) (*Configuration, error) {
 	jp := newHTTPJwksProvider(http.Get, jsonDecodeResponse)
 	ksp := newSigningKeySetProvider(cp, jp, pemEncodePublicKey)
 	kp := newSigningKeyProvider(ksp)
-	m.tokenValidator = newIDTokenValidator(nil, jwt.Parse, kp)
+	m.tokenValidator = newIDTokenValidator(nil, jwt.Parse, kp, jwt.ParseRSAPublicKeyFromPEM)
 
 	for _, option := range options {
 		err := option(m)
