@@ -138,26 +138,28 @@ func (p PostgresRepo) GetPolicyById(id string) (*api.Policy, error) {
 	return policyApi, nil
 }
 
-func (p PostgresRepo) GetPoliciesFiltered(org string, pathPrefix string) ([]api.Policy, error) {
+func (p PostgresRepo) GetPoliciesFiltered(org string, filter *api.Filter) ([]api.Policy, int, error) {
+	var total int
 	policies := []Policy{}
-	var apiPolicies []api.Policy
 	query := p.Dbmap
+
 	if len(org) > 0 {
 		query = query.Where("org like ?", org)
 	}
-	if len(pathPrefix) > 0 {
-		query = query.Where("path like ?", pathPrefix+"%")
+	if len(filter.PathPrefix) > 0 {
+		query = query.Where("path like ?", filter.PathPrefix+"%")
 	}
 
 	// Error handling
-	if err := query.Find(&policies).Error; err != nil {
-		return nil, &database.Error{
+	if err := query.Find(&policies).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&policies).Error; err != nil {
+		return nil, total, &database.Error{
 			Code:    database.INTERNAL_ERROR,
 			Message: err.Error(),
 		}
 	}
 
 	// Transform policies for API
+	var apiPolicies []api.Policy
 	if policies != nil {
 		apiPolicies = make([]api.Policy, len(policies), cap(policies))
 
@@ -169,7 +171,7 @@ func (p PostgresRepo) GetPoliciesFiltered(org string, pathPrefix string) ([]api.
 			query = p.Dbmap.Where("policy_id like ?", policy.ID).Find(&statements)
 			// Error Handling
 			if err := query.Error; err != nil {
-				return nil, &database.Error{
+				return nil, total, &database.Error{
 					Code:    database.INTERNAL_ERROR,
 					Message: err.Error(),
 				}
@@ -183,7 +185,7 @@ func (p PostgresRepo) GetPoliciesFiltered(org string, pathPrefix string) ([]api.
 
 	}
 
-	return apiPolicies, nil
+	return apiPolicies, total, nil
 }
 
 func (p PostgresRepo) UpdatePolicy(policy api.Policy, name string, path string, urn string, statements []api.Statement) (*api.Policy, error) {
@@ -286,13 +288,14 @@ func (p PostgresRepo) RemovePolicy(id string) error {
 	return nil
 }
 
-func (p PostgresRepo) GetAttachedGroups(policyID string) ([]api.Group, error) {
+func (p PostgresRepo) GetAttachedGroups(policyID string, filter *api.Filter) ([]api.Group, int, error) {
+	var total int
 	relations := []GroupPolicyRelation{}
-	query := p.Dbmap.Where("policy_id like ?", policyID).Find(&relations)
+	query := p.Dbmap.Where("policy_id like ?", policyID).Find(&relations).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&relations)
 	var groups []api.Group
 	// Error Handling
 	if err := query.Error; err != nil {
-		return nil, &database.Error{
+		return nil, total, &database.Error{
 			Code:    database.INTERNAL_ERROR,
 			Message: err.Error(),
 		}
@@ -305,7 +308,7 @@ func (p PostgresRepo) GetAttachedGroups(policyID string) ([]api.Group, error) {
 			group, err := p.GetGroupById(r.GroupID)
 			// Error handling
 			if err != nil {
-				return nil, &database.Error{
+				return nil, total, &database.Error{
 					Code:    database.INTERNAL_ERROR,
 					Message: err.Error(),
 				}
@@ -315,7 +318,7 @@ func (p PostgresRepo) GetAttachedGroups(policyID string) ([]api.Group, error) {
 		}
 	}
 
-	return groups, nil
+	return groups, total, nil
 }
 
 // PRIVATE HELPER METHODS

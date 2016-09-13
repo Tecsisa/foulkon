@@ -141,37 +141,48 @@ func (api AuthAPI) GetUserByExternalID(requestInfo RequestInfo, externalId strin
 	}
 }
 
-func (api AuthAPI) ListUsers(requestInfo RequestInfo, pathPrefix string) ([]string, error) {
+func (api AuthAPI) ListUsers(requestInfo RequestInfo, filter *Filter) ([]string, int, error) {
 	// Check parameters
-	if len(pathPrefix) > 0 && !IsValidPath(pathPrefix) {
-		return nil, &Error{
+	var total int
+	if len(filter.PathPrefix) > 0 && !IsValidPath(filter.PathPrefix) {
+		return nil, total, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", pathPrefix),
+			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", filter.PathPrefix),
 		}
 	}
 
-	if len(pathPrefix) == 0 {
-		pathPrefix = "/"
+	if len(filter.PathPrefix) == 0 {
+		filter.PathPrefix = "/"
 	}
 
+	if filter.Limit > MAX_LIMIT_SIZE {
+		return nil, total, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: Limit %v, max limit allowed: %v", filter.Limit, MAX_LIMIT_SIZE),
+		}
+	}
+
+	if filter.Limit == 0 {
+		filter.Limit = DEFAULT_LIMIT_SIZE
+	}
 	// Retrieve users with specified path prefix
-	users, err := api.UserRepo.GetUsersFiltered(pathPrefix)
+	users, total, err := api.UserRepo.GetUsersFiltered(filter)
 
 	// Error handling
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
-		return nil, &Error{
+		return nil, total, &Error{
 			Code:    UNKNOWN_API_ERROR,
 			Message: dbError.Message,
 		}
 	}
 
 	// Check restrictions
-	urnPrefix := GetUrnPrefix("", RESOURCE_USER, pathPrefix)
+	urnPrefix := GetUrnPrefix("", RESOURCE_USER, filter.PathPrefix)
 	usersFiltered, err := api.GetAuthorizedUsers(requestInfo, urnPrefix, USER_ACTION_LIST_USERS, users)
 	if err != nil {
-		return nil, err
+		return nil, total, err
 	}
 
 	// Return user IDs
@@ -180,7 +191,7 @@ func (api AuthAPI) ListUsers(requestInfo RequestInfo, pathPrefix string) ([]stri
 		externalIds = append(externalIds, u.ExternalID)
 	}
 
-	return externalIds, nil
+	return externalIds, total, nil
 }
 
 func (api AuthAPI) UpdateUser(requestInfo RequestInfo, externalId string, newPath string) (*User, error) {
@@ -277,20 +288,33 @@ func (api AuthAPI) RemoveUser(requestInfo RequestInfo, externalId string) error 
 	return nil
 }
 
-func (api AuthAPI) ListGroupsByUser(requestInfo RequestInfo, externalId string) ([]GroupIdentity, error) {
+func (api AuthAPI) ListGroupsByUser(requestInfo RequestInfo, externalId string, filter *Filter) ([]GroupIdentity, int, error) {
+	// Check parameters
+	var total int
+	if filter.Limit > MAX_LIMIT_SIZE {
+		return nil, total, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: Limit %v, max limit allowed: %v", filter.Limit, MAX_LIMIT_SIZE),
+		}
+	}
+
+	if filter.Limit == 0 {
+		filter.Limit = DEFAULT_LIMIT_SIZE
+	}
+
 	// Call repo to retrieve the user
 	user, err := api.GetUserByExternalID(requestInfo, externalId)
 	if err != nil {
-		return nil, err
+		return nil, total, err
 	}
 
 	// Check restrictions
 	usersFiltered, err := api.GetAuthorizedUsers(requestInfo, user.Urn, USER_ACTION_LIST_GROUPS_FOR_USER, []User{*user})
 	if err != nil {
-		return nil, err
+		return nil, total, err
 	}
 	if len(usersFiltered) < 1 {
-		return nil, &Error{
+		return nil, total, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				requestInfo.Identifier, user.Urn),
@@ -298,13 +322,13 @@ func (api AuthAPI) ListGroupsByUser(requestInfo RequestInfo, externalId string) 
 	}
 
 	// Call group repo to retrieve groups associated to user
-	groups, err := api.UserRepo.GetGroupsByUserID(user.ID)
+	groups, total, err := api.UserRepo.GetGroupsByUserID(user.ID, filter)
 
 	// Error handling
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
-		return nil, &Error{
+		return nil, total, &Error{
 			Code:    UNKNOWN_API_ERROR,
 			Message: dbError.Message,
 		}
@@ -319,7 +343,7 @@ func (api AuthAPI) ListGroupsByUser(requestInfo RequestInfo, externalId string) 
 		})
 	}
 
-	return groupIDs, nil
+	return groupIDs, total, nil
 }
 
 // PRIVATE HELPER METHODS

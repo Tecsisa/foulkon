@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/foulkon"
 	"github.com/julienschmidt/httprouter"
 	"github.com/satori/go.uuid"
+	"strconv"
 )
 
 const (
@@ -328,4 +330,38 @@ func writeErrorWithStatus(w http.ResponseWriter, apiError *api.Error, statusCode
 	w.WriteHeader(statusCode)
 	w.Write(b)
 	return w, nil
+}
+
+func getFilterData(r *http.Request) (*api.Filter, error) {
+	var err error
+	// Retrieve Offset
+	var offset int
+	offs := r.URL.Query().Get("Offset")
+	if len(offs) != 0 {
+		offset, err = strconv.Atoi(offs)
+		if err != nil || offset < 0 {
+			return nil, &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: fmt.Sprintf("Invalid parameter: Offset %v", offs),
+			}
+		}
+	}
+	// Retrieve Limit
+	var limit int
+	lmt := r.URL.Query().Get("Limit")
+	if len(lmt) != 0 {
+		limit, err = strconv.Atoi(lmt)
+		if err != nil || limit < 0 {
+			return nil, &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: fmt.Sprintf("Invalid parameter: Limit %v", lmt),
+			}
+		}
+	}
+
+	return &api.Filter{
+		PathPrefix: r.URL.Query().Get("PathPrefix"),
+		Offset:     offset,
+		Limit:      limit,
+	}, nil
 }

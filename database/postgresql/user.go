@@ -81,33 +81,34 @@ func (u PostgresRepo) GetUserByID(id string) (*api.User, error) {
 	return dbUserToAPIUser(user), nil
 }
 
-func (u PostgresRepo) GetUsersFiltered(pathPrefix string) ([]api.User, error) {
+func (u PostgresRepo) GetUsersFiltered(filter *api.Filter) ([]api.User, int, error) {
+	var total int
 	users := []User{}
 	query := u.Dbmap
 
 	// Check if path is filled, else it doesn't use it to filter
-	if len(pathPrefix) > 0 {
-		query = query.Where("path like ?", pathPrefix+"%")
+	if len(filter.PathPrefix) > 0 {
+		query = query.Where("path like ?", filter.PathPrefix+"%")
 	}
 
 	// Error handling
-	if err := query.Find(&users).Error; err != nil {
-		return nil, &database.Error{
+	if err := query.Find(&users).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&users).Error; err != nil {
+		return nil, total, &database.Error{
 			Code:    database.INTERNAL_ERROR,
 			Message: err.Error(),
 		}
 	}
 
 	// Transform users for API
+	var apiusers []api.User
 	if users != nil {
-		apiusers := make([]api.User, len(users), cap(users))
+		apiusers = make([]api.User, len(users), cap(users))
 		for i, u := range users {
 			apiusers[i] = *dbUserToAPIUser(&u)
 		}
-		return apiusers, nil
 	}
 
-	return nil, nil
+	return apiusers, total, nil
 }
 
 func (u PostgresRepo) UpdateUser(user api.User, newPath string, newUrn string) (*api.User, error) {
@@ -170,13 +171,14 @@ func (u PostgresRepo) RemoveUser(id string) error {
 	return nil
 }
 
-func (u PostgresRepo) GetGroupsByUserID(id string) ([]api.Group, error) {
+func (u PostgresRepo) GetGroupsByUserID(id string, filter *api.Filter) ([]api.Group, int, error) {
+	var total int
 	relations := []GroupUserRelation{}
-	query := u.Dbmap.Where("user_id like ?", id).Find(&relations)
+	query := u.Dbmap.Where("user_id like ?", id).Find(&relations).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&relations)
 
 	// Error Handling
 	if err := query.Error; err != nil {
-		return nil, &database.Error{
+		return nil, total, &database.Error{
 			Code:    database.INTERNAL_ERROR,
 			Message: err.Error(),
 		}
@@ -190,7 +192,7 @@ func (u PostgresRepo) GetGroupsByUserID(id string) ([]api.Group, error) {
 			group, err := u.GetGroupById(r.GroupID)
 			// Error handling
 			if err != nil {
-				return nil, &database.Error{
+				return nil, total, &database.Error{
 					Code:    database.INTERNAL_ERROR,
 					Message: err.Error(),
 				}
@@ -199,7 +201,7 @@ func (u PostgresRepo) GetGroupsByUserID(id string) ([]api.Group, error) {
 		}
 	}
 
-	return apiGroups, nil
+	return apiGroups, total, nil
 }
 
 // PRIVATE HELPER METHODS

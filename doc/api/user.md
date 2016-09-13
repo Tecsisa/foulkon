@@ -171,6 +171,9 @@ HTTP/1.1 200 OK
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
+| **limit** | *integer* | The maximum number of items in the response (as set in the query or by default) | `20` |
+| **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
+| **total** | *integer* | The total number of items available to return | `50` |
 | **users** | *array* | User identifiers | `["User1","User2"]` |
 
 ###  User List All
@@ -178,14 +181,14 @@ HTTP/1.1 200 OK
 List all users filtered by PathPrefix.
 
 ```
-GET /api/v1/users?PathPrefix={optional_path_prefix}
+GET /api/v1/users?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/users?PathPrefix=$OPTIONAL_PATH_PREFIX \
+$ curl -n /api/v1/users?PathPrefix=$OPTIONAL_PATH_PREFIX&Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -201,7 +204,10 @@ HTTP/1.1 200 OK
   "users": [
     "User1",
     "User2"
-  ]
+  ],
+  "offset": 0,
+  "limit": 20,
+  "total": 50
 }
 ```
 
@@ -217,20 +223,23 @@ HTTP/1.1 200 OK
 | ------- | ------- | ------- | ------- |
 | **groups/name** | *string* | Group name | `"group1"` |
 | **groups/org** | *string* | Group organization | `"tecsisa"` |
+| **limit** | *integer* | The maximum number of items in the response (as set in the query or by default) | `20` |
+| **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
+| **total** | *integer* | The total number of items available to return | `50` |
 
 ###  List user groups
 
 List all groups that a user is a member.
 
 ```
-GET /api/v1/users/{user_externalId}/groups
+GET /api/v1/users/{user_externalId}/groups?Offset={optional_offset}&Limit={optional_limit}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/users/$USER_EXTERNALID/groups \
+$ curl -n /api/v1/users/$USER_EXTERNALID/groups?Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -248,7 +257,10 @@ HTTP/1.1 200 OK
       "org": "tecsisa",
       "name": "group1"
     }
-  ]
+  ],
+  "offset": 0,
+  "limit": 20,
+  "total": 50
 }
 ```
 

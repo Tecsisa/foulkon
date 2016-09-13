@@ -171,33 +171,45 @@ func (api AuthAPI) GetGroupByName(requestInfo RequestInfo, org string, name stri
 	}
 }
 
-func (api AuthAPI) ListGroups(requestInfo RequestInfo, org string, pathPrefix string) ([]GroupIdentity, error) {
+func (api AuthAPI) ListGroups(requestInfo RequestInfo, org string, filter *Filter) ([]GroupIdentity, int, error) {
 	// Validate fields
+	var total int
 	if len(org) > 0 && !IsValidOrg(org) {
-		return nil, &Error{
+		return nil, total, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: org %v", org),
 		}
 	}
-	if len(pathPrefix) > 0 && !IsValidPath(pathPrefix) {
-		return nil, &Error{
+	if len(filter.PathPrefix) > 0 && !IsValidPath(filter.PathPrefix) {
+		return nil, total, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", pathPrefix),
+			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", filter.PathPrefix),
 		}
 	}
 
-	if len(pathPrefix) == 0 {
-		pathPrefix = "/"
+	if len(filter.PathPrefix) == 0 {
+		filter.PathPrefix = "/"
+	}
+
+	if filter.Limit > MAX_LIMIT_SIZE {
+		return nil, total, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: Limit %v, max limit allowed: %v", filter.Limit, MAX_LIMIT_SIZE),
+		}
+	}
+
+	if filter.Limit == 0 {
+		filter.Limit = DEFAULT_LIMIT_SIZE
 	}
 
 	// Call repo to retrieve the groups
-	groups, err := api.GroupRepo.GetGroupsFiltered(org, pathPrefix)
+	groups, total, err := api.GroupRepo.GetGroupsFiltered(org, filter)
 
 	// Error handling
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
-		return nil, &Error{
+		return nil, total, &Error{
 			Code:    UNKNOWN_API_ERROR,
 			Message: dbError.Message,
 		}
@@ -208,11 +220,11 @@ func (api AuthAPI) ListGroups(requestInfo RequestInfo, org string, pathPrefix st
 	if len(org) == 0 {
 		urnPrefix = "*"
 	} else {
-		urnPrefix = GetUrnPrefix(org, RESOURCE_GROUP, pathPrefix)
+		urnPrefix = GetUrnPrefix(org, RESOURCE_GROUP, filter.PathPrefix)
 	}
 	filteredGroups, err := api.GetAuthorizedGroups(requestInfo, urnPrefix, GROUP_ACTION_LIST_GROUPS, groups)
 	if err != nil {
-		return nil, err
+		return nil, total, err
 	}
 
 	// Transform to identifiers
@@ -224,7 +236,7 @@ func (api AuthAPI) ListGroups(requestInfo RequestInfo, org string, pathPrefix st
 		})
 	}
 
-	return groupIDs, nil
+	return groupIDs, total, nil
 }
 
 func (api AuthAPI) UpdateGroup(requestInfo RequestInfo, org string, name string, newName string, newPath string) (*Group, error) {
@@ -476,21 +488,33 @@ func (api AuthAPI) RemoveMember(requestInfo RequestInfo, externalId string, name
 	return nil
 }
 
-func (api AuthAPI) ListMembers(requestInfo RequestInfo, org string, name string) ([]string, error) {
+func (api AuthAPI) ListMembers(requestInfo RequestInfo, org string, name string, filter *Filter) ([]string, int, error) {
+	// Validate fields
+	var total int
+	if filter.Limit > MAX_LIMIT_SIZE {
+		return nil, total, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: Limit %v, max limit allowed: %v", filter.Limit, MAX_LIMIT_SIZE),
+		}
+	}
+
+	if filter.Limit == 0 {
+		filter.Limit = DEFAULT_LIMIT_SIZE
+	}
 
 	// Call repo to retrieve the group
 	group, err := api.GetGroupByName(requestInfo, org, name)
 	if err != nil {
-		return nil, err
+		return nil, total, err
 	}
 
 	// Check restrictions
 	groupsFiltered, err := api.GetAuthorizedGroups(requestInfo, group.Urn, GROUP_ACTION_LIST_MEMBERS, []Group{*group})
 	if err != nil {
-		return nil, err
+		return nil, total, err
 	}
 	if len(groupsFiltered) < 1 {
-		return nil, &Error{
+		return nil, total, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				requestInfo.Identifier, group.Urn),
@@ -498,13 +522,13 @@ func (api AuthAPI) ListMembers(requestInfo RequestInfo, org string, name string)
 	}
 
 	// Get Members
-	members, err := api.GroupRepo.GetGroupMembers(group.ID)
+	members, total, err := api.GroupRepo.GetGroupMembers(group.ID, filter)
 
 	// Error handling
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
-		return nil, &Error{
+		return nil, total, &Error{
 			Code:    UNKNOWN_API_ERROR,
 			Message: dbError.Message,
 		}
@@ -515,7 +539,7 @@ func (api AuthAPI) ListMembers(requestInfo RequestInfo, org string, name string)
 		externalIDs = append(externalIDs, m.ExternalID)
 	}
 
-	return externalIDs, nil
+	return externalIDs, total, nil
 }
 
 func (api AuthAPI) AttachPolicyToGroup(requestInfo RequestInfo, org string, name string, policyName string) error {
@@ -639,21 +663,33 @@ func (api AuthAPI) DetachPolicyToGroup(requestInfo RequestInfo, org string, name
 	return nil
 }
 
-func (api AuthAPI) ListAttachedGroupPolicies(requestInfo RequestInfo, org string, name string) ([]string, error) {
+func (api AuthAPI) ListAttachedGroupPolicies(requestInfo RequestInfo, org string, name string, filter *Filter) ([]string, int, error) {
+	// Validate fields
+	var total int
+	if filter.Limit > MAX_LIMIT_SIZE {
+		return nil, total, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: Limit %v, max limit allowed: %v", filter.Limit, MAX_LIMIT_SIZE),
+		}
+	}
+
+	if filter.Limit == 0 {
+		filter.Limit = DEFAULT_LIMIT_SIZE
+	}
 
 	// Check if group exists
 	group, err := api.GetGroupByName(requestInfo, org, name)
 	if err != nil {
-		return nil, err
+		return nil, total, err
 	}
 
 	// Check restrictions
 	groupsFiltered, err := api.GetAuthorizedGroups(requestInfo, group.Urn, GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES, []Group{*group})
 	if err != nil {
-		return nil, err
+		return nil, total, err
 	}
 	if len(groupsFiltered) < 1 {
-		return nil, &Error{
+		return nil, total, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
 				requestInfo.Identifier, group.Urn),
@@ -661,13 +697,13 @@ func (api AuthAPI) ListAttachedGroupPolicies(requestInfo RequestInfo, org string
 	}
 
 	// Call repo to retrieve the GroupPolicyRelations
-	attachedPolicies, err := api.GroupRepo.GetAttachedPolicies(group.ID)
+	attachedPolicies, total, err := api.GroupRepo.GetAttachedPolicies(group.ID, filter)
 
 	// Error handling
 	if err != nil {
 		//Transform to DB error
 		dbError := err.(*database.Error)
-		return nil, &Error{
+		return nil, total, &Error{
 			Code:    UNKNOWN_API_ERROR,
 			Message: dbError.Message,
 		}
@@ -677,7 +713,7 @@ func (api AuthAPI) ListAttachedGroupPolicies(requestInfo RequestInfo, org string
 	for _, p := range attachedPolicies {
 		policyIDs = append(policyIDs, p.Name)
 	}
-	return policyIDs, nil
+	return policyIDs, total, nil
 }
 
 // PRIVATE HELPER METHODS

@@ -1,7 +1,8 @@
 package api
 
 import (
-	"github.com/Sirupsen/logrus"
+	"bytes"
+	log "github.com/Sirupsen/logrus"
 	"github.com/kylelemons/godebug/pretty"
 	"math/rand"
 	"testing"
@@ -42,6 +43,12 @@ type TestRepo struct {
 	SpecialFuncs map[string]interface{}
 }
 
+var testFilter = Filter{
+	PathPrefix: "",
+	Offset:     0,
+	Limit:      20,
+}
+
 // func that initializes the TestRepo
 func makeTestRepo() *TestRepo {
 	testRepo := &TestRepo{
@@ -53,13 +60,13 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[AddUserMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[UpdateUserMethod] = make([]interface{}, 3)
 	testRepo.ArgsIn[GetUsersFilteredMethod] = make([]interface{}, 1)
-	testRepo.ArgsIn[GetGroupsByUserIDMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[GetGroupsByUserIDMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[RemoveUserMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetGroupByNameMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[IsMemberOfGroupMethod] = make([]interface{}, 2)
-	testRepo.ArgsIn[GetGroupMembersMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[GetGroupMembersMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[IsAttachedToGroupMethod] = make([]interface{}, 2)
-	testRepo.ArgsIn[GetAttachedPoliciesMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[GetAttachedPoliciesMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[GetGroupsFilteredMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[RemoveGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[AddGroupMethod] = make([]interface{}, 1)
@@ -73,20 +80,20 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[UpdatePolicyMethod] = make([]interface{}, 5)
 	testRepo.ArgsIn[RemovePolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetPoliciesFilteredMethod] = make([]interface{}, 2)
-	testRepo.ArgsIn[GetAttachedGroupsMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[GetAttachedGroupsMethod] = make([]interface{}, 2)
 
 	testRepo.ArgsOut[GetUserByExternalIDMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AddUserMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[UpdateUserMethod] = make([]interface{}, 2)
-	testRepo.ArgsOut[GetUsersFilteredMethod] = make([]interface{}, 2)
-	testRepo.ArgsOut[GetGroupsByUserIDMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[GetUsersFilteredMethod] = make([]interface{}, 3)
+	testRepo.ArgsOut[GetGroupsByUserIDMethod] = make([]interface{}, 3)
 	testRepo.ArgsOut[RemoveUserMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[GetGroupByNameMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[IsMemberOfGroupMethod] = make([]interface{}, 2)
-	testRepo.ArgsOut[GetGroupMembersMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[GetGroupMembersMethod] = make([]interface{}, 3)
 	testRepo.ArgsOut[IsAttachedToGroupMethod] = make([]interface{}, 2)
-	testRepo.ArgsOut[GetAttachedPoliciesMethod] = make([]interface{}, 2)
-	testRepo.ArgsOut[GetGroupsFilteredMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[GetAttachedPoliciesMethod] = make([]interface{}, 3)
+	testRepo.ArgsOut[GetGroupsFilteredMethod] = make([]interface{}, 3)
 	testRepo.ArgsOut[RemoveGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[AddGroupMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AddMemberMethod] = make([]interface{}, 1)
@@ -98,8 +105,8 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[AddPolicyMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[UpdatePolicyMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[RemovePolicyMethod] = make([]interface{}, 1)
-	testRepo.ArgsOut[GetPoliciesFilteredMethod] = make([]interface{}, 2)
-	testRepo.ArgsOut[GetAttachedGroupsMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[GetPoliciesFilteredMethod] = make([]interface{}, 3)
+	testRepo.ArgsOut[GetAttachedGroupsMethod] = make([]interface{}, 3)
 
 	return testRepo
 }
@@ -109,7 +116,12 @@ func makeTestAPI(testRepo *TestRepo) *AuthAPI {
 		UserRepo:   testRepo,
 		GroupRepo:  testRepo,
 		PolicyRepo: testRepo,
-		Logger:     logrus.StandardLogger(),
+		Logger: &log.Logger{
+			Out:       bytes.NewBuffer([]byte{}),
+			Formatter: &log.TextFormatter{},
+			Hooks:     make(log.LevelHooks),
+			Level:     log.DebugLevel,
+		},
 	}
 	return api
 }
@@ -162,30 +174,40 @@ func (t TestRepo) UpdateUser(user User, newPath string, newUrn string) (*User, e
 	return updated, err
 }
 
-func (t TestRepo) GetUsersFiltered(pathPrefix string) ([]User, error) {
-	t.ArgsIn[GetUsersFilteredMethod][0] = pathPrefix
+func (t TestRepo) GetUsersFiltered(filter *Filter) ([]User, int, error) {
+	t.ArgsIn[GetUsersFilteredMethod][0] = filter.PathPrefix
 	var users []User
 	if t.ArgsOut[GetUsersFilteredMethod][0] != nil {
 		users = t.ArgsOut[GetUsersFilteredMethod][0].([]User)
 	}
-	var err error
+
+	var total int
 	if t.ArgsOut[GetUsersFilteredMethod][1] != nil {
-		err = t.ArgsOut[GetUsersFilteredMethod][1].(error)
+		total = t.ArgsOut[GetUsersFilteredMethod][1].(int)
 	}
-	return users, err
+	var err error
+	if t.ArgsOut[GetUsersFilteredMethod][2] != nil {
+		err = t.ArgsOut[GetUsersFilteredMethod][2].(error)
+	}
+	return users, total, err
 }
 
-func (t TestRepo) GetGroupsByUserID(id string) ([]Group, error) {
+func (t TestRepo) GetGroupsByUserID(id string, filter *Filter) ([]Group, int, error) {
 	t.ArgsIn[GetGroupsByUserIDMethod][0] = id
 	var groups []Group
 	if t.ArgsOut[GetGroupsByUserIDMethod][0] != nil {
 		groups = t.ArgsOut[GetGroupsByUserIDMethod][0].([]Group)
 	}
-	var err error
+
+	var total int
 	if t.ArgsOut[GetGroupsByUserIDMethod][1] != nil {
-		err = t.ArgsOut[GetGroupsByUserIDMethod][1].(error)
+		total = t.ArgsOut[GetGroupsByUserIDMethod][1].(int)
 	}
-	return groups, err
+	var err error
+	if t.ArgsOut[GetGroupsByUserIDMethod][2] != nil {
+		err = t.ArgsOut[GetGroupsByUserIDMethod][2].(error)
+	}
+	return groups, total, err
 }
 
 func (t TestRepo) RemoveUser(id string) error {
@@ -232,17 +254,21 @@ func (t TestRepo) IsMemberOfGroup(userID string, groupID string) (bool, error) {
 	return isMember, err
 }
 
-func (t TestRepo) GetGroupMembers(groupID string) ([]User, error) {
+func (t TestRepo) GetGroupMembers(groupID string, filter *Filter) ([]User, int, error) {
 	t.ArgsIn[GetGroupMembersMethod][0] = groupID
 	var members []User
 	if t.ArgsOut[GetGroupMembersMethod][0] != nil {
 		members = t.ArgsOut[GetGroupMembersMethod][0].([]User)
 	}
-	var err error
+	var total int
 	if t.ArgsOut[GetGroupMembersMethod][1] != nil {
-		err = t.ArgsOut[GetGroupMembersMethod][1].(error)
+		total = t.ArgsOut[GetGroupMembersMethod][1].(int)
 	}
-	return members, err
+	var err error
+	if t.ArgsOut[GetGroupMembersMethod][2] != nil {
+		err = t.ArgsOut[GetGroupMembersMethod][2].(error)
+	}
+	return members, total, err
 }
 
 func (t TestRepo) IsAttachedToGroup(groupID string, policyID string) (bool, error) {
@@ -259,32 +285,41 @@ func (t TestRepo) IsAttachedToGroup(groupID string, policyID string) (bool, erro
 	return isAttached, err
 }
 
-func (t TestRepo) GetAttachedPolicies(groupID string) ([]Policy, error) {
+func (t TestRepo) GetAttachedPolicies(groupID string, filter *Filter) ([]Policy, int, error) {
 	t.ArgsIn[GetAttachedPoliciesMethod][0] = groupID
 	var policies []Policy
 	if t.ArgsOut[GetAttachedPoliciesMethod][0] != nil {
 		policies = t.ArgsOut[GetAttachedPoliciesMethod][0].([]Policy)
 	}
-	var err error
+	var total int
 	if t.ArgsOut[GetAttachedPoliciesMethod][1] != nil {
-		err = t.ArgsOut[GetAttachedPoliciesMethod][1].(error)
+		total = t.ArgsOut[GetAttachedPoliciesMethod][1].(int)
 	}
-	return policies, err
+
+	var err error
+	if t.ArgsOut[GetAttachedPoliciesMethod][2] != nil {
+		err = t.ArgsOut[GetAttachedPoliciesMethod][2].(error)
+	}
+	return policies, total, err
 }
 
-func (t TestRepo) GetGroupsFiltered(org string, pathPrefix string) ([]Group, error) {
+func (t TestRepo) GetGroupsFiltered(org string, filter *Filter) ([]Group, int, error) {
 	t.ArgsIn[GetGroupsFilteredMethod][0] = org
-	t.ArgsIn[GetGroupsFilteredMethod][1] = pathPrefix
+	t.ArgsIn[GetGroupsFilteredMethod][1] = filter.PathPrefix
 
 	var groups []Group
 	if t.ArgsOut[GetGroupsFilteredMethod][0] != nil {
 		groups = t.ArgsOut[GetGroupsFilteredMethod][0].([]Group)
 	}
-	var err error
+	var total int
 	if t.ArgsOut[GetGroupsFilteredMethod][1] != nil {
-		err = t.ArgsOut[GetGroupsFilteredMethod][1].(error)
+		total = t.ArgsOut[GetGroupsFilteredMethod][1].(int)
 	}
-	return groups, err
+	var err error
+	if t.ArgsOut[GetGroupsFilteredMethod][2] != nil {
+		err = t.ArgsOut[GetGroupsFilteredMethod][2].(error)
+	}
+	return groups, total, err
 }
 func (t TestRepo) RemoveGroup(id string) error {
 	t.ArgsIn[RemoveGroupMethod][0] = id
@@ -425,33 +460,41 @@ func (t TestRepo) RemovePolicy(id string) error {
 	return err
 }
 
-func (t TestRepo) GetPoliciesFiltered(org string, pathPrefix string) ([]Policy, error) {
+func (t TestRepo) GetPoliciesFiltered(org string, filter *Filter) ([]Policy, int, error) {
 	t.ArgsIn[GetPoliciesFilteredMethod][0] = org
-	t.ArgsIn[GetPoliciesFilteredMethod][1] = pathPrefix
+	t.ArgsIn[GetPoliciesFilteredMethod][1] = filter.PathPrefix
 
 	var policies []Policy
 	if t.ArgsOut[GetPoliciesFilteredMethod][0] != nil {
 		policies = t.ArgsOut[GetPoliciesFilteredMethod][0].([]Policy)
 	}
-	var err error
+	var total int
 	if t.ArgsOut[GetPoliciesFilteredMethod][1] != nil {
-		err = t.ArgsOut[GetPoliciesFilteredMethod][1].(error)
+		total = t.ArgsOut[GetPoliciesFilteredMethod][1].(int)
 	}
-	return policies, err
+	var err error
+	if t.ArgsOut[GetPoliciesFilteredMethod][2] != nil {
+		err = t.ArgsOut[GetPoliciesFilteredMethod][2].(error)
+	}
+	return policies, total, err
 }
 
-func (t TestRepo) GetAttachedGroups(policyID string) ([]Group, error) {
+func (t TestRepo) GetAttachedGroups(policyID string, filter *Filter) ([]Group, int, error) {
 	t.ArgsIn[GetAttachedGroupsMethod][0] = policyID
 
 	var groups []Group
 	if t.ArgsOut[GetAttachedGroupsMethod][0] != nil {
 		groups = t.ArgsOut[GetAttachedGroupsMethod][0].([]Group)
 	}
-	var err error
-	if t.ArgsOut[GetAttachedGroupsMethod][1] != nil {
-		err = t.ArgsOut[GetAttachedGroupsMethod][1].(error)
+	var total int
+	if t.ArgsOut[GetGroupsByUserIDMethod][1] != nil {
+		total = t.ArgsOut[GetAttachedGroupsMethod][1].(int)
 	}
-	return groups, err
+	var err error
+	if t.ArgsOut[GetAttachedGroupsMethod][2] != nil {
+		err = t.ArgsOut[GetAttachedGroupsMethod][2].(error)
+	}
+	return groups, total, err
 }
 
 // Private helper methods

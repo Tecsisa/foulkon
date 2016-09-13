@@ -1004,10 +1004,10 @@ func TestGetRestrictions(t *testing.T) {
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
 
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = test.getGroupsByUserIDResult
-		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = test.getGroupsByUserIDError
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][2] = test.getGroupsByUserIDError
 
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = test.getAttachedPoliciesResult
-		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = test.getAttachedPoliciesError
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][2] = test.getAttachedPoliciesError
 
 		restrictions, err := testAPI.getRestrictions(test.authUserID, test.action, test.resourceUrn)
 		checkMethodResponse(t, n, test.wantError, err, test.expectedRestrictions, restrictions)
@@ -1080,7 +1080,7 @@ func TestGetGroupsByUser(t *testing.T) {
 		testAPI := makeTestAPI(testRepo)
 
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = test.getGroupsByUserIDResult
-		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = test.getGroupsByUserIDError
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][2] = test.getGroupsByUserIDError
 
 		groups, err := testAPI.getGroupsByUser(test.userID)
 		checkMethodResponse(t, n, test.wantError, err, test.expectedGroups, groups)
@@ -1165,7 +1165,7 @@ func TestGetPoliciesByGroups(t *testing.T) {
 		testAPI := makeTestAPI(testRepo)
 
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = test.getAttachedPoliciesResult
-		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = test.getAttachedPoliciesError
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][2] = test.getAttachedPoliciesError
 
 		policies, err := testAPI.getPoliciesByGroups(test.groups)
 		checkMethodResponse(t, n, test.wantError, err, test.expectedPolicies, policies)

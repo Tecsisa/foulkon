@@ -26,14 +26,23 @@ type UpdatePolicyRequest struct {
 
 type ListPoliciesResponse struct {
 	Policies []string `json:"policies, omitempty"`
+	Limit    int      `json:"limit, omitempty"`
+	Offset   int      `json:"offset, omitempty"`
+	Total    int      `json:"total, omitempty"`
 }
 
 type ListAllPoliciesResponse struct {
 	Policies []api.PolicyIdentity `json:"policies, omitempty"`
+	Limit    int                  `json:"limit, omitempty"`
+	Offset   int                  `json:"offset, omitempty"`
+	Total    int                  `json:"total, omitempty"`
 }
 
 type ListAttachedGroupsResponse struct {
 	Groups []string `json:"groups, omitempty"`
+	Limit  int      `json:"limit, omitempty"`
+	Offset int      `json:"offset, omitempty"`
+	Total  int      `json:"total, omitempty"`
 }
 
 // HANDLERS
@@ -117,11 +126,17 @@ func (h *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Reques
 	// Retrieve org from path
 	org := ps.ByName(ORG_NAME)
 
-	// Retrieve query param if exist
-	pathPrefix := r.URL.Query().Get("PathPrefix")
+	// Retrieve filterData
+	filterData, err := getFilterData(r)
+	if err != nil {
+		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
+		h.RespondBadRequest(r, requestInfo, w, apiError)
+		return
+	}
 
 	// Call policy API to retrieve policies
-	result, err := h.worker.PolicyApi.ListPolicies(requestInfo, org, pathPrefix)
+	result, total, err := h.worker.PolicyApi.ListPolicies(requestInfo, org, filterData)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -144,6 +159,9 @@ func (h *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Reques
 	}
 	response := &ListPoliciesResponse{
 		Policies: policies,
+		Offset:   filterData.Offset,
+		Limit:    filterData.Limit,
+		Total:    total,
 	}
 
 	// Return policies
@@ -152,11 +170,18 @@ func (h *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Reques
 
 func (h *WorkerHandler) HandleListAllPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	requestInfo := h.GetRequestInfo(r)
-	// get Org and PathPrefix from request, so the query can be filtered
-	pathPrefix := r.URL.Query().Get("PathPrefix")
+
+	// Retrieve filterData
+	filterData, err := getFilterData(r)
+	if err != nil {
+		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
+		h.RespondBadRequest(r, requestInfo, w, apiError)
+		return
+	}
 
 	// Call policies API to retrieve policies
-	result, err := h.worker.PolicyApi.ListPolicies(requestInfo, "", pathPrefix)
+	result, total, err := h.worker.PolicyApi.ListPolicies(requestInfo, "", filterData)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -175,6 +200,9 @@ func (h *WorkerHandler) HandleListAllPolicies(w http.ResponseWriter, r *http.Req
 	// Create response
 	response := &ListAllPoliciesResponse{
 		Policies: result,
+		Offset:   filterData.Offset,
+		Limit:    filterData.Limit,
+		Total:    total,
 	}
 
 	// Return policies
@@ -262,8 +290,17 @@ func (h *WorkerHandler) HandleListAttachedGroups(w http.ResponseWriter, r *http.
 	orgId := ps.ByName(ORG_NAME)
 	policyName := ps.ByName(POLICY_NAME)
 
+	// Retrieve filterData
+	filterData, err := getFilterData(r)
+	if err != nil {
+		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
+		h.RespondBadRequest(r, requestInfo, w, apiError)
+		return
+	}
+
 	// Call policies API to retrieve attached groups
-	result, err := h.worker.PolicyApi.ListAttachedGroups(requestInfo, orgId, policyName)
+	result, total, err := h.worker.PolicyApi.ListAttachedGroups(requestInfo, orgId, policyName, filterData)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -284,6 +321,9 @@ func (h *WorkerHandler) HandleListAttachedGroups(w http.ResponseWriter, r *http.
 	// Create response
 	response := &ListAttachedGroupsResponse{
 		Groups: result,
+		Offset: filterData.Offset,
+		Limit:  filterData.Limit,
+		Total:  total,
 	}
 
 	// Return groups

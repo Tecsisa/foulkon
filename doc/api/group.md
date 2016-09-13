@@ -178,20 +178,23 @@ HTTP/1.1 200 OK
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
 | **groups** | *array* | List of groups | `["groupName1, groupName2"]` |
+| **limit** | *integer* | The maximum number of items in the response (as set in the query or by default) | `20` |
+| **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
+| **total** | *integer* | The total number of items available to return | `50` |
 
 ### Organization's groups List
 
 List all organization's groups
 
 ```
-GET /api/v1/organizations/{organization_id}/groups?PathPrefix={optional_path_prefix}
+GET /api/v1/organizations/{organization_id}/groups?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/organizations/$ORGANIZATION_ID/groups?PathPrefix=$OPTIONAL_PATH_PREFIX \
+$ curl -n /api/v1/organizations/$ORGANIZATION_ID/groups?PathPrefix=$OPTIONAL_PATH_PREFIX&Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -206,7 +209,10 @@ HTTP/1.1 200 OK
 {
   "groups": [
     "groupName1, groupName2"
-  ]
+  ],
+  "offset": 0,
+  "limit": 20,
+  "total": 50
 }
 ```
 
@@ -222,20 +228,23 @@ HTTP/1.1 200 OK
 | ------- | ------- | ------- | ------- |
 | **[groups/name](#resource-order1_group)** | *string* | Group name | `"group1"` |
 | **[groups/org](#resource-order1_group)** | *string* | Group organization | `"tecsisa"` |
+| **limit** | *integer* | The maximum number of items in the response (as set in the query or by default) | `20` |
+| **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
+| **total** | *integer* | The total number of items available to return | `50` |
 
 ### All groups List
 
 List all groups
 
 ```
-GET /api/v1/groups?PathPrefix={optional_path_prefix}
+GET /api/v1/groups?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/groups?PathPrefix=$OPTIONAL_PATH_PREFIX \
+$ curl -n /api/v1/groups?PathPrefix=$OPTIONAL_PATH_PREFIX&Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -253,7 +262,10 @@ HTTP/1.1 200 OK
       "org": "tecsisa",
       "name": "group1"
     }
-  ]
+  ],
+  "offset": 0,
+  "limit": 20,
+  "total": 50
 }
 ```
 
@@ -267,7 +279,10 @@ Group members
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
+| **limit** | *integer* | The maximum number of items in the response (as set in the query or by default) | `20` |
 | **members** | *array* | Identifier of user | `["member1"]` |
+| **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
+| **total** | *integer* | The total number of items available to return | `50` |
 
 ### Member Add
 
@@ -324,14 +339,14 @@ HTTP/1.1 202 Accepted
 List members of a group
 
 ```
-GET /api/v1/organizations/{organization_id}/groups/{group_name}/users
+GET /api/v1/organizations/{organization_id}/groups/{group_name}/users?Offset={optional_offset}&Limit={optional_limit}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/organizations/$ORGANIZATION_ID/groups/$GROUP_NAME/users \
+$ curl -n /api/v1/organizations/$ORGANIZATION_ID/groups/$GROUP_NAME/users?Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -346,7 +361,10 @@ HTTP/1.1 200 OK
 {
   "members": [
     "member1"
-  ]
+  ],
+  "offset": 0,
+  "limit": 20,
+  "total": 50
 }
 ```
 
@@ -360,7 +378,10 @@ Attached Policies
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
+| **limit** | *integer* | The maximum number of items in the response (as set in the query or by default) | `20` |
+| **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
 | **policies** | *array* | Policies attached to this group | `["policyName1, policyName2"]` |
+| **total** | *integer* | The total number of items available to return | `50` |
 
 ### Group Policies Attach
 
@@ -417,14 +438,14 @@ HTTP/1.1 202 Accepted
 List attach policies
 
 ```
-GET /api/v1/organizations/{organization_id}/groups/{group_name}/policies
+GET /api/v1/organizations/{organization_id}/groups/{group_name}/policies?Offset={optional_offset}&Limit={optional_limit}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/organizations/$ORGANIZATION_ID/groups/$GROUP_NAME/policies \
+$ curl -n /api/v1/organizations/$ORGANIZATION_ID/groups/$GROUP_NAME/policies?Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -439,7 +460,10 @@ HTTP/1.1 200 OK
 {
   "policies": [
     "policyName1, policyName2"
-  ]
+  ],
+  "offset": 0,
+  "limit": 20,
+  "total": 50
 }
 ```
 

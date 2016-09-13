@@ -23,10 +23,16 @@ type UpdateUserRequest struct {
 
 type GetUserExternalIDsResponse struct {
 	ExternalIDs []string `json:"users, omitempty"`
+	Limit       int      `json:"limit, omitempty"`
+	Offset      int      `json:"offset, omitempty"`
+	Total       int      `json:"total, omitempty"`
 }
 
 type GetGroupsByUserIdResponse struct {
 	Groups []api.GroupIdentity `json:"groups, omitempty"`
+	Limit  int                 `json:"limit, omitempty"`
+	Offset int                 `json:"offset, omitempty"`
+	Total  int                 `json:"total, omitempty"`
 }
 
 // HANDLERS
@@ -103,10 +109,16 @@ func (h *WorkerHandler) HandleGetUserByExternalID(w http.ResponseWriter, r *http
 
 func (h *WorkerHandler) HandleListUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	requestInfo := h.GetRequestInfo(r)
-	// Retrieve PathPrefix
-	pathPrefix := r.URL.Query().Get("PathPrefix")
-	// Call user API
-	result, err := h.worker.UserApi.ListUsers(requestInfo, pathPrefix)
+	// Retrieve filterData
+	filterData, err := getFilterData(r)
+	if err != nil {
+		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
+		h.RespondBadRequest(r, requestInfo, w, apiError)
+		return
+	}
+
+	result, total, err := h.worker.UserApi.ListUsers(requestInfo, filterData)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -114,6 +126,8 @@ func (h *WorkerHandler) HandleListUsers(w http.ResponseWriter, r *http.Request, 
 		switch apiError.Code {
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
 			h.RespondForbidden(r, requestInfo, w, apiError)
+		case api.INVALID_PARAMETER_ERROR:
+			h.RespondBadRequest(r, requestInfo, w, apiError)
 		default: // Unexpected API error
 			h.RespondInternalServerError(r, requestInfo, w)
 		}
@@ -123,6 +137,9 @@ func (h *WorkerHandler) HandleListUsers(w http.ResponseWriter, r *http.Request, 
 	// Create response
 	response := &GetUserExternalIDsResponse{
 		ExternalIDs: result,
+		Offset:      filterData.Offset,
+		Limit:       filterData.Limit,
+		Total:       total,
 	}
 
 	// Return users
@@ -205,7 +222,15 @@ func (h *WorkerHandler) HandleListGroupsByUser(w http.ResponseWriter, r *http.Re
 	// Retrieve users using path
 	id := ps.ByName(USER_ID)
 
-	result, err := h.worker.UserApi.ListGroupsByUser(requestInfo, id)
+	// Retrieve filterData
+	filterData, err := getFilterData(r)
+	if err != nil {
+		apiError := err.(*api.Error)
+		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
+		h.RespondBadRequest(r, requestInfo, w, apiError)
+		return
+	}
+	result, total, err := h.worker.UserApi.ListGroupsByUser(requestInfo, id, filterData)
 
 	if err != nil {
 		// Transform to API errors
@@ -226,6 +251,9 @@ func (h *WorkerHandler) HandleListGroupsByUser(w http.ResponseWriter, r *http.Re
 
 	response := GetGroupsByUserIdResponse{
 		Groups: result,
+		Offset: filterData.Offset,
+		Limit:  filterData.Limit,
+		Total:  total,
 	}
 
 	// Write user to response
