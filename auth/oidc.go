@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	USER_ID_HEADER = "USER-ID"
+	USER_ID_HEADER = "X-FOULKON-USER-ID"
 )
 
 // OIDCAuthConnector represents an OIDC connector that implements interface of auth connector
@@ -63,6 +63,5 @@ func (c OIDCAuthConnector) Authenticate(h http.Handler) http.Handler {
 // Retrieve user from OIDC token
 func (c OIDCAuthConnector) RetrieveUserID(r http.Request) string {
 	userID := r.Header.Get(USER_ID_HEADER)
-	r.Header.Del(USER_ID_HEADER)
 	return userID
 }
