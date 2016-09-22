@@ -43,15 +43,11 @@ func InitDb(datasourcename string, idleConns string, maxOpenConns string, connTT
 		return nil, err
 	}
 
-	// Create tables if not exist =
+	// Create tables if not exist
 	err = db.AutoMigrate(&User{}, &Group{}, &Policy{}, &Statement{}, &GroupUserRelation{}, &GroupPolicyRelation{}).Error
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO:
-	// Activate sql logger
-	//db.LogMode(true)
 
 	return db, nil
 }
@@ -62,6 +58,7 @@ type User struct {
 	ExternalID string `gorm:"not null;unique"`
 	Path       string `gorm:"not null"`
 	CreateAt   int64  `gorm:"not null"`
+	UpdateAt   int64  `gorm:"not null"`
 	Urn        string `gorm:"not null;unique"`
 }
 
@@ -77,6 +74,7 @@ type Group struct {
 	Path     string `gorm:"not null"`
 	Org      string `gorm:"not null"`
 	CreateAt int64  `gorm:"not null"`
+	UpdateAt int64  `gorm:"not null"`
 	Urn      string `gorm:"not null;unique"`
 }
 
@@ -92,6 +90,7 @@ type Policy struct {
 	Path     string `gorm:"not null"`
 	Org      string `gorm:"not null"`
 	CreateAt int64  `gorm:"not null"`
+	UpdateAt int64  `gorm:"not null"`
 	Urn      string `gorm:"not null;unique"`
 }
 

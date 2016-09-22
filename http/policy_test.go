@@ -51,6 +51,7 @@ func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
 				Org:      "org1",
 				Path:     "/path/",
 				CreateAt: now,
+				UpdateAt: now,
 				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]api.Statement{
 					{
@@ -70,6 +71,7 @@ func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
 				Name:     "test",
 				Org:      "org1",
 				CreateAt: now,
+				UpdateAt: now,
 				Path:     "/path/",
 				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]api.Statement{
@@ -310,6 +312,7 @@ func TestWorkerHandler_HandleGetPolicy(t *testing.T) {
 				Org:      "org1",
 				Path:     "/path/",
 				CreateAt: now,
+				UpdateAt: now,
 				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]api.Statement{
 					{
@@ -329,6 +332,7 @@ func TestWorkerHandler_HandleGetPolicy(t *testing.T) {
 				Org:      "org1",
 				Path:     "/path/",
 				CreateAt: now,
+				UpdateAt: now,
 				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]api.Statement{
 					{
@@ -862,6 +866,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				Path:     "/path/",
 				Org:      "org1",
 				CreateAt: now,
+				UpdateAt: now,
 				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]api.Statement{
 					{
@@ -881,6 +886,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				Path:     "/path/",
 				Org:      "org1",
 				CreateAt: now,
+				UpdateAt: now,
 				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
 				Statements: &[]api.Statement{
 					{

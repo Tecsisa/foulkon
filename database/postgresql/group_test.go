@@ -13,7 +13,7 @@ func TestPostgresRepo_AddGroup(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
-		previousGroup *api.Group
+		previousGroup *Group
 		// Postgres Repo Args
 		groupToCreate *api.Group
 		// Expected result
@@ -27,6 +27,7 @@ func TestPostgresRepo_AddGroup(t *testing.T) {
 				Path:     "Path",
 				Urn:      "urn",
 				CreateAt: now,
+				UpdateAt: now,
 				Org:      "Org",
 			},
 			expectedResponse: &api.Group{
@@ -35,16 +36,18 @@ func TestPostgresRepo_AddGroup(t *testing.T) {
 				Path:     "Path",
 				Urn:      "urn",
 				CreateAt: now,
+				UpdateAt: now,
 				Org:      "Org",
 			},
 		},
 		"ErrorCasegroupAlreadyExist": {
-			previousGroup: &api.Group{
+			previousGroup: &Group{
 				ID:       "GroupID",
 				Name:     "Name",
 				Path:     "Path",
 				Urn:      "urn",
-				CreateAt: now,
+				CreateAt: now.UnixNano(),
+				UpdateAt: now.UnixNano(),
 				Org:      "Org",
 			},
 			groupToCreate: &api.Group{
@@ -53,6 +56,7 @@ func TestPostgresRepo_AddGroup(t *testing.T) {
 				Path:     "Path",
 				Urn:      "urn",
 				CreateAt: now,
+				UpdateAt: now,
 				Org:      "Org",
 			},
 			expectedError: &database.Error{
@@ -68,8 +72,7 @@ func TestPostgresRepo_AddGroup(t *testing.T) {
 
 		// Insert previous data
 		if test.previousGroup != nil {
-			err := insertGroup(test.previousGroup.ID, test.previousGroup.Name, test.previousGroup.Path,
-				test.previousGroup.CreateAt.UnixNano(), test.previousGroup.Urn, test.previousGroup.Org)
+			err := insertGroup(*test.previousGroup)
 			if err != nil {
 				t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
 				continue
@@ -99,7 +102,7 @@ func TestPostgresRepo_AddGroup(t *testing.T) {
 			}
 			// Check database
 			groupNumber, err := getGroupsCountFiltered(test.groupToCreate.ID, test.groupToCreate.Name, test.groupToCreate.Path,
-				test.groupToCreate.CreateAt.UnixNano(), test.groupToCreate.Urn, test.groupToCreate.Org)
+				test.groupToCreate.CreateAt.UnixNano(), test.groupToCreate.UpdateAt.UnixNano(), test.groupToCreate.Urn, test.groupToCreate.Org)
 			if err != nil {
 				t.Errorf("Test %v failed. Unexpected error counting groups: %v", n, err)
 				continue
@@ -116,7 +119,7 @@ func TestPostgresRepo_GetGroupByName(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
-		previousGroup *api.Group
+		previousGroup *Group
 		// Postgres Repo Args
 		org  string
 		name string
@@ -125,12 +128,13 @@ func TestPostgresRepo_GetGroupByName(t *testing.T) {
 		expectedError    *database.Error
 	}{
 		"OkCase": {
-			previousGroup: &api.Group{
+			previousGroup: &Group{
 				ID:       "GroupID",
 				Name:     "Name",
 				Path:     "Path",
 				Urn:      "Urn",
-				CreateAt: now,
+				CreateAt: now.UnixNano(),
+				UpdateAt: now.UnixNano(),
 				Org:      "Org",
 			},
 			org:  "Org",
@@ -141,16 +145,18 @@ func TestPostgresRepo_GetGroupByName(t *testing.T) {
 				Path:     "Path",
 				Urn:      "Urn",
 				CreateAt: now,
+				UpdateAt: now,
 				Org:      "Org",
 			},
 		},
 		"ErrorCaseGroupNotExist": {
-			previousGroup: &api.Group{
+			previousGroup: &Group{
 				ID:       "GroupID",
 				Name:     "Name",
 				Path:     "Path",
 				Urn:      "Urn",
-				CreateAt: now,
+				CreateAt: now.UnixNano(),
+				UpdateAt: now.UnixNano(),
 				Org:      "Org",
 			},
 			org:  "Org",
@@ -168,8 +174,7 @@ func TestPostgresRepo_GetGroupByName(t *testing.T) {
 
 		// Insert previous data
 		if test.previousGroup != nil {
-			err := insertGroup(test.previousGroup.ID, test.previousGroup.Name, test.previousGroup.Path,
-				test.previousGroup.CreateAt.UnixNano(), test.previousGroup.Urn, test.previousGroup.Org)
+			err := insertGroup(*test.previousGroup)
 			if err != nil {
 				t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
 				continue
@@ -202,7 +207,7 @@ func TestPostgresRepo_GetGroupById(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
-		previousGroup *api.Group
+		previousGroup *Group
 		// Postgres Repo Args
 		groupID string
 		// Expected result
@@ -210,12 +215,13 @@ func TestPostgresRepo_GetGroupById(t *testing.T) {
 		expectedError    *database.Error
 	}{
 		"OkCase": {
-			previousGroup: &api.Group{
+			previousGroup: &Group{
 				ID:       "GroupID",
 				Name:     "Name",
 				Path:     "Path",
 				Urn:      "Urn",
-				CreateAt: now,
+				CreateAt: now.UnixNano(),
+				UpdateAt: now.UnixNano(),
 				Org:      "Org",
 			},
 			groupID: "GroupID",
@@ -225,16 +231,18 @@ func TestPostgresRepo_GetGroupById(t *testing.T) {
 				Path:     "Path",
 				Urn:      "Urn",
 				CreateAt: now,
+				UpdateAt: now,
 				Org:      "Org",
 			},
 		},
 		"ErrorCaseGroupNotExist": {
-			previousGroup: &api.Group{
+			previousGroup: &Group{
 				ID:       "GroupID",
 				Name:     "Name",
 				Path:     "Path",
 				Urn:      "Urn",
-				CreateAt: now,
+				CreateAt: now.UnixNano(),
+				UpdateAt: now.UnixNano(),
 				Org:      "Org",
 			},
 			groupID: "NotExist",
@@ -251,8 +259,7 @@ func TestPostgresRepo_GetGroupById(t *testing.T) {
 
 		// Insert previous data
 		if test.previousGroup != nil {
-			err := insertGroup(test.previousGroup.ID, test.previousGroup.Name, test.previousGroup.Path,
-				test.previousGroup.CreateAt.UnixNano(), test.previousGroup.Urn, test.previousGroup.Org)
+			err := insertGroup(*test.previousGroup)
 			if err != nil {
 				t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
 				continue
@@ -285,7 +292,7 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
-		previousGroups []api.Group
+		previousGroups []Group
 		// Postgres Repo Args
 		org    string
 		filter *api.Filter
@@ -293,13 +300,14 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 		expectedResponse []api.Group
 	}{
 		"OkCasePathPrefix1": {
-			previousGroups: []api.Group{
+			previousGroups: []Group{
 				{
 					ID:       "GroupID1",
 					Name:     "Name1",
 					Path:     "Path123",
 					Urn:      "urn1",
-					CreateAt: now,
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
 					Org:      "Org1",
 				},
 				{
@@ -307,7 +315,8 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 					Name:     "Name2",
 					Path:     "Path456",
 					Urn:      "urn2",
-					CreateAt: now,
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
 					Org:      "Org2",
 				},
 			},
@@ -323,6 +332,7 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 					Path:     "Path123",
 					Urn:      "urn1",
 					CreateAt: now,
+					UpdateAt: now,
 					Org:      "Org1",
 				},
 				{
@@ -331,18 +341,20 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 					Path:     "Path456",
 					Urn:      "urn2",
 					CreateAt: now,
+					UpdateAt: now,
 					Org:      "Org2",
 				},
 			},
 		},
 		"OkCasePathPrefix2": {
-			previousGroups: []api.Group{
+			previousGroups: []Group{
 				{
 					ID:       "GroupID1",
 					Name:     "Name1",
 					Path:     "Path123",
 					Urn:      "urn1",
-					CreateAt: now,
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
 					Org:      "Org1",
 				},
 				{
@@ -350,7 +362,8 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 					Name:     "Name2",
 					Path:     "Path456",
 					Urn:      "urn2",
-					CreateAt: now,
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
 					Org:      "Org2",
 				},
 			},
@@ -366,18 +379,20 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 					Path:     "Path123",
 					Urn:      "urn1",
 					CreateAt: now,
+					UpdateAt: now,
 					Org:      "Org1",
 				},
 			},
 		},
 		"OkCasePathPrefix3": {
-			previousGroups: []api.Group{
+			previousGroups: []Group{
 				{
 					ID:       "GroupID1",
 					Name:     "Name1",
 					Path:     "Path123",
 					Urn:      "urn1",
-					CreateAt: now,
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
 					Org:      "Org1",
 				},
 				{
@@ -385,7 +400,8 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 					Name:     "Name2",
 					Path:     "Path456",
 					Urn:      "urn2",
-					CreateAt: now,
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
 					Org:      "Org2",
 				},
 			},
@@ -397,13 +413,14 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 			expectedResponse: []api.Group{},
 		},
 		"OkCaseGetByOrg": {
-			previousGroups: []api.Group{
+			previousGroups: []Group{
 				{
 					ID:       "GroupID1",
 					Name:     "Name1",
 					Path:     "Path123",
 					Urn:      "urn1",
-					CreateAt: now,
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
 					Org:      "Org1",
 				},
 				{
@@ -411,7 +428,8 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 					Name:     "Name2",
 					Path:     "Path456",
 					Urn:      "urn2",
-					CreateAt: now,
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
 					Org:      "Org2",
 				},
 			},
@@ -424,18 +442,20 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 					Path:     "Path123",
 					Urn:      "urn1",
 					CreateAt: now,
+					UpdateAt: now,
 					Org:      "Org1",
 				},
 			},
 		},
 		"OkCaseGetByOrgAndPathPrefix": {
-			previousGroups: []api.Group{
+			previousGroups: []Group{
 				{
 					ID:       "GroupID1",
 					Name:     "Name1",
 					Path:     "Path123",
 					Urn:      "urn1",
-					CreateAt: now,
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
 					Org:      "Org1",
 				},
 				{
@@ -443,7 +463,8 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 					Name:     "Name2",
 					Path:     "Path456",
 					Urn:      "urn2",
-					CreateAt: now,
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
 					Org:      "Org2",
 				},
 			},
@@ -460,18 +481,20 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 					Path:     "Path123",
 					Urn:      "urn1",
 					CreateAt: now,
+					UpdateAt: now,
 					Org:      "Org1",
 				},
 			},
 		},
 		"OkCaseWithoutParams": {
-			previousGroups: []api.Group{
+			previousGroups: []Group{
 				{
 					ID:       "GroupID1",
 					Name:     "Name1",
 					Path:     "Path123",
 					Urn:      "urn1",
-					CreateAt: now,
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
 					Org:      "Org1",
 				},
 				{
@@ -479,7 +502,8 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 					Name:     "Name2",
 					Path:     "Path456",
 					Urn:      "urn2",
-					CreateAt: now,
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
 					Org:      "Org2",
 				},
 			},
@@ -491,6 +515,7 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 					Path:     "Path123",
 					Urn:      "urn1",
 					CreateAt: now,
+					UpdateAt: now,
 					Org:      "Org1",
 				},
 				{
@@ -499,6 +524,7 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 					Path:     "Path456",
 					Urn:      "urn2",
 					CreateAt: now,
+					UpdateAt: now,
 					Org:      "Org2",
 				},
 			},
@@ -512,8 +538,7 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 		// Insert previous data
 		if test.previousGroups != nil {
 			for _, previousGroup := range test.previousGroups {
-				if err := insertGroup(previousGroup.ID, previousGroup.Name, previousGroup.Path,
-					previousGroup.CreateAt.UnixNano(), previousGroup.Urn, previousGroup.Org); err != nil {
+				if err := insertGroup(previousGroup); err != nil {
 					t.Errorf("Test %v failed. Unexpected error inserting previous groups: %v", n, err)
 					continue
 				}
@@ -542,55 +567,53 @@ func TestPostgresRepo_UpdateGroup(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
-		previousGroups []api.Group
+		previousGroups []Group
 		// Postgres Repo Args
 		groupToUpdate *api.Group
-		newName       string
-		newPath       string
-		newUrn        string
 		// Expected result
 		expectedResponse *api.Group
 		expectedError    *database.Error
 	}{
 		"OkCase": {
-			previousGroups: []api.Group{
+			previousGroups: []Group{
 				{
 					ID:       "GroupID",
 					Name:     "Name",
 					Path:     "Path",
 					Urn:      "Urn",
-					CreateAt: now,
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
 					Org:      "Org",
 				},
 			},
 			groupToUpdate: &api.Group{
 				ID:       "GroupID",
-				Name:     "Name",
-				Path:     "Path",
-				Urn:      "Urn",
+				Name:     "NewName",
+				Path:     "NewPath",
+				Urn:      "NewUrn",
 				CreateAt: now,
+				UpdateAt: now,
 				Org:      "Org",
 			},
-			newName: "NewName",
-			newPath: "NewPath",
-			newUrn:  "NewUrn",
 			expectedResponse: &api.Group{
 				ID:       "GroupID",
 				Name:     "NewName",
 				Path:     "NewPath",
 				Urn:      "NewUrn",
 				CreateAt: now,
+				UpdateAt: now,
 				Org:      "Org",
 			},
 		},
 		"ErrorCaseDuplicateUrn": {
-			previousGroups: []api.Group{
+			previousGroups: []Group{
 				{
 					ID:       "GroupID",
 					Name:     "Name",
 					Path:     "Path",
 					Urn:      "Urn",
-					CreateAt: now,
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
 					Org:      "Org",
 				},
 				{
@@ -598,7 +621,8 @@ func TestPostgresRepo_UpdateGroup(t *testing.T) {
 					Name:     "Name2",
 					Path:     "Path2",
 					Urn:      "Fail",
-					CreateAt: now,
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
 					Org:      "Org2",
 				},
 			},
@@ -606,13 +630,10 @@ func TestPostgresRepo_UpdateGroup(t *testing.T) {
 				ID:       "GroupID",
 				Name:     "Name",
 				Path:     "Path",
-				Urn:      "Urn",
+				Urn:      "Fail",
 				CreateAt: now,
 				Org:      "Org",
 			},
-			newName: "NewName",
-			newPath: "NewPath",
-			newUrn:  "Fail",
 			expectedError: &database.Error{
 				Code:    database.INTERNAL_ERROR,
 				Message: "pq: duplicate key value violates unique constraint \"groups_urn_key\"",
@@ -627,8 +648,7 @@ func TestPostgresRepo_UpdateGroup(t *testing.T) {
 		// Insert previous data
 		if test.previousGroups != nil {
 			for _, previousGroup := range test.previousGroups {
-				err := insertGroup(previousGroup.ID, previousGroup.Name, previousGroup.Path,
-					previousGroup.CreateAt.UnixNano(), previousGroup.Urn, previousGroup.Org)
+				err := insertGroup(previousGroup)
 				if err != nil {
 					t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
 					continue
@@ -637,7 +657,7 @@ func TestPostgresRepo_UpdateGroup(t *testing.T) {
 		}
 
 		// Call to repository to update group
-		updatedGroup, err := repoDB.UpdateGroup(*test.groupToUpdate, test.newName, test.newPath, test.newUrn)
+		updatedGroup, err := repoDB.UpdateGroup(*test.groupToUpdate)
 		if test.expectedError != nil {
 			dbError, ok := err.(*database.Error)
 			if !ok || dbError == nil {
@@ -660,7 +680,8 @@ func TestPostgresRepo_UpdateGroup(t *testing.T) {
 			}
 			// Check database
 			groupNumber, err := getGroupsCountFiltered(test.expectedResponse.ID, test.expectedResponse.Name, test.expectedResponse.Path,
-				test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.Urn, test.expectedResponse.Org)
+				test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.UpdateAt.UnixNano(), test.expectedResponse.Urn,
+				test.expectedResponse.Org)
 			if err != nil {
 				t.Errorf("Test %v failed. Unexpected error counting groups: %v", n, err)
 				continue
@@ -676,29 +697,47 @@ func TestPostgresRepo_UpdateGroup(t *testing.T) {
 func TestPostgresRepo_RemoveGroup(t *testing.T) {
 	type relation struct {
 		userID        string
-		groupIDs      []string
+		groupID       string
 		groupNotFound bool
 	}
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
-		previousGroup *api.Group
-		relation      *relation
+		previousGroups []Group
+		relations      []relation
 		// Postgres Repo Args
 		groupToDelete string
 	}{
 		"OkCase": {
-			previousGroup: &api.Group{
-				ID:       "GroupID",
-				Name:     "Name",
-				Path:     "Path",
-				Urn:      "Urn",
-				CreateAt: now,
-				Org:      "Org",
+			previousGroups: []Group{
+				{
+					ID:       "GroupID",
+					Name:     "Name",
+					Path:     "Path",
+					Urn:      "Urn",
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
+					Org:      "Org",
+				},
+				{
+					ID:       "GroupID2",
+					Name:     "Name",
+					Path:     "Path",
+					Urn:      "Urn2",
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
+					Org:      "Org",
+				},
 			},
-			relation: &relation{
-				userID:   "UserID",
-				groupIDs: []string{"GroupID"},
+			relations: []relation{
+				{
+					userID:  "UserID",
+					groupID: "GroupID",
+				},
+				{
+					userID:  "UserID",
+					groupID: "GroupID2",
+				},
 			},
 			groupToDelete: "GroupID",
 		},
@@ -709,16 +748,17 @@ func TestPostgresRepo_RemoveGroup(t *testing.T) {
 		cleanGroupUserRelationTable()
 
 		// Insert previous data
-		if test.previousGroup != nil {
-			if err := insertGroup(test.previousGroup.ID, test.previousGroup.Name, test.previousGroup.Path,
-				test.previousGroup.CreateAt.Unix(), test.previousGroup.Urn, test.previousGroup.Org); err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting previous group: %v", n, err)
-				continue
+		if test.previousGroups != nil {
+			for _, g := range test.previousGroups {
+				if err := insertGroup(g); err != nil {
+					t.Errorf("Test %v failed. Unexpected error inserting previous group %v: %v", n, g.ID, err)
+					continue
+				}
 			}
 		}
-		if test.relation != nil {
-			for _, id := range test.relation.groupIDs {
-				if err := insertGroupUserRelation(test.relation.userID, id); err != nil {
+		if test.relations != nil {
+			for _, rel := range test.relations {
+				if err := insertGroupUserRelation(rel.userID, rel.groupID); err != nil {
 					t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
 					continue
 				}
@@ -728,8 +768,7 @@ func TestPostgresRepo_RemoveGroup(t *testing.T) {
 		err := repoDB.RemoveGroup(test.groupToDelete)
 
 		// Check database
-		groupNumber, err := getGroupsCountFiltered(test.groupToDelete, "", "",
-			0, "", "")
+		groupNumber, err := getGroupsCountFiltered(test.groupToDelete, "", "", 0, 0, "", "")
 		if err != nil {
 			t.Errorf("Test %v failed. Unexpected error counting groups: %v", n, err)
 			continue
@@ -739,13 +778,36 @@ func TestPostgresRepo_RemoveGroup(t *testing.T) {
 			continue
 		}
 
-		relations, err := getGroupUserRelations(test.previousGroup.ID, "")
+		// Check total groups
+		totalGroupNumber, err := getGroupsCountFiltered("", "", "", 0, 0, "", "")
 		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting relations: %v", n, err)
+			t.Errorf("Test %v failed. Unexpected error counting total groups: %v", n, err)
+			continue
+		}
+		if totalGroupNumber != 1 {
+			t.Errorf("Test %v failed. Received different total group number: %v", n, totalGroupNumber)
+			continue
+		}
+
+		// Check group user relations
+		relations, err := getGroupUserRelations(test.groupToDelete, "")
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error counting group user relations: %v", n, err)
 			continue
 		}
 		if relations != 0 {
-			t.Errorf("Test %v failed. Received different relations number: %v", n, relations)
+			t.Errorf("Test %v failed. Received different group user relation number: %v", n, relations)
+			continue
+		}
+
+		// Check total group user relations
+		totalRelations, err := getGroupUserRelations("", "")
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error counting total relations: %v", n, err)
+			continue
+		}
+		if relations != 0 {
+			t.Errorf("Test %v failed. Received different total group user relation number: %v", n, totalRelations)
 			continue
 		}
 	}
@@ -918,7 +980,7 @@ func TestPostgresRepo_IsMemberOfGroup(t *testing.T) {
 
 func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 	type relations struct {
-		users        []api.User
+		users        []User
 		groupID      string
 		userNotFound bool
 	}
@@ -935,20 +997,22 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 	}{
 		"OkCase": {
 			relations: &relations{
-				users: []api.User{
+				users: []User{
 					{
 						ID:         "UserID1",
 						ExternalID: "ExternalID1",
 						Path:       "Path",
 						Urn:        "urn1",
-						CreateAt:   now,
+						CreateAt:   now.UnixNano(),
+						UpdateAt:   now.UnixNano(),
 					},
 					{
 						ID:         "UserID2",
 						ExternalID: "ExternalID2",
 						Path:       "Path",
 						Urn:        "urn2",
-						CreateAt:   now,
+						CreateAt:   now.UnixNano(),
+						UpdateAt:   now.UnixNano(),
 					},
 				},
 				groupID: "GroupID",
@@ -962,6 +1026,7 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 					Path:       "Path",
 					Urn:        "urn1",
 					CreateAt:   now,
+					UpdateAt:   now,
 				},
 				{
 					ID:         "UserID2",
@@ -969,12 +1034,13 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 					Path:       "Path",
 					Urn:        "urn2",
 					CreateAt:   now,
+					UpdateAt:   now,
 				},
 			},
 		},
 		"ErrorCase": {
 			relations: &relations{
-				users: []api.User{
+				users: []User{
 					{
 						ID: "UserID1",
 					},
@@ -1003,8 +1069,7 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 					continue
 				}
 				if !test.relations.userNotFound {
-					if err := insertUser(user.ID, user.ExternalID, user.Path,
-						user.CreateAt.UnixNano(), user.Urn); err != nil {
+					if err := insertUser(user); err != nil {
 						t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
 						continue
 					}
@@ -1215,7 +1280,7 @@ func TestPostgresRepo_IsAttachedToGroup(t *testing.T) {
 
 func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 	type relations struct {
-		policies       []api.Policy
+		policies       []Policy
 		groupID        string
 		policyNotFound bool
 	}
@@ -1233,13 +1298,14 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 	}{
 		"OkCase": {
 			relations: &relations{
-				policies: []api.Policy{
+				policies: []Policy{
 					{
 						ID:       "PolicyID1",
 						Name:     "Name1",
 						Org:      "org1",
 						Path:     "/path/",
-						CreateAt: now,
+						CreateAt: now.UnixNano(),
+						UpdateAt: now.UnixNano(),
 						Urn:      "Urn1",
 					},
 					{
@@ -1247,7 +1313,8 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 						Name:     "Name2",
 						Org:      "org1",
 						Path:     "/path/",
-						CreateAt: now,
+						CreateAt: now.UnixNano(),
+						UpdateAt: now.UnixNano(),
 						Urn:      "Urn2",
 					},
 				},
@@ -1263,6 +1330,7 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 					Org:        "org1",
 					Path:       "/path/",
 					CreateAt:   now,
+					UpdateAt:   now,
 					Urn:        "Urn1",
 					Statements: &[]api.Statement{},
 				},
@@ -1272,6 +1340,7 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 					Org:        "org1",
 					Path:       "/path/",
 					CreateAt:   now,
+					UpdateAt:   now,
 					Urn:        "Urn2",
 					Statements: &[]api.Statement{},
 				},
@@ -1279,13 +1348,14 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 		},
 		"ErrorCase": {
 			relations: &relations{
-				policies: []api.Policy{
+				policies: []Policy{
 					{
 						ID:       "PolicyID1",
 						Name:     "Name1",
 						Org:      "org1",
 						Path:     "/path/",
-						CreateAt: now,
+						CreateAt: now.UnixNano(),
+						UpdateAt: now.UnixNano(),
 						Urn:      "Urn1",
 					},
 					{
@@ -1293,7 +1363,8 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 						Name:     "Name2",
 						Org:      "org1",
 						Path:     "/path/",
-						CreateAt: now,
+						CreateAt: now.UnixNano(),
+						UpdateAt: now.UnixNano(),
 						Urn:      "Urn2",
 					},
 				},
@@ -1322,8 +1393,7 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 					continue
 				}
 				if !test.relations.policyNotFound {
-					if err := insertPolicy(policy.ID, policy.Name, policy.Org, policy.Path,
-						policy.CreateAt.UnixNano(), policy.Urn, test.statements); err != nil {
+					if err := insertPolicy(policy, test.statements); err != nil {
 						t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
 						continue
 					}

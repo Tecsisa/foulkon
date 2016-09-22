@@ -159,10 +159,8 @@ func (t TestRepo) AddUser(user User) (*User, error) {
 	return created, err
 }
 
-func (t TestRepo) UpdateUser(user User, newPath string, newUrn string) (*User, error) {
+func (t TestRepo) UpdateUser(user User) (*User, error) {
 	t.ArgsIn[UpdateUserMethod][0] = user
-	t.ArgsIn[UpdateUserMethod][1] = newPath
-	t.ArgsIn[UpdateUserMethod][2] = newUrn
 	var updated *User
 	if t.ArgsOut[UpdateUserMethod][0] != nil {
 		updated = t.ArgsOut[UpdateUserMethod][0].(*User)
@@ -363,11 +361,8 @@ func (t TestRepo) RemoveMember(userID string, groupID string) error {
 	return err
 }
 
-func (t TestRepo) UpdateGroup(group Group, newName string, newPath string, newUrn string) (*Group, error) {
+func (t TestRepo) UpdateGroup(group Group) (*Group, error) {
 	t.ArgsIn[UpdateGroupMethod][0] = group
-	t.ArgsIn[UpdateGroupMethod][1] = newName
-	t.ArgsIn[UpdateGroupMethod][2] = newPath
-	t.ArgsIn[UpdateGroupMethod][3] = newUrn
 
 	var updated *Group
 	if t.ArgsOut[UpdateGroupMethod][0] != nil {
@@ -433,12 +428,8 @@ func (t TestRepo) AddPolicy(policy Policy) (*Policy, error) {
 	return created, err
 }
 
-func (t TestRepo) UpdatePolicy(policy Policy, newName string, newPath string, newUrn string, newStatements []Statement) (*Policy, error) {
+func (t TestRepo) UpdatePolicy(policy Policy) (*Policy, error) {
 	t.ArgsIn[UpdatePolicyMethod][0] = policy
-	t.ArgsIn[UpdatePolicyMethod][1] = newName
-	t.ArgsIn[UpdatePolicyMethod][2] = newPath
-	t.ArgsIn[UpdatePolicyMethod][3] = newUrn
-	t.ArgsIn[UpdatePolicyMethod][4] = newStatements
 
 	var updated *Policy
 	if t.ArgsOut[UpdatePolicyMethod][0] != nil {
