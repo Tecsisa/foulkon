@@ -695,16 +695,20 @@ func TestPostgresRepo_UpdateGroup(t *testing.T) {
 }
 
 func TestPostgresRepo_RemoveGroup(t *testing.T) {
-	type relation struct {
-		userID        string
-		groupID       string
-		groupNotFound bool
+	type userRelation struct {
+		userID  string
+		groupID string
+	}
+	type policyRelation struct {
+		policyID string
+		groupID  string
 	}
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
-		previousGroups []Group
-		relations      []relation
+		previousGroups  []Group
+		userRelations   []userRelation
+		policyRelations []policyRelation
 		// Postgres Repo Args
 		groupToDelete string
 	}{
@@ -729,14 +733,24 @@ func TestPostgresRepo_RemoveGroup(t *testing.T) {
 					Org:      "Org",
 				},
 			},
-			relations: []relation{
+			userRelations: []userRelation{
 				{
 					userID:  "UserID",
 					groupID: "GroupID",
 				},
 				{
-					userID:  "UserID",
+					userID:  "UserID1",
 					groupID: "GroupID2",
+				},
+			},
+			policyRelations: []policyRelation{
+				{
+					policyID: "policyID",
+					groupID:  "GroupID",
+				},
+				{
+					policyID: "policyID1",
+					groupID:  "GroupID2",
 				},
 			},
 			groupToDelete: "GroupID",
@@ -746,6 +760,7 @@ func TestPostgresRepo_RemoveGroup(t *testing.T) {
 	for n, test := range testcases {
 		cleanGroupTable()
 		cleanGroupUserRelationTable()
+		cleanGroupPolicyRelationTable()
 
 		// Insert previous data
 		if test.previousGroups != nil {
@@ -756,10 +771,18 @@ func TestPostgresRepo_RemoveGroup(t *testing.T) {
 				}
 			}
 		}
-		if test.relations != nil {
-			for _, rel := range test.relations {
+		if test.userRelations != nil {
+			for _, rel := range test.userRelations {
 				if err := insertGroupUserRelation(rel.userID, rel.groupID); err != nil {
 					t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
+					continue
+				}
+			}
+		}
+		if test.policyRelations != nil {
+			for _, rel := range test.policyRelations {
+				if err := insertGroupPolicyRelation(rel.groupID, rel.policyID); err != nil {
+					t.Errorf("Test %v failed. Unexpected error inserting previous group policy relations: %v", n, err)
 					continue
 				}
 			}
@@ -803,11 +826,33 @@ func TestPostgresRepo_RemoveGroup(t *testing.T) {
 		// Check total group user relations
 		totalRelations, err := getGroupUserRelations("", "")
 		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting total relations: %v", n, err)
+			t.Errorf("Test %v failed. Unexpected error counting total group user relations: %v", n, err)
+			continue
+		}
+		if totalRelations != 1 {
+			t.Errorf("Test %v failed. Received different total group user relation number: %v", n, totalRelations)
+			continue
+		}
+
+		// Check group policy relations
+		relations, err = getGroupPolicyRelationCount("", test.groupToDelete)
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error counting group policy relations: %v", n, err)
 			continue
 		}
 		if relations != 0 {
-			t.Errorf("Test %v failed. Received different total group user relation number: %v", n, totalRelations)
+			t.Errorf("Test %v failed. Received different group policy relation number: %v", n, relations)
+			continue
+		}
+
+		// Check total group policy relations
+		totalRelations, err = getGroupPolicyRelationCount("", "")
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error counting total group policy relations: %v", n, err)
+			continue
+		}
+		if totalRelations != 1 {
+			t.Errorf("Test %v failed. Received different total group policy relation number: %v", n, totalRelations)
 			continue
 		}
 	}
