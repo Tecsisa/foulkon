@@ -149,11 +149,11 @@ func (g PostgresRepo) UpdateGroup(group api.Group) (*api.Group, error) {
 }
 
 func (g PostgresRepo) RemoveGroup(id string) error {
+
 	transaction := g.Dbmap.Begin()
+
 	// Delete group
 	transaction.Where("id like ?", id).Delete(&Group{})
-
-	// Error handling
 	if err := transaction.Error; err != nil {
 		transaction.Rollback()
 		return &database.Error{
@@ -164,8 +164,16 @@ func (g PostgresRepo) RemoveGroup(id string) error {
 
 	// Delete all group relations
 	transaction.Where("group_id like ?", id).Delete(&GroupUserRelation{})
+	if err := transaction.Error; err != nil {
+		transaction.Rollback()
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
 
-	// Error handling
+	}
+	// Delete all policy relations
+	transaction.Where("group_id like ?", id).Delete(&GroupPolicyRelation{})
 	if err := transaction.Error; err != nil {
 		transaction.Rollback()
 		return &database.Error{
