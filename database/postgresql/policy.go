@@ -19,6 +19,7 @@ func (p PostgresRepo) AddPolicy(policy api.Policy) (*api.Policy, error) {
 		Name:     policy.Name,
 		Path:     policy.Path,
 		CreateAt: policy.CreateAt.UnixNano(),
+		UpdateAt: policy.UpdateAt.UnixNano(),
 		Urn:      policy.Urn,
 		Org:      policy.Org,
 	}
@@ -188,19 +189,14 @@ func (p PostgresRepo) GetPoliciesFiltered(org string, filter *api.Filter) ([]api
 	return apiPolicies, total, nil
 }
 
-func (p PostgresRepo) UpdatePolicy(policy api.Policy, name string, path string, urn string, statements []api.Statement) (*api.Policy, error) {
-	// Create policy to update
-	policyUpdated := Policy{
-		Name: name,
-		Path: path,
-		Urn:  urn,
-	}
+func (p PostgresRepo) UpdatePolicy(policy api.Policy) (*api.Policy, error) {
 
 	policyDB := Policy{
 		ID:       policy.ID,
 		Name:     policy.Name,
 		Path:     policy.Path,
 		CreateAt: policy.CreateAt.UTC().UnixNano(),
+		UpdateAt: policy.UpdateAt.UTC().UnixNano(),
 		Urn:      policy.Urn,
 		Org:      policy.Org,
 	}
@@ -208,7 +204,7 @@ func (p PostgresRepo) UpdatePolicy(policy api.Policy, name string, path string, 
 	transaction := p.Dbmap.Begin()
 
 	// Update policy
-	if err := transaction.Model(&policyDB).Update(policyUpdated).Error; err != nil {
+	if err := transaction.Model(&Policy{ID: policy.ID}).Update(policyDB).Error; err != nil {
 		transaction.Rollback()
 		return nil, &database.Error{
 			Code:    database.INTERNAL_ERROR,
@@ -226,7 +222,7 @@ func (p PostgresRepo) UpdatePolicy(policy api.Policy, name string, path string, 
 	}
 
 	// Create new statements
-	for _, s := range statements {
+	for _, s := range *policy.Statements {
 		statementDB := &Statement{
 			ID:        uuid.NewV4().String(),
 			PolicyID:  policy.ID,
@@ -245,11 +241,7 @@ func (p PostgresRepo) UpdatePolicy(policy api.Policy, name string, path string, 
 
 	transaction.Commit()
 
-	// Create API policy
-	policyApi := dbPolicyToAPIPolicy(&policyDB)
-	policyApi.Statements = &statements
-
-	return policyApi, nil
+	return &policy, nil
 }
 
 func (p PostgresRepo) RemovePolicy(id string) error {
@@ -330,6 +322,7 @@ func dbPolicyToAPIPolicy(policydb *Policy) *api.Policy {
 		Name:     policydb.Name,
 		Path:     policydb.Path,
 		CreateAt: time.Unix(0, policydb.CreateAt).UTC(),
+		UpdateAt: time.Unix(0, policydb.UpdateAt).UTC(),
 		Urn:      policydb.Urn,
 		Org:      policydb.Org,
 	}

@@ -43,6 +43,7 @@ func TestWorkerHandler_HandleAddGroup(t *testing.T) {
 				Urn:      "Urn",
 				Org:      "org1",
 				CreateAt: now,
+				UpdateAt: now,
 			},
 			addGroupResult: &api.Group{
 				ID:       "GroupID",
@@ -51,6 +52,7 @@ func TestWorkerHandler_HandleAddGroup(t *testing.T) {
 				Urn:      "Urn",
 				Org:      "org1",
 				CreateAt: now,
+				UpdateAt: now,
 			},
 		},
 		"ErrorCaseMalformedRequest": {
@@ -234,6 +236,7 @@ func TestWorkerHandler_HandleGetGroupByName(t *testing.T) {
 				Urn:      "Urn",
 				Org:      "Org",
 				CreateAt: now,
+				UpdateAt: now,
 			},
 			getGroupByNameResult: &api.Group{
 				ID:       "groupID",
@@ -242,6 +245,7 @@ func TestWorkerHandler_HandleGetGroupByName(t *testing.T) {
 				Urn:      "Urn",
 				Org:      "Org",
 				CreateAt: now,
+				UpdateAt: now,
 			},
 		},
 		"ErrorCaseGroupNotFound": {
@@ -733,6 +737,7 @@ func TestWorkerHandler_HandleUpdateGroup(t *testing.T) {
 				Path:     "Path",
 				Urn:      "urn",
 				CreateAt: now,
+				UpdateAt: now,
 			},
 			updateGroupResult: &api.Group{
 				ID:       "GroupID",
@@ -740,6 +745,7 @@ func TestWorkerHandler_HandleUpdateGroup(t *testing.T) {
 				Path:     "Path",
 				Urn:      "urn",
 				CreateAt: now,
+				UpdateAt: now,
 			},
 		},
 		"ErrorCaseMalformedRequest": {

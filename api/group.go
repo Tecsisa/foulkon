@@ -18,6 +18,7 @@ type Group struct {
 	Org      string    `json:"org, omitempty"`
 	Urn      string    `json:"urn, omitempty"`
 	CreateAt time.Time `json:"createAt, omitempty"`
+	UpdateAt time.Time `json:"updateAt, omitempty"`
 }
 
 func (g Group) String() string {
@@ -254,15 +255,14 @@ func (api AuthAPI) UpdateGroup(requestInfo RequestInfo, org string, name string,
 		}
 	}
 
-	// Call repo to retrieve the group
-	group, err := api.GetGroupByName(requestInfo, org, name)
+	// Call repo to retrieve the old group
+	oldGroup, err := api.GetGroupByName(requestInfo, org, name)
 	if err != nil {
 		return nil, err
 	}
-	oldGroup := group
 
 	// Check restrictions
-	groupsFiltered, err := api.GetAuthorizedGroups(requestInfo, group.Urn, GROUP_ACTION_UPDATE_GROUP, []Group{*group})
+	groupsFiltered, err := api.GetAuthorizedGroups(requestInfo, oldGroup.Urn, GROUP_ACTION_UPDATE_GROUP, []Group{*oldGroup})
 	if err != nil {
 		return nil, err
 	}
@@ -270,14 +270,14 @@ func (api AuthAPI) UpdateGroup(requestInfo RequestInfo, org string, name string,
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				requestInfo.Identifier, group.Urn),
+				requestInfo.Identifier, oldGroup.Urn),
 		}
 	}
 
 	// Check if a group with "newName" already exists
 	newGroup, err := api.GetGroupByName(requestInfo, org, newName)
 
-	if err == nil && group.ID != newGroup.ID {
+	if err == nil && oldGroup.ID != newGroup.ID {
 		// Group already exists
 		return nil, &Error{
 			Code:    GROUP_ALREADY_EXIST,
@@ -286,16 +286,17 @@ func (api AuthAPI) UpdateGroup(requestInfo RequestInfo, org string, name string,
 	}
 
 	if err != nil {
-		if apiError := err.(*Error); apiError.Code == UNAUTHORIZED_RESOURCES_ERROR || apiError.Code == UNKNOWN_API_ERROR {
+		if apiError := err.(*Error); apiError.Code != GROUP_BY_ORG_AND_NAME_NOT_FOUND {
 			return nil, err
 		}
 	}
 
-	// Get Group updated
-	groupToUpdate := createGroup(org, newName, newPath)
+	auxGroup := Group{
+		Urn: CreateUrn(org, RESOURCE_GROUP, newPath, newName),
+	}
 
 	// Check restrictions
-	groupsFiltered, err = api.GetAuthorizedGroups(requestInfo, groupToUpdate.Urn, GROUP_ACTION_UPDATE_GROUP, []Group{groupToUpdate})
+	groupsFiltered, err = api.GetAuthorizedGroups(requestInfo, auxGroup.Urn, GROUP_ACTION_UPDATE_GROUP, []Group{auxGroup})
 	if err != nil {
 		return nil, err
 	}
@@ -303,12 +304,22 @@ func (api AuthAPI) UpdateGroup(requestInfo RequestInfo, org string, name string,
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				requestInfo.Identifier, groupToUpdate.Urn),
+				requestInfo.Identifier, auxGroup.Urn),
 		}
 	}
 
 	// Update group
-	group, err = api.GroupRepo.UpdateGroup(*group, newName, newPath, groupToUpdate.Urn)
+	group := Group{
+		ID:       oldGroup.ID,
+		Name:     newName,
+		Path:     newPath,
+		Org:      oldGroup.Org,
+		Urn:      auxGroup.Urn,
+		CreateAt: oldGroup.CreateAt,
+		UpdateAt: time.Now().UTC(),
+	}
+
+	updatedGroup, err := api.GroupRepo.UpdateGroup(group)
 
 	// Check unexpected DB error
 	if err != nil {
@@ -320,8 +331,8 @@ func (api AuthAPI) UpdateGroup(requestInfo RequestInfo, org string, name string,
 		}
 	}
 
-	LogOperation(api.Logger, requestInfo, fmt.Sprintf("Group updated from %+v to %+v", oldGroup, group))
-	return group, nil
+	LogOperation(api.Logger, requestInfo, fmt.Sprintf("Group updated from %+v to %+v", oldGroup, updatedGroup))
+	return updatedGroup, nil
 
 }
 
@@ -725,6 +736,7 @@ func createGroup(org string, name string, path string) Group {
 		Name:     name,
 		Path:     path,
 		CreateAt: time.Now().UTC(),
+		UpdateAt: time.Now().UTC(),
 		Urn:      urn,
 		Org:      org,
 	}

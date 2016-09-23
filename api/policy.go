@@ -18,6 +18,7 @@ type Policy struct {
 	Org        string       `json:"org, omitempty"`
 	Urn        string       `json:"urn, omitempty"`
 	CreateAt   time.Time    `json:"createAt, omitempty"`
+	UpdateAt   time.Time    `json:"updateAt, omitempty"`
 	Statements *[]Statement `json:"statements, omitempty"`
 }
 
@@ -278,14 +279,14 @@ func (api AuthAPI) UpdatePolicy(requestInfo RequestInfo, org string, policyName 
 
 	}
 
-	// Call repo to retrieve the policy
-	policyDB, err := api.GetPolicyByName(requestInfo, org, policyName)
+	// Call repo to retrieve the old policy
+	oldPolicy, err := api.GetPolicyByName(requestInfo, org, policyName)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check restrictions
-	policiesFiltered, err := api.GetAuthorizedPolicies(requestInfo, policyDB.Urn, POLICY_ACTION_UPDATE_POLICY, []Policy{*policyDB})
+	policiesFiltered, err := api.GetAuthorizedPolicies(requestInfo, oldPolicy.Urn, POLICY_ACTION_UPDATE_POLICY, []Policy{*oldPolicy})
 	if err != nil {
 		return nil, err
 	}
@@ -293,31 +294,33 @@ func (api AuthAPI) UpdatePolicy(requestInfo RequestInfo, org string, policyName 
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				requestInfo.Identifier, policyDB.Urn),
+				requestInfo.Identifier, oldPolicy.Urn),
 		}
 	}
 
 	// Check if policy with "newName" exists
 	targetPolicy, err := api.GetPolicyByName(requestInfo, org, newName)
 
-	if err == nil && targetPolicy.ID != policyDB.ID {
+	if err == nil && targetPolicy.ID != oldPolicy.ID {
 		// Policy already exists
 		return nil, &Error{
 			Code:    POLICY_ALREADY_EXIST,
 			Message: fmt.Sprintf("Policy name: %v already exists", newName),
 		}
 	}
+
 	if err != nil {
-		if apiError := err.(*Error); apiError.Code == UNAUTHORIZED_RESOURCES_ERROR || apiError.Code == UNKNOWN_API_ERROR {
+		if apiError := err.(*Error); apiError.Code != POLICY_BY_ORG_AND_NAME_NOT_FOUND {
 			return nil, err
 		}
 	}
 
-	// Get Policy Updated
-	policyToUpdate := createPolicy(newName, newPath, org, &newStatements)
+	auxPolicy := Policy{
+		Urn: CreateUrn(org, RESOURCE_POLICY, newPath, newName),
+	}
 
 	// Check restrictions
-	policiesFiltered, err = api.GetAuthorizedPolicies(requestInfo, policyToUpdate.Urn, POLICY_ACTION_UPDATE_POLICY, []Policy{policyToUpdate})
+	policiesFiltered, err = api.GetAuthorizedPolicies(requestInfo, auxPolicy.Urn, POLICY_ACTION_UPDATE_POLICY, []Policy{auxPolicy})
 	if err != nil {
 		return nil, err
 	}
@@ -325,12 +328,23 @@ func (api AuthAPI) UpdatePolicy(requestInfo RequestInfo, org string, policyName 
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				requestInfo.Identifier, policyToUpdate.Urn),
+				requestInfo.Identifier, auxPolicy.Urn),
 		}
 	}
 
+	policy := Policy{
+		ID:         oldPolicy.ID,
+		Name:       newName,
+		Path:       newPath,
+		Org:        oldPolicy.Org,
+		Urn:        auxPolicy.Urn,
+		CreateAt:   oldPolicy.CreateAt,
+		UpdateAt:   time.Now().UTC(),
+		Statements: &newStatements,
+	}
+
 	// Update policy
-	policy, err := api.PolicyRepo.UpdatePolicy(*policyDB, newName, newPath, policyToUpdate.Urn, newStatements)
+	updatedPolicy, err := api.PolicyRepo.UpdatePolicy(policy)
 
 	// Check unexpected DB error
 	if err != nil {
@@ -342,8 +356,8 @@ func (api AuthAPI) UpdatePolicy(requestInfo RequestInfo, org string, policyName 
 		}
 	}
 
-	LogOperation(api.Logger, requestInfo, fmt.Sprintf("Policy updated from %+v to %+v", policyDB, policy))
-	return policy, nil
+	LogOperation(api.Logger, requestInfo, fmt.Sprintf("Policy updated from %+v to %+v", oldPolicy, updatedPolicy))
+	return updatedPolicy, nil
 }
 
 func (api AuthAPI) RemovePolicy(requestInfo RequestInfo, org string, name string) error {
@@ -443,9 +457,10 @@ func createPolicy(name string, path string, org string, statements *[]Statement)
 		ID:         uuid.NewV4().String(),
 		Name:       name,
 		Path:       path,
+		CreateAt:   time.Now().UTC(),
+		UpdateAt:   time.Now().UTC(),
 		Org:        org,
 		Urn:        urn,
-		CreateAt:   time.Now().UTC(),
 		Statements: statements,
 	}
 

@@ -40,6 +40,7 @@ func TestWorkerHandler_HandleAddUser(t *testing.T) {
 				Path:       "Path",
 				Urn:        "urn",
 				CreateAt:   now,
+				UpdateAt:   now,
 			},
 			addUserResult: &api.User{
 				ID:         "UserID",
@@ -47,6 +48,7 @@ func TestWorkerHandler_HandleAddUser(t *testing.T) {
 				Path:       "Path",
 				Urn:        "urn",
 				CreateAt:   now,
+				UpdateAt:   now,
 			},
 		},
 		"ErrorCaseMalformedRequest": {
@@ -221,6 +223,7 @@ func TestWorkerHandler_HandleGetUserByExternalID(t *testing.T) {
 				Path:       "Path",
 				Urn:        "urn",
 				CreateAt:   now,
+				UpdateAt:   now,
 			},
 			getUserByExternalIdResult: &api.User{
 				ID:         "UserID",
@@ -228,6 +231,7 @@ func TestWorkerHandler_HandleGetUserByExternalID(t *testing.T) {
 				Path:       "Path",
 				Urn:        "urn",
 				CreateAt:   now,
+				UpdateAt:   now,
 			},
 		},
 		"ErrorCaseUserNotExist": {
@@ -522,6 +526,7 @@ func TestWorkerHandler_HandleUpdateUser(t *testing.T) {
 				Path:       "Path",
 				Urn:        "urn",
 				CreateAt:   now,
+				UpdateAt:   now,
 			},
 			updateUserResult: &api.User{
 				ID:         "UserID",
@@ -529,6 +534,7 @@ func TestWorkerHandler_HandleUpdateUser(t *testing.T) {
 				Path:       "Path",
 				Urn:        "urn",
 				CreateAt:   now,
+				UpdateAt:   now,
 			},
 		},
 		"ErrorCaseMalformedRequest": {

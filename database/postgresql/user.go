@@ -18,6 +18,7 @@ func (u PostgresRepo) AddUser(user api.User) (*api.User, error) {
 		ExternalID: user.ExternalID,
 		Path:       user.Path,
 		CreateAt:   user.CreateAt.UnixNano(),
+		UpdateAt:   user.UpdateAt.UnixNano(),
 		Urn:        user.Urn,
 	}
 
@@ -111,24 +112,19 @@ func (u PostgresRepo) GetUsersFiltered(filter *api.Filter) ([]api.User, int, err
 	return apiusers, total, nil
 }
 
-func (u PostgresRepo) UpdateUser(user api.User, newPath string, newUrn string) (*api.User, error) {
-
-	// Create new user
-	userUpdated := User{
-		Path: newPath,
-		Urn:  newUrn,
-	}
+func (u PostgresRepo) UpdateUser(user api.User) (*api.User, error) {
 
 	userDB := User{
 		ID:         user.ID,
 		ExternalID: user.ExternalID,
 		Path:       user.Path,
 		CreateAt:   user.CreateAt.UnixNano(),
+		UpdateAt:   user.UpdateAt.UnixNano(),
 		Urn:        user.Urn,
 	}
 
 	// Update user
-	query := u.Dbmap.Model(&userDB).Update(userUpdated)
+	query := u.Dbmap.Model(&User{ID: user.ID}).Updates(userDB)
 
 	// Error Handling
 	if err := query.Error; err != nil {
@@ -138,7 +134,7 @@ func (u PostgresRepo) UpdateUser(user api.User, newPath string, newUrn string) (
 		}
 	}
 
-	return dbUserToAPIUser(&userDB), nil
+	return &user, nil
 }
 
 func (u PostgresRepo) RemoveUser(id string) error {
@@ -213,6 +209,7 @@ func dbUserToAPIUser(userdb *User) *api.User {
 		ExternalID: userdb.ExternalID,
 		Path:       userdb.Path,
 		CreateAt:   time.Unix(0, userdb.CreateAt).UTC(),
+		UpdateAt:   time.Unix(0, userdb.UpdateAt).UTC(),
 		Urn:        userdb.Urn,
 	}
 }

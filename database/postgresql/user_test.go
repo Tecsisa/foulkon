@@ -13,7 +13,7 @@ func TestPostgresRepo_AddUser(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
-		previousUser *api.User
+		previousUser *User
 		// Postgres Repo Args
 		userToCreate *api.User
 		// Expected result
@@ -27,6 +27,7 @@ func TestPostgresRepo_AddUser(t *testing.T) {
 				Path:       "Path",
 				Urn:        "urn",
 				CreateAt:   now,
+				UpdateAt:   now,
 			},
 			expectedResponse: &api.User{
 				ID:         "UserID",
@@ -34,15 +35,17 @@ func TestPostgresRepo_AddUser(t *testing.T) {
 				Path:       "Path",
 				Urn:        "urn",
 				CreateAt:   now,
+				UpdateAt:   now,
 			},
 		},
 		"ErrorCaseUserAlreadyExist": {
-			previousUser: &api.User{
+			previousUser: &User{
 				ID:         "UserID",
 				ExternalID: "ExternalID",
 				Path:       "Path",
 				Urn:        "urn",
-				CreateAt:   now,
+				CreateAt:   now.UnixNano(),
+				UpdateAt:   now.UnixNano(),
 			},
 			userToCreate: &api.User{
 				ID:         "UserID",
@@ -50,6 +53,7 @@ func TestPostgresRepo_AddUser(t *testing.T) {
 				Path:       "Path",
 				Urn:        "urn",
 				CreateAt:   now,
+				UpdateAt:   now,
 			},
 			expectedError: &database.Error{
 				Code:    database.INTERNAL_ERROR,
@@ -64,8 +68,7 @@ func TestPostgresRepo_AddUser(t *testing.T) {
 
 		// Insert previous data
 		if test.previousUser != nil {
-			if err := insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
-				test.previousUser.CreateAt.Unix(), test.previousUser.Urn); err != nil {
+			if err := insertUser(*test.previousUser); err != nil {
 				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
 				continue
 			}
@@ -94,7 +97,7 @@ func TestPostgresRepo_AddUser(t *testing.T) {
 			}
 			// Check database
 			userNumber, err := getUsersCountFiltered(test.expectedResponse.ID, test.expectedResponse.ExternalID, test.expectedResponse.Path,
-				test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.Urn, "")
+				test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.UpdateAt.UnixNano(), test.expectedResponse.Urn, "")
 			if err != nil {
 				t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
 				continue
@@ -113,7 +116,7 @@ func TestPostgresRepo_GetUserByExternalID(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
-		previousUser *api.User
+		previousUser *User
 		// Postgres Repo Args
 		externalID string
 		// Expected result
@@ -121,12 +124,13 @@ func TestPostgresRepo_GetUserByExternalID(t *testing.T) {
 		expectedError    *database.Error
 	}{
 		"OkCase": {
-			previousUser: &api.User{
+			previousUser: &User{
 				ID:         "UserID",
 				ExternalID: "ExternalID",
 				Path:       "Path",
 				Urn:        "urn",
-				CreateAt:   now,
+				CreateAt:   now.UnixNano(),
+				UpdateAt:   now.UnixNano(),
 			},
 			externalID: "ExternalID",
 			expectedResponse: &api.User{
@@ -135,15 +139,17 @@ func TestPostgresRepo_GetUserByExternalID(t *testing.T) {
 				Path:       "Path",
 				Urn:        "urn",
 				CreateAt:   now,
+				UpdateAt:   now,
 			},
 		},
 		"ErrorCaseUserNotExist": {
-			previousUser: &api.User{
+			previousUser: &User{
 				ID:         "UserID",
 				ExternalID: "ExternalID",
 				Path:       "Path",
 				Urn:        "urn",
-				CreateAt:   now,
+				CreateAt:   now.UnixNano(),
+				UpdateAt:   now.UnixNano(),
 			},
 			externalID: "NotExist",
 			expectedError: &database.Error{
@@ -159,8 +165,7 @@ func TestPostgresRepo_GetUserByExternalID(t *testing.T) {
 
 		// Insert previous data
 		if test.previousUser != nil {
-			if err := insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
-				test.previousUser.CreateAt.UnixNano(), test.previousUser.Urn); err != nil {
+			if err := insertUser(*test.previousUser); err != nil {
 				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
 				continue
 			}
@@ -196,7 +201,7 @@ func TestPostgresRepo_GetUserByID(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
-		previousUser *api.User
+		previousUser *User
 		// Postgres Repo Args
 		userID string
 		// Expected result
@@ -204,12 +209,13 @@ func TestPostgresRepo_GetUserByID(t *testing.T) {
 		expectedError    *database.Error
 	}{
 		"OkCase": {
-			previousUser: &api.User{
+			previousUser: &User{
 				ID:         "UserID",
 				ExternalID: "ExternalID",
 				Path:       "Path",
 				Urn:        "urn",
-				CreateAt:   now,
+				CreateAt:   now.UnixNano(),
+				UpdateAt:   now.UnixNano(),
 			},
 			userID: "UserID",
 			expectedResponse: &api.User{
@@ -218,15 +224,17 @@ func TestPostgresRepo_GetUserByID(t *testing.T) {
 				Path:       "Path",
 				Urn:        "urn",
 				CreateAt:   now,
+				UpdateAt:   now,
 			},
 		},
 		"ErrorCaseUserNotExist": {
-			previousUser: &api.User{
+			previousUser: &User{
 				ID:         "UserID",
 				ExternalID: "ExternalID",
 				Path:       "Path",
 				Urn:        "urn",
-				CreateAt:   now,
+				CreateAt:   now.UnixNano(),
+				UpdateAt:   now.UnixNano(),
 			},
 			userID: "NotExist",
 			expectedError: &database.Error{
@@ -242,8 +250,7 @@ func TestPostgresRepo_GetUserByID(t *testing.T) {
 
 		// Insert previous data
 		if test.previousUser != nil {
-			if err := insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
-				test.previousUser.CreateAt.UnixNano(), test.previousUser.Urn); err != nil {
+			if err := insertUser(*test.previousUser); err != nil {
 				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
 				continue
 			}
@@ -280,27 +287,29 @@ func TestPostgresRepo_GetUsersFiltered(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
-		previousUsers []api.User
+		previousUsers []User
 		// Postgres Repo Args
 		filter *api.Filter
 		// Expected result
 		expectedResponse []api.User
 	}{
 		"OkCase1": {
-			previousUsers: []api.User{
+			previousUsers: []User{
 				{
 					ID:         "UserID1",
 					ExternalID: "ExternalID1",
 					Path:       "Path123",
 					Urn:        "urn1",
-					CreateAt:   now,
+					CreateAt:   now.UnixNano(),
+					UpdateAt:   now.UnixNano(),
 				},
 				{
 					ID:         "UserID2",
 					ExternalID: "ExternalID2",
 					Path:       "Path456",
 					Urn:        "urn2",
-					CreateAt:   now,
+					CreateAt:   now.UnixNano(),
+					UpdateAt:   now.UnixNano(),
 				},
 			},
 			filter: &api.Filter{
@@ -315,6 +324,7 @@ func TestPostgresRepo_GetUsersFiltered(t *testing.T) {
 					Path:       "Path123",
 					Urn:        "urn1",
 					CreateAt:   now,
+					UpdateAt:   now,
 				},
 				{
 					ID:         "UserID2",
@@ -322,24 +332,27 @@ func TestPostgresRepo_GetUsersFiltered(t *testing.T) {
 					Path:       "Path456",
 					Urn:        "urn2",
 					CreateAt:   now,
+					UpdateAt:   now,
 				},
 			},
 		},
 		"OkCase2": {
-			previousUsers: []api.User{
+			previousUsers: []User{
 				{
 					ID:         "UserID1",
 					ExternalID: "ExternalID1",
 					Path:       "Path123",
 					Urn:        "urn1",
-					CreateAt:   now,
+					CreateAt:   now.UnixNano(),
+					UpdateAt:   now.UnixNano(),
 				},
 				{
 					ID:         "UserID2",
 					ExternalID: "ExternalID2",
 					Path:       "Path456",
 					Urn:        "urn2",
-					CreateAt:   now,
+					CreateAt:   now.UnixNano(),
+					UpdateAt:   now.UnixNano(),
 				},
 			},
 			filter: &api.Filter{
@@ -354,24 +367,27 @@ func TestPostgresRepo_GetUsersFiltered(t *testing.T) {
 					Path:       "Path123",
 					Urn:        "urn1",
 					CreateAt:   now,
+					UpdateAt:   now,
 				},
 			},
 		},
 		"OkCase3": {
-			previousUsers: []api.User{
+			previousUsers: []User{
 				{
 					ID:         "UserID1",
 					ExternalID: "ExternalID1",
 					Path:       "Path123",
 					Urn:        "urn1",
-					CreateAt:   now,
+					CreateAt:   now.UnixNano(),
+					UpdateAt:   now.UnixNano(),
 				},
 				{
 					ID:         "UserID2",
 					ExternalID: "ExternalID2",
 					Path:       "Path456",
 					Urn:        "urn2",
-					CreateAt:   now,
+					CreateAt:   now.UnixNano(),
+					UpdateAt:   now.UnixNano(),
 				},
 			},
 			filter: &api.Filter{
@@ -390,8 +406,7 @@ func TestPostgresRepo_GetUsersFiltered(t *testing.T) {
 		// Insert previous data
 		if test.previousUsers != nil {
 			for _, previousUser := range test.previousUsers {
-				if err := insertUser(previousUser.ID, previousUser.ExternalID, previousUser.Path,
-					previousUser.CreateAt.UnixNano(), previousUser.Urn); err != nil {
+				if err := insertUser(previousUser); err != nil {
 					t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
 					continue
 				}
@@ -421,37 +436,36 @@ func TestPostgresRepo_UpdateUser(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
-		previousUser *api.User
+		previousUser *User
 		// Postgres Repo Args
 		userToUpdate *api.User
-		newPath      string
-		newUrn       string
 		// Expected result
 		expectedResponse *api.User
 	}{
 		"OkCase": {
-			previousUser: &api.User{
+			previousUser: &User{
 				ID:         "UserID",
 				ExternalID: "ExternalID",
 				Path:       "OldPath",
 				Urn:        "Oldurn",
-				CreateAt:   now,
+				CreateAt:   now.UnixNano(),
+				UpdateAt:   now.UnixNano(),
 			},
 			userToUpdate: &api.User{
 				ID:         "UserID",
 				ExternalID: "ExternalID",
-				Path:       "OldPath",
-				Urn:        "Oldurn",
+				Path:       "NewPath",
+				Urn:        "NewUrn",
 				CreateAt:   now,
+				UpdateAt:   now,
 			},
-			newPath: "NewPath",
-			newUrn:  "NewUrn",
 			expectedResponse: &api.User{
 				ID:         "UserID",
 				ExternalID: "ExternalID",
 				Path:       "NewPath",
 				Urn:        "NewUrn",
 				CreateAt:   now,
+				UpdateAt:   now,
 			},
 		},
 	}
@@ -462,14 +476,13 @@ func TestPostgresRepo_UpdateUser(t *testing.T) {
 
 		// Insert previous data
 		if test.previousUser != nil {
-			if err := insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
-				test.previousUser.CreateAt.UnixNano(), test.previousUser.Urn); err != nil {
+			if err := insertUser(*test.previousUser); err != nil {
 				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
 				continue
 			}
 		}
 		// Call to repository to update an user
-		updatedUser, err := repoDB.UpdateUser(*test.userToUpdate, test.newPath, test.newUrn)
+		updatedUser, err := repoDB.UpdateUser(*test.userToUpdate)
 
 		if err != nil {
 			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
@@ -482,7 +495,7 @@ func TestPostgresRepo_UpdateUser(t *testing.T) {
 		}
 		// Check database
 		userNumber, err := getUsersCountFiltered(test.expectedResponse.ID, test.expectedResponse.ExternalID, test.expectedResponse.Path,
-			test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.Urn, "")
+			test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.UpdateAt.UnixNano(), test.expectedResponse.Urn, "")
 		if err != nil {
 			t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
 			continue
@@ -498,28 +511,45 @@ func TestPostgresRepo_UpdateUser(t *testing.T) {
 func TestPostgresRepo_RemoveUser(t *testing.T) {
 	type relation struct {
 		userID        string
-		groupIDs      []string
+		groupID       string
 		groupNotFound bool
 	}
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
-		previousUser *api.User
-		relation     *relation
+		previousUsers []User
+		relations     []relation
 		// Postgres Repo Args
 		userToDelete string
 	}{
 		"OkCase": {
-			previousUser: &api.User{
-				ID:         "UserID",
-				ExternalID: "ExternalID",
-				Path:       "OldPath",
-				Urn:        "Oldurn",
-				CreateAt:   now,
+			previousUsers: []User{
+				{
+					ID:         "UserID",
+					ExternalID: "ExternalID",
+					Path:       "OldPath",
+					Urn:        "Oldurn",
+					CreateAt:   now.UnixNano(),
+					UpdateAt:   now.UnixNano(),
+				},
+				{
+					ID:         "UserID2",
+					ExternalID: "ExternalID2",
+					Path:       "OldPath",
+					Urn:        "Oldurn2",
+					CreateAt:   now.UnixNano(),
+					UpdateAt:   now.UnixNano(),
+				},
 			},
-			relation: &relation{
-				userID:   "UserID",
-				groupIDs: []string{"GroupID1", "GroupID2"},
+			relations: []relation{
+				{
+					userID:  "UserID",
+					groupID: "GroupID",
+				},
+				{
+					userID:  "UserID2",
+					groupID: "GroupID",
+				},
 			},
 			userToDelete: "UserID",
 		},
@@ -531,16 +561,17 @@ func TestPostgresRepo_RemoveUser(t *testing.T) {
 		cleanGroupUserRelationTable()
 
 		// Insert previous data
-		if test.previousUser != nil {
-			if err := insertUser(test.previousUser.ID, test.previousUser.ExternalID, test.previousUser.Path,
-				test.previousUser.CreateAt.Unix(), test.previousUser.Urn); err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
-				continue
+		if test.previousUsers != nil {
+			for _, usr := range test.previousUsers {
+				if err := insertUser(usr); err != nil {
+					t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
+					continue
+				}
 			}
 		}
-		if test.relation != nil {
-			for _, id := range test.relation.groupIDs {
-				if err := insertGroupUserRelation(test.relation.userID, id); err != nil {
+		if test.relations != nil {
+			for _, rel := range test.relations {
+				if err := insertGroupUserRelation(rel.userID, rel.groupID); err != nil {
 					t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
 					continue
 				}
@@ -550,8 +581,7 @@ func TestPostgresRepo_RemoveUser(t *testing.T) {
 		err := repoDB.RemoveUser(test.userToDelete)
 
 		// Check database
-		userNumber, err := getUsersCountFiltered(test.userToDelete, "", "",
-			0, "", "")
+		userNumber, err := getUsersCountFiltered(test.userToDelete, "", "", 0, 0, "", "")
 		if err != nil {
 			t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
 			continue
@@ -561,13 +591,36 @@ func TestPostgresRepo_RemoveUser(t *testing.T) {
 			continue
 		}
 
-		relations, err := getGroupUserRelations("", test.previousUser.ID)
+		// Check total users
+		totalUserNumber, err := getUsersCountFiltered("", "", "", 0, 0, "", "")
 		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting relations: %v", n, err)
+			t.Errorf("Test %v failed. Unexpected error counting total users: %v", n, err)
+			continue
+		}
+		if totalUserNumber != 1 {
+			t.Errorf("Test %v failed. Received different total user number: %v", n, totalUserNumber)
+			continue
+		}
+
+		// Check user deleted relations
+		relations, err := getGroupUserRelations("", test.userToDelete)
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error counting group user relations: %v", n, err)
 			continue
 		}
 		if relations != 0 {
-			t.Errorf("Test %v failed. Received different relations number: %v", n, relations)
+			t.Errorf("Test %v failed. Received different group user relation number: %v", n, relations)
+			continue
+		}
+
+		// Check total user relations
+		totalRelations, err := getGroupUserRelations("", "")
+		if err != nil {
+			t.Errorf("Test %v failed. Unexpected error counting total group user relations: %v", n, err)
+			continue
+		}
+		if totalRelations != 1 {
+			t.Errorf("Test %v failed. Received different total group user relation number: %v", n, totalRelations)
 			continue
 		}
 
@@ -577,7 +630,7 @@ func TestPostgresRepo_RemoveUser(t *testing.T) {
 func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 	type relation struct {
 		userID        string
-		groups        []api.Group
+		groups        []Group
 		groupNotFound bool
 	}
 	now := time.Now().UTC()
@@ -594,13 +647,14 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 		"OkCase": {
 			relation: &relation{
 				userID: "UserID",
-				groups: []api.Group{
+				groups: []Group{
 					{
 						ID:       "GroupID1",
 						Name:     "Name1",
 						Path:     "Path1",
 						Urn:      "urn1",
-						CreateAt: now,
+						CreateAt: now.UnixNano(),
+						UpdateAt: now.UnixNano(),
 						Org:      "Org",
 					},
 					{
@@ -608,7 +662,8 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 						Name:     "Name2",
 						Path:     "Path2",
 						Urn:      "urn2",
-						CreateAt: now,
+						CreateAt: now.UnixNano(),
+						UpdateAt: now.UnixNano(),
 						Org:      "Org",
 					},
 				},
@@ -622,6 +677,7 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 					Path:     "Path1",
 					Urn:      "urn1",
 					CreateAt: now,
+					UpdateAt: now,
 					Org:      "Org",
 				},
 				{
@@ -630,6 +686,7 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 					Path:     "Path2",
 					Urn:      "urn2",
 					CreateAt: now,
+					UpdateAt: now,
 					Org:      "Org",
 				},
 			},
@@ -637,7 +694,7 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 		"ErrorCase": {
 			relation: &relation{
 				userID: "UserID",
-				groups: []api.Group{
+				groups: []Group{
 					{
 						ID: "GroupID1",
 					},
@@ -670,8 +727,7 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 					continue
 				}
 				if !test.relation.groupNotFound {
-					if err := insertGroup(group.ID, group.Name, group.Path,
-						group.CreateAt.UnixNano(), group.Urn, group.Org); err != nil {
+					if err := insertGroup(group); err != nil {
 						t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
 						continue
 					}

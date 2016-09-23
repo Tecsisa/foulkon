@@ -37,6 +37,7 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 				Path:       "Path",
 				Urn:        "urn",
 				CreateAt:   now,
+				UpdateAt:   now,
 			},
 			getUserByExternalIdResult: &api.User{
 				ID:         "UserID",
@@ -44,6 +45,7 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 				Path:       "Path",
 				Urn:        "urn",
 				CreateAt:   now,
+				UpdateAt:   now,
 			},
 			getAuthorizedExternalResourcesResult: []string{"urn:ews:example:instance1:resource/user"},
 		},

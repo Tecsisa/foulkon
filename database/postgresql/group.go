@@ -18,6 +18,7 @@ func (g PostgresRepo) AddGroup(group api.Group) (*api.Group, error) {
 		Name:     group.Name,
 		Path:     group.Path,
 		CreateAt: group.CreateAt.UnixNano(),
+		UpdateAt: group.UpdateAt.UnixNano(),
 		Urn:      group.Urn,
 		Org:      group.Org,
 	}
@@ -107,33 +108,26 @@ func (g PostgresRepo) GetGroupsFiltered(org string, filter *api.Filter) ([]api.G
 		for i, g := range groups {
 			apiGroups[i] = *dbGroupToAPIGroup(&g)
 		}
-		return apiGroups, total, nil
 	}
 
 	// No data to return
 	return apiGroups, total, nil
 }
 
-func (g PostgresRepo) UpdateGroup(group api.Group, newName string, newPath string, urn string) (*api.Group, error) {
-
-	// Create new group
-	updatedGroup := Group{
-		Name: newName,
-		Path: newPath,
-		Urn:  urn,
-	}
+func (g PostgresRepo) UpdateGroup(group api.Group) (*api.Group, error) {
 
 	groupDB := Group{
 		ID:       group.ID,
 		Name:     group.Name,
 		Path:     group.Path,
 		CreateAt: group.CreateAt.UTC().UnixNano(),
+		UpdateAt: group.UpdateAt.UTC().UnixNano(),
 		Urn:      group.Urn,
 		Org:      group.Org,
 	}
 
 	// Update group
-	query := g.Dbmap.Model(&groupDB).Update(updatedGroup)
+	query := g.Dbmap.Model(&Group{ID: group.ID}).Updates(groupDB)
 
 	// Check if group exist
 	if query.RecordNotFound() {
@@ -151,7 +145,7 @@ func (g PostgresRepo) UpdateGroup(group api.Group, newName string, newPath strin
 		}
 	}
 
-	return dbGroupToAPIGroup(&groupDB), nil
+	return &group, nil
 }
 
 func (g PostgresRepo) RemoveGroup(id string) error {
@@ -371,6 +365,7 @@ func dbGroupToAPIGroup(groupdb *Group) *api.Group {
 		Name:     groupdb.Name,
 		Path:     groupdb.Path,
 		CreateAt: time.Unix(0, groupdb.CreateAt).UTC(),
+		UpdateAt: time.Unix(0, groupdb.UpdateAt).UTC(),
 		Urn:      groupdb.Urn,
 		Org:      groupdb.Org,
 	}

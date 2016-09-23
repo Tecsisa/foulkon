@@ -161,9 +161,9 @@ type UserRepo interface {
 	// if there are problems with database.
 	GetUsersFiltered(filter *Filter) ([]User, int, error)
 
-	// Update user stored in database with new pathPrefix. Throw error if the database restrictions
+	// Update user stored in database with new fields. Throw error if the database restrictions
 	// are not satisfied or unexpected error happen.
-	UpdateUser(user User, newPath string, newUrn string) (*User, error)
+	UpdateUser(user User) (*User, error)
 
 	// Remove user stored in database with its group relationships.
 	// Throw error if there are problems during transactions.
@@ -186,9 +186,9 @@ type GroupRepo interface {
 	// if there are problems with database.
 	GetGroupsFiltered(org string, filter *Filter) ([]Group, int, error)
 
-	// Update group stored in database with new name and pathPrefix.
+	// Update group stored in database with new fields.
 	// Throw error if there are problems with database.
-	UpdateGroup(group Group, newName string, newPath string, newUrn string) (*Group, error)
+	UpdateGroup(group Group) (*Group, error)
 
 	// Remove group stored in database with its user and policy relationships.
 	// Throw error if there are problems during transactions.
@@ -237,9 +237,9 @@ type PolicyRepo interface {
 	// if there are problems with database.
 	GetPoliciesFiltered(org string, filter *Filter) ([]Policy, int, error)
 
-	// Update policy stored in database with new name and pathPrefix. Also it overrides statements.
+	// Update policy stored in database with new fields. Also it overrides statements if it has.
 	// Throw error if there are problems with database.
-	UpdatePolicy(policy Policy, newName string, newPath string, newUrn string, newStatements []Statement) (*Policy, error)
+	UpdatePolicy(policy Policy) (*Policy, error)
 
 	// Remove policy stored in database with its groups relationships.
 	// Throw error if there are problems during transactions.

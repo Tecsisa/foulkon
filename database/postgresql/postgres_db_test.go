@@ -78,9 +78,9 @@ func TestInitDb(t *testing.T) {
 
 // Aux methods
 
-func insertUser(id string, externalID string, path string, createAt int64, urn string) error {
-	err := repoDB.Dbmap.Exec("INSERT INTO public.users (id, external_id, path, create_at, urn) VALUES (?, ?, ?, ?, ?)",
-		id, externalID, path, createAt, urn).Error
+func insertUser(user User) error {
+	err := repoDB.Dbmap.Exec("INSERT INTO public.users (id, external_id, path, create_at, update_at, urn) VALUES (?, ?, ?, ?, ?, ?)",
+		user.ID, user.ExternalID, user.Path, user.CreateAt, user.UpdateAt, user.Urn).Error
 
 	// Error handling
 	if err != nil {
@@ -106,7 +106,7 @@ func insertGroupUserRelation(userID string, groupID string) error {
 	return nil
 }
 
-func getUsersCountFiltered(id string, externalID string, path string, createAt int64, urn string, pathPrefix string) (int, error) {
+func getUsersCountFiltered(id string, externalID string, path string, createAt int64, updateAt int64, urn string, pathPrefix string) (int, error) {
 	query := repoDB.Dbmap.Table(User{}.TableName())
 	if id != "" {
 		query = query.Where("id = ?", id)
@@ -122,6 +122,9 @@ func getUsersCountFiltered(id string, externalID string, path string, createAt i
 	}
 	if createAt != 0 {
 		query = query.Where("create_at = ?", createAt)
+	}
+	if updateAt != 0 {
+		query = query.Where("update_at = ?", updateAt)
 	}
 	if urn != "" {
 		query = query.Where("urn = ?", urn)
@@ -150,9 +153,9 @@ func cleanGroupUserRelationTable() error {
 
 // GROUP
 
-func insertGroup(id string, name string, path string, createAt int64, urn string, org string) error {
-	err := repoDB.Dbmap.Exec("INSERT INTO public.groups (id, name, path, create_at, urn, org) VALUES (?, ?, ?, ?, ?, ?)",
-		id, name, path, createAt, urn, org).Error
+func insertGroup(group Group) error {
+	err := repoDB.Dbmap.Exec("INSERT INTO public.groups (id, name, path, create_at, update_at, urn, org) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		group.ID, group.Name, group.Path, group.CreateAt, group.UpdateAt, group.Urn, group.Org).Error
 
 	// Error handling
 	if err != nil {
@@ -164,7 +167,7 @@ func insertGroup(id string, name string, path string, createAt int64, urn string
 	return nil
 }
 
-func getGroupsCountFiltered(id string, name string, path string, createAt int64, urn string, org string) (int, error) {
+func getGroupsCountFiltered(id string, name string, path string, createAt int64, updateAt int64, urn string, org string) (int, error) {
 	query := repoDB.Dbmap.Table(Group{}.TableName())
 	if id != "" {
 		query = query.Where("id = ?", id)
@@ -177,6 +180,9 @@ func getGroupsCountFiltered(id string, name string, path string, createAt int64,
 	}
 	if createAt != 0 {
 		query = query.Where("create_at = ?", createAt)
+	}
+	if updateAt != 0 {
+		query = query.Where("update_at = ?", updateAt)
 	}
 	if urn != "" {
 		query = query.Where("urn = ?", urn)
@@ -239,9 +245,9 @@ func cleanStatementTable() error {
 	return nil
 }
 
-func insertPolicy(id string, name string, org string, path string, createAt int64, urn string, statements []Statement) error {
-	err := repoDB.Dbmap.Exec("INSERT INTO public.policies (id, name, org, path, create_at, urn) VALUES (?, ?, ?, ?, ?, ?)",
-		id, name, org, path, createAt, urn).Error
+func insertPolicy(policy Policy, statements []Statement) error {
+	err := repoDB.Dbmap.Exec("INSERT INTO public.policies (id, name, org, path, create_at, update_at, urn) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		policy.ID, policy.Name, policy.Org, policy.Path, policy.CreateAt, policy.UpdateAt, policy.Urn).Error
 
 	// Error handling
 	if err != nil {
@@ -252,7 +258,8 @@ func insertPolicy(id string, name string, org string, path string, createAt int6
 	}
 
 	for _, v := range statements {
-		err = insertStatements(v.ID, v.PolicyID, v.Actions, v.Effect, v.Resources)
+		v.PolicyID = policy.ID
+		err = insertStatements(v)
 		// Error handling
 		if err != nil {
 			return &database.Error{
@@ -265,9 +272,9 @@ func insertPolicy(id string, name string, org string, path string, createAt int6
 	return nil
 }
 
-func insertStatements(id string, policyId string, actions string, effect string, resources string) error {
+func insertStatements(statement Statement) error {
 	err := repoDB.Dbmap.Exec("INSERT INTO public.statements (id, policy_id, effect, actions, resources) VALUES (?, ?, ?, ?, ?)",
-		id, policyId, effect, actions, resources).Error
+		statement.ID, statement.PolicyID, statement.Effect, statement.Actions, statement.Resources).Error
 
 	// Error handling
 	if err != nil {

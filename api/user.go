@@ -17,6 +17,7 @@ type User struct {
 	Path       string    `json:"path, omitempty"`
 	Urn        string    `json:"urn, omitempty"`
 	CreateAt   time.Time `json:"createAt, omitempty"`
+	UpdateAt   time.Time `json:"updateAt, omitempty"`
 }
 
 func (u User) String() string {
@@ -203,13 +204,13 @@ func (api AuthAPI) UpdateUser(requestInfo RequestInfo, externalId string, newPat
 	}
 
 	// Call repo to retrieve the user
-	userDB, err := api.GetUserByExternalID(requestInfo, externalId)
+	oldUser, err := api.GetUserByExternalID(requestInfo, externalId)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check restrictions
-	usersFiltered, err := api.GetAuthorizedUsers(requestInfo, userDB.Urn, USER_ACTION_UPDATE_USER, []User{*userDB})
+	usersFiltered, err := api.GetAuthorizedUsers(requestInfo, oldUser.Urn, USER_ACTION_UPDATE_USER, []User{*oldUser})
 	if err != nil {
 		return nil, err
 	}
@@ -217,14 +218,16 @@ func (api AuthAPI) UpdateUser(requestInfo RequestInfo, externalId string, newPat
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				requestInfo.Identifier, userDB.Urn),
+				requestInfo.Identifier, oldUser.Urn),
 		}
 	}
 
-	userToUpdate := createUser(externalId, newPath)
+	auxUser := User{
+		Urn: CreateUrn("", RESOURCE_USER, newPath, externalId),
+	}
 
 	// Check restrictions
-	usersFiltered, err = api.GetAuthorizedUsers(requestInfo, userToUpdate.Urn, USER_ACTION_GET_USER, []User{userToUpdate})
+	usersFiltered, err = api.GetAuthorizedUsers(requestInfo, auxUser.Urn, USER_ACTION_GET_USER, []User{auxUser})
 	if err != nil {
 		return nil, err
 	}
@@ -232,11 +235,20 @@ func (api AuthAPI) UpdateUser(requestInfo RequestInfo, externalId string, newPat
 		return nil, &Error{
 			Code: UNAUTHORIZED_RESOURCES_ERROR,
 			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
-				requestInfo.Identifier, userToUpdate.Urn),
+				requestInfo.Identifier, auxUser.Urn),
 		}
 	}
 
-	user, err := api.UserRepo.UpdateUser(*userDB, newPath, userToUpdate.Urn)
+	user := User{
+		ID:         oldUser.ID,
+		ExternalID: oldUser.ExternalID,
+		Path:       newPath,
+		CreateAt:   oldUser.CreateAt,
+		UpdateAt:   time.Now().UTC(),
+		Urn:        auxUser.Urn,
+	}
+
+	updatedUser, err := api.UserRepo.UpdateUser(user)
 
 	// Check unexpected DB error
 	if err != nil {
@@ -248,8 +260,8 @@ func (api AuthAPI) UpdateUser(requestInfo RequestInfo, externalId string, newPat
 		}
 	}
 
-	LogOperation(api.Logger, requestInfo, fmt.Sprintf("User updated from %+v to %+v", userDB, user))
-	return user, nil
+	LogOperation(api.Logger, requestInfo, fmt.Sprintf("User updated from %+v to %+v", oldUser, updatedUser))
+	return updatedUser, nil
 
 }
 
@@ -355,6 +367,7 @@ func createUser(externalId string, path string) User {
 		ExternalID: externalId,
 		Path:       path,
 		CreateAt:   time.Now().UTC(),
+		UpdateAt:   time.Now().UTC(),
 		Urn:        urn,
 	}
 
