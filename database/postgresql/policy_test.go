@@ -378,15 +378,14 @@ func TestPostgresRepo_GetPoliciesFiltered(t *testing.T) {
 		policy     *Policy
 		statements []Statement
 		// Postgres Repo Args
-		org    string
 		filter *api.Filter
 		// Expected result
 		expectedResponse []api.Policy
 	}{
 		"OkCase": {
-			org: "org1",
 			filter: &api.Filter{
 				PathPrefix: "/path/",
+				Org:        "org1",
 				Offset:     0,
 				Limit:      20,
 			},
@@ -432,9 +431,9 @@ func TestPostgresRepo_GetPoliciesFiltered(t *testing.T) {
 			},
 		},
 		"OKCaseNotFound": {
-			org: "org1",
 			filter: &api.Filter{
 				PathPrefix: "test",
+				Org:        "org1",
 				Offset:     0,
 				Limit:      20,
 			},
@@ -455,7 +454,7 @@ func TestPostgresRepo_GetPoliciesFiltered(t *testing.T) {
 			}
 		}
 		// Call to repository to get a policy
-		receivedPolicy, total, err := repoDB.GetPoliciesFiltered(test.org, test.filter)
+		receivedPolicy, total, err := repoDB.GetPoliciesFiltered(test.filter)
 		if err != nil {
 			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
 			continue

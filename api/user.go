@@ -300,7 +300,7 @@ func (api AuthAPI) RemoveUser(requestInfo RequestInfo, externalId string) error 
 	return nil
 }
 
-func (api AuthAPI) ListGroupsByUser(requestInfo RequestInfo, externalId string, filter *Filter) ([]GroupIdentity, int, error) {
+func (api AuthAPI) ListGroupsByUser(requestInfo RequestInfo, filter *Filter) ([]GroupIdentity, int, error) {
 	// Check parameters
 	var total int
 	if filter.Limit > MAX_LIMIT_SIZE {
@@ -315,7 +315,7 @@ func (api AuthAPI) ListGroupsByUser(requestInfo RequestInfo, externalId string, 
 	}
 
 	// Call repo to retrieve the user
-	user, err := api.GetUserByExternalID(requestInfo, externalId)
+	user, err := api.GetUserByExternalID(requestInfo, filter.ExternalID)
 	if err != nil {
 		return nil, total, err
 	}

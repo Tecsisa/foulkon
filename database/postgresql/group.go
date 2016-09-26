@@ -83,12 +83,12 @@ func (g PostgresRepo) GetGroupById(id string) (*api.Group, error) {
 	return dbGroupToAPIGroup(group), nil
 }
 
-func (g PostgresRepo) GetGroupsFiltered(org string, filter *api.Filter) ([]api.Group, int, error) {
+func (g PostgresRepo) GetGroupsFiltered(filter *api.Filter) ([]api.Group, int, error) {
 	var total int
 	groups := []Group{}
 	query := g.Dbmap
-	if len(org) > 0 {
-		query = query.Where("org like ? ", org)
+	if len(filter.Org) > 0 {
+		query = query.Where("org like ? ", filter.Org)
 	}
 	if len(filter.PathPrefix) > 0 {
 		query = query.Where("path like ? ", filter.PathPrefix+"%")

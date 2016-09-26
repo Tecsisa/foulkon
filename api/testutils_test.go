@@ -45,6 +45,10 @@ type TestRepo struct {
 
 var testFilter = Filter{
 	PathPrefix: "",
+	Org:        "",
+	GroupName:  "",
+	PolicyName: "",
+	ExternalID: "",
 	Offset:     0,
 	Limit:      20,
 }
@@ -67,7 +71,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[GetGroupMembersMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[IsAttachedToGroupMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[GetAttachedPoliciesMethod] = make([]interface{}, 2)
-	testRepo.ArgsIn[GetGroupsFilteredMethod] = make([]interface{}, 2)
+	testRepo.ArgsIn[GetGroupsFilteredMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[RemoveGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[AddGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[AddMemberMethod] = make([]interface{}, 2)
@@ -79,7 +83,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[AddPolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[UpdatePolicyMethod] = make([]interface{}, 5)
 	testRepo.ArgsIn[RemovePolicyMethod] = make([]interface{}, 1)
-	testRepo.ArgsIn[GetPoliciesFilteredMethod] = make([]interface{}, 2)
+	testRepo.ArgsIn[GetPoliciesFilteredMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetAttachedGroupsMethod] = make([]interface{}, 2)
 
 	testRepo.ArgsOut[GetUserByExternalIDMethod] = make([]interface{}, 2)
@@ -301,9 +305,8 @@ func (t TestRepo) GetAttachedPolicies(groupID string, filter *Filter) ([]Policy,
 	return policies, total, err
 }
 
-func (t TestRepo) GetGroupsFiltered(org string, filter *Filter) ([]Group, int, error) {
-	t.ArgsIn[GetGroupsFilteredMethod][0] = org
-	t.ArgsIn[GetGroupsFilteredMethod][1] = filter.PathPrefix
+func (t TestRepo) GetGroupsFiltered(filter *Filter) ([]Group, int, error) {
+	t.ArgsIn[GetGroupsFilteredMethod][0] = filter
 
 	var groups []Group
 	if t.ArgsOut[GetGroupsFilteredMethod][0] != nil {
@@ -451,9 +454,8 @@ func (t TestRepo) RemovePolicy(id string) error {
 	return err
 }
 
-func (t TestRepo) GetPoliciesFiltered(org string, filter *Filter) ([]Policy, int, error) {
-	t.ArgsIn[GetPoliciesFilteredMethod][0] = org
-	t.ArgsIn[GetPoliciesFilteredMethod][1] = filter.PathPrefix
+func (t TestRepo) GetPoliciesFiltered(filter *Filter) ([]Policy, int, error) {
+	t.ArgsIn[GetPoliciesFilteredMethod][0] = filter
 
 	var policies []Policy
 	if t.ArgsOut[GetPoliciesFilteredMethod][0] != nil {

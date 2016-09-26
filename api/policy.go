@@ -187,13 +187,13 @@ func (api AuthAPI) GetPolicyByName(requestInfo RequestInfo, org string, policyNa
 	}
 }
 
-func (api AuthAPI) ListPolicies(requestInfo RequestInfo, org string, filter *Filter) ([]PolicyIdentity, int, error) {
+func (api AuthAPI) ListPolicies(requestInfo RequestInfo, filter *Filter) ([]PolicyIdentity, int, error) {
 	// Validate fields
 	var total int
-	if len(org) > 0 && !IsValidOrg(org) {
+	if len(filter.Org) > 0 && !IsValidOrg(filter.Org) {
 		return nil, total, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+			Message: fmt.Sprintf("Invalid parameter: org %v", filter.Org),
 		}
 	}
 	if len(filter.PathPrefix) > 0 && !IsValidPath(filter.PathPrefix) {
@@ -218,7 +218,7 @@ func (api AuthAPI) ListPolicies(requestInfo RequestInfo, org string, filter *Fil
 	}
 
 	// Call repo to retrieve the policies
-	policies, total, err := api.PolicyRepo.GetPoliciesFiltered(org, filter)
+	policies, total, err := api.PolicyRepo.GetPoliciesFiltered(filter)
 
 	// Error handling
 	if err != nil {
@@ -232,10 +232,10 @@ func (api AuthAPI) ListPolicies(requestInfo RequestInfo, org string, filter *Fil
 
 	// Check restrictions to list
 	var urnPrefix string
-	if len(org) == 0 {
+	if len(filter.Org) == 0 {
 		urnPrefix = "*"
 	} else {
-		urnPrefix = GetUrnPrefix(org, RESOURCE_POLICY, filter.PathPrefix)
+		urnPrefix = GetUrnPrefix(filter.Org, RESOURCE_POLICY, filter.PathPrefix)
 	}
 	policiesFiltered, err := api.GetAuthorizedPolicies(requestInfo, urnPrefix, POLICY_ACTION_LIST_POLICIES, policies)
 	if err != nil {
@@ -395,7 +395,7 @@ func (api AuthAPI) RemovePolicy(requestInfo RequestInfo, org string, name string
 	return nil
 }
 
-func (api AuthAPI) ListAttachedGroups(requestInfo RequestInfo, org string, name string, filter *Filter) ([]string, int, error) {
+func (api AuthAPI) ListAttachedGroups(requestInfo RequestInfo, filter *Filter) ([]string, int, error) {
 	// Validate fields
 	var total int
 	if filter.Limit > MAX_LIMIT_SIZE {
@@ -410,7 +410,7 @@ func (api AuthAPI) ListAttachedGroups(requestInfo RequestInfo, org string, name 
 	}
 
 	// Call repo to retrieve the policy
-	policy, err := api.GetPolicyByName(requestInfo, org, name)
+	policy, err := api.GetPolicyByName(requestInfo, filter.Org, filter.PolicyName)
 	if err != nil {
 		return nil, total, err
 	}
