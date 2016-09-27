@@ -463,7 +463,6 @@ func TestWorkerHandler_HandleGetPolicy(t *testing.T) {
 func TestWorkerHandler_HandleListPolicies(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		org          string
 		filter       *api.Filter
 		ignoreArgsIn bool
 		// Expected result
@@ -477,9 +476,9 @@ func TestWorkerHandler_HandleListPolicies(t *testing.T) {
 		getPolicyListErr error
 	}{
 		"OkCase": {
-			org: "org1",
 			filter: &api.Filter{
 				PathPrefix: "/path/",
+				Org:        "org1",
 				Offset:     0,
 				Limit:      0,
 			},
@@ -536,9 +535,9 @@ func TestWorkerHandler_HandleListPolicies(t *testing.T) {
 			totalGroupsResult: 2,
 		},
 		"ErrorCaseInvalidParameterError": {
-			org: "org1",
 			filter: &api.Filter{
 				PathPrefix: "/path/",
+				Org:        "org1",
 			},
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
@@ -551,9 +550,9 @@ func TestWorkerHandler_HandleListPolicies(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedError": {
-			org: "org1",
 			filter: &api.Filter{
 				PathPrefix: "/path/",
+				Org:        "org1",
 			},
 			expectedStatusCode: http.StatusForbidden,
 			expectedError: api.Error{
@@ -583,7 +582,7 @@ func TestWorkerHandler_HandleListPolicies(t *testing.T) {
 		testApi.ArgsOut[ListPoliciesMethod][1] = test.totalGroupsResult
 		testApi.ArgsOut[ListPoliciesMethod][2] = test.getPolicyListErr
 
-		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies", test.org)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies", test.filter.Org)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
@@ -600,11 +599,7 @@ func TestWorkerHandler_HandleListPolicies(t *testing.T) {
 
 		if !test.ignoreArgsIn {
 			// Check received parameters
-			if testApi.ArgsIn[ListPoliciesMethod][1] != test.org {
-				t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[ListPoliciesMethod][1])
-				continue
-			}
-			filterData, ok := testApi.ArgsIn[ListPoliciesMethod][2].(*api.Filter)
+			filterData, ok := testApi.ArgsIn[ListPoliciesMethod][1].(*api.Filter)
 			if ok {
 				// Check result
 				if diff := pretty.Compare(filterData, test.filter); diff != "" {
@@ -775,11 +770,7 @@ func TestWorkerHandler_HandleListAllPolicies(t *testing.T) {
 		}
 		if !test.ignoreArgsIn {
 			// Check received parameters
-			if testApi.ArgsIn[ListPoliciesMethod][1] != "" {
-				t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, "", testApi.ArgsIn[ListPoliciesMethod][1])
-				continue
-			}
-			filterData, ok := testApi.ArgsIn[ListPoliciesMethod][2].(*api.Filter)
+			filterData, ok := testApi.ArgsIn[ListPoliciesMethod][1].(*api.Filter)
 			if ok {
 				// Check result
 				if diff := pretty.Compare(filterData, test.filter); diff != "" {
@@ -1244,8 +1235,6 @@ func TestWorkerHandler_HandleRemovePolicy(t *testing.T) {
 func TestWorkerHandler_HandleListAttachedGroups(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		org          string
-		policyName   string
 		filter       *api.Filter
 		ignoreArgsIn bool
 		// Expected result
@@ -1259,9 +1248,10 @@ func TestWorkerHandler_HandleListAttachedGroups(t *testing.T) {
 		getPolicyGroupsErr error
 	}{
 		"OkCase": {
-			org:                "org1",
-			policyName:         "p1",
-			filter:             testFilter,
+			filter: &api.Filter{
+				Org:        "org1",
+				PolicyName: "p1",
+			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: ListAttachedGroupsResponse{
 				Groups: []string{"group1", "group2"},
@@ -1284,9 +1274,10 @@ func TestWorkerHandler_HandleListAttachedGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseNotFound": {
-			org:                "org1",
-			policyName:         "p1",
-			filter:             testFilter,
+			filter: &api.Filter{
+				Org:        "org1",
+				PolicyName: "p1",
+			},
 			expectedStatusCode: http.StatusNotFound,
 			expectedError: api.Error{
 				Code: api.POLICY_BY_ORG_AND_NAME_NOT_FOUND,
@@ -1296,9 +1287,10 @@ func TestWorkerHandler_HandleListAttachedGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorized": {
-			org:                "org1",
-			policyName:         "p1",
-			filter:             testFilter,
+			filter: &api.Filter{
+				Org:        "org1",
+				PolicyName: "p1",
+			},
 			expectedStatusCode: http.StatusForbidden,
 			expectedError: api.Error{
 				Code: api.UNAUTHORIZED_RESOURCES_ERROR,
@@ -1308,9 +1300,10 @@ func TestWorkerHandler_HandleListAttachedGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidParam": {
-			org:                "org1",
-			policyName:         "p1",
-			filter:             testFilter,
+			filter: &api.Filter{
+				Org:        "org1",
+				PolicyName: "p1",
+			},
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
 				Code: api.INVALID_PARAMETER_ERROR,
@@ -1320,9 +1313,10 @@ func TestWorkerHandler_HandleListAttachedGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseInternalServerError": {
-			org:                "org1",
-			policyName:         "p1",
-			filter:             testFilter,
+			filter: &api.Filter{
+				Org:        "org1",
+				PolicyName: "p1",
+			},
 			expectedStatusCode: http.StatusInternalServerError,
 			expectedError: api.Error{
 				Code: api.UNKNOWN_API_ERROR,
@@ -1341,7 +1335,7 @@ func TestWorkerHandler_HandleListAttachedGroups(t *testing.T) {
 		testApi.ArgsOut[ListAttachedGroupsMethod][1] = test.totalGroupsResult
 		testApi.ArgsOut[ListAttachedGroupsMethod][2] = test.getPolicyGroupsErr
 
-		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies/%v/groups", test.org, test.policyName)
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies/%v/groups", test.filter.Org, test.filter.PolicyName)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
@@ -1358,15 +1352,7 @@ func TestWorkerHandler_HandleListAttachedGroups(t *testing.T) {
 
 		if !test.ignoreArgsIn {
 			// Check received parameters
-			if testApi.ArgsIn[ListAttachedGroupsMethod][1] != test.org {
-				t.Errorf("Test case %v. Received different org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[ListAttachedGroupsMethod][1])
-				continue
-			}
-			if testApi.ArgsIn[ListAttachedGroupsMethod][2] != test.policyName {
-				t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.policyName, testApi.ArgsIn[ListAttachedGroupsMethod][2])
-				continue
-			}
-			filterData, ok := testApi.ArgsIn[ListAttachedGroupsMethod][2].(*api.Filter)
+			filterData, ok := testApi.ArgsIn[ListAttachedGroupsMethod][1].(*api.Filter)
 			if ok {
 				// Check result
 				if diff := pretty.Compare(filterData, test.filter); diff != "" {

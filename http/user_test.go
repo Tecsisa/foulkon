@@ -799,7 +799,6 @@ func TestWorkerHandler_HandleRemoveUser(t *testing.T) {
 func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		externalID   string
 		filter       *api.Filter
 		ignoreArgsIn bool
 		// Expected result
@@ -813,8 +812,9 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 		getGroupsByUserIdErr error
 	}{
 		"OkCase": {
-			externalID:         "UserID",
-			filter:             testFilter,
+			filter: &api.Filter{
+				ExternalID: "UserID",
+			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: GetGroupsByUserIdResponse{
 				Groups: []api.GroupIdentity{
@@ -844,9 +844,9 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 			totalGroupsResult: 2,
 		},
 		"ErrorCaseInvalidFilterParams": {
-			externalID: "UserID",
 			filter: &api.Filter{
 				PathPrefix: "",
+				ExternalID: "UserID",
 				Limit:      -1,
 			},
 			ignoreArgsIn:       true,
@@ -857,8 +857,9 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseUserNotExist": {
-			externalID:         "UserID",
-			filter:             testFilter,
+			filter: &api.Filter{
+				ExternalID: "UserID",
+			},
 			expectedStatusCode: http.StatusNotFound,
 			expectedError: api.Error{
 				Code:    api.USER_BY_EXTERNAL_ID_NOT_FOUND,
@@ -870,8 +871,9 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidParameterError": {
-			externalID:         "InvalidID",
-			filter:             testFilter,
+			filter: &api.Filter{
+				ExternalID: "InvalidID",
+			},
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
@@ -883,8 +885,9 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnauthorizedResourcesError": {
-			externalID:         "UnauthorizedID",
-			filter:             testFilter,
+			filter: &api.Filter{
+				ExternalID: "UnauthorizedID",
+			},
 			expectedStatusCode: http.StatusForbidden,
 			expectedError: api.Error{
 				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
@@ -896,8 +899,9 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 			},
 		},
 		"ErrorCaseUnknownApiError": {
-			externalID:         "ExceptionID",
-			filter:             testFilter,
+			filter: &api.Filter{
+				ExternalID: "ExceptionID",
+			},
 			expectedStatusCode: http.StatusInternalServerError,
 			getGroupsByUserIdErr: &api.Error{
 				Code:    api.UNKNOWN_API_ERROR,
@@ -914,7 +918,7 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 		testApi.ArgsOut[ListGroupsByUserMethod][1] = test.totalGroupsResult
 		testApi.ArgsOut[ListGroupsByUserMethod][2] = test.getGroupsByUserIdErr
 
-		url := fmt.Sprintf(server.URL+USER_ROOT_URL+"/%v/groups", test.externalID)
+		url := fmt.Sprintf(server.URL+USER_ROOT_URL+"/%v/groups", test.filter.ExternalID)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
@@ -930,11 +934,7 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 		}
 		if !test.ignoreArgsIn {
 			// Check received parameters
-			if testApi.ArgsIn[ListGroupsByUserMethod][1] != test.externalID {
-				t.Errorf("Test case %v. Received different ExternalID (wanted:%v / received:%v)", n, test.externalID, testApi.ArgsIn[ListGroupsByUserMethod][1])
-				continue
-			}
-			filterData, ok := testApi.ArgsIn[ListGroupsByUserMethod][2].(*api.Filter)
+			filterData, ok := testApi.ArgsIn[ListGroupsByUserMethod][1].(*api.Filter)
 			if ok {
 				// Check result
 				if diff := pretty.Compare(filterData, test.filter); diff != "" {

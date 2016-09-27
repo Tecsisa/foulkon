@@ -139,13 +139,13 @@ func (p PostgresRepo) GetPolicyById(id string) (*api.Policy, error) {
 	return policyApi, nil
 }
 
-func (p PostgresRepo) GetPoliciesFiltered(org string, filter *api.Filter) ([]api.Policy, int, error) {
+func (p PostgresRepo) GetPoliciesFiltered(filter *api.Filter) ([]api.Policy, int, error) {
 	var total int
 	policies := []Policy{}
 	query := p.Dbmap
 
-	if len(org) > 0 {
-		query = query.Where("org like ?", org)
+	if len(filter.Org) > 0 {
+		query = query.Where("org like ?", filter.Org)
 	}
 	if len(filter.PathPrefix) > 0 {
 		query = query.Where("path like ?", filter.PathPrefix+"%")

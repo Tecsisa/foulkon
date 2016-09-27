@@ -58,6 +58,10 @@ var testApi *TestAPI
 var authConnector *TestConnector
 var testFilter = &api.Filter{
 	PathPrefix: "",
+	Org:        "",
+	GroupName:  "",
+	PolicyName: "",
+	ExternalID: "",
 	Offset:     0,
 	Limit:      0,
 }
@@ -204,26 +208,26 @@ func makeTestApi() *TestAPI {
 	testApi.ArgsIn[ListUsersMethod] = make([]interface{}, 2)
 	testApi.ArgsIn[UpdateUserMethod] = make([]interface{}, 3)
 	testApi.ArgsIn[RemoveUserMethod] = make([]interface{}, 2)
-	testApi.ArgsIn[ListGroupsByUserMethod] = make([]interface{}, 3)
+	testApi.ArgsIn[ListGroupsByUserMethod] = make([]interface{}, 2)
 
 	testApi.ArgsIn[AddGroupMethod] = make([]interface{}, 4)
 	testApi.ArgsIn[GetGroupByNameMethod] = make([]interface{}, 3)
-	testApi.ArgsIn[ListGroupsMethod] = make([]interface{}, 3)
+	testApi.ArgsIn[ListGroupsMethod] = make([]interface{}, 2)
 	testApi.ArgsIn[UpdateGroupMethod] = make([]interface{}, 5)
 	testApi.ArgsIn[RemoveGroupMethod] = make([]interface{}, 3)
 	testApi.ArgsIn[AddMemberMethod] = make([]interface{}, 4)
 	testApi.ArgsIn[RemoveMemberMethod] = make([]interface{}, 4)
-	testApi.ArgsIn[ListMembersMethod] = make([]interface{}, 4)
+	testApi.ArgsIn[ListMembersMethod] = make([]interface{}, 2)
 	testApi.ArgsIn[AttachPolicyToGroupMethod] = make([]interface{}, 4)
 	testApi.ArgsIn[DetachPolicyToGroupMethod] = make([]interface{}, 4)
-	testApi.ArgsIn[ListAttachedGroupPoliciesMethod] = make([]interface{}, 4)
+	testApi.ArgsIn[ListAttachedGroupPoliciesMethod] = make([]interface{}, 2)
 
 	testApi.ArgsIn[AddPolicyMethod] = make([]interface{}, 5)
 	testApi.ArgsIn[GetPolicyByNameMethod] = make([]interface{}, 3)
-	testApi.ArgsIn[ListPoliciesMethod] = make([]interface{}, 3)
+	testApi.ArgsIn[ListPoliciesMethod] = make([]interface{}, 2)
 	testApi.ArgsIn[UpdatePolicyMethod] = make([]interface{}, 6)
 	testApi.ArgsIn[RemovePolicyMethod] = make([]interface{}, 3)
-	testApi.ArgsIn[ListAttachedGroupsMethod] = make([]interface{}, 4)
+	testApi.ArgsIn[ListAttachedGroupsMethod] = make([]interface{}, 2)
 
 	testApi.ArgsIn[GetAuthorizedUsersMethod] = make([]interface{}, 4)
 	testApi.ArgsIn[GetAuthorizedGroupsMethod] = make([]interface{}, 4)
@@ -338,10 +342,9 @@ func (t TestAPI) RemoveUser(authenticatedUser api.RequestInfo, id string) error 
 	return err
 }
 
-func (t TestAPI) ListGroupsByUser(authenticatedUser api.RequestInfo, id string, filter *api.Filter) ([]api.GroupIdentity, int, error) {
+func (t TestAPI) ListGroupsByUser(authenticatedUser api.RequestInfo, filter *api.Filter) ([]api.GroupIdentity, int, error) {
 	t.ArgsIn[ListGroupsByUserMethod][0] = authenticatedUser
-	t.ArgsIn[ListGroupsByUserMethod][1] = id
-	t.ArgsIn[ListGroupsByUserMethod][2] = filter
+	t.ArgsIn[ListGroupsByUserMethod][1] = filter
 	var groups []api.GroupIdentity
 	var total int
 	if t.ArgsOut[ListGroupsByUserMethod][1] != nil {
@@ -391,10 +394,9 @@ func (t TestAPI) GetGroupByName(authenticatedUser api.RequestInfo, org string, n
 	return group, err
 }
 
-func (t TestAPI) ListGroups(authenticatedUser api.RequestInfo, org string, filter *api.Filter) ([]api.GroupIdentity, int, error) {
+func (t TestAPI) ListGroups(authenticatedUser api.RequestInfo, filter *api.Filter) ([]api.GroupIdentity, int, error) {
 	t.ArgsIn[ListGroupsMethod][0] = authenticatedUser
-	t.ArgsIn[ListGroupsMethod][1] = org
-	t.ArgsIn[ListGroupsMethod][2] = filter
+	t.ArgsIn[ListGroupsMethod][1] = filter
 
 	var groups []api.GroupIdentity
 	var total int
@@ -463,11 +465,9 @@ func (t TestAPI) RemoveMember(authenticatedUser api.RequestInfo, userID string, 
 	return err
 }
 
-func (t TestAPI) ListMembers(authenticatedUser api.RequestInfo, org string, groupName string, filter *api.Filter) ([]string, int, error) {
+func (t TestAPI) ListMembers(authenticatedUser api.RequestInfo, filter *api.Filter) ([]string, int, error) {
 	t.ArgsIn[ListMembersMethod][0] = authenticatedUser
-	t.ArgsIn[ListMembersMethod][1] = org
-	t.ArgsIn[ListMembersMethod][2] = groupName
-	t.ArgsIn[ListMembersMethod][3] = filter
+	t.ArgsIn[ListMembersMethod][1] = filter
 
 	var externalIDs []string
 	var total int
@@ -508,11 +508,9 @@ func (t TestAPI) DetachPolicyToGroup(authenticatedUser api.RequestInfo, org stri
 	return err
 }
 
-func (t TestAPI) ListAttachedGroupPolicies(authenticatedUser api.RequestInfo, org string, groupName string, filter *api.Filter) ([]string, int, error) {
+func (t TestAPI) ListAttachedGroupPolicies(authenticatedUser api.RequestInfo, filter *api.Filter) ([]string, int, error) {
 	t.ArgsIn[ListAttachedGroupPoliciesMethod][0] = authenticatedUser
-	t.ArgsIn[ListAttachedGroupPoliciesMethod][1] = org
-	t.ArgsIn[ListAttachedGroupPoliciesMethod][2] = groupName
-	t.ArgsIn[ListAttachedGroupPoliciesMethod][3] = filter
+	t.ArgsIn[ListAttachedGroupPoliciesMethod][1] = filter
 
 	var policies []string
 	var total int
@@ -563,10 +561,9 @@ func (t TestAPI) GetPolicyByName(authenticatedUser api.RequestInfo, org string, 
 	return policy, err
 }
 
-func (t TestAPI) ListPolicies(authenticatedUser api.RequestInfo, org string, filter *api.Filter) ([]api.PolicyIdentity, int, error) {
+func (t TestAPI) ListPolicies(authenticatedUser api.RequestInfo, filter *api.Filter) ([]api.PolicyIdentity, int, error) {
 	t.ArgsIn[ListPoliciesMethod][0] = authenticatedUser
-	t.ArgsIn[ListPoliciesMethod][1] = org
-	t.ArgsIn[ListPoliciesMethod][2] = filter
+	t.ArgsIn[ListPoliciesMethod][1] = filter
 
 	var policies []api.PolicyIdentity
 	var total int
@@ -614,11 +611,9 @@ func (t TestAPI) RemovePolicy(authenticatedUser api.RequestInfo, org string, nam
 	return err
 }
 
-func (t TestAPI) ListAttachedGroups(authenticatedUser api.RequestInfo, org string, policyName string, filter *api.Filter) ([]string, int, error) {
+func (t TestAPI) ListAttachedGroups(authenticatedUser api.RequestInfo, filter *api.Filter) ([]string, int, error) {
 	t.ArgsIn[ListAttachedGroupsMethod][0] = authenticatedUser
-	t.ArgsIn[ListAttachedGroupsMethod][1] = org
-	t.ArgsIn[ListAttachedGroupsMethod][2] = policyName
-	t.ArgsIn[ListAttachedGroupsMethod][3] = filter
+	t.ArgsIn[ListAttachedGroupsMethod][1] = filter
 
 	var groups []string
 	var total int

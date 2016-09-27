@@ -107,10 +107,10 @@ func (h *WorkerHandler) HandleGetUserByExternalID(w http.ResponseWriter, r *http
 	h.RespondOk(r, requestInfo, w, response)
 }
 
-func (h *WorkerHandler) HandleListUsers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *WorkerHandler) HandleListUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	requestInfo := h.GetRequestInfo(r)
 	// Retrieve filterData
-	filterData, err := getFilterData(r)
+	filterData, err := getFilterData(r, ps)
 	if err != nil {
 		apiError := err.(*api.Error)
 		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
@@ -219,18 +219,16 @@ func (h *WorkerHandler) HandleRemoveUser(w http.ResponseWriter, r *http.Request,
 
 func (h *WorkerHandler) HandleListGroupsByUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	requestInfo := h.GetRequestInfo(r)
-	// Retrieve users using path
-	id := ps.ByName(USER_ID)
 
 	// Retrieve filterData
-	filterData, err := getFilterData(r)
+	filterData, err := getFilterData(r, ps)
 	if err != nil {
 		apiError := err.(*api.Error)
 		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
 		h.RespondBadRequest(r, requestInfo, w, apiError)
 		return
 	}
-	result, total, err := h.worker.UserApi.ListGroupsByUser(requestInfo, id, filterData)
+	result, total, err := h.worker.UserApi.ListGroupsByUser(requestInfo, filterData)
 
 	if err != nil {
 		// Transform to API errors

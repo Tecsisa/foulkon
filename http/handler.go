@@ -332,7 +332,7 @@ func writeErrorWithStatus(w http.ResponseWriter, apiError *api.Error, statusCode
 	return w, nil
 }
 
-func getFilterData(r *http.Request) (*api.Filter, error) {
+func getFilterData(r *http.Request, ps httprouter.Params) (*api.Filter, error) {
 	var err error
 	// Retrieve Offset
 	var offset int
@@ -359,8 +359,18 @@ func getFilterData(r *http.Request) (*api.Filter, error) {
 		}
 	}
 
+	// Retrieve Org
+	var org string
+	if org = ps.ByName(ORG_NAME); len(org) == 0 {
+		org = r.URL.Query().Get("Org")
+	}
+
 	return &api.Filter{
 		PathPrefix: r.URL.Query().Get("PathPrefix"),
+		Org:        org,
+		ExternalID: ps.ByName(USER_ID),
+		PolicyName: ps.ByName(POLICY_NAME),
+		GroupName:  ps.ByName(GROUP_NAME),
 		Offset:     offset,
 		Limit:      limit,
 	}, nil

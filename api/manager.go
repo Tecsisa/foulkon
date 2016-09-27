@@ -21,6 +21,10 @@ type AuthAPI struct {
 // Filter properties for database search
 type Filter struct {
 	PathPrefix string
+	Org        string
+	ExternalID string
+	PolicyName string
+	GroupName  string
 	// Pagination
 	Offset int
 	Limit  int
@@ -51,7 +55,7 @@ type UserAPI interface {
 
 	// Retrieve groups that belongs to the user. Throw error if externalId parameter is invalid, user
 	// doesn't exist or unexpected error happen.
-	ListGroupsByUser(requestInfo RequestInfo, externalId string, filter *Filter) ([]GroupIdentity, int, error)
+	ListGroupsByUser(requestInfo RequestInfo, filter *Filter) ([]GroupIdentity, int, error)
 }
 
 type GroupAPI interface {
@@ -65,7 +69,7 @@ type GroupAPI interface {
 
 	// Retrieve group identifiers from database filtered by org and pathPrefix parameters. These input parameters are optional.
 	// Throw error if the input parameters are invalid or unexpected error happen.
-	ListGroups(requestInfo RequestInfo, org string, filter *Filter) ([]GroupIdentity, int, error)
+	ListGroups(requestInfo RequestInfo, filter *Filter) ([]GroupIdentity, int, error)
 
 	// Update group stored in database with new name and pathPrefix.
 	// Throw error if the input parameters are invalid, group to update doesn't exist,
@@ -86,7 +90,7 @@ type GroupAPI interface {
 
 	// List user identifiers that belong to the group. Throw error if the input parameters are invalid,
 	// group doesn't exist or unexpected error happen.
-	ListMembers(requestInfo RequestInfo, org string, groupName string, filter *Filter) ([]string, int, error)
+	ListMembers(requestInfo RequestInfo, filter *Filter) ([]string, int, error)
 
 	// Attach policy to group. Throw error if the input parameters are invalid, policy doesn't exist,
 	// group doesn't exist, policy is already attached to the group or unexpected error happen.
@@ -98,7 +102,7 @@ type GroupAPI interface {
 
 	// Retrieve name of policies that are attached to the group. Throw error if the input parameters are invalid,
 	// group doesn't exist or unexpected error happen.
-	ListAttachedGroupPolicies(requestInfo RequestInfo, org string, groupName string, filter *Filter) ([]string, int, error)
+	ListAttachedGroupPolicies(requestInfo RequestInfo, filter *Filter) ([]string, int, error)
 }
 
 type PolicyAPI interface {
@@ -112,7 +116,7 @@ type PolicyAPI interface {
 
 	// Retrieve policy identifiers from database filtered by org and pathPrefix parameters. These input parameters are optional.
 	// Throw error if the input parameters are invalid or unexpected error happen.
-	ListPolicies(requestInfo RequestInfo, org string, filter *Filter) ([]PolicyIdentity, int, error)
+	ListPolicies(requestInfo RequestInfo, filter *Filter) ([]PolicyIdentity, int, error)
 
 	// Update policy stored in database with new name, new pathPrefix and new statements.
 	// It overrides older statements. Throw error if the input parameters are invalid,
@@ -126,7 +130,7 @@ type PolicyAPI interface {
 
 	// Retrieve name of groups that are attached to the policy. Throw error if the input parameters are invalid,
 	// policy doesn't exist or unexpected error happen.
-	ListAttachedGroups(requestInfo RequestInfo, org string, name string, filter *Filter) ([]string, int, error)
+	ListAttachedGroups(requestInfo RequestInfo, filter *Filter) ([]string, int, error)
 }
 
 type AuthzAPI interface {
@@ -184,7 +188,7 @@ type GroupRepo interface {
 
 	// Retrieve groups from database filtered by org and pathPrefix optional parameters. Throw error
 	// if there are problems with database.
-	GetGroupsFiltered(org string, filter *Filter) ([]Group, int, error)
+	GetGroupsFiltered(filter *Filter) ([]Group, int, error)
 
 	// Update group stored in database with new fields.
 	// Throw error if there are problems with database.
@@ -235,7 +239,7 @@ type PolicyRepo interface {
 
 	// Retrieve policies from database filtered by org and pathPrefix optional parameters. Throw error
 	// if there are problems with database.
-	GetPoliciesFiltered(org string, filter *Filter) ([]Policy, int, error)
+	GetPoliciesFiltered(filter *Filter) ([]Policy, int, error)
 
 	// Update policy stored in database with new fields. Also it overrides statements if it has.
 	// Throw error if there are problems with database.

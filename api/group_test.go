@@ -612,7 +612,6 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 	testcases := map[string]struct {
 		// API Method args
 		requestInfo RequestInfo
-		org         string
 		filter      *Filter
 		// Expected result
 		expectedGroups []GroupIdentity
@@ -632,8 +631,9 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 				Identifier: "123456",
 				Admin:      true,
 			},
-			org:    "org1",
-			filter: &testFilter,
+			filter: &Filter{
+				Org: "org1",
+			},
 			expectedGroups: []GroupIdentity{
 				{
 					Org:  "org1",
@@ -687,8 +687,9 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			org:    "org1",
-			filter: &testFilter,
+			filter: &Filter{
+				Org: "org1",
+			},
 			expectedGroups: []GroupIdentity{
 				{
 					Org:  "org1",
@@ -750,9 +751,9 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 				Identifier: "123456",
 				Admin:      true,
 			},
-			org: "org1",
 			filter: &Filter{
 				Limit: 10000,
+				Org:   "org1",
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
@@ -760,9 +761,9 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidOrg": {
-			org: "%org1",
 			filter: &Filter{
 				PathPrefix: "/example/das/",
+				Org:        "%org1",
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
@@ -770,9 +771,9 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidPath": {
-			org: "org1",
 			filter: &Filter{
 				PathPrefix: "/example/das",
+				Org:        "org1",
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
@@ -780,9 +781,9 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 			},
 		},
 		"ErrorCaseInternalErrorGetGroupsFiltered": {
-			org: "org1",
 			filter: &Filter{
 				PathPrefix: "/path/",
+				Org:        "org1",
 			},
 			wantError: &Error{
 				Code: UNKNOWN_API_ERROR,
@@ -796,9 +797,9 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			org: "org1",
 			filter: &Filter{
 				PathPrefix: "/path/",
+				Org:        "org1",
 			},
 			wantError: &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
@@ -821,8 +822,9 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			org:    "org1",
-			filter: &testFilter,
+			filter: &Filter{
+				Org: "org1",
+			},
 			wantError: &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/*",
@@ -890,8 +892,9 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			org:    "org1",
-			filter: &testFilter,
+			filter: &Filter{
+				Org: "org1",
+			},
 			wantError: &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/*",
@@ -949,7 +952,7 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 
-		groups, total, err := testAPI.ListGroups(testcase.requestInfo, testcase.org, testcase.filter)
+		groups, total, err := testAPI.ListGroups(testcase.requestInfo, testcase.filter)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedGroups, groups)
 		if testcase.totalResult != total {
 			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", testcase, testcase.totalResult, total)
@@ -2872,8 +2875,6 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 	testcases := map[string]struct {
 		// API Method args
 		requestInfo RequestInfo
-		org         string
-		groupName   string
 		filter      *Filter
 		// Expected result
 		expectedMembers []string
@@ -2895,10 +2896,10 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Identifier: "123456",
 				Admin:      true,
 			},
-			org:       "org1",
-			groupName: "group1",
 			filter: &Filter{
-				Limit: 0,
+				Limit:     0,
+				Org:       "org1",
+				GroupName: "group1",
 			},
 			expectedMembers: []string{
 				"member1",
@@ -2929,9 +2930,10 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			org:       "org1",
-			groupName: "group1",
-			filter:    &testFilter,
+			filter: &Filter{
+				Org:       "org1",
+				GroupName: "group1",
+			},
 			expectedMembers: []string{
 				"member1",
 				"member2",
@@ -2997,10 +2999,10 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Identifier: "123456",
 				Admin:      true,
 			},
-			org:       "org1",
-			groupName: "group1",
 			filter: &Filter{
-				Limit: 10000,
+				Limit:     10000,
+				Org:       "org1",
+				GroupName: "group1",
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
@@ -3008,27 +3010,30 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidName": {
-			org:       "org1",
-			groupName: "*%$",
-			filter:    &testFilter,
+			filter: &Filter{
+				Org:       "org1",
+				GroupName: "*%$",
+			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
 				Message: "Invalid parameter: name *%$",
 			},
 		},
 		"ErrorCaseInvalidOrg": {
-			org:       "!^**$%&",
-			groupName: "g1",
-			filter:    &testFilter,
+			filter: &Filter{
+				Org:       "!^**$%&",
+				GroupName: "g1",
+			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
 				Message: "Invalid parameter: org !^**$%&",
 			},
 		},
 		"ErrorCaseGroupNotFound": {
-			org:       "org1",
-			groupName: "group1",
-			filter:    &testFilter,
+			filter: &Filter{
+				Org:       "org1",
+				GroupName: "group1",
+			},
 			getGroupByNameMethodErr: &database.Error{
 				Code: database.GROUP_NOT_FOUND,
 			},
@@ -3041,9 +3046,10 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			org:       "org1",
-			groupName: "group1",
-			filter:    &testFilter,
+			filter: &Filter{
+				Org:       "org1",
+				GroupName: "group1",
+			},
 			wantError: &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
@@ -3063,9 +3069,10 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			org:       "org1",
-			groupName: "group1",
-			filter:    &testFilter,
+			filter: &Filter{
+				Org:       "org1",
+				GroupName: "group1",
+			},
 			wantError: &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/path/groupUser",
@@ -3117,9 +3124,10 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			org:       "org1",
-			groupName: "group1",
-			filter:    &testFilter,
+			filter: &Filter{
+				Org:       "org1",
+				GroupName: "group1",
+			},
 			wantError: &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/path/groupUser",
@@ -3181,9 +3189,10 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			org:       "org1",
-			groupName: "group1",
-			filter:    &testFilter,
+			filter: &Filter{
+				Org:       "org1",
+				GroupName: "group1",
+			},
 			wantError: &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/path/groupUser",
@@ -3225,9 +3234,10 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Identifier: "123456",
 				Admin:      true,
 			},
-			org:       "org1",
-			groupName: "group1",
-			filter:    &testFilter,
+			filter: &Filter{
+				Org:       "org1",
+				GroupName: "group1",
+			},
 			wantError: &Error{
 				Code: UNKNOWN_API_ERROR,
 			},
@@ -3257,7 +3267,7 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 
-		members, total, err := testAPI.ListMembers(testcase.requestInfo, testcase.org, testcase.groupName, testcase.filter)
+		members, total, err := testAPI.ListMembers(testcase.requestInfo, testcase.filter)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedMembers, members)
 		if testcase.totalResult != total {
 			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", testcase, testcase.totalResult, total)
@@ -4341,8 +4351,6 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 	testcases := map[string]struct {
 		//API method args
 		requestInfo RequestInfo
-		name        string
-		org         string
 		filter      *Filter
 		// Expected result
 		expectedPolicies []string
@@ -4363,10 +4371,10 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 				Identifier: "123456",
 				Admin:      true,
 			},
-			name: "group1",
-			org:  "org1",
 			filter: &Filter{
-				Limit: 0,
+				Limit:     0,
+				Org:       "org1",
+				GroupName: "group1",
 			},
 			getGroupByNameMethodResult: &Group{
 				ID:   "543210",
@@ -4387,9 +4395,10 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			name:   "group1",
-			org:    "org1",
-			filter: &testFilter,
+			filter: &Filter{
+				Org:       "org1",
+				GroupName: "group1",
+			},
 			getGroupByNameMethodResult: &Group{
 				ID:   "543210",
 				Name: "group1",
@@ -4449,27 +4458,31 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidName": {
-			name:   "invalid*",
-			org:    "org1",
-			filter: &testFilter,
+			filter: &Filter{
+				Limit:     0,
+				Org:       "org1",
+				GroupName: "invalid*",
+			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
 				Message: "Invalid parameter: name invalid*",
 			},
 		},
 		"ErrorCaseInvalidOrg": {
-			name:   "n1",
-			org:    "!**$%&",
-			filter: &testFilter,
+			filter: &Filter{
+				Org:       "!**$%&",
+				GroupName: "n1",
+			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
 				Message: "Invalid parameter: org !**$%&",
 			},
 		},
 		"ErrorCaseGroupNotFound": {
-			name:   "group1",
-			org:    "org1",
-			filter: &testFilter,
+			filter: &Filter{
+				Org:       "org1",
+				GroupName: "group1",
+			},
 			wantError: &Error{
 				Code: GROUP_BY_ORG_AND_NAME_NOT_FOUND,
 			},
@@ -4482,9 +4495,10 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			name:   "group1",
-			org:    "org1",
-			filter: &testFilter,
+			filter: &Filter{
+				Org:       "org1",
+				GroupName: "group1",
+			},
 			wantError: &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
@@ -4504,9 +4518,10 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			name:   "group1",
-			org:    "org1",
-			filter: &testFilter,
+			filter: &Filter{
+				Org:       "org1",
+				GroupName: "group1",
+			},
 			getGroupByNameMethodResult: &Group{
 				ID:   "543210",
 				Name: "group1",
@@ -4559,9 +4574,10 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			name:   "group1",
-			org:    "org1",
-			filter: &testFilter,
+			filter: &Filter{
+				Org:       "org1",
+				GroupName: "group1",
+			},
 			getGroupByNameMethodResult: &Group{
 				ID:   "543210",
 				Name: "group1",
@@ -4624,9 +4640,10 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			name:   "group1",
-			org:    "org1",
-			filter: &testFilter,
+			filter: &Filter{
+				Org:       "org1",
+				GroupName: "group1",
+			},
 			getGroupByNameMethodResult: &Group{
 				ID:   "543210",
 				Name: "group1",
@@ -4669,9 +4686,10 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 				Identifier: "123456",
 				Admin:      true,
 			},
-			name:   "group1",
-			org:    "org1",
-			filter: &testFilter,
+			filter: &Filter{
+				Org:       "org1",
+				GroupName: "group1",
+			},
 			getGroupByNameMethodResult: &Group{
 				ID:   "543210",
 				Name: "group1",
@@ -4715,7 +4733,7 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][1] = testcase.totalResult
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][2] = testcase.getAttachedPoliciesErr
 
-		policies, total, err := testAPI.ListAttachedGroupPolicies(testcase.requestInfo, testcase.org, testcase.name, testcase.filter)
+		policies, total, err := testAPI.ListAttachedGroupPolicies(testcase.requestInfo, testcase.filter)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedPolicies, policies)
 		if testcase.totalResult != total {
 			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", testcase, testcase.totalResult, total)

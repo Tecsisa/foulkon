@@ -1626,7 +1626,6 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 	testcases := map[string]struct {
 		// API Method args
 		requestInfo RequestInfo
-		externalID  string
 		filter      *Filter
 		// Expected result
 		expectedResponse []GroupIdentity
@@ -1645,10 +1644,10 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 				Identifier: "123456",
 				Admin:      true,
 			},
-			externalID: "1234",
 			filter: &Filter{
-				Offset: 0,
-				Limit:  0,
+				ExternalID: "1234",
+				Offset:     0,
+				Limit:      0,
 			},
 			expectedResponse: []GroupIdentity{
 				{
@@ -1688,9 +1687,9 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 				Identifier: "123456",
 				Admin:      false,
 			},
-			externalID: "1234",
 			filter: &Filter{
-				Limit: 0,
+				ExternalID: "1234",
+				Limit:      0,
 			},
 			expectedResponse: []GroupIdentity{
 				{
@@ -1759,9 +1758,9 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 				Identifier: "123456",
 				Admin:      true,
 			},
-			externalID: "1234",
 			filter: &Filter{
-				Limit: 10000,
+				ExternalID: "1234",
+				Limit:      10000,
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
@@ -1773,8 +1772,9 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 				Identifier: "1234",
 				Admin:      false,
 			},
-			externalID: "1234",
-			filter:     &testFilter,
+			filter: &Filter{
+				ExternalID: "1234",
+			},
 			wantError: &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "User with externalId 1234 is not allowed to access to resource urn:iws:iam::user/example/12345",
@@ -1791,8 +1791,9 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 				Identifier: "1234",
 				Admin:      false,
 			},
-			externalID: "1234",
-			filter:     &testFilter,
+			filter: &Filter{
+				ExternalID: "1234",
+			},
 			wantError: &Error{
 				Code: USER_BY_EXTERNAL_ID_NOT_FOUND,
 			},
@@ -1805,8 +1806,9 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 				Identifier: "123456",
 				Admin:      true,
 			},
-			externalID: "1234",
-			filter:     &testFilter,
+			filter: &Filter{
+				ExternalID: "1234",
+			},
 			wantError: &Error{
 				Code: UNKNOWN_API_ERROR,
 			},
@@ -1819,8 +1821,9 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 				Identifier: "123456",
 				Admin:      true,
 			},
-			externalID: "1234",
-			filter:     &testFilter,
+			filter: &Filter{
+				ExternalID: "1234",
+			},
 			wantError: &Error{
 				Code: UNKNOWN_API_ERROR,
 			},
@@ -1838,9 +1841,9 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 				Identifier: "1234",
 				Admin:      false,
 			},
-			externalID: "1234",
 			filter: &Filter{
-				Limit: 0,
+				ExternalID: "1234",
+				Limit:      0,
 			},
 			wantError: &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
@@ -1903,8 +1906,9 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 				Identifier: "1234",
 				Admin:      false,
 			},
-			externalID: "12345",
-			filter:     &testFilter,
+			filter: &Filter{
+				ExternalID: "1234",
+			},
 			wantError: &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "User with externalId 1234 is not allowed to access to resource urn:iws:iam::user/path/1234",
@@ -1955,7 +1959,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = testcase.totalResult
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][2] = testcase.getGroupsByUserIDMethodErr
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesMethodResult
-		groups, total, err := testAPI.ListGroupsByUser(testcase.requestInfo, testcase.externalID, testcase.filter)
+		groups, total, err := testAPI.ListGroupsByUser(testcase.requestInfo, testcase.filter)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedResponse, groups)
 		if testcase.totalResult != total {
 			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", testcase, testcase.totalResult, total)

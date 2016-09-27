@@ -172,13 +172,13 @@ func (api AuthAPI) GetGroupByName(requestInfo RequestInfo, org string, name stri
 	}
 }
 
-func (api AuthAPI) ListGroups(requestInfo RequestInfo, org string, filter *Filter) ([]GroupIdentity, int, error) {
+func (api AuthAPI) ListGroups(requestInfo RequestInfo, filter *Filter) ([]GroupIdentity, int, error) {
 	// Validate fields
 	var total int
-	if len(org) > 0 && !IsValidOrg(org) {
+	if len(filter.Org) > 0 && !IsValidOrg(filter.Org) {
 		return nil, total, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+			Message: fmt.Sprintf("Invalid parameter: org %v", filter.Org),
 		}
 	}
 	if len(filter.PathPrefix) > 0 && !IsValidPath(filter.PathPrefix) {
@@ -204,7 +204,7 @@ func (api AuthAPI) ListGroups(requestInfo RequestInfo, org string, filter *Filte
 	}
 
 	// Call repo to retrieve the groups
-	groups, total, err := api.GroupRepo.GetGroupsFiltered(org, filter)
+	groups, total, err := api.GroupRepo.GetGroupsFiltered(filter)
 
 	// Error handling
 	if err != nil {
@@ -218,10 +218,10 @@ func (api AuthAPI) ListGroups(requestInfo RequestInfo, org string, filter *Filte
 
 	// Check restrictions to list
 	var urnPrefix string
-	if len(org) == 0 {
+	if len(filter.Org) == 0 {
 		urnPrefix = "*"
 	} else {
-		urnPrefix = GetUrnPrefix(org, RESOURCE_GROUP, filter.PathPrefix)
+		urnPrefix = GetUrnPrefix(filter.Org, RESOURCE_GROUP, filter.PathPrefix)
 	}
 	filteredGroups, err := api.GetAuthorizedGroups(requestInfo, urnPrefix, GROUP_ACTION_LIST_GROUPS, groups)
 	if err != nil {
@@ -499,7 +499,7 @@ func (api AuthAPI) RemoveMember(requestInfo RequestInfo, externalId string, name
 	return nil
 }
 
-func (api AuthAPI) ListMembers(requestInfo RequestInfo, org string, name string, filter *Filter) ([]string, int, error) {
+func (api AuthAPI) ListMembers(requestInfo RequestInfo, filter *Filter) ([]string, int, error) {
 	// Validate fields
 	var total int
 	if filter.Limit > MAX_LIMIT_SIZE {
@@ -514,7 +514,7 @@ func (api AuthAPI) ListMembers(requestInfo RequestInfo, org string, name string,
 	}
 
 	// Call repo to retrieve the group
-	group, err := api.GetGroupByName(requestInfo, org, name)
+	group, err := api.GetGroupByName(requestInfo, filter.Org, filter.GroupName)
 	if err != nil {
 		return nil, total, err
 	}
@@ -674,7 +674,7 @@ func (api AuthAPI) DetachPolicyToGroup(requestInfo RequestInfo, org string, name
 	return nil
 }
 
-func (api AuthAPI) ListAttachedGroupPolicies(requestInfo RequestInfo, org string, name string, filter *Filter) ([]string, int, error) {
+func (api AuthAPI) ListAttachedGroupPolicies(requestInfo RequestInfo, filter *Filter) ([]string, int, error) {
 	// Validate fields
 	var total int
 	if filter.Limit > MAX_LIMIT_SIZE {
@@ -689,7 +689,7 @@ func (api AuthAPI) ListAttachedGroupPolicies(requestInfo RequestInfo, org string
 	}
 
 	// Check if group exists
-	group, err := api.GetGroupByName(requestInfo, org, name)
+	group, err := api.GetGroupByName(requestInfo, filter.Org, filter.GroupName)
 	if err != nil {
 		return nil, total, err
 	}

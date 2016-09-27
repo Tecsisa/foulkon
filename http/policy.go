@@ -123,11 +123,9 @@ func (h *WorkerHandler) HandleGetPolicyByName(w http.ResponseWriter, r *http.Req
 
 func (h *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	requestInfo := h.GetRequestInfo(r)
-	// Retrieve org from path
-	org := ps.ByName(ORG_NAME)
 
 	// Retrieve filterData
-	filterData, err := getFilterData(r)
+	filterData, err := getFilterData(r, ps)
 	if err != nil {
 		apiError := err.(*api.Error)
 		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
@@ -136,7 +134,7 @@ func (h *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Call policy API to retrieve policies
-	result, total, err := h.worker.PolicyApi.ListPolicies(requestInfo, org, filterData)
+	result, total, err := h.worker.PolicyApi.ListPolicies(requestInfo, filterData)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -172,7 +170,7 @@ func (h *WorkerHandler) HandleListAllPolicies(w http.ResponseWriter, r *http.Req
 	requestInfo := h.GetRequestInfo(r)
 
 	// Retrieve filterData
-	filterData, err := getFilterData(r)
+	filterData, err := getFilterData(r, ps)
 	if err != nil {
 		apiError := err.(*api.Error)
 		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
@@ -181,7 +179,7 @@ func (h *WorkerHandler) HandleListAllPolicies(w http.ResponseWriter, r *http.Req
 	}
 
 	// Call policies API to retrieve policies
-	result, total, err := h.worker.PolicyApi.ListPolicies(requestInfo, "", filterData)
+	result, total, err := h.worker.PolicyApi.ListPolicies(requestInfo, filterData)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
@@ -286,12 +284,9 @@ func (h *WorkerHandler) HandleRemovePolicy(w http.ResponseWriter, r *http.Reques
 
 func (h *WorkerHandler) HandleListAttachedGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	requestInfo := h.GetRequestInfo(r)
-	// Retrieve org and policy name from request path
-	orgId := ps.ByName(ORG_NAME)
-	policyName := ps.ByName(POLICY_NAME)
 
 	// Retrieve filterData
-	filterData, err := getFilterData(r)
+	filterData, err := getFilterData(r, ps)
 	if err != nil {
 		apiError := err.(*api.Error)
 		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
@@ -300,7 +295,7 @@ func (h *WorkerHandler) HandleListAttachedGroups(w http.ResponseWriter, r *http.
 	}
 
 	// Call policies API to retrieve attached groups
-	result, total, err := h.worker.PolicyApi.ListAttachedGroups(requestInfo, orgId, policyName, filterData)
+	result, total, err := h.worker.PolicyApi.ListAttachedGroups(requestInfo, filterData)
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)

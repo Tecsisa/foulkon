@@ -433,8 +433,9 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 					Org:      "Org2",
 				},
 			},
-			org:    "Org1",
-			filter: testFilter,
+			filter: &api.Filter{
+				Org: "Org1",
+			},
 			expectedResponse: []api.Group{
 				{
 					ID:       "GroupID1",
@@ -468,9 +469,9 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 					Org:      "Org2",
 				},
 			},
-			org: "Org1",
 			filter: &api.Filter{
 				PathPrefix: "Path123",
+				Org:        "Org1",
 				Offset:     0,
 				Limit:      20,
 			},
@@ -545,7 +546,7 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 			}
 		}
 		// Call to repository to get groups
-		receivedGroups, total, err := repoDB.GetGroupsFiltered(test.org, test.filter)
+		receivedGroups, total, err := repoDB.GetGroupsFiltered(test.filter)
 		if err != nil {
 			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
 			continue
