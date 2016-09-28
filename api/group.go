@@ -175,32 +175,9 @@ func (api AuthAPI) GetGroupByName(requestInfo RequestInfo, org string, name stri
 func (api AuthAPI) ListGroups(requestInfo RequestInfo, filter *Filter) ([]GroupIdentity, int, error) {
 	// Validate fields
 	var total int
-	if len(filter.Org) > 0 && !IsValidOrg(filter.Org) {
-		return nil, total, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: org %v", filter.Org),
-		}
-	}
-	if len(filter.PathPrefix) > 0 && !IsValidPath(filter.PathPrefix) {
-		return nil, total, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", filter.PathPrefix),
-		}
-	}
-
-	if len(filter.PathPrefix) == 0 {
-		filter.PathPrefix = "/"
-	}
-
-	if filter.Limit > MAX_LIMIT_SIZE {
-		return nil, total, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Limit %v, max limit allowed: %v", filter.Limit, MAX_LIMIT_SIZE),
-		}
-	}
-
-	if filter.Limit == 0 {
-		filter.Limit = DEFAULT_LIMIT_SIZE
+	err := validateFilter(filter)
+	if err != nil {
+		return nil, total, err
 	}
 
 	// Call repo to retrieve the groups
@@ -502,15 +479,9 @@ func (api AuthAPI) RemoveMember(requestInfo RequestInfo, externalId string, name
 func (api AuthAPI) ListMembers(requestInfo RequestInfo, filter *Filter) ([]string, int, error) {
 	// Validate fields
 	var total int
-	if filter.Limit > MAX_LIMIT_SIZE {
-		return nil, total, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Limit %v, max limit allowed: %v", filter.Limit, MAX_LIMIT_SIZE),
-		}
-	}
-
-	if filter.Limit == 0 {
-		filter.Limit = DEFAULT_LIMIT_SIZE
+	err := validateFilter(filter)
+	if err != nil {
+		return nil, total, err
 	}
 
 	// Call repo to retrieve the group
@@ -677,15 +648,9 @@ func (api AuthAPI) DetachPolicyToGroup(requestInfo RequestInfo, org string, name
 func (api AuthAPI) ListAttachedGroupPolicies(requestInfo RequestInfo, filter *Filter) ([]string, int, error) {
 	// Validate fields
 	var total int
-	if filter.Limit > MAX_LIMIT_SIZE {
-		return nil, total, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Limit %v, max limit allowed: %v", filter.Limit, MAX_LIMIT_SIZE),
-		}
-	}
-
-	if filter.Limit == 0 {
-		filter.Limit = DEFAULT_LIMIT_SIZE
+	err := validateFilter(filter)
+	if err != nil {
+		return nil, total, err
 	}
 
 	// Check if group exists

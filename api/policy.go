@@ -190,31 +190,9 @@ func (api AuthAPI) GetPolicyByName(requestInfo RequestInfo, org string, policyNa
 func (api AuthAPI) ListPolicies(requestInfo RequestInfo, filter *Filter) ([]PolicyIdentity, int, error) {
 	// Validate fields
 	var total int
-	if len(filter.Org) > 0 && !IsValidOrg(filter.Org) {
-		return nil, total, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: org %v", filter.Org),
-		}
-	}
-	if len(filter.PathPrefix) > 0 && !IsValidPath(filter.PathPrefix) {
-		return nil, total, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", filter.PathPrefix),
-		}
-	}
-	if len(filter.PathPrefix) == 0 {
-		filter.PathPrefix = "/"
-	}
-
-	if filter.Limit > MAX_LIMIT_SIZE {
-		return nil, total, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Limit %v, max limit allowed: %v", filter.Limit, MAX_LIMIT_SIZE),
-		}
-	}
-
-	if filter.Limit == total {
-		filter.Limit = DEFAULT_LIMIT_SIZE
+	err := validateFilter(filter)
+	if err != nil {
+		return nil, total, err
 	}
 
 	// Call repo to retrieve the policies
@@ -398,15 +376,9 @@ func (api AuthAPI) RemovePolicy(requestInfo RequestInfo, org string, name string
 func (api AuthAPI) ListAttachedGroups(requestInfo RequestInfo, filter *Filter) ([]string, int, error) {
 	// Validate fields
 	var total int
-	if filter.Limit > MAX_LIMIT_SIZE {
-		return nil, total, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Limit %v, max limit allowed: %v", filter.Limit, MAX_LIMIT_SIZE),
-		}
-	}
-
-	if filter.Limit == 0 {
-		filter.Limit = DEFAULT_LIMIT_SIZE
+	err := validateFilter(filter)
+	if err != nil {
+		return nil, total, err
 	}
 
 	// Call repo to retrieve the policy

@@ -230,6 +230,56 @@ func AreValidStatements(statements *[]Statement) error {
 	return nil
 }
 
+func validateFilter(filter *Filter) error {
+	if len(filter.Org) > 0 && !IsValidOrg(filter.Org) {
+		return &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", filter.Org),
+		}
+	}
+
+	if len(filter.PathPrefix) == 0 {
+		filter.PathPrefix = "/"
+	} else if !IsValidPath(filter.PathPrefix) {
+		return &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: pathPrefix %v", filter.PathPrefix),
+		}
+	}
+
+	if len(filter.GroupName) > 0 && !IsValidName(filter.GroupName) {
+		return &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: group %v", filter.GroupName),
+		}
+	}
+
+	if len(filter.ExternalID) > 0 && !IsValidUserExternalID(filter.ExternalID) {
+		return &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: externalID %v", filter.ExternalID),
+		}
+	}
+
+	if len(filter.PolicyName) > 0 && !IsValidName(filter.PolicyName) {
+		return &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: policy %v", filter.PolicyName),
+		}
+	}
+
+	if filter.Limit == 0 {
+		filter.Limit = DEFAULT_LIMIT_SIZE
+	} else if filter.Limit > MAX_LIMIT_SIZE {
+		return &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: limit %v, max limit allowed: %v", filter.Limit, MAX_LIMIT_SIZE),
+		}
+
+	}
+	return nil
+}
+
 func LogOperation(logger *logrus.Logger, requestInfo RequestInfo, message string) {
 	logger.WithFields(logrus.Fields{
 		"requestID": requestInfo.RequestID,
