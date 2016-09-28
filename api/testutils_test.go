@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/kylelemons/godebug/pretty"
 	"math/rand"
@@ -492,12 +493,20 @@ func (t TestRepo) GetAttachedGroups(policyID string, filter *Filter) ([]Group, i
 
 // Private helper methods
 
-func GetRandomString(runeValue []rune, n int) string {
+func getRandomString(runeValue []rune, n int) string {
 	b := make([]rune, n)
 	for i := range b {
 		b[i] = runeValue[rand.Intn(len(runeValue))]
 	}
 	return string(b)
+}
+
+func getResources(number int, baseUrn string) []string {
+	resources := make([]string, number, number)
+	for i := 0; i < number; i++ {
+		resources[i] = fmt.Sprintf(baseUrn+"%v", i+1)
+	}
+	return resources
 }
 
 func checkMethodResponse(t *testing.T, testcase string, expectedError error, receivedError error, expectedResponse interface{}, receivedResponse interface{}) {

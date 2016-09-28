@@ -100,10 +100,10 @@ func (api AuthAPI) GetAuthorizedExternalResources(requestInfo RequestInfo, actio
 			Message: apiError.Message,
 		}
 	}
-	if len(resources) < 1 {
+	if len(resources) < 1 || len(resources) > MAX_RESOURCE_NUMBER {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
-			Message: "Invalid parameter Resources %v. Resources can't be empty",
+			Message: fmt.Sprintf("Invalid parameter Resources. Resources can't be empty or bigger than %v elements", MAX_RESOURCE_NUMBER),
 		}
 	}
 	externalResources := []Resource{}

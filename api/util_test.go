@@ -107,7 +107,7 @@ func TestIsValidUserExternalID(t *testing.T) {
 			valid:      false,
 		},
 		"OkCaseMaxLimitExceed": {
-			externalID: GetRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), MAX_EXTERNAL_ID_LENGTH+1),
+			externalID: getRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), MAX_EXTERNAL_ID_LENGTH+1),
 			valid:      false,
 		},
 		"OkCaseLetter": {
@@ -156,7 +156,7 @@ func TestIsValidOrg(t *testing.T) {
 			valid: false,
 		},
 		"OkCaseMaxLimitExceed": {
-			org:   GetRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), MAX_NAME_LENGTH+1),
+			org:   getRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), MAX_NAME_LENGTH+1),
 			valid: false,
 		},
 		"OkCase": {
@@ -197,7 +197,7 @@ func TestIsValidName(t *testing.T) {
 			valid: false,
 		},
 		"OkCaseMaxLimitExceed": {
-			name:  GetRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), MAX_NAME_LENGTH+1),
+			name:  getRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), MAX_NAME_LENGTH+1),
 			valid: false,
 		},
 		"OkCase": {
@@ -254,7 +254,7 @@ func TestIsValidPath(t *testing.T) {
 			valid: false,
 		},
 		"OkCaseMaxLimitExceed": {
-			path:  "/" + GetRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), MAX_PATH_LENGTH-1) + "/",
+			path:  "/" + getRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), MAX_PATH_LENGTH-1) + "/",
 			valid: false,
 		},
 		"OkCaseRoot": {
@@ -302,7 +302,7 @@ func TestIsValidEffect(t *testing.T) {
 }
 
 func TestAreValidActions(t *testing.T) {
-	randomString := GetRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:*"), MAX_ACTION_LENGTH+1)
+	randomString := getRandomString([]rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:*"), MAX_ACTION_LENGTH+1)
 	testcases := map[string]struct {
 		// Method args
 		actions []string

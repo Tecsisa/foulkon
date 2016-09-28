@@ -3,6 +3,7 @@ package api
 import (
 	"testing"
 
+	"fmt"
 	"github.com/Tecsisa/foulkon/database"
 )
 
@@ -336,7 +337,19 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 			action: "product:DoSomething",
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: "Invalid parameter Resources %v. Resources can't be empty",
+				Message: fmt.Sprintf("Invalid parameter Resources. Resources can't be empty or bigger than %v elements", MAX_RESOURCE_NUMBER),
+			},
+		},
+		"ErrortestCaseMaxResourcesExceed": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			action:       "product:DoSomething",
+			resourceUrns: getResources(MAX_RESOURCE_NUMBER+1, "urn:iws:iam:org:genericresource/pathname"),
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: fmt.Sprintf("Invalid parameter Resources. Resources can't be empty or bigger than %v elements", MAX_RESOURCE_NUMBER),
 			},
 		},
 		"ErrortestCaseGetRestrictions": {
