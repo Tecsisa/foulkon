@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/Tecsisa/foulkon/api"
@@ -48,108 +47,41 @@ type ListAttachedGroupsResponse struct {
 // HANDLERS
 
 func (h *WorkerHandler) HandleAddPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	requestInfo := h.GetRequestInfo(r)
-	// Retrieve Organization
-	org := ps.ByName(ORG_NAME)
-
-	// Decode request
-	request := CreatePolicyRequest{}
-	err := json.NewDecoder(r.Body).Decode(&request)
-	if err != nil {
-		apiError := &api.Error{
-			Code:    api.INVALID_PARAMETER_ERROR,
-			Message: err.Error(),
-		}
-		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
-		h.RespondBadRequest(r, requestInfo, w, apiError)
+	// Process request
+	request := &CreatePolicyRequest{}
+	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, request)
+	if apiErr != nil {
+		h.RespondBadRequest(r, requestInfo, w, apiErr)
 		return
 	}
 
-	// Store this policy
-	response, err := h.worker.PolicyApi.AddPolicy(requestInfo, request.Name, request.Path, org, request.Statements)
-
-	// Error handling
-	if err != nil {
-		// Transform to API errors
-		apiError := err.(*api.Error)
-		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
-		switch apiError.Code {
-		case api.POLICY_ALREADY_EXIST:
-			h.RespondConflict(r, requestInfo, w, apiError)
-		case api.INVALID_PARAMETER_ERROR:
-			h.RespondBadRequest(r, requestInfo, w, apiError)
-		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			h.RespondForbidden(r, requestInfo, w, apiError)
-		default:
-			h.RespondInternalServerError(r, requestInfo, w)
-		}
-		return
-	}
-
-	// Write policy to response
-	h.RespondCreated(r, requestInfo, w, response)
+	// Call policy API to create policy
+	response, err := h.worker.PolicyApi.AddPolicy(requestInfo, request.Name, request.Path, filterData.Org, request.Statements)
+	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusCreated)
 }
 
 func (h *WorkerHandler) HandleGetPolicyByName(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	requestInfo := h.GetRequestInfo(r)
-	// Retrieve org and policy name from request path
-	orgId := ps.ByName(ORG_NAME)
-	policyName := ps.ByName(POLICY_NAME)
-
-	// Call policies API to retrieve policy
-	response, err := h.worker.PolicyApi.GetPolicyByName(requestInfo, orgId, policyName)
-
-	// Check errors
-	if err != nil {
-		// Transform to API errors
-		apiError := err.(*api.Error)
-		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
-		switch apiError.Code {
-		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			h.RespondNotFound(r, requestInfo, w, apiError)
-		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			h.RespondForbidden(r, requestInfo, w, apiError)
-		case api.INVALID_PARAMETER_ERROR:
-			h.RespondBadRequest(r, requestInfo, w, apiError)
-		default: // Unexpected API error
-			h.RespondInternalServerError(r, requestInfo, w)
-		}
+	// Process request
+	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	if apiErr != nil {
+		h.RespondBadRequest(r, requestInfo, w, apiErr)
 		return
 	}
 
-	// Return policy
-	h.RespondOk(r, requestInfo, w, response)
+	// Call policy API to retrieve policy
+	response, err := h.worker.PolicyApi.GetPolicyByName(requestInfo, filterData.Org, filterData.PolicyName)
+	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 
 func (h *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	requestInfo := h.GetRequestInfo(r)
-
-	// Retrieve filterData
-	filterData, err := getFilterData(r, ps)
-	if err != nil {
-		apiError := err.(*api.Error)
-		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
-		h.RespondBadRequest(r, requestInfo, w, apiError)
+	// Process request
+	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	if apiErr != nil {
+		h.RespondBadRequest(r, requestInfo, w, apiErr)
 		return
 	}
-
-	// Call policy API to retrieve policies
+	// Call policy API to list policies
 	result, total, err := h.worker.PolicyApi.ListPolicies(requestInfo, filterData)
-	if err != nil {
-		// Transform to API errors
-		apiError := err.(*api.Error)
-		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
-		switch apiError.Code {
-		case api.INVALID_PARAMETER_ERROR:
-			h.RespondBadRequest(r, requestInfo, w, apiError)
-		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			h.RespondForbidden(r, requestInfo, w, apiError)
-		default: // Unexpected API error
-			h.RespondInternalServerError(r, requestInfo, w)
-		}
-		return
-	}
-
 	// Create response
 	policies := []string{}
 	for _, policy := range result {
@@ -161,40 +93,18 @@ func (h *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Reques
 		Limit:    filterData.Limit,
 		Total:    total,
 	}
-
-	// Return policies
-	h.RespondOk(r, requestInfo, w, response)
+	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 
 func (h *WorkerHandler) HandleListAllPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	requestInfo := h.GetRequestInfo(r)
-
-	// Retrieve filterData
-	filterData, err := getFilterData(r, ps)
-	if err != nil {
-		apiError := err.(*api.Error)
-		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
-		h.RespondBadRequest(r, requestInfo, w, apiError)
+	// Process request
+	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	if apiErr != nil {
+		h.RespondBadRequest(r, requestInfo, w, apiErr)
 		return
 	}
-
-	// Call policies API to retrieve policies
+	// Call policy API to list all policies
 	result, total, err := h.worker.PolicyApi.ListPolicies(requestInfo, filterData)
-	if err != nil {
-		// Transform to API errors
-		apiError := err.(*api.Error)
-		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
-		switch apiError.Code {
-		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			h.RespondForbidden(r, requestInfo, w, apiError)
-		case api.INVALID_PARAMETER_ERROR:
-			h.RespondBadRequest(r, requestInfo, w, apiError)
-		default: // Unexpected API error
-			h.RespondInternalServerError(r, requestInfo, w)
-		}
-		return
-	}
-
 	// Create response
 	response := &ListAllPoliciesResponse{
 		Policies: result,
@@ -202,117 +112,43 @@ func (h *WorkerHandler) HandleListAllPolicies(w http.ResponseWriter, r *http.Req
 		Limit:    filterData.Limit,
 		Total:    total,
 	}
-
-	// Return policies
-	h.RespondOk(r, requestInfo, w, response)
+	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 
 func (h *WorkerHandler) HandleUpdatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	requestInfo := h.GetRequestInfo(r)
-	// Decode request
-	request := UpdatePolicyRequest{}
-	err := json.NewDecoder(r.Body).Decode(&request)
-	if err != nil {
-		apiError := &api.Error{
-			Code:    api.INVALID_PARAMETER_ERROR,
-			Message: err.Error(),
-		}
-		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
-		h.RespondBadRequest(r, requestInfo, w, apiError)
+	// Process request
+	request := &UpdatePolicyRequest{}
+	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, request)
+	if apiErr != nil {
+		h.RespondBadRequest(r, requestInfo, w, apiErr)
 		return
 	}
-
-	// Retrieve policy, org from path
-	org := ps.ByName(ORG_NAME)
-	policyName := ps.ByName(POLICY_NAME)
-
 	// Call policy API to update policy
-	response, err := h.worker.PolicyApi.UpdatePolicy(requestInfo, org, policyName, request.Name, request.Path, request.Statements)
-
-	// Check errors
-	if err != nil {
-		// Transform to API errors
-		apiError := err.(*api.Error)
-		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
-		switch apiError.Code {
-		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			h.RespondNotFound(r, requestInfo, w, apiError)
-		case api.POLICY_ALREADY_EXIST:
-			h.RespondConflict(r, requestInfo, w, apiError)
-		case api.INVALID_PARAMETER_ERROR:
-			h.RespondBadRequest(r, requestInfo, w, apiError)
-		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			h.RespondForbidden(r, requestInfo, w, apiError)
-		default: // Unexpected API error
-			h.RespondInternalServerError(r, requestInfo, w)
-		}
-		return
-	}
-
-	// Write policy to response
-	h.RespondOk(r, requestInfo, w, response)
+	response, err := h.worker.PolicyApi.UpdatePolicy(requestInfo, filterData.Org, filterData.PolicyName, request.Name, request.Path, request.Statements)
+	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 
 func (h *WorkerHandler) HandleRemovePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	requestInfo := h.GetRequestInfo(r)
-	// Retrieve org and policy name from request path
-	orgId := ps.ByName(ORG_NAME)
-	policyName := ps.ByName(POLICY_NAME)
-
-	// Call API to delete policy
-	err := h.worker.PolicyApi.RemovePolicy(requestInfo, orgId, policyName)
-
-	if err != nil {
-		// Transform to API errors
-		apiError := err.(*api.Error)
-		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
-		switch apiError.Code {
-		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			h.RespondNotFound(r, requestInfo, w, apiError)
-		case api.INVALID_PARAMETER_ERROR:
-			h.RespondBadRequest(r, requestInfo, w, apiError)
-		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			h.RespondForbidden(r, requestInfo, w, apiError)
-		default: // Unexpected API error
-			h.RespondInternalServerError(r, requestInfo, w)
-		}
+	// Process request
+	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	if apiErr != nil {
+		h.RespondBadRequest(r, requestInfo, w, apiErr)
 		return
 	}
-
-	h.RespondNoContent(r, requestInfo, w)
+	// Call policy API to remove policy
+	err := h.worker.PolicyApi.RemovePolicy(requestInfo, filterData.Org, filterData.PolicyName)
+	h.processHttpResponse(r, w, requestInfo, nil, err, http.StatusNoContent)
 }
 
 func (h *WorkerHandler) HandleListAttachedGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	requestInfo := h.GetRequestInfo(r)
-
-	// Retrieve filterData
-	filterData, err := getFilterData(r, ps)
-	if err != nil {
-		apiError := err.(*api.Error)
-		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
-		h.RespondBadRequest(r, requestInfo, w, apiError)
+	// Process request
+	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	if apiErr != nil {
+		h.RespondBadRequest(r, requestInfo, w, apiErr)
 		return
 	}
-
-	// Call policies API to retrieve attached groups
+	// Call policy API to list attached groups
 	result, total, err := h.worker.PolicyApi.ListAttachedGroups(requestInfo, filterData)
-	if err != nil {
-		// Transform to API errors
-		apiError := err.(*api.Error)
-		api.LogErrorMessage(h.worker.Logger, requestInfo, apiError)
-		switch apiError.Code {
-		case api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			h.RespondNotFound(r, requestInfo, w, apiError)
-		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			h.RespondForbidden(r, requestInfo, w, apiError)
-		case api.INVALID_PARAMETER_ERROR:
-			h.RespondBadRequest(r, requestInfo, w, apiError)
-		default: // Unexpected API error
-			h.RespondInternalServerError(r, requestInfo, w)
-		}
-		return
-	}
-
 	// Create response
 	response := &ListAttachedGroupsResponse{
 		Groups: result,
@@ -320,7 +156,5 @@ func (h *WorkerHandler) HandleListAttachedGroups(w http.ResponseWriter, r *http.
 		Limit:  filterData.Limit,
 		Total:  total,
 	}
-
-	// Return groups
-	h.RespondOk(r, requestInfo, w, response)
+	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }

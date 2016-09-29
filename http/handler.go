@@ -61,6 +61,71 @@ type WorkerHandler struct {
 	worker *foulkon.Worker
 }
 
+func (wh *WorkerHandler) processHttpRequest(r *http.Request, w http.ResponseWriter, ps httprouter.Params, request interface{}) (
+	requestInfo api.RequestInfo, filterData *api.Filter, apiError *api.Error) {
+	// Get Request Info
+	requestInfo = wh.GetRequestInfo(r)
+	// Decode request if passed
+	if request != nil {
+		err := json.NewDecoder(r.Body).Decode(&request)
+		if err != nil {
+			apiError = &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: err.Error(),
+			}
+			api.LogErrorMessage(wh.worker.Logger, requestInfo, apiError)
+		}
+	}
+	filterData, err := getFilterData(r, ps)
+	if err != nil {
+		apiError = err.(*api.Error)
+		api.LogErrorMessage(wh.worker.Logger, requestInfo, apiError)
+	}
+	return requestInfo, filterData, apiError
+}
+
+func (wh *WorkerHandler) processHttpResponse(r *http.Request, w http.ResponseWriter, requestInfo api.RequestInfo, response interface{}, err error, responseCode int) {
+	if err != nil {
+		// Transform to API errors
+		apiError := err.(*api.Error)
+		api.LogErrorMessage(wh.worker.Logger, requestInfo, apiError)
+		switch apiError.Code {
+		case api.USER_ALREADY_EXIST, api.GROUP_ALREADY_EXIST,
+			api.USER_IS_ALREADY_A_MEMBER_OF_GROUP,
+			api.POLICY_IS_ALREADY_ATTACHED_TO_GROUP, api.POLICY_ALREADY_EXIST:
+			wh.RespondConflict(r, requestInfo, w, apiError)
+			break
+		case api.UNAUTHORIZED_RESOURCES_ERROR:
+			wh.RespondForbidden(r, requestInfo, w, apiError)
+			break
+		case api.USER_BY_EXTERNAL_ID_NOT_FOUND, api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
+			api.USER_IS_NOT_A_MEMBER_OF_GROUP, api.POLICY_IS_NOT_ATTACHED_TO_GROUP,
+			api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
+			wh.RespondNotFound(r, requestInfo, w, apiError)
+			break
+		case api.INVALID_PARAMETER_ERROR, api.REGEX_NO_MATCH:
+			wh.RespondBadRequest(r, requestInfo, w, apiError)
+			break
+		default: // Unexpected API error
+			wh.RespondInternalServerError(r, requestInfo, w)
+			break
+		}
+		return
+	}
+
+	switch responseCode {
+	case http.StatusOK:
+		wh.RespondOk(r, requestInfo, w, response)
+		break
+	case http.StatusCreated:
+		wh.RespondCreated(r, requestInfo, w, response)
+		break
+	case http.StatusNoContent:
+		wh.RespondNoContent(r, requestInfo, w)
+		break
+	}
+}
+
 func (wh *WorkerHandler) TransactionLog(r *http.Request, requestID string, userID string, msg string) {
 
 	// TODO: X-Forwarded headers?

@@ -287,12 +287,13 @@ func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
 	}
 }
 
-func TestWorkerHandler_HandleGetPolicy(t *testing.T) {
+func TestWorkerHandler_HandleGetPolicyByName(t *testing.T) {
 	now := time.Now()
 	testcases := map[string]struct {
 		// API method args
 		org        string
 		policyName string
+		offset     string
 		// Expected result
 		expectedStatusCode int
 		expectedResponse   *api.Policy
@@ -345,6 +346,20 @@ func TestWorkerHandler_HandleGetPolicy(t *testing.T) {
 						},
 					},
 				},
+			},
+		},
+		"ErrorCaseInvalidRequest": {
+			org:                "org1",
+			policyName:         "p1",
+			offset:             "-1",
+			expectedStatusCode: http.StatusBadRequest,
+			getPolicyByNameErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
+			expectedError: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
 			},
 		},
 		"ErrorCasePolicyNotFound": {
@@ -406,6 +421,10 @@ func TestWorkerHandler_HandleGetPolicy(t *testing.T) {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
 		}
+
+		q := req.URL.Query()
+		q.Add("Offset", test.offset)
+		req.URL.RawQuery = q.Encode()
 
 		res, err := client.Do(req)
 		if err != nil {
@@ -1118,6 +1137,7 @@ func TestWorkerHandler_HandleRemovePolicy(t *testing.T) {
 		// API method args
 		org        string
 		policyName string
+		offset     string
 		// Expected result
 		expectedStatusCode int
 		expectedError      api.Error
@@ -1128,6 +1148,20 @@ func TestWorkerHandler_HandleRemovePolicy(t *testing.T) {
 			org:                "org1",
 			policyName:         "p1",
 			expectedStatusCode: http.StatusNoContent,
+		},
+		"ErrorCaseInvalidRequest": {
+			org:        "org1",
+			policyName: "p1",
+			offset:     "-1",
+			deletePolicyErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
 		},
 		"ErrorCasePolicyNotFound": {
 			org:        "org1",
@@ -1187,6 +1221,10 @@ func TestWorkerHandler_HandleRemovePolicy(t *testing.T) {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
 		}
+
+		q := req.URL.Query()
+		q.Add("Offset", test.offset)
+		req.URL.RawQuery = q.Encode()
 
 		res, err := client.Do(req)
 		if err != nil {

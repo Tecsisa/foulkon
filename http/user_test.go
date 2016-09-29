@@ -205,6 +205,7 @@ func TestWorkerHandler_HandleGetUserByExternalID(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
 		externalID string
+		offset     string
 		// Expected result
 		expectedStatusCode int
 		expectedResponse   *api.User
@@ -232,6 +233,15 @@ func TestWorkerHandler_HandleGetUserByExternalID(t *testing.T) {
 				Urn:        "urn",
 				CreateAt:   now,
 				UpdateAt:   now,
+			},
+		},
+		"ErrorCaseInvalidRequest": {
+			externalID:         "UserID",
+			offset:             "-1",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
 			},
 		},
 		"ErrorCaseUserNotExist": {
@@ -293,6 +303,10 @@ func TestWorkerHandler_HandleGetUserByExternalID(t *testing.T) {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
 		}
+
+		q := req.URL.Query()
+		q.Add("Offset", test.offset)
+		req.URL.RawQuery = q.Encode()
 
 		res, err := client.Do(req)
 		if err != nil {
@@ -686,6 +700,7 @@ func TestWorkerHandler_HandleRemoveUser(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
 		externalID string
+		offset     string
 		// Expected result
 		expectedStatusCode int
 		expectedError      api.Error
@@ -695,6 +710,19 @@ func TestWorkerHandler_HandleRemoveUser(t *testing.T) {
 		"OkCase": {
 			externalID:         "UserID",
 			expectedStatusCode: http.StatusNoContent,
+		},
+		"ErrorCaseInvalidRequest": {
+			externalID:         "UserID",
+			offset:             "-1",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
+			removeUserByIdErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
 		},
 		"ErrorCaseUserNotExist": {
 			externalID:         "UserID",
@@ -754,6 +782,10 @@ func TestWorkerHandler_HandleRemoveUser(t *testing.T) {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
 		}
+
+		q := req.URL.Query()
+		q.Add("Offset", test.offset)
+		req.URL.RawQuery = q.Encode()
 
 		res, err := client.Do(req)
 		if err != nil {

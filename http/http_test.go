@@ -304,11 +304,11 @@ func (t TestAPI) ListUsers(authenticatedUser api.RequestInfo, filter *api.Filter
 	t.ArgsIn[ListUsersMethod][1] = filter
 	var externalIDs []string
 	var total int
-	if t.ArgsOut[ListUsersMethod][1] != nil {
-		total = t.ArgsOut[ListUsersMethod][1].(int)
-	}
 	if t.ArgsOut[ListUsersMethod][0] != nil {
 		externalIDs = t.ArgsOut[ListUsersMethod][0].([]string)
+	}
+	if t.ArgsOut[ListUsersMethod][1] != nil {
+		total = t.ArgsOut[ListUsersMethod][1].(int)
 	}
 	var err error
 	if t.ArgsOut[ListUsersMethod][2] != nil {
