@@ -3,44 +3,37 @@ VETARGS?=-asmdecl -atomic -bool -buildtags -copylocks -methods \
          -nilfunc -printf -rangeloops -shift -structtags -unsafeptr
 EXTERNAL_TOOLS=\
 	golang.org/x/tools/cmd/cover \
-	github.com/axw/gocov/gocov \
-	gopkg.in/matm/v1/gocov-html \
 
 GOFILES_NOVENDOR = $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 all: test vet
 
-dev: format generate
-	@sh -c "'$(PWD)/scripts/build.sh'"
+dev: generate format
+	@FOULKON_DEV=1 sh -c "'$(PWD)/scripts/build.sh'"
 
-bin: generate
+deps:
+	curl https://glide.sh/get | sh
+	glide install
+
+bin: generate format
 	@sh -c "'$(PWD)/scripts/build.sh'"
 
 release:
 	@$(MAKE) bin
 
-cov:
-	gocov test ./... | gocov-html > /tmp/coverage.html
-	open /tmp/coverage.html
-
-test: generate
-	@echo "--> Running go fmt" ;
-	@if [ -n "`go fmt ${PACKAGES}`" ]; then \
-		echo "[ERR] go fmt updated formatting. Please commit formatted code first."; \
-		exit 1; \
-	fi
-	@sh -c "'$(PWD)/scripts/test.sh'"
-
-cover:
-	go list ./... | xargs -n1 go test --cover
-
-format:
-	@echo "--> Running go fmt"
-	@go fmt $(PACKAGES)
-
 generate:
 	@echo "--> Running go generate"
 	@go generate $(PACKAGES)
+
+format:
+	@echo "--> Running go fmt" ; \
+  if [ -n "`go fmt ${PACKAGES}`" ]; then \
+      echo "[ERR] go fmt updated formatting. Please commit formatted code first."; \
+      exit 1; \
+  fi
+
+test: generate format
+	@sh -c "'$(PWD)/scripts/test.sh'"
 
 vet:
 	@go tool vet 2>/dev/null ; if [ $$? -eq 3 ]; then \
@@ -60,7 +53,7 @@ vet:
 	fi
 
 # bootstrap the build by downloading additional tools
-bootstrap:
+bootstrap: deps
 	@for tool in $(EXTERNAL_TOOLS) ; do \
 		echo "Installing $$tool" ; \
     go get $$tool; \
@@ -69,4 +62,4 @@ bootstrap:
 travis:
 	@sh -c "'$(PWD)/scripts/travis.sh'"
 
-.PHONY: all bin cov integ test vet web web-push test-nodep
+.PHONY: all dev deps bin release generate format test vet bootstrap travis

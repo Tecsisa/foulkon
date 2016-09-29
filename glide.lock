@@ -1,5 +1,5 @@
-hash: 53f4be8edfaa82d03ed70d9b972cead24f74efed127482f2e68e95820c96f1ab
-updated: 2016-09-12T09:02:40.570979634+02:00
+hash: f40938bb4d7a5e474205c1293018b19d6d29ba1fc623ca43d39aeccace0a8714
+updated: 2016-09-29T11:43:08.991766214+02:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: 24c63f56522a87ec5339cc3567883f1039378fdb
@@ -16,8 +16,8 @@ imports:
 - name: github.com/kylelemons/godebug
   version: eadb3ce320cbab8393bea5ca17bebac3f78a021b
   subpackages:
-  - pretty
   - diff
+  - pretty
 - name: github.com/lib/pq
   version: 5da87320b996b433460a8930bb6b8f4e5672d371
   subpackages:
