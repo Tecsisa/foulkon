@@ -49,9 +49,29 @@ GET /example/resource HTTP/1.1
   LrLl0nx7RkKU8NXNHq-rvKMzqg
 ```
 
-## Testing
+## Development
 
-run `make` in project root path
+For local development, first make sure Go is properly installed according to [Go install doc](https://golang.org/doc/install) (Also, include $GOBIN environment var in your $PATH). Then run next command in project root path:
+ 
+```
+$ make bootstrap
+```
+
+Afterwards type make test. This will run the tests. If this exits with exit status 0, then everything is working!
+
+```
+$ make test
+```
+
+To compile a development version of Foulkon, run make dev. This will put the Foulkon binaries in the $GOPATH/bin folder:
+
+```
+$ make dev
+...
+$ $GOPATH/bin/worker
+$ $GOPATH/bin/proxy
+...
+```
 
 ## Contribution policy
 

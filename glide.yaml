@@ -1,4 +1,4 @@
-package: github.com/tecsisa/foulkon
+package: github.com/Tecsisa/foulkon
 ignore:
 - golang.org/x/sys/unix
 import:

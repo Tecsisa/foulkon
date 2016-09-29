@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 
+echo "--> Building..."
+#Make sure $GOPATH is set
+CGO_ENABLED=0 go install github.com/Tecsisa/foulkon/cmd/worker
+CGO_ENABLED=0 go install github.com/Tecsisa/foulkon/cmd/proxy
+
+# If its dev mode, only build for ourself
+if [[ "${FOULKON_DEV}" ]]; then
+    echo "Binaries generated for development use..."
+    exit 0
+fi
+
 branch=$(git rev-parse --abbrev-ref HEAD)
 tag=$(git tag --points-at HEAD)
 
@@ -11,11 +22,6 @@ else
     echo "Not in <master> branch or <tagged> commit, exiting..."
     exit 0
 fi
-
-echo "--> Building..."
-#Make sure $GOPATH is set
-CGO_ENABLED=0 go install github.com/Tecsisa/foulkon/cmd/worker
-CGO_ENABLED=0 go install github.com/Tecsisa/foulkon/cmd/proxy
 
 mkdir bin/ 2>/dev/null
 cp $GOPATH/bin/worker ./bin
