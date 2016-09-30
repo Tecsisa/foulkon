@@ -883,7 +883,7 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: "Invalid parameter: Limit 10000, max limit allowed: 1000",
+				Message: "Invalid parameter: limit 10000, max limit allowed: 1000",
 			},
 		},
 		"ErrorCaseInvalidPath": {
@@ -898,7 +898,7 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: "Invalid parameter: PathPrefix /path*/ /*",
+				Message: "Invalid parameter: pathPrefix /path*/ /*",
 			},
 		},
 		"ErrorCaseInvalidOrg": {
@@ -2640,7 +2640,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: "Invalid parameter: Limit 10000, max limit allowed: 1000",
+				Message: "Invalid parameter: limit 10000, max limit allowed: 1000",
 			},
 		},
 		"ErrorCaseInvalidName": {
@@ -2654,7 +2654,7 @@ func TestAuthAPI_ListAttachedGroups(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: "Invalid parameter: name invalid*",
+				Message: "Invalid parameter: policy invalid*",
 			},
 		},
 		"ErrorCaseInvalidOrg": {

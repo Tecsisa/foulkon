@@ -275,8 +275,8 @@ func validateFilter(filter *Filter) error {
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: limit %v, max limit allowed: %v", filter.Limit, MAX_LIMIT_SIZE),
 		}
-
 	}
+
 	return nil
 }
 
