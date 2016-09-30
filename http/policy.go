@@ -38,10 +38,10 @@ type ListAllPoliciesResponse struct {
 }
 
 type ListAttachedGroupsResponse struct {
-	Groups []string `json:"groups, omitempty"`
-	Limit  int      `json:"limit, omitempty"`
-	Offset int      `json:"offset, omitempty"`
-	Total  int      `json:"total, omitempty"`
+	Groups []api.PolicyGroups `json:"groups, omitempty"`
+	Limit  int                `json:"limit, omitempty"`
+	Offset int                `json:"offset, omitempty"`
+	Total  int                `json:"total, omitempty"`
 }
 
 // HANDLERS

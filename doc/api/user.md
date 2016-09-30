@@ -221,6 +221,7 @@ HTTP/1.1 200 OK
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
+| **groups/joined** | *date-time* | When relationship was created | `"2015-01-01T12:00:00Z"` |
 | **groups/name** | *string* | Group name | `"group1"` |
 | **groups/org** | *string* | Group organization | `"tecsisa"` |
 | **limit** | *integer* | The maximum number of items in the response (as set in the query or by default) | `20` |
@@ -255,7 +256,8 @@ HTTP/1.1 200 OK
   "groups": [
     {
       "org": "tecsisa",
-      "name": "group1"
+      "name": "group1",
+      "joined": "2015-01-01T12:00:00Z"
     }
   ],
   "offset": 0,

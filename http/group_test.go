@@ -1448,6 +1448,7 @@ func TestWorkerHandler_HandleRemoveMember(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleListMembers(t *testing.T) {
+	now := time.Now()
 	testcases := map[string]struct {
 		// API method args
 		filter       *api.Filter
@@ -1457,7 +1458,7 @@ func TestWorkerHandler_HandleListMembers(t *testing.T) {
 		expectedResponse   ListMembersResponse
 		expectedError      api.Error
 		// Manager Results
-		getListMembersResult []string
+		getListMembersResult []api.GroupMembers
 		totalGroupsResult    int
 		// Manager Errors
 		getListMembersErr error
@@ -1469,13 +1470,31 @@ func TestWorkerHandler_HandleListMembers(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: ListMembersResponse{
-				Members: []string{"member1", "member2"},
-				Offset:  0,
-				Limit:   0,
-				Total:   2,
+				Members: []api.GroupMembers{
+					{
+						User:     "member1",
+						CreateAt: now,
+					},
+					{
+						User:     "member2",
+						CreateAt: now,
+					},
+				},
+				Offset: 0,
+				Limit:  0,
+				Total:  2,
 			},
-			getListMembersResult: []string{"member1", "member2"},
-			totalGroupsResult:    2,
+			getListMembersResult: []api.GroupMembers{
+				{
+					User:     "member1",
+					CreateAt: now,
+				},
+				{
+					User:     "member2",
+					CreateAt: now,
+				},
+			},
+			totalGroupsResult: 2,
 		},
 		"ErrorCaseInvalidFilterParams": {
 			filter: &api.Filter{
@@ -1987,6 +2006,7 @@ func TestWorkerHandler_HandleDetachPolicyToGroup(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleListAttachedGroupPolicies(t *testing.T) {
+	now := time.Now()
 	testcases := map[string]struct {
 		// API method args
 		filter       *api.Filter
@@ -1996,7 +2016,7 @@ func TestWorkerHandler_HandleListAttachedGroupPolicies(t *testing.T) {
 		expectedResponse   ListAttachedGroupPoliciesResponse
 		expectedError      api.Error
 		// Manager Results
-		getListAttachedGroupPoliciesResult []string
+		getListAttachedGroupPoliciesResult []api.GroupPolicies
 		totalGroupsResult                  int
 		// Manager Errors
 		getListAttachedGroupPoliciesErr error
@@ -2008,9 +2028,27 @@ func TestWorkerHandler_HandleListAttachedGroupPolicies(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: ListAttachedGroupPoliciesResponse{
-				AttachedPolicies: []string{"policy1", "policy2"},
+				AttachedPolicies: []api.GroupPolicies{
+					{
+						Policy:   "policy1",
+						CreateAt: now,
+					},
+					{
+						Policy:   "policy2",
+						CreateAt: now,
+					},
+				},
 			},
-			getListAttachedGroupPoliciesResult: []string{"policy1", "policy2"},
+			getListAttachedGroupPoliciesResult: []api.GroupPolicies{
+				{
+					Policy:   "policy1",
+					CreateAt: now,
+				},
+				{
+					Policy:   "policy2",
+					CreateAt: now,
+				},
+			},
 		},
 		"ErrorCaseInvalidFilterParams": {
 			filter: &api.Filter{

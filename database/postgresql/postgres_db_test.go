@@ -92,9 +92,9 @@ func insertUser(user User) error {
 	return nil
 }
 
-func insertGroupUserRelation(userID string, groupID string) error {
-	err := repoDB.Dbmap.Exec("INSERT INTO public.group_user_relations (user_id, group_id) VALUES (?, ?)",
-		userID, groupID).Error
+func insertGroupUserRelation(userID string, groupID string, createAt int64) error {
+	err := repoDB.Dbmap.Exec("INSERT INTO public.group_user_relations (user_id, group_id, create_at) VALUES (?, ?, ?)",
+		userID, groupID, createAt).Error
 
 	// Error handling
 	if err != nil {
@@ -331,9 +331,9 @@ func getGroupPolicyRelationCount(policyID string, groupID string) (int, error) {
 	return number, nil
 }
 
-func insertGroupPolicyRelation(groupID string, policyID string) error {
-	err := repoDB.Dbmap.Exec("INSERT INTO public.group_policy_relations (group_id, policy_id) VALUES (?, ?)",
-		groupID, policyID).Error
+func insertGroupPolicyRelation(groupID string, policyID string, createAt int64) error {
+	err := repoDB.Dbmap.Exec("INSERT INTO public.group_policy_relations (group_id, policy_id, create_at) VALUES (?, ?, ?)",
+		groupID, policyID, createAt).Error
 
 	// Error handling
 	if err != nil {

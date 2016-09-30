@@ -342,16 +342,16 @@ func (t TestAPI) RemoveUser(authenticatedUser api.RequestInfo, id string) error 
 	return err
 }
 
-func (t TestAPI) ListGroupsByUser(authenticatedUser api.RequestInfo, filter *api.Filter) ([]api.GroupIdentity, int, error) {
+func (t TestAPI) ListGroupsByUser(authenticatedUser api.RequestInfo, filter *api.Filter) ([]api.UserGroups, int, error) {
 	t.ArgsIn[ListGroupsByUserMethod][0] = authenticatedUser
 	t.ArgsIn[ListGroupsByUserMethod][1] = filter
-	var groups []api.GroupIdentity
+	var groups []api.UserGroups
 	var total int
 	if t.ArgsOut[ListGroupsByUserMethod][1] != nil {
 		total = t.ArgsOut[ListGroupsByUserMethod][1].(int)
 	}
 	if t.ArgsOut[ListGroupsByUserMethod][0] != nil {
-		groups = t.ArgsOut[ListGroupsByUserMethod][0].([]api.GroupIdentity)
+		groups = t.ArgsOut[ListGroupsByUserMethod][0].([]api.UserGroups)
 
 	}
 	var err error
@@ -465,17 +465,17 @@ func (t TestAPI) RemoveMember(authenticatedUser api.RequestInfo, userID string, 
 	return err
 }
 
-func (t TestAPI) ListMembers(authenticatedUser api.RequestInfo, filter *api.Filter) ([]string, int, error) {
+func (t TestAPI) ListMembers(authenticatedUser api.RequestInfo, filter *api.Filter) ([]api.GroupMembers, int, error) {
 	t.ArgsIn[ListMembersMethod][0] = authenticatedUser
 	t.ArgsIn[ListMembersMethod][1] = filter
 
-	var externalIDs []string
+	var externalIDs []api.GroupMembers
 	var total int
 	if t.ArgsOut[ListMembersMethod][1] != nil {
 		total = t.ArgsOut[ListMembersMethod][1].(int)
 	}
 	if t.ArgsOut[ListMembersMethod][0] != nil {
-		externalIDs = t.ArgsOut[ListMembersMethod][0].([]string)
+		externalIDs = t.ArgsOut[ListMembersMethod][0].([]api.GroupMembers)
 	}
 	var err error
 	if t.ArgsOut[ListMembersMethod][2] != nil {
@@ -508,17 +508,17 @@ func (t TestAPI) DetachPolicyToGroup(authenticatedUser api.RequestInfo, org stri
 	return err
 }
 
-func (t TestAPI) ListAttachedGroupPolicies(authenticatedUser api.RequestInfo, filter *api.Filter) ([]string, int, error) {
+func (t TestAPI) ListAttachedGroupPolicies(authenticatedUser api.RequestInfo, filter *api.Filter) ([]api.GroupPolicies, int, error) {
 	t.ArgsIn[ListAttachedGroupPoliciesMethod][0] = authenticatedUser
 	t.ArgsIn[ListAttachedGroupPoliciesMethod][1] = filter
 
-	var policies []string
+	var policies []api.GroupPolicies
 	var total int
 	if t.ArgsOut[ListAttachedGroupPoliciesMethod][1] != nil {
 		total = t.ArgsOut[ListAttachedGroupPoliciesMethod][1].(int)
 	}
 	if t.ArgsOut[ListAttachedGroupPoliciesMethod][0] != nil {
-		policies = t.ArgsOut[ListAttachedGroupPoliciesMethod][0].([]string)
+		policies = t.ArgsOut[ListAttachedGroupPoliciesMethod][0].([]api.GroupPolicies)
 	}
 	var err error
 	if t.ArgsOut[ListAttachedGroupPoliciesMethod][2] != nil {
@@ -611,17 +611,17 @@ func (t TestAPI) RemovePolicy(authenticatedUser api.RequestInfo, org string, nam
 	return err
 }
 
-func (t TestAPI) ListAttachedGroups(authenticatedUser api.RequestInfo, filter *api.Filter) ([]string, int, error) {
+func (t TestAPI) ListAttachedGroups(authenticatedUser api.RequestInfo, filter *api.Filter) ([]api.PolicyGroups, int, error) {
 	t.ArgsIn[ListAttachedGroupsMethod][0] = authenticatedUser
 	t.ArgsIn[ListAttachedGroupsMethod][1] = filter
 
-	var groups []string
+	var groups []api.PolicyGroups
 	var total int
 	if t.ArgsOut[ListAttachedGroupsMethod][1] != nil {
 		total = t.ArgsOut[ListAttachedGroupsMethod][1].(int)
 	}
 	if t.ArgsOut[ListAttachedGroupsMethod][0] != nil {
-		groups = t.ArgsOut[ListAttachedGroupsMethod][0].([]string)
+		groups = t.ArgsOut[ListAttachedGroupsMethod][0].([]api.PolicyGroups)
 	}
 	var err error
 	if t.ArgsOut[ListAttachedGroupsMethod][2] != nil {

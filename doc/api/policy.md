@@ -356,7 +356,8 @@ List attached groups
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **groups** | *array* | Groups attached to this policy | `["groupName1, groupName2"]` |
+| **groups/attached** | *date-time* | When relationship was created | `"2015-01-01T12:00:00Z"` |
+| **groups/group** | *string* | Group name | `"groupName1"` |
 | **limit** | *integer* | The maximum number of items in the response (as set in the query or by default) | `20` |
 | **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
 | **total** | *integer* | The total number of items available to return | `50` |
@@ -387,7 +388,10 @@ HTTP/1.1 200 OK
 ```json
 {
   "groups": [
-    "groupName1, groupName2"
+    {
+      "group": "groupName1",
+      "attached": "2015-01-01T12:00:00Z"
+    }
   ],
   "offset": 0,
   "limit": 20,

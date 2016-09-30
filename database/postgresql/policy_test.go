@@ -571,6 +571,7 @@ func TestPostgresRepo_RemovePolicy(t *testing.T) {
 	type relation struct {
 		policyID      string
 		groupID       string
+		createAt      int64
 		groupNotFound bool
 	}
 	type policyData struct {
@@ -632,10 +633,12 @@ func TestPostgresRepo_RemovePolicy(t *testing.T) {
 				{
 					policyID: "test1",
 					groupID:  "GroupID",
+					createAt: now.UnixNano(),
 				},
 				{
 					policyID: "test2",
 					groupID:  "GroupID2",
+					createAt: now.UnixNano(),
 				},
 			},
 			policyToDelete: "test1",
@@ -661,7 +664,7 @@ func TestPostgresRepo_RemovePolicy(t *testing.T) {
 		}
 		if test.relations != nil {
 			for _, rel := range test.relations {
-				err := insertGroupPolicyRelation(rel.groupID, rel.policyID)
+				err := insertGroupPolicyRelation(rel.groupID, rel.policyID, rel.createAt)
 				if err != nil {
 					t.Errorf("Test %v failed. Unexpected error inserting group relation: %v", n, err)
 					continue
@@ -739,7 +742,7 @@ func TestPostgresRepo_GetAttachedGroups(t *testing.T) {
 		statements       []Statement
 		filter           *api.Filter
 		group            *Group
-		expectedResponse []api.Group
+		expectedResponse []PolicyGroup
 	}{
 		"OkCase": {
 			previousPolicy: &Policy{
@@ -770,15 +773,18 @@ func TestPostgresRepo_GetAttachedGroups(t *testing.T) {
 				UpdateAt: now.UnixNano(),
 				Org:      "Org",
 			},
-			expectedResponse: []api.Group{
+			expectedResponse: []PolicyGroup{
 				{
-					ID:       "GroupID",
-					Name:     "Name",
-					Path:     "Path",
-					Urn:      "urn",
+					Group: &api.Group{
+						ID:       "GroupID",
+						Name:     "Name",
+						Path:     "Path",
+						Urn:      "urn",
+						CreateAt: now,
+						UpdateAt: now,
+						Org:      "Org",
+					},
 					CreateAt: now,
-					UpdateAt: now,
-					Org:      "Org",
 				},
 			},
 		},
@@ -803,7 +809,7 @@ func TestPostgresRepo_GetAttachedGroups(t *testing.T) {
 				t.Errorf("Test %v failed. Unexpected error inserting group: %v", n, err)
 				continue
 			}
-			err = insertGroupPolicyRelation(test.group.ID, test.previousPolicy.ID)
+			err = insertGroupPolicyRelation(test.group.ID, test.previousPolicy.ID, now.UnixNano())
 			if err != nil {
 				t.Errorf("Test %v failed. Unexpected error inserting group relation: %v", n, err)
 				continue

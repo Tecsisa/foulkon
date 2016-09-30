@@ -20,6 +20,12 @@ type User struct {
 	UpdateAt   time.Time `json:"updateAt, omitempty"`
 }
 
+type UserGroups struct {
+	Org      string    `json:"org, omitempty"`
+	Name     string    `json:"name, omitempty"`
+	CreateAt time.Time `json:"joined, omitempty"`
+}
+
 func (u User) String() string {
 	return fmt.Sprintf("[id: %v, externalId: %v, path: %v, urn: %v, createAt: %v]",
 		u.ID, u.ExternalID, u.Path, u.Urn, u.CreateAt.Format("2006-01-02 15:04:05 MST"))
@@ -284,7 +290,7 @@ func (api AuthAPI) RemoveUser(requestInfo RequestInfo, externalId string) error 
 	return nil
 }
 
-func (api AuthAPI) ListGroupsByUser(requestInfo RequestInfo, filter *Filter) ([]GroupIdentity, int, error) {
+func (api AuthAPI) ListGroupsByUser(requestInfo RequestInfo, filter *Filter) ([]UserGroups, int, error) {
 	// Check parameters
 	var total int
 	err := validateFilter(filter)
@@ -323,13 +329,13 @@ func (api AuthAPI) ListGroupsByUser(requestInfo RequestInfo, filter *Filter) ([]
 			Message: dbError.Message,
 		}
 	}
-
 	// Transform to identifiers
-	groupIDs := []GroupIdentity{}
+	groupIDs := []UserGroups{}
 	for _, g := range groups {
-		groupIDs = append(groupIDs, GroupIdentity{
-			Org:  g.Org,
-			Name: g.Name,
+		groupIDs = append(groupIDs, UserGroups{
+			Org:      g.GetGroup().Org,
+			Name:     g.GetGroup().Name,
+			CreateAt: g.GetDate(),
 		})
 	}
 

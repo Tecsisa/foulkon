@@ -43,6 +43,11 @@ type Statement struct {
 	Resources []string `json:"resources, omitempty"`
 }
 
+type PolicyGroups struct {
+	Group    string    `json:"group, omitempty"`
+	CreateAt time.Time `json:"attached, omitempty"`
+}
+
 func (s Statement) String() string {
 	return fmt.Sprintf("[effect: %v, actions: %v, resources: %v]", s.Effect, s.Actions, s.Resources)
 }
@@ -373,7 +378,7 @@ func (api AuthAPI) RemovePolicy(requestInfo RequestInfo, org string, name string
 	return nil
 }
 
-func (api AuthAPI) ListAttachedGroups(requestInfo RequestInfo, filter *Filter) ([]string, int, error) {
+func (api AuthAPI) ListAttachedGroups(requestInfo RequestInfo, filter *Filter) ([]PolicyGroups, int, error) {
 	// Validate fields
 	var total int
 	err := validateFilter(filter)
@@ -401,7 +406,7 @@ func (api AuthAPI) ListAttachedGroups(requestInfo RequestInfo, filter *Filter) (
 	}
 
 	// Call repo to retrieve the attached groups
-	groups, total, err := api.PolicyRepo.GetAttachedGroups(policy.ID, filter)
+	attachedGroups, total, err := api.PolicyRepo.GetAttachedGroups(policy.ID, filter)
 
 	// Error handling
 	if err != nil {
@@ -413,12 +418,18 @@ func (api AuthAPI) ListAttachedGroups(requestInfo RequestInfo, filter *Filter) (
 		}
 	}
 
-	groupNames := []string{}
-	for _, g := range groups {
-		groupNames = append(groupNames, g.Name)
+	groups := []PolicyGroups{}
+	if attachedGroups != nil {
+		groups = make([]PolicyGroups, len(attachedGroups), cap(attachedGroups))
+		for i, m := range attachedGroups {
+			groups[i] = PolicyGroups{
+				Group:    m.GetGroup().Name,
+				CreateAt: m.GetDate(),
+			}
+		}
 	}
 
-	return groupNames, total, nil
+	return groups, total, nil
 }
 
 // PRIVATE HELPER METHODS

@@ -308,10 +308,20 @@
       "properties": {
         "groups": {
           "description": "Groups attached to this policy",
-          "example": ["groupName1, groupName2"],
           "type": "array",
           "items": {
-            "type": "string"
+            "properties": {
+              "group": {
+                "description": "Group name",
+                "example": "groupName1",
+                "type": "string"
+              },
+              "attached": {
+                "description": "When relationship was created",
+                "format": "date-time",
+                "type": "string"
+              }
+            }
           }
         },
         "offset": {

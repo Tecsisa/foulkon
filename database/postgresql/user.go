@@ -167,7 +167,7 @@ func (u PostgresRepo) RemoveUser(id string) error {
 	return nil
 }
 
-func (u PostgresRepo) GetGroupsByUserID(id string, filter *api.Filter) ([]api.Group, int, error) {
+func (u PostgresRepo) GetGroupsByUserID(id string, filter *api.Filter) ([]api.UserGroupRelation, int, error) {
 	var total int
 	relations := []GroupUserRelation{}
 	query := u.Dbmap.Where("user_id like ?", id).Find(&relations).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&relations)
@@ -180,10 +180,10 @@ func (u PostgresRepo) GetGroupsByUserID(id string, filter *api.Filter) ([]api.Gr
 		}
 	}
 
-	var apiGroups []api.Group
+	var groups []api.UserGroupRelation
 	// Transform relations to API domain
 	if relations != nil {
-		apiGroups = make([]api.Group, len(relations), cap(relations))
+		groups = make([]api.UserGroupRelation, len(relations), cap(relations))
 		for i, r := range relations {
 			group, err := u.GetGroupById(r.GroupID)
 			// Error handling
@@ -193,11 +193,14 @@ func (u PostgresRepo) GetGroupsByUserID(id string, filter *api.Filter) ([]api.Gr
 					Message: err.Error(),
 				}
 			}
-			apiGroups[i] = *group
+			groups[i] = GroupUser{
+				Group:    group,
+				CreateAt: time.Unix(0, r.CreateAt).UTC(),
+			}
 		}
 	}
 
-	return apiGroups, total, nil
+	return groups, total, nil
 }
 
 // PRIVATE HELPER METHODS

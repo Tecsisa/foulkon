@@ -20,7 +20,7 @@ func InitDb(datasourcename string, idleConns string, maxOpenConns string, connTT
 		return nil, err
 	}
 
-	// construct a gorp DbMap
+	// construct a gorm DbMap
 	idle, err := strconv.Atoi(idleConns)
 	if err != nil {
 		return nil, fmt.Errorf("Invalid postgresql idleConns param: %v", idleConns)
@@ -115,8 +115,9 @@ func (Statement) TableName() string {
 
 // Group-Users Relationship
 type GroupUserRelation struct {
-	UserID  string `gorm:"primary_key"`
-	GroupID string `gorm:"primary_key"`
+	UserID   string `gorm:"primary_key"`
+	GroupID  string `gorm:"primary_key"`
+	CreateAt int64  `gorm:"not null"`
 }
 
 // GroupUserRelation's table name
@@ -128,6 +129,7 @@ func (GroupUserRelation) TableName() string {
 type GroupPolicyRelation struct {
 	GroupID  string `gorm:"primary_key"`
 	PolicyID string `gorm:"primary_key"`
+	CreateAt int64  `gorm:"not null"`
 }
 
 // GroupPolicyRelation's table name

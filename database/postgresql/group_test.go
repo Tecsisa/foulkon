@@ -697,12 +697,14 @@ func TestPostgresRepo_UpdateGroup(t *testing.T) {
 
 func TestPostgresRepo_RemoveGroup(t *testing.T) {
 	type userRelation struct {
-		userID  string
-		groupID string
+		userID   string
+		groupID  string
+		CreateAt int64
 	}
 	type policyRelation struct {
 		policyID string
 		groupID  string
+		CreateAt int64
 	}
 	now := time.Now().UTC()
 	testcases := map[string]struct {
@@ -736,22 +738,26 @@ func TestPostgresRepo_RemoveGroup(t *testing.T) {
 			},
 			userRelations: []userRelation{
 				{
-					userID:  "UserID",
-					groupID: "GroupID",
+					userID:   "UserID",
+					groupID:  "GroupID",
+					CreateAt: now.UnixNano(),
 				},
 				{
-					userID:  "UserID1",
-					groupID: "GroupID2",
+					userID:   "UserID1",
+					groupID:  "GroupID2",
+					CreateAt: now.UnixNano(),
 				},
 			},
 			policyRelations: []policyRelation{
 				{
 					policyID: "policyID",
 					groupID:  "GroupID",
+					CreateAt: now.UnixNano(),
 				},
 				{
 					policyID: "policyID1",
 					groupID:  "GroupID2",
+					CreateAt: now.UnixNano(),
 				},
 			},
 			groupToDelete: "GroupID",
@@ -774,7 +780,7 @@ func TestPostgresRepo_RemoveGroup(t *testing.T) {
 		}
 		if test.userRelations != nil {
 			for _, rel := range test.userRelations {
-				if err := insertGroupUserRelation(rel.userID, rel.groupID); err != nil {
+				if err := insertGroupUserRelation(rel.userID, rel.groupID, rel.CreateAt); err != nil {
 					t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
 					continue
 				}
@@ -782,7 +788,7 @@ func TestPostgresRepo_RemoveGroup(t *testing.T) {
 		}
 		if test.policyRelations != nil {
 			for _, rel := range test.policyRelations {
-				if err := insertGroupPolicyRelation(rel.groupID, rel.policyID); err != nil {
+				if err := insertGroupPolicyRelation(rel.groupID, rel.policyID, rel.CreateAt); err != nil {
 					t.Errorf("Test %v failed. Unexpected error inserting previous group policy relations: %v", n, err)
 					continue
 				}
@@ -914,9 +920,11 @@ func TestPostgresRepo_AddMember(t *testing.T) {
 
 func TestPostgresRepo_RemoveMember(t *testing.T) {
 	type relation struct {
-		userID  string
-		groupID string
+		userID   string
+		groupID  string
+		createAt int64
 	}
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
 		relation *relation
@@ -928,8 +936,9 @@ func TestPostgresRepo_RemoveMember(t *testing.T) {
 	}{
 		"OkCase": {
 			relation: &relation{
-				userID:  "UserID",
-				groupID: "GroupID",
+				userID:   "UserID",
+				groupID:  "GroupID",
+				createAt: now.UnixNano(),
 			},
 			userID:  "UserID",
 			groupID: "GroupID",
@@ -942,7 +951,7 @@ func TestPostgresRepo_RemoveMember(t *testing.T) {
 
 		// Insert previous data
 		if test.relation != nil {
-			if err := insertGroupUserRelation(test.relation.userID, test.relation.groupID); err != nil {
+			if err := insertGroupUserRelation(test.relation.userID, test.relation.groupID, test.relation.createAt); err != nil {
 				t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
 				continue
 			}
@@ -971,9 +980,11 @@ func TestPostgresRepo_RemoveMember(t *testing.T) {
 
 func TestPostgresRepo_IsMemberOfGroup(t *testing.T) {
 	type relation struct {
-		userID  string
-		groupID string
+		userID   string
+		groupID  string
+		createAt int64
 	}
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
 		relation *relation
@@ -985,8 +996,9 @@ func TestPostgresRepo_IsMemberOfGroup(t *testing.T) {
 	}{
 		"OkCaseIsMember": {
 			relation: &relation{
-				userID:  "UserID",
-				groupID: "GroupID",
+				userID:   "UserID",
+				groupID:  "GroupID",
+				createAt: now.UnixNano(),
 			},
 			group:    "GroupID",
 			member:   "UserID",
@@ -1004,7 +1016,7 @@ func TestPostgresRepo_IsMemberOfGroup(t *testing.T) {
 
 		// Insert previous data
 		if test.relation != nil {
-			if err := insertGroupUserRelation(test.relation.userID, test.relation.groupID); err != nil {
+			if err := insertGroupUserRelation(test.relation.userID, test.relation.groupID, test.relation.createAt); err != nil {
 				t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
 				continue
 			}
@@ -1028,6 +1040,7 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 	type relations struct {
 		users        []User
 		groupID      string
+		createAt     int64
 		userNotFound bool
 	}
 	now := time.Now().UTC()
@@ -1038,7 +1051,7 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 		groupID string
 		filter  *api.Filter
 		// Expected result
-		expectedResponse []api.User
+		expectedResponse []GroupUser
 		expectedError    *database.Error
 	}{
 		"OkCase": {
@@ -1061,26 +1074,33 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 						UpdateAt:   now.UnixNano(),
 					},
 				},
-				groupID: "GroupID",
+				groupID:  "GroupID",
+				createAt: now.UnixNano(),
 			},
 			groupID: "GroupID",
 			filter:  testFilter,
-			expectedResponse: []api.User{
+			expectedResponse: []GroupUser{
 				{
-					ID:         "UserID1",
-					ExternalID: "ExternalID1",
-					Path:       "Path",
-					Urn:        "urn1",
-					CreateAt:   now,
-					UpdateAt:   now,
+					User: &api.User{
+						ID:         "UserID1",
+						ExternalID: "ExternalID1",
+						Path:       "Path",
+						Urn:        "urn1",
+						CreateAt:   now,
+						UpdateAt:   now,
+					},
+					CreateAt: now,
 				},
 				{
-					ID:         "UserID2",
-					ExternalID: "ExternalID2",
-					Path:       "Path",
-					Urn:        "urn2",
-					CreateAt:   now,
-					UpdateAt:   now,
+					User: &api.User{
+						ID:         "UserID2",
+						ExternalID: "ExternalID2",
+						Path:       "Path",
+						Urn:        "urn2",
+						CreateAt:   now,
+						UpdateAt:   now,
+					},
+					CreateAt: now,
 				},
 			},
 		},
@@ -1110,7 +1130,7 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 		// Insert previous data
 		if test.relations != nil {
 			for _, user := range test.relations.users {
-				if err := insertGroupUserRelation(user.ID, test.relations.groupID); err != nil {
+				if err := insertGroupUserRelation(user.ID, test.relations.groupID, test.relations.createAt); err != nil {
 					t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
 					continue
 				}
@@ -1210,7 +1230,9 @@ func TestPostgresRepo_DetachPolicy(t *testing.T) {
 	type relation struct {
 		policyID string
 		groupID  string
+		createAt int64
 	}
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
 		relation *relation
@@ -1224,6 +1246,7 @@ func TestPostgresRepo_DetachPolicy(t *testing.T) {
 			relation: &relation{
 				policyID: "PolicyID",
 				groupID:  "GroupID",
+				createAt: now.UnixNano(),
 			},
 			policyID: "PolicyID",
 			groupID:  "GroupID",
@@ -1236,7 +1259,7 @@ func TestPostgresRepo_DetachPolicy(t *testing.T) {
 
 		// Insert previous data
 		if test.relation != nil {
-			if err := insertGroupPolicyRelation(test.relation.groupID, test.relation.policyID); err != nil {
+			if err := insertGroupPolicyRelation(test.relation.groupID, test.relation.policyID, test.relation.createAt); err != nil {
 				t.Errorf("Test %v failed. Unexpected error inserting previous group policy relations: %v", n, err)
 				continue
 			}
@@ -1267,7 +1290,9 @@ func TestPostgresRepo_IsAttachedToGroup(t *testing.T) {
 	type relation struct {
 		groupID  string
 		policyID string
+		createAt int64
 	}
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
 		relation *relation
@@ -1281,6 +1306,7 @@ func TestPostgresRepo_IsAttachedToGroup(t *testing.T) {
 			relation: &relation{
 				groupID:  "GroupID",
 				policyID: "PolicyID",
+				createAt: now.UnixNano(),
 			},
 			groupID:        "GroupID",
 			policyID:       "PolicyID",
@@ -1290,6 +1316,7 @@ func TestPostgresRepo_IsAttachedToGroup(t *testing.T) {
 			relation: &relation{
 				groupID:  "GroupID",
 				policyID: "PolicyID",
+				createAt: now.UnixNano(),
 			},
 			groupID:        "GroupID",
 			policyID:       "PolicyIDXXXXXXX",
@@ -1303,7 +1330,7 @@ func TestPostgresRepo_IsAttachedToGroup(t *testing.T) {
 
 		// Insert previous data
 		if test.relation != nil {
-			if err := insertGroupPolicyRelation(test.relation.groupID, test.relation.policyID); err != nil {
+			if err := insertGroupPolicyRelation(test.relation.groupID, test.relation.policyID, test.relation.createAt); err != nil {
 				t.Errorf("Test %v failed. Unexpected error inserting previous group policy relations: %v", n, err)
 				continue
 			}
@@ -1328,6 +1355,7 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 	type relations struct {
 		policies       []Policy
 		groupID        string
+		createAt       int64
 		policyNotFound bool
 	}
 	now := time.Now().UTC()
@@ -1339,7 +1367,7 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 		groupID string
 		filter  *api.Filter
 		// Expected result
-		expectedResponse []api.Policy
+		expectedResponse []PolicyGroup
 		expectedError    *database.Error
 	}{
 		"OkCase": {
@@ -1364,31 +1392,38 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 						Urn:      "Urn2",
 					},
 				},
-				groupID: "GroupID",
+				groupID:  "GroupID",
+				createAt: now.UnixNano(),
 			},
 			statements: []Statement{},
 			groupID:    "GroupID",
 			filter:     testFilter,
-			expectedResponse: []api.Policy{
+			expectedResponse: []PolicyGroup{
 				{
-					ID:         "PolicyID1",
-					Name:       "Name1",
-					Org:        "org1",
-					Path:       "/path/",
-					CreateAt:   now,
-					UpdateAt:   now,
-					Urn:        "Urn1",
-					Statements: &[]api.Statement{},
+					Policy: &api.Policy{
+						ID:         "PolicyID1",
+						Name:       "Name1",
+						Org:        "org1",
+						Path:       "/path/",
+						CreateAt:   now,
+						UpdateAt:   now,
+						Urn:        "Urn1",
+						Statements: &[]api.Statement{},
+					},
+					CreateAt: now,
 				},
 				{
-					ID:         "PolicyID2",
-					Name:       "Name2",
-					Org:        "org1",
-					Path:       "/path/",
-					CreateAt:   now,
-					UpdateAt:   now,
-					Urn:        "Urn2",
-					Statements: &[]api.Statement{},
+					Policy: &api.Policy{
+						ID:         "PolicyID2",
+						Name:       "Name2",
+						Org:        "org1",
+						Path:       "/path/",
+						CreateAt:   now,
+						UpdateAt:   now,
+						Urn:        "Urn2",
+						Statements: &[]api.Statement{},
+					},
+					CreateAt: now,
 				},
 			},
 		},
@@ -1415,6 +1450,7 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 					},
 				},
 				groupID:        "GroupID",
+				createAt:       now.UnixNano(),
 				policyNotFound: true,
 			},
 			statements: []Statement{},
@@ -1434,7 +1470,7 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 		// Insert previous data
 		if test.relations != nil {
 			for _, policy := range test.relations.policies {
-				if err := insertGroupPolicyRelation(test.relations.groupID, policy.ID); err != nil {
+				if err := insertGroupPolicyRelation(test.relations.groupID, policy.ID, test.relations.createAt); err != nil {
 					t.Errorf("Test %v failed. Unexpected error inserting previous group policy relations: %v", n, err)
 					continue
 				}
