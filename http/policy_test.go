@@ -291,9 +291,10 @@ func TestWorkerHandler_HandleGetPolicyByName(t *testing.T) {
 	now := time.Now()
 	testcases := map[string]struct {
 		// API method args
-		org        string
-		policyName string
-		offset     string
+		org          string
+		policyName   string
+		offset       string
+		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
 		expectedResponse   *api.Policy
@@ -352,6 +353,7 @@ func TestWorkerHandler_HandleGetPolicyByName(t *testing.T) {
 			org:                "org1",
 			policyName:         "p1",
 			offset:             "-1",
+			ignoreArgsIn:       true,
 			expectedStatusCode: http.StatusBadRequest,
 			getPolicyByNameErr: &api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
@@ -432,14 +434,16 @@ func TestWorkerHandler_HandleGetPolicyByName(t *testing.T) {
 			continue
 		}
 
-		// Check received parameters
-		if testApi.ArgsIn[GetPolicyByNameMethod][1] != test.org {
-			t.Errorf("Test case %v. Received different org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[GetPolicyByNameMethod][1])
-			continue
-		}
-		if testApi.ArgsIn[GetPolicyByNameMethod][2] != test.policyName {
-			t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.policyName, testApi.ArgsIn[GetPolicyByNameMethod][2])
-			continue
+		if !test.ignoreArgsIn {
+			// Check received parameters
+			if testApi.ArgsIn[GetPolicyByNameMethod][1] != test.org {
+				t.Errorf("Test case %v. Received different org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[GetPolicyByNameMethod][1])
+				continue
+			}
+			if testApi.ArgsIn[GetPolicyByNameMethod][2] != test.policyName {
+				t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.policyName, testApi.ArgsIn[GetPolicyByNameMethod][2])
+				continue
+			}
 		}
 
 		// check status code
@@ -1135,9 +1139,10 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 func TestWorkerHandler_HandleRemovePolicy(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		org        string
-		policyName string
-		offset     string
+		org          string
+		policyName   string
+		offset       string
+		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
 		expectedError      api.Error
@@ -1150,9 +1155,10 @@ func TestWorkerHandler_HandleRemovePolicy(t *testing.T) {
 			expectedStatusCode: http.StatusNoContent,
 		},
 		"ErrorCaseInvalidRequest": {
-			org:        "org1",
-			policyName: "p1",
-			offset:     "-1",
+			org:          "org1",
+			policyName:   "p1",
+			offset:       "-1",
+			ignoreArgsIn: true,
 			deletePolicyErr: &api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
 				Message: "Invalid parameter: Offset -1",
@@ -1232,14 +1238,16 @@ func TestWorkerHandler_HandleRemovePolicy(t *testing.T) {
 			continue
 		}
 
-		// Check received parameters
-		if testApi.ArgsIn[RemovePolicyMethod][1] != test.org {
-			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[RemovePolicyMethod][1])
-			continue
-		}
-		if testApi.ArgsIn[RemovePolicyMethod][2] != test.policyName {
-			t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.policyName, testApi.ArgsIn[RemovePolicyMethod][2])
-			continue
+		if !test.ignoreArgsIn {
+			// Check received parameters
+			if testApi.ArgsIn[RemovePolicyMethod][1] != test.org {
+				t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[RemovePolicyMethod][1])
+				continue
+			}
+			if testApi.ArgsIn[RemovePolicyMethod][2] != test.policyName {
+				t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.policyName, testApi.ArgsIn[RemovePolicyMethod][2])
+				continue
+			}
 		}
 
 		// check status code
