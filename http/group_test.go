@@ -214,8 +214,9 @@ func TestWorkerHandler_HandleGetGroupByName(t *testing.T) {
 	now := time.Now()
 	testcases := map[string]struct {
 		// API method args
-		org  string
-		name string
+		org    string
+		name   string
+		offset string
 		// Expected result
 		expectedStatusCode int
 		expectedResponse   *api.Group
@@ -246,6 +247,20 @@ func TestWorkerHandler_HandleGetGroupByName(t *testing.T) {
 				Org:      "Org",
 				CreateAt: now,
 				UpdateAt: now,
+			},
+		},
+		"ErrorCaseInvalidRequest": {
+			name:               "group1",
+			org:                "org1",
+			offset:             "-1",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
+			getGroupByNameErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
 			},
 		},
 		"ErrorCaseGroupNotFound": {
@@ -307,6 +322,10 @@ func TestWorkerHandler_HandleGetGroupByName(t *testing.T) {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
 		}
+
+		q := req.URL.Query()
+		q.Add("Offset", test.offset)
+		req.URL.RawQuery = q.Encode()
 
 		res, err := client.Do(req)
 		if err != nil {
@@ -913,8 +932,9 @@ func TestWorkerHandler_HandleUpdateGroup(t *testing.T) {
 func TestWorkerHandler_HandleRemoveGroup(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		org  string
-		name string
+		org    string
+		name   string
+		offset string
 		// Expected result
 		expectedStatusCode int
 		expectedError      api.Error
@@ -925,6 +945,20 @@ func TestWorkerHandler_HandleRemoveGroup(t *testing.T) {
 			org:                "org1",
 			name:               "group1",
 			expectedStatusCode: http.StatusNoContent,
+		},
+		"ErrorCaseInvalidRequest": {
+			org:                "org1",
+			name:               "group1",
+			offset:             "-1",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
+			removeGroupErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
 		},
 		"ErrorCaseGroupNotFound": {
 			org:                "org1",
@@ -989,6 +1023,10 @@ func TestWorkerHandler_HandleRemoveGroup(t *testing.T) {
 			continue
 		}
 
+		q := req.URL.Query()
+		q.Add("Offset", test.offset)
+		req.URL.RawQuery = q.Encode()
+
 		res, err := client.Do(req)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
@@ -1039,6 +1077,7 @@ func TestWorkerHandler_HandleAddMember(t *testing.T) {
 		org       string
 		userID    string
 		groupName string
+		offset    string
 		// Expected result
 		expectedStatusCode int
 		expectedError      api.Error
@@ -1050,6 +1089,21 @@ func TestWorkerHandler_HandleAddMember(t *testing.T) {
 			userID:             "user1",
 			groupName:          "group1",
 			expectedStatusCode: http.StatusNoContent,
+		},
+		"ErrorCaseInvalidRequest": {
+			org:                "org1",
+			userID:             "user1",
+			groupName:          "group1",
+			offset:             "-1",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
+			addMemberErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
 		},
 		"ErrorCaseGroupNotFoundErr": {
 			org:                "org1",
@@ -1146,6 +1200,10 @@ func TestWorkerHandler_HandleAddMember(t *testing.T) {
 			continue
 		}
 
+		q := req.URL.Query()
+		q.Add("Offset", test.offset)
+		req.URL.RawQuery = q.Encode()
+
 		res, err := client.Do(req)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
@@ -1200,6 +1258,7 @@ func TestWorkerHandler_HandleRemoveMember(t *testing.T) {
 		org       string
 		userID    string
 		groupName string
+		offset    string
 		// Expected result
 		expectedStatusCode int
 		expectedError      api.Error
@@ -1211,6 +1270,21 @@ func TestWorkerHandler_HandleRemoveMember(t *testing.T) {
 			userID:             "user1",
 			groupName:          "group1",
 			expectedStatusCode: http.StatusNoContent,
+		},
+		"ErrorCaseInvalidRequest": {
+			org:                "org1",
+			userID:             "user1",
+			groupName:          "group1",
+			offset:             "-1",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
+			removeMemberErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
 		},
 		"ErrorCaseGroupNotFoundErr": {
 			org:                "org1",
@@ -1306,6 +1380,10 @@ func TestWorkerHandler_HandleRemoveMember(t *testing.T) {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
 		}
+
+		q := req.URL.Query()
+		q.Add("Offset", test.offset)
+		req.URL.RawQuery = q.Encode()
 
 		res, err := client.Do(req)
 		if err != nil {
@@ -1530,6 +1608,7 @@ func TestWorkerHandler_HandleAttachPolicyToGroup(t *testing.T) {
 		org        string
 		groupName  string
 		policyName string
+		offset     string
 		// Expected result
 		expectedStatusCode int
 		expectedError      api.Error
@@ -1541,6 +1620,21 @@ func TestWorkerHandler_HandleAttachPolicyToGroup(t *testing.T) {
 			groupName:          "group1",
 			policyName:         "policy1",
 			expectedStatusCode: http.StatusNoContent,
+		},
+		"ErrorCaseInvalidRequest": {
+			org:                "org1",
+			groupName:          "group1",
+			policyName:         "policy1",
+			offset:             "-1",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
+			attachGroupPolicyErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
 		},
 		"ErrorCaseGroupNotFoundErr": {
 			org:                "org1",
@@ -1637,6 +1731,10 @@ func TestWorkerHandler_HandleAttachPolicyToGroup(t *testing.T) {
 			continue
 		}
 
+		q := req.URL.Query()
+		q.Add("Offset", test.offset)
+		req.URL.RawQuery = q.Encode()
+
 		res, err := client.Do(req)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
@@ -1691,6 +1789,7 @@ func TestWorkerHandler_HandleDetachPolicyToGroup(t *testing.T) {
 		org        string
 		groupName  string
 		policyName string
+		offset     string
 		// Expected result
 		expectedStatusCode int
 		expectedError      api.Error
@@ -1702,6 +1801,21 @@ func TestWorkerHandler_HandleDetachPolicyToGroup(t *testing.T) {
 			groupName:          "group1",
 			policyName:         "policy1",
 			expectedStatusCode: http.StatusNoContent,
+		},
+		"ErrorCaseInvalidRequest": {
+			org:                "org1",
+			groupName:          "group1",
+			policyName:         "policy1",
+			offset:             "-1",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
+			detachGroupPolicyErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
 		},
 		"ErrorCaseGroupNotFoundErr": {
 			org:                "org1",
@@ -1798,6 +1912,10 @@ func TestWorkerHandler_HandleDetachPolicyToGroup(t *testing.T) {
 			continue
 		}
 
+		q := req.URL.Query()
+		q.Add("Offset", test.offset)
+		req.URL.RawQuery = q.Encode()
+
 		res, err := client.Do(req)
 		if err != nil {
 			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
@@ -1806,15 +1924,15 @@ func TestWorkerHandler_HandleDetachPolicyToGroup(t *testing.T) {
 
 		// Check received parameters
 		if testApi.ArgsIn[DetachPolicyToGroupMethod][1] != test.org {
-			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[AttachPolicyToGroupMethod][1])
+			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[DetachPolicyToGroupMethod][1])
 			continue
 		}
 		if testApi.ArgsIn[DetachPolicyToGroupMethod][2] != test.groupName {
-			t.Errorf("Test case %v. Received different GroupName (wanted:%v / received:%v)", n, test.groupName, testApi.ArgsIn[AttachPolicyToGroupMethod][2])
+			t.Errorf("Test case %v. Received different GroupName (wanted:%v / received:%v)", n, test.groupName, testApi.ArgsIn[DetachPolicyToGroupMethod][2])
 			continue
 		}
 		if testApi.ArgsIn[DetachPolicyToGroupMethod][3] != test.policyName {
-			t.Errorf("Test case %v. Received different policyName (wanted:%v / received:%v)", n, test.policyName, testApi.ArgsIn[AttachPolicyToGroupMethod][3])
+			t.Errorf("Test case %v. Received different policyName (wanted:%v / received:%v)", n, test.policyName, testApi.ArgsIn[DetachPolicyToGroupMethod][3])
 			continue
 		}
 
