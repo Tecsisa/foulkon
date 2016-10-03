@@ -214,9 +214,10 @@ func TestWorkerHandler_HandleGetGroupByName(t *testing.T) {
 	now := time.Now()
 	testcases := map[string]struct {
 		// API method args
-		org    string
-		name   string
-		offset string
+		org          string
+		name         string
+		offset       string
+		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
 		expectedResponse   *api.Group
@@ -253,6 +254,7 @@ func TestWorkerHandler_HandleGetGroupByName(t *testing.T) {
 			name:               "group1",
 			org:                "org1",
 			offset:             "-1",
+			ignoreArgsIn:       true,
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
@@ -333,16 +335,17 @@ func TestWorkerHandler_HandleGetGroupByName(t *testing.T) {
 			continue
 		}
 
-		// Check received parameters
-		if testApi.ArgsIn[GetGroupByNameMethod][1] != test.org {
-			t.Errorf("Test case %v. Received different org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[GetGroupByNameMethod][1])
-			continue
+		if !test.ignoreArgsIn {
+			// Check received parameters
+			if testApi.ArgsIn[GetGroupByNameMethod][1] != test.org {
+				t.Errorf("Test case %v. Received different org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[GetGroupByNameMethod][1])
+				continue
+			}
+			if testApi.ArgsIn[GetGroupByNameMethod][2] != test.name {
+				t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.name, testApi.ArgsIn[GetGroupByNameMethod][2])
+				continue
+			}
 		}
-		if testApi.ArgsIn[GetGroupByNameMethod][2] != test.name {
-			t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.name, testApi.ArgsIn[GetGroupByNameMethod][2])
-			continue
-		}
-
 		// check status code
 		if test.expectedStatusCode != res.StatusCode {
 			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
@@ -932,9 +935,10 @@ func TestWorkerHandler_HandleUpdateGroup(t *testing.T) {
 func TestWorkerHandler_HandleRemoveGroup(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		org    string
-		name   string
-		offset string
+		org          string
+		name         string
+		offset       string
+		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
 		expectedError      api.Error
@@ -950,6 +954,7 @@ func TestWorkerHandler_HandleRemoveGroup(t *testing.T) {
 			org:                "org1",
 			name:               "group1",
 			offset:             "-1",
+			ignoreArgsIn:       true,
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
@@ -1033,14 +1038,16 @@ func TestWorkerHandler_HandleRemoveGroup(t *testing.T) {
 			continue
 		}
 
-		// Check received parameters
-		if testApi.ArgsIn[RemoveGroupMethod][1] != test.org {
-			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[RemoveGroupMethod][1])
-			continue
-		}
-		if testApi.ArgsIn[RemoveGroupMethod][2] != test.name {
-			t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.name, testApi.ArgsIn[RemoveGroupMethod][2])
-			continue
+		if !test.ignoreArgsIn {
+			// Check received parameters
+			if testApi.ArgsIn[RemoveGroupMethod][1] != test.org {
+				t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[RemoveGroupMethod][1])
+				continue
+			}
+			if testApi.ArgsIn[RemoveGroupMethod][2] != test.name {
+				t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.name, testApi.ArgsIn[RemoveGroupMethod][2])
+				continue
+			}
 		}
 
 		// check status code
@@ -1074,10 +1081,11 @@ func TestWorkerHandler_HandleRemoveGroup(t *testing.T) {
 func TestWorkerHandler_HandleAddMember(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		org       string
-		userID    string
-		groupName string
-		offset    string
+		org          string
+		userID       string
+		groupName    string
+		offset       string
+		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
 		expectedError      api.Error
@@ -1095,6 +1103,7 @@ func TestWorkerHandler_HandleAddMember(t *testing.T) {
 			userID:             "user1",
 			groupName:          "group1",
 			offset:             "-1",
+			ignoreArgsIn:       true,
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
@@ -1209,19 +1218,20 @@ func TestWorkerHandler_HandleAddMember(t *testing.T) {
 			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
 			continue
 		}
-
-		// Check received parameters
-		if testApi.ArgsIn[AddMemberMethod][1] != test.userID {
-			t.Errorf("Test case %v. Received different UserID (wanted:%v / received:%v)", n, test.userID, testApi.ArgsIn[AddMemberMethod][1])
-			continue
-		}
-		if testApi.ArgsIn[AddMemberMethod][2] != test.groupName {
-			t.Errorf("Test case %v. Received different GroupName (wanted:%v / received:%v)", n, test.groupName, testApi.ArgsIn[AddMemberMethod][2])
-			continue
-		}
-		if testApi.ArgsIn[AddMemberMethod][3] != test.org {
-			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[AddMemberMethod][3])
-			continue
+		if !test.ignoreArgsIn {
+			// Check received parameters
+			if testApi.ArgsIn[AddMemberMethod][1] != test.userID {
+				t.Errorf("Test case %v. Received different UserID (wanted:%v / received:%v)", n, test.userID, testApi.ArgsIn[AddMemberMethod][1])
+				continue
+			}
+			if testApi.ArgsIn[AddMemberMethod][2] != test.groupName {
+				t.Errorf("Test case %v. Received different GroupName (wanted:%v / received:%v)", n, test.groupName, testApi.ArgsIn[AddMemberMethod][2])
+				continue
+			}
+			if testApi.ArgsIn[AddMemberMethod][3] != test.org {
+				t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[AddMemberMethod][3])
+				continue
+			}
 		}
 
 		// check status code
@@ -1255,10 +1265,11 @@ func TestWorkerHandler_HandleAddMember(t *testing.T) {
 func TestWorkerHandler_HandleRemoveMember(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		org       string
-		userID    string
-		groupName string
-		offset    string
+		org          string
+		userID       string
+		groupName    string
+		offset       string
+		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
 		expectedError      api.Error
@@ -1276,6 +1287,7 @@ func TestWorkerHandler_HandleRemoveMember(t *testing.T) {
 			userID:             "user1",
 			groupName:          "group1",
 			offset:             "-1",
+			ignoreArgsIn:       true,
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
@@ -1391,18 +1403,20 @@ func TestWorkerHandler_HandleRemoveMember(t *testing.T) {
 			continue
 		}
 
-		// Check received parameters
-		if testApi.ArgsIn[RemoveMemberMethod][1] != test.userID {
-			t.Errorf("Test case %v. Received different UserID (wanted:%v / received:%v)", n, test.userID, testApi.ArgsIn[RemoveMemberMethod][2])
-			continue
-		}
-		if testApi.ArgsIn[RemoveMemberMethod][2] != test.groupName {
-			t.Errorf("Test case %v. Received different GroupName (wanted:%v / received:%v)", n, test.groupName, testApi.ArgsIn[RemoveMemberMethod][2])
-			continue
-		}
-		if testApi.ArgsIn[RemoveMemberMethod][3] != test.org {
-			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[RemoveMemberMethod][1])
-			continue
+		if !test.ignoreArgsIn {
+			// Check received parameters
+			if testApi.ArgsIn[RemoveMemberMethod][1] != test.userID {
+				t.Errorf("Test case %v. Received different UserID (wanted:%v / received:%v)", n, test.userID, testApi.ArgsIn[RemoveMemberMethod][2])
+				continue
+			}
+			if testApi.ArgsIn[RemoveMemberMethod][2] != test.groupName {
+				t.Errorf("Test case %v. Received different GroupName (wanted:%v / received:%v)", n, test.groupName, testApi.ArgsIn[RemoveMemberMethod][2])
+				continue
+			}
+			if testApi.ArgsIn[RemoveMemberMethod][3] != test.org {
+				t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[RemoveMemberMethod][1])
+				continue
+			}
 		}
 
 		// check status code
@@ -1605,10 +1619,11 @@ func TestWorkerHandler_HandleListMembers(t *testing.T) {
 func TestWorkerHandler_HandleAttachPolicyToGroup(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		org        string
-		groupName  string
-		policyName string
-		offset     string
+		org          string
+		groupName    string
+		policyName   string
+		offset       string
+		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
 		expectedError      api.Error
@@ -1626,6 +1641,7 @@ func TestWorkerHandler_HandleAttachPolicyToGroup(t *testing.T) {
 			groupName:          "group1",
 			policyName:         "policy1",
 			offset:             "-1",
+			ignoreArgsIn:       true,
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
@@ -1741,18 +1757,20 @@ func TestWorkerHandler_HandleAttachPolicyToGroup(t *testing.T) {
 			continue
 		}
 
-		// Check received parameters
-		if testApi.ArgsIn[AttachPolicyToGroupMethod][1] != test.org {
-			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[AttachPolicyToGroupMethod][1])
-			continue
-		}
-		if testApi.ArgsIn[AttachPolicyToGroupMethod][2] != test.groupName {
-			t.Errorf("Test case %v. Received different GroupName (wanted:%v / received:%v)", n, test.groupName, testApi.ArgsIn[AttachPolicyToGroupMethod][2])
-			continue
-		}
-		if testApi.ArgsIn[AttachPolicyToGroupMethod][3] != test.policyName {
-			t.Errorf("Test case %v. Received different policyName (wanted:%v / received:%v)", n, test.policyName, testApi.ArgsIn[AttachPolicyToGroupMethod][3])
-			continue
+		if !test.ignoreArgsIn {
+			// Check received parameters
+			if testApi.ArgsIn[AttachPolicyToGroupMethod][1] != test.org {
+				t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[AttachPolicyToGroupMethod][1])
+				continue
+			}
+			if testApi.ArgsIn[AttachPolicyToGroupMethod][2] != test.groupName {
+				t.Errorf("Test case %v. Received different GroupName (wanted:%v / received:%v)", n, test.groupName, testApi.ArgsIn[AttachPolicyToGroupMethod][2])
+				continue
+			}
+			if testApi.ArgsIn[AttachPolicyToGroupMethod][3] != test.policyName {
+				t.Errorf("Test case %v. Received different policyName (wanted:%v / received:%v)", n, test.policyName, testApi.ArgsIn[AttachPolicyToGroupMethod][3])
+				continue
+			}
 		}
 
 		// check status code
@@ -1786,10 +1804,11 @@ func TestWorkerHandler_HandleAttachPolicyToGroup(t *testing.T) {
 func TestWorkerHandler_HandleDetachPolicyToGroup(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		org        string
-		groupName  string
-		policyName string
-		offset     string
+		org          string
+		groupName    string
+		policyName   string
+		offset       string
+		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
 		expectedError      api.Error
@@ -1807,6 +1826,7 @@ func TestWorkerHandler_HandleDetachPolicyToGroup(t *testing.T) {
 			groupName:          "group1",
 			policyName:         "policy1",
 			offset:             "-1",
+			ignoreArgsIn:       true,
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
@@ -1922,18 +1942,20 @@ func TestWorkerHandler_HandleDetachPolicyToGroup(t *testing.T) {
 			continue
 		}
 
-		// Check received parameters
-		if testApi.ArgsIn[DetachPolicyToGroupMethod][1] != test.org {
-			t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[DetachPolicyToGroupMethod][1])
-			continue
-		}
-		if testApi.ArgsIn[DetachPolicyToGroupMethod][2] != test.groupName {
-			t.Errorf("Test case %v. Received different GroupName (wanted:%v / received:%v)", n, test.groupName, testApi.ArgsIn[DetachPolicyToGroupMethod][2])
-			continue
-		}
-		if testApi.ArgsIn[DetachPolicyToGroupMethod][3] != test.policyName {
-			t.Errorf("Test case %v. Received different policyName (wanted:%v / received:%v)", n, test.policyName, testApi.ArgsIn[DetachPolicyToGroupMethod][3])
-			continue
+		if !test.ignoreArgsIn {
+			// Check received parameters
+			if testApi.ArgsIn[DetachPolicyToGroupMethod][1] != test.org {
+				t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[DetachPolicyToGroupMethod][1])
+				continue
+			}
+			if testApi.ArgsIn[DetachPolicyToGroupMethod][2] != test.groupName {
+				t.Errorf("Test case %v. Received different GroupName (wanted:%v / received:%v)", n, test.groupName, testApi.ArgsIn[DetachPolicyToGroupMethod][2])
+				continue
+			}
+			if testApi.ArgsIn[DetachPolicyToGroupMethod][3] != test.policyName {
+				t.Errorf("Test case %v. Received different policyName (wanted:%v / received:%v)", n, test.policyName, testApi.ArgsIn[DetachPolicyToGroupMethod][3])
+				continue
+			}
 		}
 
 		// check status code

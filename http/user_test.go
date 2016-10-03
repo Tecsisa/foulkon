@@ -204,8 +204,9 @@ func TestWorkerHandler_HandleGetUserByExternalID(t *testing.T) {
 	now := time.Now()
 	testcases := map[string]struct {
 		// API method args
-		externalID string
-		offset     string
+		externalID   string
+		offset       string
+		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
 		expectedResponse   *api.User
@@ -238,6 +239,7 @@ func TestWorkerHandler_HandleGetUserByExternalID(t *testing.T) {
 		"ErrorCaseInvalidRequest": {
 			externalID:         "UserID",
 			offset:             "-1",
+			ignoreArgsIn:       true,
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
@@ -314,10 +316,12 @@ func TestWorkerHandler_HandleGetUserByExternalID(t *testing.T) {
 			continue
 		}
 
-		// Check received parameters
-		if testApi.ArgsIn[GetUserByExternalIdMethod][1] != test.externalID {
-			t.Errorf("Test case %v. Received different ExternalID (wanted:%v / received:%v)", n, test.externalID, testApi.ArgsIn[GetUserByExternalIdMethod][1])
-			continue
+		if !test.ignoreArgsIn {
+			// Check received parameters
+			if testApi.ArgsIn[GetUserByExternalIdMethod][1] != test.externalID {
+				t.Errorf("Test case %v. Received different ExternalID (wanted:%v / received:%v)", n, test.externalID, testApi.ArgsIn[GetUserByExternalIdMethod][1])
+				continue
+			}
 		}
 
 		// check status code
@@ -699,8 +703,9 @@ func TestWorkerHandler_HandleUpdateUser(t *testing.T) {
 func TestWorkerHandler_HandleRemoveUser(t *testing.T) {
 	testcases := map[string]struct {
 		// API method args
-		externalID string
-		offset     string
+		externalID   string
+		offset       string
+		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
 		expectedError      api.Error
@@ -714,6 +719,7 @@ func TestWorkerHandler_HandleRemoveUser(t *testing.T) {
 		"ErrorCaseInvalidRequest": {
 			externalID:         "UserID",
 			offset:             "-1",
+			ignoreArgsIn:       true,
 			expectedStatusCode: http.StatusBadRequest,
 			expectedError: api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
@@ -793,10 +799,12 @@ func TestWorkerHandler_HandleRemoveUser(t *testing.T) {
 			continue
 		}
 
-		// Check received parameters
-		if testApi.ArgsIn[RemoveUserMethod][1] != test.externalID {
-			t.Errorf("Test case %v. Received different ExternalID (wanted:%v / received:%v)", n, test.externalID, testApi.ArgsIn[RemoveUserMethod][1])
-			continue
+		if !test.ignoreArgsIn {
+			// Check received parameters
+			if testApi.ArgsIn[RemoveUserMethod][1] != test.externalID {
+				t.Errorf("Test case %v. Received different ExternalID (wanted:%v / received:%v)", n, test.externalID, testApi.ArgsIn[RemoveUserMethod][1])
+				continue
+			}
 		}
 
 		// check status code
