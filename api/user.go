@@ -145,27 +145,11 @@ func (api AuthAPI) GetUserByExternalID(requestInfo RequestInfo, externalId strin
 func (api AuthAPI) ListUsers(requestInfo RequestInfo, filter *Filter) ([]string, int, error) {
 	// Check parameters
 	var total int
-	if len(filter.PathPrefix) > 0 && !IsValidPath(filter.PathPrefix) {
-		return nil, total, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: PathPrefix %v", filter.PathPrefix),
-		}
+	err := validateFilter(filter)
+	if err != nil {
+		return nil, total, err
 	}
 
-	if len(filter.PathPrefix) == 0 {
-		filter.PathPrefix = "/"
-	}
-
-	if filter.Limit > MAX_LIMIT_SIZE {
-		return nil, total, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Limit %v, max limit allowed: %v", filter.Limit, MAX_LIMIT_SIZE),
-		}
-	}
-
-	if filter.Limit == 0 {
-		filter.Limit = DEFAULT_LIMIT_SIZE
-	}
 	// Retrieve users with specified path prefix
 	users, total, err := api.UserRepo.GetUsersFiltered(filter)
 
@@ -303,15 +287,9 @@ func (api AuthAPI) RemoveUser(requestInfo RequestInfo, externalId string) error 
 func (api AuthAPI) ListGroupsByUser(requestInfo RequestInfo, filter *Filter) ([]GroupIdentity, int, error) {
 	// Check parameters
 	var total int
-	if filter.Limit > MAX_LIMIT_SIZE {
-		return nil, total, &Error{
-			Code:    INVALID_PARAMETER_ERROR,
-			Message: fmt.Sprintf("Invalid parameter: Limit %v, max limit allowed: %v", filter.Limit, MAX_LIMIT_SIZE),
-		}
-	}
-
-	if filter.Limit == 0 {
-		filter.Limit = DEFAULT_LIMIT_SIZE
+	err := validateFilter(filter)
+	if err != nil {
+		return nil, total, err
 	}
 
 	// Call repo to retrieve the user

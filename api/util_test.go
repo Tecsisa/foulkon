@@ -576,3 +576,113 @@ func TestAreValidResources(t *testing.T) {
 		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
+
+func TestValidateFilter(t *testing.T) {
+	testcases := map[string]struct {
+		// Method args
+		filter *Filter
+		// Expected results
+		wantError error
+	}{
+		"OKCaseAllow": {
+			filter: &Filter{
+				ExternalID: "123",
+				GroupName:  "grp",
+				Org:        "org",
+				PolicyName: "p1",
+				Offset:     2,
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			filter: &Filter{
+				ExternalID: "123",
+				GroupName:  "grp",
+				Org:        "!*@~#",
+				PolicyName: "p1",
+				Limit:      10,
+				Offset:     2,
+				PathPrefix: "/path/",
+			},
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: org !*@~#",
+			},
+		},
+		"ErrorCaseInvalidPath": {
+			filter: &Filter{
+				ExternalID: "123",
+				GroupName:  "grp",
+				Org:        "org",
+				PolicyName: "p1",
+				Limit:      10,
+				Offset:     2,
+				PathPrefix: "fail",
+			},
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: pathPrefix fail",
+			},
+		},
+		"ErrorCaseInvalidLimit": {
+			filter: &Filter{
+				ExternalID: "123",
+				GroupName:  "grp",
+				Org:        "org",
+				PolicyName: "p1",
+				Limit:      5000,
+				Offset:     2,
+			},
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: fmt.Sprintf("Invalid parameter: limit 5000, max limit allowed: %v", MAX_LIMIT_SIZE),
+			},
+		},
+		"ErrorCaseInvalidGroupName": {
+			filter: &Filter{
+				ExternalID: "123",
+				GroupName:  "#@!^*",
+				Org:        "org",
+				PolicyName: "p1",
+				Limit:      5000,
+				Offset:     2,
+			},
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: fmt.Sprintf("Invalid parameter: group #@!^*"),
+			},
+		},
+		"ErrorCaseInvalidExtID": {
+			filter: &Filter{
+				ExternalID: "#@!^*",
+				GroupName:  "grp",
+				Org:        "org",
+				PolicyName: "p1",
+				Limit:      5000,
+				Offset:     2,
+			},
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: fmt.Sprintf("Invalid parameter: externalID #@!^*"),
+			},
+		},
+		"ErrorCaseInvalidPolicyName": {
+			filter: &Filter{
+				ExternalID: "123",
+				GroupName:  "grp",
+				Org:        "org",
+				PolicyName: "#@!^*",
+				Limit:      5000,
+				Offset:     2,
+			},
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: fmt.Sprintf("Invalid parameter: policy #@!^*"),
+			},
+		},
+	}
+
+	for x, testcase := range testcases {
+		err := validateFilter(testcase.filter)
+		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
+	}
+}

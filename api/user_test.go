@@ -652,7 +652,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: "Invalid parameter: Limit 10000, max limit allowed: 1000",
+				Message: "Invalid parameter: limit 10000, max limit allowed: 1000",
 			},
 		},
 		"OKCaseNoResourcesAllowed": {
@@ -732,7 +732,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: "Invalid parameter: PathPrefix /^*$**~#!/",
+				Message: "Invalid parameter: pathPrefix /^*$**~#!/",
 			},
 		},
 		"ErrorCaseNoAuth": {
@@ -1764,7 +1764,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: "Invalid parameter: Limit 10000, max limit allowed: 1000",
+				Message: "Invalid parameter: limit 10000, max limit allowed: 1000",
 			},
 		},
 		"ErrorCaseNoAuth": {
