@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"fmt"
+
 	"github.com/Tecsisa/foulkon/database"
 )
 

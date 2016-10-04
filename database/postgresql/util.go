@@ -1,8 +1,9 @@
 package postgresql
 
 import (
-	"github.com/Tecsisa/foulkon/api"
 	"time"
+
+	"github.com/Tecsisa/foulkon/api"
 )
 
 // GroupUser struct contains (Group-User) relationship

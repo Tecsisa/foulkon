@@ -1,10 +1,11 @@
 package postgresql
 
 import (
-	"github.com/Tecsisa/foulkon/api"
-	"github.com/kylelemons/godebug/pretty"
 	"testing"
 	"time"
+
+	"github.com/Tecsisa/foulkon/api"
+	"github.com/kylelemons/godebug/pretty"
 )
 
 func TestGroupUser_GetUser(t *testing.T) {

@@ -2,10 +2,10 @@ package api
 
 import (
 	"fmt"
-	//"github.com/Sirupsen/logrus"
-	"github.com/Sirupsen/logrus"
 	"regexp"
 	"strings"
+
+	"github.com/Sirupsen/logrus"
 )
 
 const (
