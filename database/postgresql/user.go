@@ -11,7 +11,6 @@ import (
 // USER REPOSITORY IMPLEMENTATION
 
 func (u PostgresRepo) AddUser(user api.User) (*api.User, error) {
-
 	// Create user model
 	userDB := &User{
 		ID:         user.ID,
@@ -87,9 +86,11 @@ func (u PostgresRepo) GetUsersFiltered(filter *api.Filter) ([]api.User, int, err
 	users := []User{}
 	query := u.Dbmap
 
-	// Check if path is filled, else it doesn't use it to filter
 	if len(filter.PathPrefix) > 0 {
 		query = query.Where("path like ?", filter.PathPrefix+"%")
+	}
+	if len(filter.OrderBy) > 0 {
+		query = query.Order(filter.OrderBy)
 	}
 
 	// Error handling
@@ -113,7 +114,6 @@ func (u PostgresRepo) GetUsersFiltered(filter *api.Filter) ([]api.User, int, err
 }
 
 func (u PostgresRepo) UpdateUser(user api.User) (*api.User, error) {
-
 	userDB := User{
 		ID:         user.ID,
 		ExternalID: user.ExternalID,
@@ -170,7 +170,13 @@ func (u PostgresRepo) RemoveUser(id string) error {
 func (u PostgresRepo) GetGroupsByUserID(id string, filter *api.Filter) ([]api.UserGroupRelation, int, error) {
 	var total int
 	relations := []GroupUserRelation{}
-	query := u.Dbmap.Where("user_id like ?", id).Find(&relations).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&relations)
+	query := u.Dbmap
+
+	if len(filter.OrderBy) > 0 {
+		query = query.Order(filter.OrderBy)
+	}
+
+	query.Where("user_id like ?", id).Find(&relations).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&relations)
 
 	// Error Handling
 	if err := query.Error; err != nil {

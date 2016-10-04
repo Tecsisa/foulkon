@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Tecsisa/foulkon/api"
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq" //GORM needs to import the lib/pq driver
 )
@@ -135,4 +136,25 @@ type GroupPolicyRelation struct {
 // GroupPolicyRelation's table name
 func (GroupPolicyRelation) TableName() string {
 	return "group_policy_relations"
+}
+
+func (u PostgresRepo) OrderByValidColumns(action string) []string {
+	switch action {
+	case api.USER_ACTION_LIST_USERS:
+		return []string{"path", "external_id", "create_at", "update_at", "urn"}
+	case api.USER_ACTION_LIST_GROUPS_FOR_USER:
+		return []string{"create_at"}
+	case api.GROUP_ACTION_LIST_GROUPS:
+		return []string{"name", "path", "org", "create_at", "update_at", "urn"}
+	case api.GROUP_ACTION_LIST_MEMBERS:
+		return []string{"create_at"}
+	case api.GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES:
+		return []string{"create_at"}
+	case api.POLICY_ACTION_LIST_POLICIES:
+		return []string{"name", "path", "org", "create_at", "update_at", "urn"}
+	case api.POLICY_ACTION_LIST_ATTACHED_GROUPS:
+		return []string{"create_at"}
+	default:
+		return nil
+	}
 }

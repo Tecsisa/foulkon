@@ -58,6 +58,7 @@ const (
 var (
 	rUserExtID, _          = regexp.Compile(`^[\w+.@=\-_]+$`)
 	rName, _               = regexp.Compile(`^[\w\-_]+$`)
+	rOrder, _              = regexp.Compile(`^\w+\-(asc|desc)$`)
 	rOrg, _                = regexp.Compile(`^[\w\-_]+$`)
 	rPath, _               = regexp.Compile(`^/$|^/[\w+/\-_]+\w+/$`)
 	rPathExclude, _        = regexp.Compile(`[/]{2,}`)
@@ -95,9 +96,14 @@ func IsValidOrg(org string) bool {
 	return rOrg.MatchString(org) && len(org) < MAX_NAME_LENGTH
 }
 
-// this func validates group and policy names
+// IsValidName validates group and policy names
 func IsValidName(name string) bool {
 	return rName.MatchString(name) && len(name) < MAX_NAME_LENGTH
+}
+
+// IsValidOrder validates the OrderBy query param
+func IsValidOrder(order string) bool {
+	return rOrder.MatchString(order) && len(order) < MAX_NAME_LENGTH
 }
 
 func IsValidPath(path string) bool {
@@ -230,7 +236,7 @@ func AreValidStatements(statements *[]Statement) error {
 	return nil
 }
 
-func validateFilter(filter *Filter) error {
+func validateFilter(filter *Filter, validColumns []string) error {
 	if len(filter.Org) > 0 && !IsValidOrg(filter.Org) {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -274,6 +280,30 @@ func validateFilter(filter *Filter) error {
 		return &Error{
 			Code:    INVALID_PARAMETER_ERROR,
 			Message: fmt.Sprintf("Invalid parameter: limit %v, max limit allowed: %v", filter.Limit, MAX_LIMIT_SIZE),
+		}
+	}
+
+	if len(filter.OrderBy) > 0 {
+		if !IsValidOrder(filter.OrderBy) {
+			return &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: fmt.Sprintf("Invalid parameter: OrderBy %v", filter.OrderBy),
+			}
+		} else {
+			column := strings.Split(filter.OrderBy, "-")[0]
+			for _, validCol := range validColumns {
+				if column == validCol {
+					// replace "-" with space to match GoRM syntax
+					filter.OrderBy = strings.Replace(filter.OrderBy, "-", " ", 1)
+					// if the column matches, finish func
+					return nil
+				}
+			}
+
+			return &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: fmt.Sprintf("Invalid parameter: OrderBy column %v", column),
+			}
 		}
 	}
 

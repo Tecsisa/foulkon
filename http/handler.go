@@ -439,5 +439,6 @@ func getFilterData(r *http.Request, ps httprouter.Params) (*api.Filter, error) {
 		GroupName:  ps.ByName(GROUP_NAME),
 		Offset:     offset,
 		Limit:      limit,
+		OrderBy:    r.URL.Query().Get("OrderBy"),
 	}, nil
 }

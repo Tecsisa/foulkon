@@ -46,6 +46,8 @@ type Filter struct {
 	// Pagination
 	Offset int
 	Limit  int
+	// Sorting
+	OrderBy string
 }
 
 // API INTERFACES WITH AUTHORIZATION
@@ -194,6 +196,9 @@ type UserRepo interface {
 	// Retrieve groups that belong to the user. Throw error
 	// if there are problems with database.
 	GetGroupsByUserID(id string, filter *Filter) ([]UserGroupRelation, int, error)
+
+	// OrderByValidColumns returns valid columns that you can use in OrderBy
+	OrderByValidColumns(action string) []string
 }
 
 // GroupRepo contains all database operations
@@ -245,6 +250,9 @@ type GroupRepo interface {
 
 	// Retrieve policies that are attached to the group. Throw error if there are problems with database.
 	GetAttachedPolicies(groupID string, filter *Filter) ([]PolicyGroupRelation, int, error)
+
+	// OrderByValidColumns returns valid columns that you can use in OrderBy
+	OrderByValidColumns(action string) []string
 }
 
 // PolicyRepo contains all database operations
@@ -269,4 +277,7 @@ type PolicyRepo interface {
 
 	// Retrieve groups that are attached to the policy. Throw error if there are problems with database.
 	GetAttachedGroups(policyID string, filter *Filter) ([]PolicyGroupRelation, int, error)
+
+	// OrderByValidColumns returns valid columns that you can use in OrderBy
+	OrderByValidColumns(action string) []string
 }

@@ -11,7 +11,6 @@ import (
 // GROUP REPOSITORY IMPLEMENTATION
 
 func (g PostgresRepo) AddGroup(group api.Group) (*api.Group, error) {
-
 	// Create group model
 	groupDB := &Group{
 		ID:       group.ID,
@@ -87,12 +86,17 @@ func (g PostgresRepo) GetGroupsFiltered(filter *api.Filter) ([]api.Group, int, e
 	var total int
 	groups := []Group{}
 	query := g.Dbmap
+
 	if len(filter.Org) > 0 {
 		query = query.Where("org like ? ", filter.Org)
 	}
 	if len(filter.PathPrefix) > 0 {
 		query = query.Where("path like ? ", filter.PathPrefix+"%")
 	}
+	if len(filter.OrderBy) > 0 {
+		query = query.Order(filter.OrderBy)
+	}
+
 	// Error handling
 	if err := query.Find(&groups).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&groups).Error; err != nil {
 		return nil, total, &database.Error{
@@ -115,7 +119,6 @@ func (g PostgresRepo) GetGroupsFiltered(filter *api.Filter) ([]api.Group, int, e
 }
 
 func (g PostgresRepo) UpdateGroup(group api.Group) (*api.Group, error) {
-
 	groupDB := Group{
 		ID:       group.ID,
 		Name:     group.Name,
@@ -149,7 +152,6 @@ func (g PostgresRepo) UpdateGroup(group api.Group) (*api.Group, error) {
 }
 
 func (g PostgresRepo) RemoveGroup(id string) error {
-
 	transaction := g.Dbmap.Begin()
 
 	// Delete group
@@ -187,7 +189,6 @@ func (g PostgresRepo) RemoveGroup(id string) error {
 }
 
 func (g PostgresRepo) AddMember(userID string, groupID string) error {
-
 	// Create relation
 	relation := &GroupUserRelation{
 		UserID:   userID,
@@ -246,6 +247,10 @@ func (g PostgresRepo) GetGroupMembers(groupID string, filter *api.Filter) ([]api
 	var total int
 	members := []GroupUserRelation{}
 	query := g.Dbmap.Where("group_id like ?", groupID)
+
+	if len(filter.OrderBy) > 0 {
+		query = query.Order(filter.OrderBy)
+	}
 
 	// Error handling
 	if err := query.Find(&members).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&members).Error; err != nil {
@@ -341,6 +346,10 @@ func (g PostgresRepo) GetAttachedPolicies(groupID string, filter *api.Filter) ([
 	var total int
 	relations := []GroupPolicyRelation{}
 	query := g.Dbmap.Where("group_id like ?", groupID)
+
+	if len(filter.OrderBy) > 0 {
+		query = query.Order(filter.OrderBy)
+	}
 
 	// Error Handling
 	if err := query.Find(&relations).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&relations).Error; err != nil {

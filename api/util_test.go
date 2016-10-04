@@ -580,7 +580,8 @@ func TestAreValidResources(t *testing.T) {
 func TestValidateFilter(t *testing.T) {
 	testcases := map[string]struct {
 		// Method args
-		filter *Filter
+		filter              *Filter
+		OrderByValidColumns []string
 		// Expected results
 		wantError error
 	}{
@@ -591,7 +592,9 @@ func TestValidateFilter(t *testing.T) {
 				Org:        "org",
 				PolicyName: "p1",
 				Offset:     2,
+				OrderBy:    "name-desc",
 			},
+			OrderByValidColumns: []string{"name", "test"},
 		},
 		"ErrorCaseInvalidOrg": {
 			filter: &Filter{
@@ -679,10 +682,41 @@ func TestValidateFilter(t *testing.T) {
 				Message: fmt.Sprintf("Invalid parameter: policy #@!^*"),
 			},
 		},
+		"ErrorCaseInvalidOrderBy": {
+			filter: &Filter{
+				ExternalID: "123",
+				GroupName:  "grp",
+				Org:        "org",
+				PolicyName: "asd",
+				Limit:      10,
+				Offset:     2,
+				OrderBy:    "fail-fail",
+			},
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: fmt.Sprintf("Invalid parameter: OrderBy fail-fail"),
+			},
+		},
+		"ErrorCaseInvalidOrderByColumn": {
+			filter: &Filter{
+				ExternalID: "123",
+				GroupName:  "grp",
+				Org:        "org",
+				PolicyName: "asd",
+				Limit:      10,
+				Offset:     2,
+				OrderBy:    "xxx-asc",
+			},
+			OrderByValidColumns: []string{"val1", "val2"},
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: fmt.Sprintf("Invalid parameter: OrderBy column xxx"),
+			},
+		},
 	}
 
 	for x, testcase := range testcases {
-		err := validateFilter(testcase.filter)
+		err := validateFilter(testcase.filter, testcase.OrderByValidColumns)
 		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }

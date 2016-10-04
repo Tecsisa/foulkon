@@ -195,7 +195,8 @@ func (api AuthAPI) GetPolicyByName(requestInfo RequestInfo, org string, policyNa
 func (api AuthAPI) ListPolicies(requestInfo RequestInfo, filter *Filter) ([]PolicyIdentity, int, error) {
 	// Validate fields
 	var total int
-	err := validateFilter(filter)
+	orderByValidColumns := api.UserRepo.OrderByValidColumns(POLICY_ACTION_LIST_POLICIES)
+	err := validateFilter(filter, orderByValidColumns)
 	if err != nil {
 		return nil, total, err
 	}
@@ -381,7 +382,8 @@ func (api AuthAPI) RemovePolicy(requestInfo RequestInfo, org string, name string
 func (api AuthAPI) ListAttachedGroups(requestInfo RequestInfo, filter *Filter) ([]PolicyGroups, int, error) {
 	// Validate fields
 	var total int
-	err := validateFilter(filter)
+	orderByValidColumns := api.UserRepo.OrderByValidColumns(POLICY_ACTION_LIST_ATTACHED_GROUPS)
+	err := validateFilter(filter, orderByValidColumns)
 	if err != nil {
 		return nil, total, err
 	}
