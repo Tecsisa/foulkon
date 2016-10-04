@@ -117,7 +117,7 @@ type GroupAPI interface {
 	// group doesn't exist, policy isn't attached to the group or unexpected error happen.
 	DetachPolicyToGroup(requestInfo RequestInfo, org string, groupName string, policyName string) error
 
-	// Retrieve name of policies that are attached to the group. Throw error if the input parameters are invalid,
+	// Retrieve policies that are attached to the group. Throw error if the input parameters are invalid,
 	// group doesn't exist or unexpected error happen.
 	ListAttachedGroupPolicies(requestInfo RequestInfo, filter *Filter) ([]GroupPolicies, int, error)
 }
@@ -145,7 +145,7 @@ type PolicyAPI interface {
 	// Throw error if the input parameters are invalid, the policy doesn't exist or unexpected error happen.
 	RemovePolicy(requestInfo RequestInfo, org string, name string) error
 
-	// Retrieve name of groups that are attached to the policy. Throw error if the input parameters are invalid,
+	// Retrieve groups that are attached to the policy. Throw error if the input parameters are invalid,
 	// policy doesn't exist or unexpected error happen.
 	ListAttachedGroups(requestInfo RequestInfo, filter *Filter) ([]PolicyGroups, int, error)
 }
