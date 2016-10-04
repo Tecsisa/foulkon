@@ -837,6 +837,7 @@ func TestWorkerHandler_HandleRemoveUser(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
+	now := time.Now()
 	testcases := map[string]struct {
 		// API method args
 		filter       *api.Filter
@@ -846,7 +847,7 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 		expectedResponse   GetGroupsByUserIdResponse
 		expectedError      api.Error
 		// Manager Results
-		getGroupsByUserIdResult []api.GroupIdentity
+		getGroupsByUserIdResult []api.UserGroups
 		totalGroupsResult       int
 		// Manager Errors
 		getGroupsByUserIdErr error
@@ -857,28 +858,32 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: GetGroupsByUserIdResponse{
-				Groups: []api.GroupIdentity{
+				Groups: []api.UserGroups{
 					{
-						Org:  "org1",
-						Name: "group1",
+						Org:      "org1",
+						Name:     "group1",
+						CreateAt: now,
 					},
 					{
-						Org:  "org2",
-						Name: "group2",
+						Org:      "org2",
+						Name:     "group2",
+						CreateAt: now,
 					},
 				},
 				Offset: 0,
 				Limit:  0,
 				Total:  2,
 			},
-			getGroupsByUserIdResult: []api.GroupIdentity{
+			getGroupsByUserIdResult: []api.UserGroups{
 				{
-					Org:  "org1",
-					Name: "group1",
+					Org:      "org1",
+					Name:     "group1",
+					CreateAt: now,
 				},
 				{
-					Org:  "org2",
-					Name: "group2",
+					Org:      "org2",
+					Name:     "group2",
+					CreateAt: now,
 				},
 			},
 			totalGroupsResult: 2,

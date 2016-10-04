@@ -28,10 +28,10 @@ type GetUserExternalIDsResponse struct {
 }
 
 type GetGroupsByUserIdResponse struct {
-	Groups []api.GroupIdentity `json:"groups, omitempty"`
-	Limit  int                 `json:"limit, omitempty"`
-	Offset int                 `json:"offset, omitempty"`
-	Total  int                 `json:"total, omitempty"`
+	Groups []api.UserGroups `json:"groups, omitempty"`
+	Limit  int              `json:"limit, omitempty"`
+	Offset int              `json:"offset, omitempty"`
+	Total  int              `json:"total, omitempty"`
 }
 
 // HANDLERS

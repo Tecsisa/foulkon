@@ -37,7 +37,13 @@ type GroupIdentity struct {
 }
 
 type GroupMembers struct {
-	Users []User `json:"users, omitempty"`
+	User     string    `json:"user, omitempty"`
+	CreateAt time.Time `json:"joined, omitempty"`
+}
+
+type GroupPolicies struct {
+	Policy   string    `json:"policy, omitempty"`
+	CreateAt time.Time `json:"attached, omitempty"`
 }
 
 // GROUP API IMPLEMENTATION
@@ -476,7 +482,7 @@ func (api AuthAPI) RemoveMember(requestInfo RequestInfo, externalId string, name
 	return nil
 }
 
-func (api AuthAPI) ListMembers(requestInfo RequestInfo, filter *Filter) ([]string, int, error) {
+func (api AuthAPI) ListMembers(requestInfo RequestInfo, filter *Filter) ([]GroupMembers, int, error) {
 	// Validate fields
 	var total int
 	err := validateFilter(filter)
@@ -504,7 +510,7 @@ func (api AuthAPI) ListMembers(requestInfo RequestInfo, filter *Filter) ([]strin
 	}
 
 	// Get Members
-	members, total, err := api.GroupRepo.GetGroupMembers(group.ID, filter)
+	users, total, err := api.GroupRepo.GetGroupMembers(group.ID, filter)
 
 	// Error handling
 	if err != nil {
@@ -516,12 +522,18 @@ func (api AuthAPI) ListMembers(requestInfo RequestInfo, filter *Filter) ([]strin
 		}
 	}
 
-	externalIDs := []string{}
-	for _, m := range members {
-		externalIDs = append(externalIDs, m.ExternalID)
+	members := []GroupMembers{}
+	if users != nil {
+		members = make([]GroupMembers, len(users), cap(users))
+		for i, m := range users {
+			members[i] = GroupMembers{
+				User:     m.GetUser().ExternalID,
+				CreateAt: m.GetDate(),
+			}
+		}
 	}
 
-	return externalIDs, total, nil
+	return members, total, nil
 }
 
 func (api AuthAPI) AttachPolicyToGroup(requestInfo RequestInfo, org string, name string, policyName string) error {
@@ -645,7 +657,7 @@ func (api AuthAPI) DetachPolicyToGroup(requestInfo RequestInfo, org string, name
 	return nil
 }
 
-func (api AuthAPI) ListAttachedGroupPolicies(requestInfo RequestInfo, filter *Filter) ([]string, int, error) {
+func (api AuthAPI) ListAttachedGroupPolicies(requestInfo RequestInfo, filter *Filter) ([]GroupPolicies, int, error) {
 	// Validate fields
 	var total int
 	err := validateFilter(filter)
@@ -685,11 +697,18 @@ func (api AuthAPI) ListAttachedGroupPolicies(requestInfo RequestInfo, filter *Fi
 		}
 	}
 
-	policyIDs := []string{}
-	for _, p := range attachedPolicies {
-		policyIDs = append(policyIDs, p.Name)
+	policies := []GroupPolicies{}
+	if attachedPolicies != nil {
+		policies = make([]GroupPolicies, len(attachedPolicies), cap(attachedPolicies))
+		for i, m := range attachedPolicies {
+			policies[i] = GroupPolicies{
+				Policy:   m.GetPolicy().Name,
+				CreateAt: m.GetDate(),
+			}
+		}
 	}
-	return policyIDs, total, nil
+
+	return policies, total, nil
 }
 
 // PRIVATE HELPER METHODS

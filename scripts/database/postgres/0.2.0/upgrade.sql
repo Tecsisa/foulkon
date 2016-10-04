@@ -35,9 +35,9 @@ DO $$
             RAISE NOTICE '[WARN] The users column could not be created. Check if this column already exists';
         END IF;
 
-        ------------------------
+        --------------------------
         -- ALTER TABLE policies --
-        ------------------------
+        --------------------------
         -- Add the updateAt column
         SELECT COUNT(column_name) INTO COL_EXIST
             FROM information_schema.columns
@@ -50,6 +50,40 @@ DO $$
             RAISE NOTICE '[INFO] Alter table policies to add next column: update_at';
         ELSE
             RAISE NOTICE '[WARN] The policies column could not be created. Check if this column already exists';
+        END IF;
+
+        ----------------------------------------
+        -- ALTER TABLE group_policy_relations --
+        ----------------------------------------
+        -- Add the createAt column
+        SELECT COUNT(column_name) INTO COL_EXIST
+            FROM information_schema.columns
+            WHERE table_name LIKE 'group_policy_relations' AND column_name LIKE 'create_at';
+
+        IF COL_EXIST = 0 THEN
+            EXECUTE 'ALTER TABLE group_policy_relations ADD create_at BIGINT';
+            EXECUTE 'UPDATE group_policy_relations SET create_at = EXTRACT(epoch from now() at time zone ''utc'') * 1000000000'; -- nano conversion --
+            EXECUTE 'ALTER TABLE group_policy_relations ALTER COLUMN create_at SET NOT NULL';
+            RAISE NOTICE '[INFO] Alter table group_policy_relations to add next column: create_at';
+        ELSE
+            RAISE NOTICE '[WARN] The group_policy_relations column could not be created. Check if this column already exists';
+        END IF;
+
+        --------------------------------------
+        -- ALTER TABLE group_user_relations --
+        --------------------------------------
+        -- Add the createAt column
+        SELECT COUNT(column_name) INTO COL_EXIST
+            FROM information_schema.columns
+            WHERE table_name LIKE 'group_user_relations' AND column_name LIKE 'create_at';
+
+        IF COL_EXIST = 0 THEN
+            EXECUTE 'ALTER TABLE group_user_relations ADD create_at BIGINT';
+            EXECUTE 'UPDATE group_user_relations SET create_at = EXTRACT(epoch from now() at time zone ''utc'') * 1000000000'; -- nano conversion --
+            EXECUTE 'ALTER TABLE group_user_relations ALTER COLUMN create_at SET NOT NULL';
+            RAISE NOTICE '[INFO] Alter table group_user_relations to add next column: create_at';
+        ELSE
+            RAISE NOTICE '[WARN] The group_user_relations column could not be created. Check if this column already exists';
         END IF;
 
     END $$

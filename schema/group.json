@@ -268,11 +268,21 @@
       ],
       "properties": {
         "members": {
-          "description": "Identifier of user",
-          "example": ["member1"],
+          "description": "Identifier of member",
           "type": "array",
           "items": {
-            "type": "string"
+            "properties": {
+              "user": {
+                "description": "External ID",
+                "example": "member1",
+                "type": "string"
+              },
+              "joined": {
+                "description": "When relationship was created",
+                "format": "date-time",
+                "type": "string"
+              }
+            }
           }
         },
         "offset": {
@@ -333,10 +343,20 @@
       "properties": {
         "policies": {
           "description": "Policies attached to this group",
-          "example": ["policyName1, policyName2"],
           "type": "array",
           "items": {
-            "type": "string"
+            "properties": {
+              "policy": {
+                "description": "Policy name",
+                "example": "policyName1",
+                "type": "string"
+              },
+              "attached": {
+                "description": "When relationship was created",
+                "format": "date-time",
+                "type": "string"
+              }
+            }
           }
         },
         "offset": {

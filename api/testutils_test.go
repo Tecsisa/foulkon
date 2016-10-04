@@ -7,6 +7,7 @@ import (
 	"github.com/kylelemons/godebug/pretty"
 	"math/rand"
 	"testing"
+	"time"
 )
 
 const (
@@ -42,6 +43,18 @@ type TestRepo struct {
 	ArgsIn       map[string][]interface{}
 	ArgsOut      map[string][]interface{}
 	SpecialFuncs map[string]interface{}
+}
+
+type TestUserGroupRelation struct {
+	User     *User
+	Group    *Group
+	CreateAt time.Time
+}
+
+type TestPolicyGroupRelation struct {
+	Group    *Group
+	Policy   *Policy
+	CreateAt time.Time
 }
 
 var testFilter = Filter{
@@ -131,6 +144,38 @@ func makeTestAPI(testRepo *TestRepo) *AuthAPI {
 	return api
 }
 
+//////////////////////
+// UserGroupRelation
+//////////////////////
+
+func (t TestUserGroupRelation) GetUser() *User {
+	return t.User
+}
+
+func (t TestUserGroupRelation) GetGroup() *Group {
+	return t.Group
+}
+
+func (t TestUserGroupRelation) GetDate() time.Time {
+	return t.CreateAt
+}
+
+///////////////////////
+// PolicyGroupRelation
+///////////////////////
+
+func (t TestPolicyGroupRelation) GetPolicy() *Policy {
+	return t.Policy
+}
+
+func (t TestPolicyGroupRelation) GetGroup() *Group {
+	return t.Group
+}
+
+func (t TestPolicyGroupRelation) GetDate() time.Time {
+	return t.CreateAt
+}
+
 //////////////////
 // User repo
 //////////////////
@@ -195,11 +240,14 @@ func (t TestRepo) GetUsersFiltered(filter *Filter) ([]User, int, error) {
 	return users, total, err
 }
 
-func (t TestRepo) GetGroupsByUserID(id string, filter *Filter) ([]Group, int, error) {
+func (t TestRepo) GetGroupsByUserID(id string, filter *Filter) ([]UserGroupRelation, int, error) {
 	t.ArgsIn[GetGroupsByUserIDMethod][0] = id
-	var groups []Group
+	var groups []UserGroupRelation
 	if t.ArgsOut[GetGroupsByUserIDMethod][0] != nil {
-		groups = t.ArgsOut[GetGroupsByUserIDMethod][0].([]Group)
+		testGroups := t.ArgsOut[GetGroupsByUserIDMethod][0].([]TestUserGroupRelation)
+		for _, v := range testGroups {
+			groups = append(groups, v)
+		}
 	}
 
 	var total int
@@ -257,11 +305,15 @@ func (t TestRepo) IsMemberOfGroup(userID string, groupID string) (bool, error) {
 	return isMember, err
 }
 
-func (t TestRepo) GetGroupMembers(groupID string, filter *Filter) ([]User, int, error) {
+func (t TestRepo) GetGroupMembers(groupID string, filter *Filter) ([]UserGroupRelation, int, error) {
 	t.ArgsIn[GetGroupMembersMethod][0] = groupID
-	var members []User
+	var members []UserGroupRelation
 	if t.ArgsOut[GetGroupMembersMethod][0] != nil {
-		members = t.ArgsOut[GetGroupMembersMethod][0].([]User)
+		testMembers := t.ArgsOut[GetGroupMembersMethod][0].([]TestUserGroupRelation)
+		for _, v := range testMembers {
+			members = append(members, v)
+		}
+
 	}
 	var total int
 	if t.ArgsOut[GetGroupMembersMethod][1] != nil {
@@ -288,11 +340,14 @@ func (t TestRepo) IsAttachedToGroup(groupID string, policyID string) (bool, erro
 	return isAttached, err
 }
 
-func (t TestRepo) GetAttachedPolicies(groupID string, filter *Filter) ([]Policy, int, error) {
+func (t TestRepo) GetAttachedPolicies(groupID string, filter *Filter) ([]PolicyGroupRelation, int, error) {
 	t.ArgsIn[GetAttachedPoliciesMethod][0] = groupID
-	var policies []Policy
+	var policies []PolicyGroupRelation
 	if t.ArgsOut[GetAttachedPoliciesMethod][0] != nil {
-		policies = t.ArgsOut[GetAttachedPoliciesMethod][0].([]Policy)
+		testPolicies := t.ArgsOut[GetAttachedPoliciesMethod][0].([]TestPolicyGroupRelation)
+		for _, v := range testPolicies {
+			policies = append(policies, v)
+		}
 	}
 	var total int
 	if t.ArgsOut[GetAttachedPoliciesMethod][1] != nil {
@@ -473,12 +528,15 @@ func (t TestRepo) GetPoliciesFiltered(filter *Filter) ([]Policy, int, error) {
 	return policies, total, err
 }
 
-func (t TestRepo) GetAttachedGroups(policyID string, filter *Filter) ([]Group, int, error) {
+func (t TestRepo) GetAttachedGroups(policyID string, filter *Filter) ([]PolicyGroupRelation, int, error) {
 	t.ArgsIn[GetAttachedGroupsMethod][0] = policyID
 
-	var groups []Group
+	var groups []PolicyGroupRelation
 	if t.ArgsOut[GetAttachedGroupsMethod][0] != nil {
-		groups = t.ArgsOut[GetAttachedGroupsMethod][0].([]Group)
+		testGroups := t.ArgsOut[GetAttachedGroupsMethod][0].([]TestPolicyGroupRelation)
+		for _, v := range testGroups {
+			groups = append(groups, v)
+		}
 	}
 	var total int
 	if t.ArgsOut[GetGroupsByUserIDMethod][1] != nil {

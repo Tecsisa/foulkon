@@ -36,3 +36,4 @@ type = "oidc"
 	[authenticator.oidc]
 	issuer = "https://accounts.google.com"
 	clientids = "google-client-identity"
+

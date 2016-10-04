@@ -190,8 +190,9 @@ func (g PostgresRepo) AddMember(userID string, groupID string) error {
 
 	// Create relation
 	relation := &GroupUserRelation{
-		UserID:  userID,
-		GroupID: groupID,
+		UserID:   userID,
+		GroupID:  groupID,
+		CreateAt: time.Now().UTC().UnixNano(),
 	}
 
 	// Store relation
@@ -241,7 +242,7 @@ func (g PostgresRepo) IsMemberOfGroup(userID string, groupID string) (bool, erro
 	return true, nil
 }
 
-func (g PostgresRepo) GetGroupMembers(groupID string, filter *api.Filter) ([]api.User, int, error) {
+func (g PostgresRepo) GetGroupMembers(groupID string, filter *api.Filter) ([]api.UserGroupRelation, int, error) {
 	var total int
 	members := []GroupUserRelation{}
 	query := g.Dbmap.Where("group_id like ?", groupID)
@@ -254,12 +255,13 @@ func (g PostgresRepo) GetGroupMembers(groupID string, filter *api.Filter) ([]api
 		}
 	}
 
-	var apiUsers []api.User
+	var membersList []api.UserGroupRelation
 	// Transform relations to API domain
 	if members != nil {
-		apiUsers = make([]api.User, len(members), cap(members))
+		membersList = make([]api.UserGroupRelation, len(members), cap(members))
 		for i, m := range members {
 			user, err := g.GetUserByID(m.UserID)
+
 			// Error handling
 			if err != nil {
 				return nil, total, &database.Error{
@@ -268,11 +270,14 @@ func (g PostgresRepo) GetGroupMembers(groupID string, filter *api.Filter) ([]api
 				}
 			}
 
-			apiUsers[i] = *user
+			membersList[i] = GroupUser{
+				User:     user,
+				CreateAt: time.Unix(0, m.CreateAt).UTC(),
+			}
 		}
 	}
 
-	return apiUsers, total, nil
+	return membersList, total, nil
 }
 
 func (g PostgresRepo) AttachPolicy(groupID string, policyID string) error {
@@ -280,6 +285,7 @@ func (g PostgresRepo) AttachPolicy(groupID string, policyID string) error {
 	relation := &GroupPolicyRelation{
 		GroupID:  groupID,
 		PolicyID: policyID,
+		CreateAt: time.Now().UTC().UnixNano(),
 	}
 
 	// Store relation
@@ -331,7 +337,7 @@ func (g PostgresRepo) IsAttachedToGroup(groupID string, policyID string) (bool, 
 	return true, nil
 }
 
-func (g PostgresRepo) GetAttachedPolicies(groupID string, filter *api.Filter) ([]api.Policy, int, error) {
+func (g PostgresRepo) GetAttachedPolicies(groupID string, filter *api.Filter) ([]api.PolicyGroupRelation, int, error) {
 	var total int
 	relations := []GroupPolicyRelation{}
 	query := g.Dbmap.Where("group_id like ?", groupID)
@@ -343,10 +349,10 @@ func (g PostgresRepo) GetAttachedPolicies(groupID string, filter *api.Filter) ([
 			Message: err.Error(),
 		}
 	}
-	var apiPolicies []api.Policy
+	var policies []api.PolicyGroupRelation
 	// Transform relations to API domain
 	if relations != nil {
-		apiPolicies = make([]api.Policy, len(relations), cap(relations))
+		policies = make([]api.PolicyGroupRelation, len(relations), cap(relations))
 		for i, r := range relations {
 			policy, err := g.GetPolicyById(r.PolicyID)
 			// Error handling
@@ -357,11 +363,14 @@ func (g PostgresRepo) GetAttachedPolicies(groupID string, filter *api.Filter) ([
 				}
 			}
 
-			apiPolicies[i] = *policy
+			policies[i] = PolicyGroup{
+				Policy:   policy,
+				CreateAt: time.Unix(0, r.CreateAt).UTC(),
+			}
 		}
 	}
 
-	return apiPolicies, total, nil
+	return policies, total, nil
 }
 
 // PRIVATE HELPER METHODS

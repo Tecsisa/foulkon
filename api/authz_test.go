@@ -287,10 +287,10 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 		getUserByExternalIDResult *User
 		getUserByExternalIDError  error
 		// GetGroupsByUserID Method Out Arguments
-		getGroupsByUserIDResult []Group
+		getGroupsByUserIDResult []TestUserGroupRelation
 		getGroupsByUserIDError  error
 		// GetAttachedPolicies Method Out Arguments
-		getAttachedPoliciesResult []Policy
+		getAttachedPoliciesResult []TestPolicyGroupRelation
 		getAttachedPoliciesError  error
 	}{
 		"ErrortestCaseInvalidAction": {
@@ -398,24 +398,28 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 				ID:  "123456",
 				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:  "GROUP-USER-ID",
-					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:  "GROUP-USER-ID",
+						Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:  "POLICY-USER-ID",
-					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								POLICY_ACTION_GET_POLICY,
-							},
-							Resources: []string{
-								GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
+					Policy: &Policy{
+						ID:  "POLICY-USER-ID",
+						Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									POLICY_ACTION_GET_POLICY,
+								},
+								Resources: []string{
+									GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
+								},
 							},
 						},
 					},
@@ -438,34 +442,38 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 				ID:  "123456",
 				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:  "GROUP-USER-ID",
-					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:  "GROUP-USER-ID",
+						Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:  "POLICY-USER-ID",
-					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "deny",
-							Actions: []string{
-								POLICY_ACTION_GET_POLICY,
+					Policy: &Policy{
+						ID:  "POLICY-USER-ID",
+						Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "deny",
+								Actions: []string{
+									POLICY_ACTION_GET_POLICY,
+								},
+								Resources: []string{
+									GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
-							},
-						},
-						{
-							Effect: "allow",
-							Actions: []string{
-								POLICY_ACTION_GET_POLICY,
-							},
-							Resources: []string{
-								GetUrnPrefix("example", RESOURCE_POLICY, "/path/path2"),
-								GetUrnPrefix("example2", RESOURCE_POLICY, "/path/path2"),
+							{
+								Effect: "allow",
+								Actions: []string{
+									POLICY_ACTION_GET_POLICY,
+								},
+								Resources: []string{
+									GetUrnPrefix("example", RESOURCE_POLICY, "/path/path2"),
+									GetUrnPrefix("example2", RESOURCE_POLICY, "/path/path2"),
+								},
 							},
 						},
 					},
@@ -492,39 +500,43 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 				ID:  "123456",
 				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:  "GROUP-USER-ID",
-					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:  "GROUP-USER-ID",
+						Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:  "POLICY-USER-ID",
-					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								"product:DoAction",
+					Policy: &Policy{
+						ID:  "POLICY-USER-ID",
+						Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									"product:DoAction",
+								},
+								Resources: []string{
+									"urn:ews:product:instance:resource/path1/resourceAllow",
+									"urn:ews:product:instance:resource/path2/resourceAllow",
+									"urn:ews:product:instance:resource/path1*",
+									"urn:ews:product:instance:resource/path2*",
+								},
 							},
-							Resources: []string{
-								"urn:ews:product:instance:resource/path1/resourceAllow",
-								"urn:ews:product:instance:resource/path2/resourceAllow",
-								"urn:ews:product:instance:resource/path1*",
-								"urn:ews:product:instance:resource/path2*",
-							},
-						},
-						{
-							Effect: "deny",
-							Actions: []string{
-								"product:DoAction",
-							},
-							Resources: []string{
-								"urn:ews:product:instance:resource/path1/resourceDeny",
-								"urn:ews:product:instance:resource/path2/resourceDeny",
-								"urn:ews:product:instance:resource/path3*",
-								"urn:ews:product:instance:resource/path4*",
+							{
+								Effect: "deny",
+								Actions: []string{
+									"product:DoAction",
+								},
+								Resources: []string{
+									"urn:ews:product:instance:resource/path1/resourceDeny",
+									"urn:ews:product:instance:resource/path2/resourceDeny",
+									"urn:ews:product:instance:resource/path3*",
+									"urn:ews:product:instance:resource/path4*",
+								},
 							},
 						},
 					},
@@ -580,10 +592,10 @@ func TestGetAuthorizedResources(t *testing.T) {
 		getUserByExternalIDResult *User
 		getUserByExternalIDError  error
 		// GetGroupsByUserID Method Out Arguments
-		getGroupsByUserIDResult []Group
+		getGroupsByUserIDResult []TestUserGroupRelation
 		getGroupsByUserIDError  error
 		// GetAttachedPolicies Method Out Arguments
-		getAttachedPoliciesResult []Policy
+		getAttachedPoliciesResult []TestPolicyGroupRelation
 		getAttachedPoliciesError  error
 	}{
 		"OKtestCaseAdmin": {
@@ -689,24 +701,28 @@ func TestGetAuthorizedResources(t *testing.T) {
 				ID:  "123456",
 				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:  "GROUP-USER-ID",
-					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:  "GROUP-USER-ID",
+						Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:  "POLICY-USER-ID",
-					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								CreateUrn("example", RESOURCE_GROUP, "/path/", "group1"),
+					Policy: &Policy{
+						ID:  "POLICY-USER-ID",
+						Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									CreateUrn("example", RESOURCE_GROUP, "/path/", "group1"),
+								},
 							},
 						},
 					},
@@ -737,24 +753,28 @@ func TestGetAuthorizedResources(t *testing.T) {
 				ID:  "123456",
 				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:  "GROUP-USER-ID",
-					Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:  "GROUP-USER-ID",
+						Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:  "POLICY-USER-ID",
-					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("example", RESOURCE_GROUP, "/path2/"),
+					Policy: &Policy{
+						ID:  "POLICY-USER-ID",
+						Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("example", RESOURCE_GROUP, "/path2/"),
+								},
 							},
 						},
 					},
@@ -806,10 +826,10 @@ func TestGetRestrictions(t *testing.T) {
 		getUserByExternalIDResult *User
 		getUserByExternalIDError  error
 		// GetGroupsByUserID Method Out Arguments
-		getGroupsByUserIDResult []Group
+		getGroupsByUserIDResult []TestUserGroupRelation
 		getGroupsByUserIDError  error
 		// GetAttachedPolicies Method Out Arguments
-		getAttachedPoliciesResult []Policy
+		getAttachedPoliciesResult []TestPolicyGroupRelation
 		getAttachedPoliciesError  error
 	}{
 		"ErrortestCaseGetUserAuthenticatedNotFound": {
@@ -859,9 +879,11 @@ func TestGetRestrictions(t *testing.T) {
 			getUserByExternalIDResult: &User{
 				ID: "UserID",
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID: "GroupID",
+					Group: &Group{
+						ID: "GroupID",
+					},
 				},
 			},
 			getAttachedPoliciesError: &database.Error{
@@ -910,38 +932,42 @@ func TestGetRestrictions(t *testing.T) {
 			getUserByExternalIDResult: &User{
 				ID: "AuthUserID",
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID: "GROUP-USER-ID",
+					Group: &Group{
+						ID: "GROUP-USER-ID",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:  "POLICY-USER-ID",
-					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
+					Policy: &Policy{
+						ID:  "POLICY-USER-ID",
+						Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupAllow"),
+									CreateUrn("example", RESOURCE_GROUP, "/path2/", "groupAllow"),
+									GetUrnPrefix("example", RESOURCE_GROUP, "/path1/"),
+									GetUrnPrefix("example", RESOURCE_GROUP, "/path2/"),
+								},
 							},
-							Resources: []string{
-								CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupAllow"),
-								CreateUrn("example", RESOURCE_GROUP, "/path2/", "groupAllow"),
-								GetUrnPrefix("example", RESOURCE_GROUP, "/path1/"),
-								GetUrnPrefix("example", RESOURCE_GROUP, "/path2/"),
-							},
-						},
-						{
-							Effect: "deny",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupDeny"),
-								CreateUrn("example", RESOURCE_GROUP, "/path2/", "groupDeny"),
-								GetUrnPrefix("example", RESOURCE_GROUP, "/path3/"),
-								GetUrnPrefix("example", RESOURCE_GROUP, "/path4/"),
+							{
+								Effect: "deny",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupDeny"),
+									CreateUrn("example", RESOURCE_GROUP, "/path2/", "groupDeny"),
+									GetUrnPrefix("example", RESOURCE_GROUP, "/path3/"),
+									GetUrnPrefix("example", RESOURCE_GROUP, "/path4/"),
+								},
 							},
 						},
 					},
@@ -969,38 +995,42 @@ func TestGetRestrictions(t *testing.T) {
 			getUserByExternalIDResult: &User{
 				ID: "AuthUserID",
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID: "GROUP-USER-ID",
+					Group: &Group{
+						ID: "GROUP-USER-ID",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:  "POLICY-USER-ID",
-					Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
+					Policy: &Policy{
+						ID:  "POLICY-USER-ID",
+						Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupAllow"),
+									CreateUrn("example", RESOURCE_GROUP, "/path2/", "groupAllow"),
+									GetUrnPrefix("example", RESOURCE_GROUP, "/path1/"),
+									GetUrnPrefix("example", RESOURCE_GROUP, "/path2/"),
+								},
 							},
-							Resources: []string{
-								CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupAllow"),
-								CreateUrn("example", RESOURCE_GROUP, "/path2/", "groupAllow"),
-								GetUrnPrefix("example", RESOURCE_GROUP, "/path1/"),
-								GetUrnPrefix("example", RESOURCE_GROUP, "/path2/"),
-							},
-						},
-						{
-							Effect: "deny",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupDeny"),
-								CreateUrn("example", RESOURCE_GROUP, "/path2/", "groupDeny"),
-								GetUrnPrefix("example", RESOURCE_GROUP, "/path3/"),
-								GetUrnPrefix("example", RESOURCE_GROUP, "/path4/"),
+							{
+								Effect: "deny",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupDeny"),
+									CreateUrn("example", RESOURCE_GROUP, "/path2/", "groupDeny"),
+									GetUrnPrefix("example", RESOURCE_GROUP, "/path3/"),
+									GetUrnPrefix("example", RESOURCE_GROUP, "/path4/"),
+								},
 							},
 						},
 					},
@@ -1037,7 +1067,7 @@ func TestGetRestrictions(t *testing.T) {
 		}
 
 		if param := testRepo.ArgsIn[GetAttachedPoliciesMethod][0]; test.wantError == nil && test.getGroupsByUserIDResult != nil &&
-			param != test.getGroupsByUserIDResult[0].ID {
+			param != test.getGroupsByUserIDResult[0].Group.ID {
 			t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
 				n, test.authUserID, testRepo.ArgsIn[GetAttachedPoliciesMethod][0])
 			continue
@@ -1054,7 +1084,7 @@ func TestGetGroupsByUser(t *testing.T) {
 		// Error to compare when we expect an error
 		wantError error
 		// GetGroupsByUserID Method Out Arguments
-		getGroupsByUserIDResult []Group
+		getGroupsByUserIDResult []TestUserGroupRelation
 		getGroupsByUserIDError  error
 	}{
 		"OktestCase": {
@@ -1067,12 +1097,16 @@ func TestGetGroupsByUser(t *testing.T) {
 					ID: "GROUP-USER-ID2",
 				},
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID: "GROUP-USER-ID1",
+					Group: &Group{
+						ID: "GROUP-USER-ID1",
+					},
 				},
 				{
-					ID: "GROUP-USER-ID2",
+					Group: &Group{
+						ID: "GROUP-USER-ID2",
+					},
 				},
 			},
 		},
@@ -1112,7 +1146,7 @@ func TestGetPoliciesByGroups(t *testing.T) {
 		// Error to compare when we expect an error
 		wantError error
 		// GetAttachedPolicies Method Out Arguments
-		getAttachedPoliciesResult []Policy
+		getAttachedPoliciesResult []TestPolicyGroupRelation
 		getAttachedPoliciesError  error
 	}{
 		"OktestCaseEmptyGroups": {
@@ -1148,9 +1182,12 @@ func TestGetPoliciesByGroups(t *testing.T) {
 					ID: "PolicyID",
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID: "PolicyID",
+					Policy: &Policy{
+
+						ID: "PolicyID",
+					},
 				},
 			},
 		},

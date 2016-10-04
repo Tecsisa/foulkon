@@ -36,17 +36,17 @@ type ListAllGroupsResponse struct {
 }
 
 type ListMembersResponse struct {
-	Members []string `json:"members, omitempty"`
-	Limit   int      `json:"limit, omitempty"`
-	Offset  int      `json:"offset, omitempty"`
-	Total   int      `json:"total, omitempty"`
+	Members []api.GroupMembers `json:"members, omitempty"`
+	Limit   int                `json:"limit, omitempty"`
+	Offset  int                `json:"offset, omitempty"`
+	Total   int                `json:"total, omitempty"`
 }
 
 type ListAttachedGroupPoliciesResponse struct {
-	AttachedPolicies []string `json:"policies, omitempty"`
-	Limit            int      `json:"limit, omitempty"`
-	Offset           int      `json:"offset, omitempty"`
-	Total            int      `json:"total, omitempty"`
+	AttachedPolicies []api.GroupPolicies `json:"policies, omitempty"`
+	Limit            int                 `json:"limit, omitempty"`
+	Offset           int                 `json:"offset, omitempty"`
+	Total            int                 `json:"total, omitempty"`
 }
 
 // HANDLERS

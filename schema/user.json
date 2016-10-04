@@ -201,6 +201,11 @@
                 "description": "Group name",
                 "example": "group1",
                 "type": "string"
+              },
+              "joined": {
+                "description": "When relationship was created",
+                "format": "date-time",
+                "type": "string"
               }
             }
           }

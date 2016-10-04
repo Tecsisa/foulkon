@@ -280,7 +280,8 @@ Group members
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
 | **limit** | *integer* | The maximum number of items in the response (as set in the query or by default) | `20` |
-| **members** | *array* | Identifier of user | `["member1"]` |
+| **members/joined** | *date-time* | When relationship was created | `"2015-01-01T12:00:00Z"` |
+| **members/user** | *string* | External ID | `"member1"` |
 | **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
 | **total** | *integer* | The total number of items available to return | `50` |
 
@@ -360,7 +361,10 @@ HTTP/1.1 200 OK
 ```json
 {
   "members": [
-    "member1"
+    {
+      "user": "member1",
+      "joined": "2015-01-01T12:00:00Z"
+    }
   ],
   "offset": 0,
   "limit": 20,
@@ -380,7 +384,8 @@ Attached Policies
 | ------- | ------- | ------- | ------- |
 | **limit** | *integer* | The maximum number of items in the response (as set in the query or by default) | `20` |
 | **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
-| **policies** | *array* | Policies attached to this group | `["policyName1, policyName2"]` |
+| **policies/attached** | *date-time* | When relationship was created | `"2015-01-01T12:00:00Z"` |
+| **policies/policy** | *string* | Policy name | `"policyName1"` |
 | **total** | *integer* | The total number of items available to return | `50` |
 
 ### Group Policies Attach
@@ -459,7 +464,10 @@ HTTP/1.1 200 OK
 ```json
 {
   "policies": [
-    "policyName1, policyName2"
+    {
+      "policy": "policyName1",
+      "attached": "2015-01-01T12:00:00Z"
+    }
   ],
   "offset": 0,
   "limit": 20,

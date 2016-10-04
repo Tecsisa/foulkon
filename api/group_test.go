@@ -18,8 +18,8 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 		wantError     error
 		// Manager Results
 		getUserByExternalIDResult *User
-		getGroupsByUserIDResult   []Group
-		getAttachedPoliciesResult []Policy
+		getGroupsByUserIDResult   []TestUserGroupRelation
+		getAttachedPoliciesResult []TestPolicyGroupRelation
 		getGroupByName            *Group
 		addMemberMethodResult     *Group
 		// Manager Errors
@@ -65,28 +65,32 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/path/",
-					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/path/",
+						Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Path: "/path/",
-					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_CREATE_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, "/example/"),
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Path: "/path/",
+						Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_CREATE_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, "/example/"),
+								},
 							},
 						},
 					},
@@ -181,37 +185,41 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/path/",
-					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/path/",
+						Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Path: "/path/",
-					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_CREATE_GROUP,
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Path: "/path/",
+						Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_CREATE_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, "/test/"),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, "/test/"),
-							},
-						},
-						{
-							Effect: "deny",
-							Actions: []string{
-								GROUP_ACTION_CREATE_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, "/test/asd"),
+							{
+								Effect: "deny",
+								Actions: []string{
+									GROUP_ACTION_CREATE_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, "/test/asd"),
+								},
 							},
 						},
 					},
@@ -239,21 +247,25 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/path/",
-					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/path/",
+						Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:         "POLICY-USER-ID",
-					Name:       "policyUser",
-					Path:       "/path/",
-					Urn:        CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
-					Statements: &[]Statement{},
+					Policy: &Policy{
+						ID:         "POLICY-USER-ID",
+						Name:       "policyUser",
+						Path:       "/path/",
+						Urn:        CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
+						Statements: &[]Statement{},
+					},
 				},
 			},
 			getGroupByNameMethodErr: &database.Error{
@@ -325,8 +337,8 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 		wantError     error
 		// Manager Results
 		getUserByExternalIDResult  *User
-		getGroupsByUserIDResult    []Group
-		getAttachedPoliciesResult  []Policy
+		getGroupsByUserIDResult    []TestUserGroupRelation
+		getAttachedPoliciesResult  []TestPolicyGroupRelation
 		getGroupByNameMethodResult *Group
 		// Manager Errors
 		getUserByExternalIDMethodErr error
@@ -374,28 +386,32 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/path/",
-					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/path/",
+						Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Path: "/path/",
-					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, "/test/"),
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Path: "/path/",
+						Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, "/test/"),
+								},
 							},
 						},
 					},
@@ -496,37 +512,41 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/path/",
-					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/path/",
+						Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Path: "/path/",
-					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Path: "/path/",
+						Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, "/test/"),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, "/test/"),
-							},
-						},
-						{
-							Effect: "deny",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, "/test/asd"),
+							{
+								Effect: "deny",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, "/test/asd"),
+								},
 							},
 						},
 					},
@@ -565,21 +585,25 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/path/",
-					Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/path/",
+						Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:         "POLICY-USER-ID",
-					Name:       "policyUser",
-					Path:       "/path/",
-					Urn:        CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
-					Statements: &[]Statement{},
+					Policy: &Policy{
+						ID:         "POLICY-USER-ID",
+						Name:       "policyUser",
+						Path:       "/path/",
+						Urn:        CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
+						Statements: &[]Statement{},
+					},
 				},
 			},
 			getGroupByNameMethodResult: &Group{
@@ -619,8 +643,8 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 		wantError      error
 		// Manager Results
 		getGroupsFilteredMethodResult []Group
-		getGroupsByUserIDResult       []Group
-		getAttachedPoliciesResult     []Policy
+		getGroupsByUserIDResult       []TestUserGroupRelation
+		getAttachedPoliciesResult     []TestPolicyGroupRelation
 		getUserByExternalIDResult     *User
 		// Manager Errors
 		getUserByExternalIDMethodErr error
@@ -711,29 +735,33 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 					Urn:  CreateUrn("org2", RESOURCE_GROUP, "/path2/", "group2"),
 				},
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/path/1/",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/path/1/",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_LIST_GROUPS,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_LIST_GROUPS,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
 						},
 					},
@@ -843,38 +871,42 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 					Urn:  CreateUrn("org2", RESOURCE_GROUP, "/path2/", "group2"),
 				},
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/path/1/",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/path/1/",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_LIST_GROUPS,
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_LIST_GROUPS,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "deny",
-							Actions: []string{
-								GROUP_ACTION_LIST_GROUPS,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							{
+								Effect: "deny",
+								Actions: []string{
+									GROUP_ACTION_LIST_GROUPS,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
 						},
 					},
@@ -913,22 +945,26 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 					Urn:  CreateUrn("org2", RESOURCE_GROUP, "/path2/", "group2"),
 				},
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/path/1/",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/path/1/",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:         "POLICY-USER-ID",
-					Name:       "policyUser",
-					Org:        "org1",
-					Path:       "/path/",
-					Urn:        CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{},
+					Policy: &Policy{
+						ID:         "POLICY-USER-ID",
+						Name:       "policyUser",
+						Org:        "org1",
+						Path:       "/path/",
+						Urn:        CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{},
+					},
 				},
 			},
 			getUserByExternalIDResult: &User{
@@ -973,8 +1009,8 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 		// Manager Results
 		getGroupByNameResult            *Group
 		getGroupMembersResult           []User
-		getGroupsByUserIDResult         []Group
-		getAttachedPoliciesResult       []Policy
+		getGroupsByUserIDResult         []TestUserGroupRelation
+		getAttachedPoliciesResult       []TestPolicyGroupRelation
 		getUserByExternalIDResult       *User
 		updateGroupResult               *Group
 		getGroupByNameMethodSpecialFunc func(string, string) (*Group, error)
@@ -1044,30 +1080,34 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 				Path: "/new/",
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/new/", "test"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/1/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-								GROUP_ACTION_UPDATE_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+									GROUP_ACTION_UPDATE_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
 						},
 					},
@@ -1223,29 +1263,33 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 				Path: "/path/1/",
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/1/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
 						},
 					},
@@ -1278,39 +1322,43 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "group1"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/1/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-								GROUP_ACTION_UPDATE_GROUP,
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+									GROUP_ACTION_UPDATE_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "deny",
-							Actions: []string{
-								GROUP_ACTION_UPDATE_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, "/path"),
+							{
+								Effect: "deny",
+								Actions: []string{
+									GROUP_ACTION_UPDATE_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, "/path"),
+								},
 							},
 						},
 					},
@@ -1350,30 +1398,34 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 					Code: database.GROUP_NOT_FOUND,
 				}
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "group1",
-					Org:  "123",
-					Path: "/new/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "group1",
+						Org:  "123",
+						Path: "/new/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "123",
-					Path: "/path/",
-					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-								GROUP_ACTION_UPDATE_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("123", RESOURCE_GROUP, "/path/"),
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "123",
+						Path: "/path/",
+						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+									GROUP_ACTION_UPDATE_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("123", RESOURCE_GROUP, "/path/"),
+								},
 							},
 						},
 					},
@@ -1413,39 +1465,43 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 					Code: database.GROUP_NOT_FOUND,
 				}
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "group1",
-					Org:  "123",
-					Path: "/new/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "group1",
+						Org:  "123",
+						Path: "/new/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "123",
-					Path: "/path/",
-					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-								GROUP_ACTION_UPDATE_GROUP,
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "123",
+						Path: "/path/",
+						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+									GROUP_ACTION_UPDATE_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("123", RESOURCE_GROUP, ""),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("123", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "deny",
-							Actions: []string{
-								GROUP_ACTION_UPDATE_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("123", RESOURCE_GROUP, "/new/"),
+							{
+								Effect: "deny",
+								Actions: []string{
+									GROUP_ACTION_UPDATE_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("123", RESOURCE_GROUP, "/new/"),
+								},
 							},
 						},
 					},
@@ -1478,22 +1534,26 @@ func TestAuthAPI_UpdateGroup(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "group1"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/1/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:         "POLICY-USER-ID",
-					Name:       "policyUser",
-					Org:        "org1",
-					Path:       "/path/",
-					Urn:        CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{},
+					Policy: &Policy{
+						ID:         "POLICY-USER-ID",
+						Name:       "policyUser",
+						Org:        "org1",
+						Path:       "/path/",
+						Urn:        CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{},
+					},
 				},
 			},
 			getUserByExternalIDResult: &User{
@@ -1557,8 +1617,8 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 		wantError error
 		// Manager Results
 		getUserByExternalIDResult  *User
-		getGroupsByUserIDResult    []Group
-		getAttachedPoliciesResult  []Policy
+		getGroupsByUserIDResult    []TestUserGroupRelation
+		getAttachedPoliciesResult  []TestPolicyGroupRelation
 		getGroupByNameMethodResult *Group
 		// API Errors
 		getUserByExternalIDMethodErr error
@@ -1606,34 +1666,38 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/example/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_DELETE_GROUP,
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/example/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_DELETE_GROUP,
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
 						},
 					},
 				},
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/example/",
-					Org:  "org1",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org1",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+					},
 				},
 			},
 		},
@@ -1709,30 +1773,34 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/example/",
-					Org:  "org1",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org1",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/example/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/example/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
 						},
 					},
@@ -1763,40 +1831,44 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/example/",
-					Org:  "org1",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org1",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/example/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_DELETE_GROUP,
-								GROUP_ACTION_GET_GROUP,
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/example/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_DELETE_GROUP,
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "deny",
-							Actions: []string{
-								GROUP_ACTION_DELETE_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, "/example/group1"),
+							{
+								Effect: "deny",
+								Actions: []string{
+									GROUP_ACTION_DELETE_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, "/example/group1"),
+								},
 							},
 						},
 					},
@@ -1827,23 +1899,27 @@ func TestAuthAPI_RemoveGroup(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/example/",
-					Org:  "org1",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org1",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:         "POLICY-USER-ID",
-					Name:       "policyUser",
-					Org:        "org1",
-					Path:       "/example/",
-					Urn:        CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
-					Statements: &[]Statement{},
+					Policy: &Policy{
+						ID:         "POLICY-USER-ID",
+						Name:       "policyUser",
+						Org:        "org1",
+						Path:       "/example/",
+						Urn:        CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+						Statements: &[]Statement{},
+					},
 				},
 			},
 		},
@@ -1903,8 +1979,8 @@ func TestAuthAPI_AddMember(t *testing.T) {
 		// Expected result
 		wantError error
 		// Manager Results
-		getGroupsByUserIDResult   []Group
-		getAttachedPoliciesResult []Policy
+		getGroupsByUserIDResult   []TestUserGroupRelation
+		getAttachedPoliciesResult []TestPolicyGroupRelation
 		getUserByExternalIDResult *User
 		getGroupByNameResult      *Group
 		isMemberOfGroupResult     bool
@@ -1943,31 +2019,35 @@ func TestAuthAPI_AddMember(t *testing.T) {
 			userID:    "12345",
 			org:       "org1",
 			groupName: "group1",
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								"iam:*",
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-								GetUrnPrefix("", RESOURCE_USER, ""),
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									"iam:*",
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+									GetUrnPrefix("", RESOURCE_USER, ""),
+								},
 							},
 						},
 					},
@@ -2072,29 +2152,33 @@ func TestAuthAPI_AddMember(t *testing.T) {
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/path/1/group1",
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/1/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
 						},
 					},
@@ -2126,40 +2210,44 @@ func TestAuthAPI_AddMember(t *testing.T) {
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/path/group1",
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "deny",
-							Actions: []string{
-								GROUP_ACTION_ADD_MEMBER,
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "deny",
+								Actions: []string{
+									GROUP_ACTION_ADD_MEMBER,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, "/path/"),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, "/path/"),
-							},
-						},
-						{
-							Effect: "allow",
-							Actions: []string{
-								"iam:*",
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-								GetUrnPrefix("", RESOURCE_USER, ""),
+							{
+								Effect: "allow",
+								Actions: []string{
+									"iam:*",
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+									GetUrnPrefix("", RESOURCE_USER, ""),
+								},
 							},
 						},
 					},
@@ -2191,23 +2279,27 @@ func TestAuthAPI_AddMember(t *testing.T) {
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org1:group/path/group1",
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:         "POLICY-USER-ID",
-					Name:       "policyUser",
-					Org:        "org1",
-					Path:       "/path/",
-					Urn:        CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{},
+					Policy: &Policy{
+						ID:         "POLICY-USER-ID",
+						Name:       "policyUser",
+						Org:        "org1",
+						Path:       "/path/",
+						Urn:        CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{},
+					},
 				},
 			},
 			getUserByExternalIDResult: &User{
@@ -2356,8 +2448,8 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 		// Manager Results
 		getGroupByNameResult      *Group
 		getUserByExternalIDResult *User
-		getGroupsByUserIDResult   []Group
-		getAttachedPoliciesResult []Policy
+		getGroupsByUserIDResult   []TestUserGroupRelation
+		getAttachedPoliciesResult []TestPolicyGroupRelation
 		isMemberOfGroupResult     bool
 		// Manager Errors
 		getGroupByNameMethodErr      error
@@ -2401,39 +2493,43 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/1/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_REMOVE_MEMBER,
-								GROUP_ACTION_GET_GROUP,
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_REMOVE_MEMBER,
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "allow",
-							Actions: []string{
-								USER_ACTION_GET_USER,
-							},
-							Resources: []string{
-								GetUrnPrefix("", RESOURCE_USER, ""),
+							{
+								Effect: "allow",
+								Actions: []string{
+									USER_ACTION_GET_USER,
+								},
+								Resources: []string{
+									GetUrnPrefix("", RESOURCE_USER, ""),
+								},
 							},
 						},
 					},
@@ -2537,29 +2633,33 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "group1"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/1/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
 						},
 					},
@@ -2591,39 +2691,43 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/1/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-								GROUP_ACTION_REMOVE_MEMBER,
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+									GROUP_ACTION_REMOVE_MEMBER,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "deny",
-							Actions: []string{
-								USER_ACTION_GET_USER,
-							},
-							Resources: []string{
-								GetUrnPrefix("", RESOURCE_USER, ""),
+							{
+								Effect: "deny",
+								Actions: []string{
+									USER_ACTION_GET_USER,
+								},
+								Resources: []string{
+									GetUrnPrefix("", RESOURCE_USER, ""),
+								},
 							},
 						},
 					},
@@ -2655,39 +2759,43 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/1/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-								GROUP_ACTION_REMOVE_MEMBER,
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+									GROUP_ACTION_REMOVE_MEMBER,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "deny",
-							Actions: []string{
-								GROUP_ACTION_REMOVE_MEMBER,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, "/path/"),
+							{
+								Effect: "deny",
+								Actions: []string{
+									GROUP_ACTION_REMOVE_MEMBER,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, "/path/"),
+								},
 							},
 						},
 					},
@@ -2719,22 +2827,26 @@ func TestAuthAPI_RemoveMember(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/1/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:         "POLICY-USER-ID",
-					Name:       "policyUser",
-					Org:        "org1",
-					Path:       "/path/",
-					Urn:        CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{},
+					Policy: &Policy{
+						ID:         "POLICY-USER-ID",
+						Name:       "policyUser",
+						Org:        "org1",
+						Path:       "/path/",
+						Urn:        CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{},
+					},
 				},
 			},
 			getUserByExternalIDResult: &User{
@@ -2877,14 +2989,14 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 		requestInfo RequestInfo
 		filter      *Filter
 		// Expected result
-		expectedMembers []string
+		expectedMembers []GroupMembers
 		totalResult     int
 		wantError       error
 		// Manager Results
 		getGroupByNameResult      *Group
-		getGroupMembersResult     []User
-		getGroupsByUserIDResult   []Group
-		getAttachedPoliciesResult []Policy
+		getGroupMembersResult     []TestUserGroupRelation
+		getGroupsByUserIDResult   []TestUserGroupRelation
+		getAttachedPoliciesResult []TestPolicyGroupRelation
 		getUserByExternalIDResult *User
 		// API Errors
 		getGroupByNameMethodErr      error
@@ -2901,9 +3013,13 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Org:       "org1",
 				GroupName: "group1",
 			},
-			expectedMembers: []string{
-				"member1",
-				"member2",
+			expectedMembers: []GroupMembers{
+				{
+					User: "member1",
+				},
+				{
+					User: "member2",
+				},
 			},
 			totalResult: 2,
 			getGroupByNameResult: &Group{
@@ -2912,16 +3028,20 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Org:  "org1",
 				Path: "/test/",
 			},
-			getGroupMembersResult: []User{
+			getGroupMembersResult: []TestUserGroupRelation{
 				{
-					ID:         "12345",
-					ExternalID: "member1",
-					Path:       "/test/",
+					User: &User{
+						ID:         "12345",
+						ExternalID: "member1",
+						Path:       "/test/",
+					},
 				},
 				{
-					ID:         "123456",
-					ExternalID: "member2",
-					Path:       "/test/",
+					User: &User{
+						ID:         "123456",
+						ExternalID: "member2",
+						Path:       "/test/",
+					},
 				},
 			},
 		},
@@ -2934,9 +3054,13 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Org:       "org1",
 				GroupName: "group1",
 			},
-			expectedMembers: []string{
-				"member1",
-				"member2",
+			expectedMembers: []GroupMembers{
+				{
+					User: "member1",
+				},
+				{
+					User: "member2",
+				},
 			},
 			totalResult: 2,
 			getGroupByNameResult: &Group{
@@ -2946,42 +3070,50 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Path: "/path/1/",
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
 			},
-			getGroupMembersResult: []User{
+			getGroupMembersResult: []TestUserGroupRelation{
 				{
-					ID:         "12345",
-					ExternalID: "member1",
-					Path:       "/test/",
+					User: &User{
+						ID:         "12345",
+						ExternalID: "member1",
+						Path:       "/test/",
+					},
 				},
 				{
-					ID:         "123456",
-					ExternalID: "member2",
-					Path:       "/test/",
-				},
-			},
-			getGroupsByUserIDResult: []Group{
-				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
+					User: &User{
+						ID:         "123456",
+						ExternalID: "member2",
+						Path:       "/test/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_LIST_MEMBERS,
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, "/path/"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/1/",
+					},
+				},
+			},
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
+				{
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_LIST_MEMBERS,
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, "/path/"),
+								},
 							},
 						},
 					},
@@ -3084,29 +3216,33 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/1/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
 						},
 					},
@@ -3139,39 +3275,43 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Path: "/path/1/",
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/1/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/path/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "deny",
-							Actions: []string{
-								GROUP_ACTION_LIST_MEMBERS,
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/path/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "deny",
+								Actions: []string{
+									GROUP_ACTION_LIST_MEMBERS,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, "/path/"),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, "/path/"),
-							},
-						},
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_LIST_MEMBERS,
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_LIST_MEMBERS,
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
 						},
 					},
@@ -3204,22 +3344,26 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("org1", RESOURCE_GROUP, "/path/", "groupUser"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Org:  "org1",
-					Path: "/path/1/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Org:  "org1",
+						Path: "/path/1/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:         "POLICY-USER-ID",
-					Name:       "policyUser",
-					Org:        "org1",
-					Path:       "/path/",
-					Urn:        CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{},
+					Policy: &Policy{
+						ID:         "POLICY-USER-ID",
+						Name:       "policyUser",
+						Org:        "org1",
+						Path:       "/path/",
+						Urn:        CreateUrn("org1", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{},
+					},
 				},
 			},
 			getUserByExternalIDResult: &User{
@@ -3287,8 +3431,8 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 		getGroupByNameResult      *Group
 		getPolicyByNameResult     *Policy
 		getUserByExternalIDResult *User
-		getGroupsByUserIDResult   []Group
-		getAttachedPoliciesResult []Policy
+		getGroupsByUserIDResult   []TestUserGroupRelation
+		getAttachedPoliciesResult []TestPolicyGroupRelation
 		isAttachedToGroupResult   bool
 		// API Errors
 		getGroupByNameMethodErr      error
@@ -3365,39 +3509,43 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 					},
 				},
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "group1",
-					Org:  "123",
-					Path: "/path/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "group1",
+						Org:  "123",
+						Path: "/path/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "123",
-					Path: "/path/",
-					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-								GROUP_ACTION_ATTACH_GROUP_POLICY,
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "123",
+						Path: "/path/",
+						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+									GROUP_ACTION_ATTACH_GROUP_POLICY,
+								},
+								Resources: []string{
+									GetUrnPrefix("123", RESOURCE_GROUP, "/path/"),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("123", RESOURCE_GROUP, "/path/"),
-							},
-						},
-						{
-							Effect: "allow",
-							Actions: []string{
-								POLICY_ACTION_GET_POLICY,
-							},
-							Resources: []string{
-								GetUrnPrefix("123", RESOURCE_POLICY, "/path/"),
+							{
+								Effect: "allow",
+								Actions: []string{
+									POLICY_ACTION_GET_POLICY,
+								},
+								Resources: []string{
+									GetUrnPrefix("123", RESOURCE_POLICY, "/path/"),
+								},
 							},
 						},
 					},
@@ -3507,29 +3655,33 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "group1"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "group1",
-					Org:  "123",
-					Path: "/path/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "group1",
+						Org:  "123",
+						Path: "/path/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "123",
-					Path: "/path/",
-					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("123", RESOURCE_GROUP, ""),
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "123",
+						Path: "/path/",
+						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("123", RESOURCE_GROUP, ""),
+								},
 							},
 						},
 					},
@@ -3561,39 +3713,43 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "group1"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "group1",
-					Org:  "123",
-					Path: "/path/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "group1",
+						Org:  "123",
+						Path: "/path/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "123",
-					Path: "/path/",
-					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-								GROUP_ACTION_ATTACH_GROUP_POLICY,
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "123",
+						Path: "/path/",
+						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+									GROUP_ACTION_ATTACH_GROUP_POLICY,
+								},
+								Resources: []string{
+									GetUrnPrefix("123", RESOURCE_GROUP, ""),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("123", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "deny",
-							Actions: []string{
-								GROUP_ACTION_ATTACH_GROUP_POLICY,
-							},
-							Resources: []string{
-								GetUrnPrefix("123", RESOURCE_GROUP, "/path/"),
+							{
+								Effect: "deny",
+								Actions: []string{
+									GROUP_ACTION_ATTACH_GROUP_POLICY,
+								},
+								Resources: []string{
+									GetUrnPrefix("123", RESOURCE_GROUP, "/path/"),
+								},
 							},
 						},
 					},
@@ -3625,22 +3781,26 @@ func TestAuthAPI_AttachPolicyToGroup(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "group1"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "group1",
-					Org:  "123",
-					Path: "/path/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "group1",
+						Org:  "123",
+						Path: "/path/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:         "POLICY-USER-ID",
-					Name:       "policyUser",
-					Org:        "123",
-					Path:       "/path/",
-					Urn:        CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{},
+					Policy: &Policy{
+						ID:         "POLICY-USER-ID",
+						Name:       "policyUser",
+						Org:        "123",
+						Path:       "/path/",
+						Urn:        CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{},
+					},
 				},
 			},
 			getUserByExternalIDResult: &User{
@@ -3827,8 +3987,8 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 		getGroupByNameResult      *Group
 		getPolicyByNameResult     *Policy
 		getUserByExternalIDResult *User
-		getGroupsByUserIDResult   []Group
-		getAttachedPoliciesResult []Policy
+		getGroupsByUserIDResult   []TestUserGroupRelation
+		getAttachedPoliciesResult []TestPolicyGroupRelation
 		isAttachedToGroupResult   bool
 		// API Errors
 		getGroupByNameMethodErr      error
@@ -3905,39 +4065,43 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 					},
 				},
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "group1",
-					Org:  "123",
-					Path: "/path/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "group1",
+						Org:  "123",
+						Path: "/path/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "123",
-					Path: "/path/",
-					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-								GROUP_ACTION_DETACH_GROUP_POLICY,
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "123",
+						Path: "/path/",
+						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+									GROUP_ACTION_DETACH_GROUP_POLICY,
+								},
+								Resources: []string{
+									GetUrnPrefix("123", RESOURCE_GROUP, ""),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("123", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "allow",
-							Actions: []string{
-								POLICY_ACTION_GET_POLICY,
-							},
-							Resources: []string{
-								GetUrnPrefix("123", RESOURCE_POLICY, ""),
+							{
+								Effect: "allow",
+								Actions: []string{
+									POLICY_ACTION_GET_POLICY,
+								},
+								Resources: []string{
+									GetUrnPrefix("123", RESOURCE_POLICY, ""),
+								},
 							},
 						},
 					},
@@ -4039,29 +4203,33 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "group1"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "group1",
-					Org:  "123",
-					Path: "/path/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "group1",
+						Org:  "123",
+						Path: "/path/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "123",
-					Path: "/path/",
-					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("123", RESOURCE_GROUP, ""),
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "123",
+						Path: "/path/",
+						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("123", RESOURCE_GROUP, ""),
+								},
 							},
 						},
 					},
@@ -4093,39 +4261,43 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "group1"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "group1",
-					Org:  "123",
-					Path: "/path/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "group1",
+						Org:  "123",
+						Path: "/path/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "123",
-					Path: "/path/",
-					Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-								GROUP_ACTION_DETACH_GROUP_POLICY,
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "123",
+						Path: "/path/",
+						Urn:  CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+									GROUP_ACTION_DETACH_GROUP_POLICY,
+								},
+								Resources: []string{
+									GetUrnPrefix("123", RESOURCE_GROUP, ""),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("123", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "deny",
-							Actions: []string{
-								GROUP_ACTION_DETACH_GROUP_POLICY,
-							},
-							Resources: []string{
-								GetUrnPrefix("123", RESOURCE_GROUP, "/path/"),
+							{
+								Effect: "deny",
+								Actions: []string{
+									GROUP_ACTION_DETACH_GROUP_POLICY,
+								},
+								Resources: []string{
+									GetUrnPrefix("123", RESOURCE_GROUP, "/path/"),
+								},
 							},
 						},
 					},
@@ -4157,22 +4329,26 @@ func TestAuthAPI_DetachPolicyToGroup(t *testing.T) {
 				Path: "/path/",
 				Urn:  CreateUrn("123", RESOURCE_GROUP, "/path/", "group1"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "group1",
-					Org:  "123",
-					Path: "/path/",
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "group1",
+						Org:  "123",
+						Path: "/path/",
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:         "POLICY-USER-ID",
-					Name:       "policyUser",
-					Org:        "123",
-					Path:       "/path/",
-					Urn:        CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
-					Statements: &[]Statement{},
+					Policy: &Policy{
+						ID:         "POLICY-USER-ID",
+						Name:       "policyUser",
+						Org:        "123",
+						Path:       "/path/",
+						Urn:        CreateUrn("123", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{},
+					},
 				},
 			},
 			getUserByExternalIDResult: &User{
@@ -4353,13 +4529,13 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 		requestInfo RequestInfo
 		filter      *Filter
 		// Expected result
-		expectedPolicies []string
+		expectedPolicies []GroupPolicies
 		totalResult      int
 		wantError        error
 		// Manager Results
 		getUserByExternalIDResult  *User
-		getGroupsByUserIDResult    []Group
-		getAttachedPoliciesResult  []Policy
+		getGroupsByUserIDResult    []TestUserGroupRelation
+		getAttachedPoliciesResult  []TestPolicyGroupRelation
 		getGroupByNameMethodResult *Group
 		// API Errors
 		getUserByExternalIDMethodErr error
@@ -4388,7 +4564,7 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
 			},
-			expectedPolicies: []string{},
+			expectedPolicies: []GroupPolicies{},
 		},
 		"OKCase": {
 			requestInfo: RequestInfo{
@@ -4412,37 +4588,45 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/example/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES,
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/example/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES,
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
 						},
 					},
 				},
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/example/",
-					Org:  "org1",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "groupUser"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org1",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "groupUser"),
+					},
 				},
 			},
-			expectedPolicies: []string{"policyUser"},
+			expectedPolicies: []GroupPolicies{
+				{
+					Policy: "policyUser",
+				},
+			},
 		},
 		"ErrorCaseMaxLimitSize": {
 			requestInfo: RequestInfo{
@@ -4535,30 +4719,34 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/example/",
-					Org:  "org1",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "groupUser"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org1",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/example/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_GET_GROUP,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/example/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
 						},
 					},
@@ -4591,40 +4779,44 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/example/",
-					Org:  "org1",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "groupUser"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org1",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:   "POLICY-USER-ID",
-					Name: "policyUser",
-					Org:  "org1",
-					Path: "/example/",
-					Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
-					Statements: &[]Statement{
-						{
-							Effect: "allow",
-							Actions: []string{
-								GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES,
-								GROUP_ACTION_GET_GROUP,
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/example/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES,
+									GROUP_ACTION_GET_GROUP,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, ""),
+								},
 							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, ""),
-							},
-						},
-						{
-							Effect: "deny",
-							Actions: []string{
-								GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES,
-							},
-							Resources: []string{
-								GetUrnPrefix("org1", RESOURCE_GROUP, "/example/group1"),
+							{
+								Effect: "deny",
+								Actions: []string{
+									GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES,
+								},
+								Resources: []string{
+									GetUrnPrefix("org1", RESOURCE_GROUP, "/example/group1"),
+								},
 							},
 						},
 					},
@@ -4657,23 +4849,27 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/example/",
-					Org:  "org1",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "groupUser"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org1",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "groupUser"),
+					},
 				},
 			},
-			getAttachedPoliciesResult: []Policy{
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
 				{
-					ID:         "POLICY-USER-ID",
-					Name:       "policyUser",
-					Org:        "org1",
-					Path:       "/example/",
-					Urn:        CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
-					Statements: &[]Statement{},
+					Policy: &Policy{
+						ID:         "POLICY-USER-ID",
+						Name:       "policyUser",
+						Org:        "org1",
+						Path:       "/example/",
+						Urn:        CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+						Statements: &[]Statement{},
+					},
 				},
 			},
 			wantError: &Error{
@@ -4703,13 +4899,15 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 				Path:       "/path/",
 				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
 			},
-			getGroupsByUserIDResult: []Group{
+			getGroupsByUserIDResult: []TestUserGroupRelation{
 				{
-					ID:   "GROUP-USER-ID",
-					Name: "groupUser",
-					Path: "/example/",
-					Org:  "org1",
-					Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org1",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+					},
 				},
 			},
 			getAttachedPoliciesErr: &database.Error{

@@ -1279,6 +1279,7 @@ func TestWorkerHandler_HandleRemovePolicy(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleListAttachedGroups(t *testing.T) {
+	now := time.Now()
 	testcases := map[string]struct {
 		// API method args
 		filter       *api.Filter
@@ -1288,7 +1289,7 @@ func TestWorkerHandler_HandleListAttachedGroups(t *testing.T) {
 		expectedResponse   ListAttachedGroupsResponse
 		expectedError      api.Error
 		// Manager Results
-		getPolicyGroupsResult []string
+		getPolicyGroupsResult []api.PolicyGroups
 		totalGroupsResult     int
 		// Manager Errors
 		getPolicyGroupsErr error
@@ -1300,13 +1301,31 @@ func TestWorkerHandler_HandleListAttachedGroups(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: ListAttachedGroupsResponse{
-				Groups: []string{"group1", "group2"},
+				Groups: []api.PolicyGroups{
+					{
+						Group:    "group1",
+						CreateAt: now,
+					},
+					{
+						Group:    "group2",
+						CreateAt: now,
+					},
+				},
 				Offset: 0,
 				Limit:  0,
 				Total:  2,
 			},
-			getPolicyGroupsResult: []string{"group1", "group2"},
-			totalGroupsResult:     2,
+			getPolicyGroupsResult: []api.PolicyGroups{
+				{
+					Group:    "group1",
+					CreateAt: now,
+				},
+				{
+					Group:    "group2",
+					CreateAt: now,
+				},
+			},
+			totalGroupsResult: 2,
 		},
 		"ErrorCaseInvalidFilterParams": {
 			filter: &api.Filter{

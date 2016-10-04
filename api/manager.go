@@ -1,6 +1,9 @@
 package api
 
-import log "github.com/Sirupsen/logrus"
+import (
+	log "github.com/Sirupsen/logrus"
+	"time"
+)
 
 // TYPE DEFINITIONS
 
@@ -8,6 +11,20 @@ import log "github.com/Sirupsen/logrus"
 type Resource interface {
 	// This method must return resource URN
 	GetUrn() string
+}
+
+// Interface for User-Group relationships
+type UserGroupRelation interface {
+	GetUser() *User
+	GetGroup() *Group
+	GetDate() time.Time
+}
+
+// Interface for Policy-Group relationships
+type PolicyGroupRelation interface {
+	GetGroup() *Group
+	GetPolicy() *Policy
+	GetDate() time.Time
 }
 
 // Foulkon API that implements API interfaces using repositories
@@ -55,7 +72,7 @@ type UserAPI interface {
 
 	// Retrieve groups that belongs to the user. Throw error if externalId parameter is invalid, user
 	// doesn't exist or unexpected error happen.
-	ListGroupsByUser(requestInfo RequestInfo, filter *Filter) ([]GroupIdentity, int, error)
+	ListGroupsByUser(requestInfo RequestInfo, filter *Filter) ([]UserGroups, int, error)
 }
 
 type GroupAPI interface {
@@ -90,7 +107,7 @@ type GroupAPI interface {
 
 	// List user identifiers that belong to the group. Throw error if the input parameters are invalid,
 	// group doesn't exist or unexpected error happen.
-	ListMembers(requestInfo RequestInfo, filter *Filter) ([]string, int, error)
+	ListMembers(requestInfo RequestInfo, filter *Filter) ([]GroupMembers, int, error)
 
 	// Attach policy to group. Throw error if the input parameters are invalid, policy doesn't exist,
 	// group doesn't exist, policy is already attached to the group or unexpected error happen.
@@ -100,9 +117,9 @@ type GroupAPI interface {
 	// group doesn't exist, policy isn't attached to the group or unexpected error happen.
 	DetachPolicyToGroup(requestInfo RequestInfo, org string, groupName string, policyName string) error
 
-	// Retrieve name of policies that are attached to the group. Throw error if the input parameters are invalid,
+	// Retrieve policies that are attached to the group. Throw error if the input parameters are invalid,
 	// group doesn't exist or unexpected error happen.
-	ListAttachedGroupPolicies(requestInfo RequestInfo, filter *Filter) ([]string, int, error)
+	ListAttachedGroupPolicies(requestInfo RequestInfo, filter *Filter) ([]GroupPolicies, int, error)
 }
 
 type PolicyAPI interface {
@@ -128,9 +145,9 @@ type PolicyAPI interface {
 	// Throw error if the input parameters are invalid, the policy doesn't exist or unexpected error happen.
 	RemovePolicy(requestInfo RequestInfo, org string, name string) error
 
-	// Retrieve name of groups that are attached to the policy. Throw error if the input parameters are invalid,
+	// Retrieve groups that are attached to the policy. Throw error if the input parameters are invalid,
 	// policy doesn't exist or unexpected error happen.
-	ListAttachedGroups(requestInfo RequestInfo, filter *Filter) ([]string, int, error)
+	ListAttachedGroups(requestInfo RequestInfo, filter *Filter) ([]PolicyGroups, int, error)
 }
 
 type AuthzAPI interface {
@@ -175,7 +192,7 @@ type UserRepo interface {
 
 	// Retrieve groups that belong to the user. Throw error
 	// if there are problems with database.
-	GetGroupsByUserID(id string, filter *Filter) ([]Group, int, error)
+	GetGroupsByUserID(id string, filter *Filter) ([]UserGroupRelation, int, error)
 }
 
 // GroupRepo contains all database operations
@@ -211,7 +228,7 @@ type GroupRepo interface {
 	IsMemberOfGroup(userID string, groupID string) (bool, error)
 
 	// Retrieve users that belong to the group. Throw error if there are problems with database.
-	GetGroupMembers(groupID string, filter *Filter) ([]User, int, error)
+	GetGroupMembers(groupID string, filter *Filter) ([]UserGroupRelation, int, error)
 
 	// Attach policy to group. It doesn't check restrictions about existence of group or policy. It throws
 	// errors if there are problems with database.
@@ -226,7 +243,7 @@ type GroupRepo interface {
 	IsAttachedToGroup(groupID string, policyID string) (bool, error)
 
 	// Retrieve policies that are attached to the group. Throw error if there are problems with database.
-	GetAttachedPolicies(groupID string, filter *Filter) ([]Policy, int, error)
+	GetAttachedPolicies(groupID string, filter *Filter) ([]PolicyGroupRelation, int, error)
 }
 
 // PolicyRepo contains all database operations
@@ -250,5 +267,5 @@ type PolicyRepo interface {
 	RemovePolicy(id string) error
 
 	// Retrieve groups that are attached to the policy. Throw error if there are problems with database.
-	GetAttachedGroups(policyID string, filter *Filter) ([]Group, int, error)
+	GetAttachedGroups(policyID string, filter *Filter) ([]PolicyGroupRelation, int, error)
 }
