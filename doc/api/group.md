@@ -187,14 +187,14 @@ HTTP/1.1 200 OK
 List all organization's groups
 
 ```
-GET /api/v1/organizations/{organization_id}/groups?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}
+GET /api/v1/organizations/{organization_id}/groups?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/organizations/$ORGANIZATION_ID/groups?PathPrefix=$OPTIONAL_PATH_PREFIX&Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT \
+$ curl -n /api/v1/organizations/$ORGANIZATION_ID/groups?PathPrefix=$OPTIONAL_PATH_PREFIX&Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT&OrderBy=$COLUMNNAME-DESC \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -237,14 +237,14 @@ HTTP/1.1 200 OK
 List all groups
 
 ```
-GET /api/v1/groups?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}
+GET /api/v1/groups?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/groups?PathPrefix=$OPTIONAL_PATH_PREFIX&Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT \
+$ curl -n /api/v1/groups?PathPrefix=$OPTIONAL_PATH_PREFIX&Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT&OrderBy=$COLUMNNAME-DESC \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -340,14 +340,14 @@ HTTP/1.1 202 Accepted
 List members of a group
 
 ```
-GET /api/v1/organizations/{organization_id}/groups/{group_name}/users?Offset={optional_offset}&Limit={optional_limit}
+GET /api/v1/organizations/{organization_id}/groups/{group_name}/users?Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/organizations/$ORGANIZATION_ID/groups/$GROUP_NAME/users?Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT \
+$ curl -n /api/v1/organizations/$ORGANIZATION_ID/groups/$GROUP_NAME/users?Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT&OrderBy=$COLUMNNAME-DESC \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -443,14 +443,14 @@ HTTP/1.1 202 Accepted
 List attach policies
 
 ```
-GET /api/v1/organizations/{organization_id}/groups/{group_name}/policies?Offset={optional_offset}&Limit={optional_limit}
+GET /api/v1/organizations/{organization_id}/groups/{group_name}/policies?Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/organizations/$ORGANIZATION_ID/groups/$GROUP_NAME/policies?Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT \
+$ curl -n /api/v1/organizations/$ORGANIZATION_ID/groups/$GROUP_NAME/policies?Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT&OrderBy=$COLUMNNAME-DESC \
   -H "Authorization: Basic or Bearer XXX"
 ```
 

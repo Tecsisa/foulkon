@@ -264,14 +264,14 @@ HTTP/1.1 200 OK
 List all policies by organization.
 
 ```
-GET /api/v1/organizations/{organization_id}/policies?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}
+GET /api/v1/organizations/{organization_id}/policies?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/organizations/$ORGANIZATION_ID/policies?PathPrefix=$OPTIONAL_PATH_PREFIX&Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT \
+$ curl -n /api/v1/organizations/$ORGANIZATION_ID/policies?PathPrefix=$OPTIONAL_PATH_PREFIX&Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT&OrderBy=$COLUMNNAME-DESC \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -314,14 +314,14 @@ HTTP/1.1 200 OK
 List all policies.
 
 ```
-GET /api/v1/policies?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}
+GET /api/v1/policies?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-asc}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/policies?PathPrefix=$OPTIONAL_PATH_PREFIX&Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT \
+$ curl -n /api/v1/policies?PathPrefix=$OPTIONAL_PATH_PREFIX&Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT&OrderBy=$COLUMNNAME-ASC \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -367,14 +367,14 @@ List attached groups
 List attached groups to this policy
 
 ```
-GET /api/v1/organizations/{organization_id}/policies/{policy_name}/groups?Offset={optional_offset}&Limit={optional_limit}
+GET /api/v1/organizations/{organization_id}/policies/{policy_name}/groups?Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/organizations/$ORGANIZATION_ID/policies/$POLICY_NAME/groups?Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT \
+$ curl -n /api/v1/organizations/$ORGANIZATION_ID/policies/$POLICY_NAME/groups?Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT&OrderBy=$COLUMNNAME-DESC \
   -H "Authorization: Basic or Bearer XXX"
 ```
 

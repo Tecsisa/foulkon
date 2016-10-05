@@ -81,35 +81,35 @@ func TestPostgresRepo_OrderByValidColumns(t *testing.T) {
 		action          string
 		expectedColumns []string
 	}{
-		api.USER_ACTION_LIST_USERS: {
+		"OkCaseAction-" + api.USER_ACTION_LIST_USERS: {
 			action:          api.USER_ACTION_LIST_USERS,
 			expectedColumns: []string{"path", "external_id", "create_at", "update_at", "urn"},
 		},
-		api.USER_ACTION_LIST_GROUPS_FOR_USER: {
+		"OkCaseAction-" + api.USER_ACTION_LIST_GROUPS_FOR_USER: {
 			action:          api.USER_ACTION_LIST_GROUPS_FOR_USER,
 			expectedColumns: []string{"create_at"},
 		},
-		api.GROUP_ACTION_LIST_GROUPS: {
+		"OkCaseAction-" + api.GROUP_ACTION_LIST_GROUPS: {
 			action:          api.GROUP_ACTION_LIST_GROUPS,
 			expectedColumns: []string{"name", "path", "org", "create_at", "update_at", "urn"},
 		},
-		api.GROUP_ACTION_LIST_MEMBERS: {
+		"OkCaseAction-" + api.GROUP_ACTION_LIST_MEMBERS: {
 			action:          api.GROUP_ACTION_LIST_MEMBERS,
 			expectedColumns: []string{"create_at"},
 		},
-		api.GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES: {
+		"OkCaseAction-" + api.GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES: {
 			action:          api.GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES,
 			expectedColumns: []string{"create_at"},
 		},
-		api.POLICY_ACTION_LIST_POLICIES: {
+		"OkCaseAction-" + api.POLICY_ACTION_LIST_POLICIES: {
 			action:          api.POLICY_ACTION_LIST_POLICIES,
 			expectedColumns: []string{"name", "path", "org", "create_at", "update_at", "urn"},
 		},
-		api.POLICY_ACTION_LIST_ATTACHED_GROUPS: {
+		"OkCaseAction-" + api.POLICY_ACTION_LIST_ATTACHED_GROUPS: {
 			action:          api.POLICY_ACTION_LIST_ATTACHED_GROUPS,
 			expectedColumns: []string{"create_at"},
 		},
-		"others": {
+		"OkCaseOtherActions": {
 			action:          "other",
 			expectedColumns: []string{},
 		},

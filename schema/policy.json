@@ -202,7 +202,7 @@
       "links": [
         {
           "description": "List all policies by organization.",
-          "href": "/api/v1/organizations/{organization_id}/policies?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}",
+          "href": "/api/v1/organizations/{organization_id}/policies?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}",
           "method": "GET",
           "rel": "self",
           "http_header": {
@@ -246,7 +246,7 @@
       "links": [
         {
           "description": "List all policies.",
-          "href": "/api/v1/policies?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}",
+          "href": "/api/v1/policies?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-asc}",
           "method": "GET",
           "rel": "self",
           "http_header": {
@@ -296,7 +296,7 @@
       "links": [
         {
           "description": "List attached groups to this policy",
-          "href": "/api/v1/organizations/{organization_id}/policies/{policy_name}/groups?Offset={optional_offset}&Limit={optional_limit}",
+          "href": "/api/v1/organizations/{organization_id}/policies/{policy_name}/groups?Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}",
           "method": "GET",
           "rel": "self",
           "http_header": {

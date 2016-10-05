@@ -143,7 +143,7 @@
       "links": [
         {
           "description": "List all organization's groups",
-          "href": "/api/v1/organizations/{organization_id}/groups?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}",
+          "href": "/api/v1/organizations/{organization_id}/groups?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}",
           "method": "GET",
           "rel": "self",
           "http_header": {
@@ -187,7 +187,7 @@
       "links": [
         {
           "description": "List all groups",
-          "href": "/api/v1/groups?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}",
+          "href": "/api/v1/groups?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}",
           "method": "GET",
           "rel": "self",
           "http_header": {
@@ -257,7 +257,7 @@
         },
         {
           "description": "List members of a group",
-          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/users?Offset={optional_offset}&Limit={optional_limit}",
+          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/users?Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}",
           "method": "GET",
           "rel": "self",
           "http_header": {
@@ -331,7 +331,7 @@
         },
         {
           "description": "List attach policies",
-          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/policies?Offset={optional_offset}&Limit={optional_limit}",
+          "href": "/api/v1/organizations/{organization_id}/groups/{group_name}/policies?Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}",
           "method": "GET",
           "rel": "self",
           "http_header": {

@@ -101,7 +101,6 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[RemovePolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetPoliciesFilteredMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetAttachedGroupsMethod] = make([]interface{}, 2)
-	testRepo.ArgsIn[GetPoliciesFilteredMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[OrderByValidColumnsMethod] = make([]interface{}, 1)
 
 	testRepo.ArgsOut[GetUserByExternalIDMethod] = make([]interface{}, 2)
