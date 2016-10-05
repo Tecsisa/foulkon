@@ -61,6 +61,9 @@ vet:
 		echo ""; \
 	fi
 
+changelog:
+	github_changelog_generator
+
 # bootstrap the build by downloading additional tools
 bootstrap: deps
 	@for tool in $(EXTERNAL_TOOLS) ; do \
