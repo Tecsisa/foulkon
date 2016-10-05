@@ -8,6 +8,7 @@ import (
 
 	"bytes"
 	"fmt"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/auth"

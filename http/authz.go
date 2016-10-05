@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"fmt"
+
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/julienschmidt/httprouter"
 )

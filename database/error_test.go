@@ -1,8 +1,9 @@
 package database
 
 import (
-	"github.com/kylelemons/godebug/pretty"
 	"testing"
+
+	"github.com/kylelemons/godebug/pretty"
 )
 
 func TestError(t *testing.T) {

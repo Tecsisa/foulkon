@@ -3,11 +3,12 @@ package api
 import (
 	"bytes"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/kylelemons/godebug/pretty"
 	"math/rand"
 	"testing"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/kylelemons/godebug/pretty"
 )
 
 const (
