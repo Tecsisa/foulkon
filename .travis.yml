@@ -26,3 +26,4 @@ script:
 
 after_success:
   - make bin
+  - bash <(curl -s https://codecov.io/bash)

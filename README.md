@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/Tecsisa/foulkon.svg?branch=master)](https://travis-ci.org/Tecsisa/foulkon)
 [![Join the chat at https://gitter.im/Tecsisa/foulkon](https://badges.gitter.im/Tecsisa/foulkon.svg)](https://gitter.im/Tecsisa/foulkon?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tecsisa/foulkon)](https://goreportcard.com/report/github.com/tecsisa/foulkon)
+[![codecov](https://codecov.io/gh/Tecsisa/foulkon/branch/master/graph/badge.svg)](https://codecov.io/gh/Tecsisa/foulkon)
 
 __Foulkon__ is an authorization server that allows or denies the access to web resources.
 
@@ -52,7 +53,7 @@ GET /example/resource HTTP/1.1
 ## Development
 
 For local development, first make sure Go is properly installed according to [Go install doc](https://golang.org/doc/install) (Also, include $GOBIN environment var in your $PATH). Then run next command in project root path:
- 
+
 ```
 $ make bootstrap
 ```

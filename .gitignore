@@ -26,3 +26,6 @@ _testmain.go
 
 # external packages folder
 vendor/
+
+# coverage generated files
+coverage.txt
