@@ -380,6 +380,63 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 				Message: "Invalid parameter action product:DoPrefix*. Action parameter can't be a prefix",
 			},
 		},
+		"ErrortestCaseNoAllowedUrns": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			action: POLICY_ACTION_GET_POLICY,
+			resourceUrns: []string{
+				CreateUrn("example", RESOURCE_POLICY, "/path/", "policy1"),
+				CreateUrn("example", RESOURCE_POLICY, "/path/", "policy2"),
+				CreateUrn("example1", RESOURCE_POLICY, "/path/", "policy3"),
+			},
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to any resource",
+			},
+			getUserByExternalIDResult: &User{
+				ID:  "123456",
+				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
+			},
+			getGroupsByUserIDResult: []TestUserGroupRelation{
+				{
+					Group: &Group{
+						ID:  "GROUP-USER-ID",
+						Urn: CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
+				},
+			},
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
+				{
+					Policy: &Policy{
+						ID:  "POLICY-USER-ID",
+						Urn: CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "deny",
+								Actions: []string{
+									POLICY_ACTION_GET_POLICY,
+								},
+								Resources: []string{
+									GetUrnPrefix("example", RESOURCE_POLICY, "/path/"),
+								},
+							},
+							{
+								Effect: "allow",
+								Actions: []string{
+									POLICY_ACTION_GET_POLICY,
+								},
+								Resources: []string{
+									GetUrnPrefix("example", RESOURCE_POLICY, "/path/path2"),
+									GetUrnPrefix("example2", RESOURCE_POLICY, "/path/path2"),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 		"OktestCaseFullUrnAllow": {
 			requestInfo: RequestInfo{
 				Identifier: "123456",
@@ -437,8 +494,9 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 				CreateUrn("example", RESOURCE_POLICY, "/path/", "policy1"),
 				CreateUrn("example", RESOURCE_POLICY, "/path/", "policy2"),
 				CreateUrn("example1", RESOURCE_POLICY, "/path/", "policy3"),
+				CreateUrn("example2", RESOURCE_POLICY, "/path/path2/", "policy3"),
 			},
-			expectedResources: []string{},
+			expectedResources: []string{CreateUrn("example2", RESOURCE_POLICY, "/path/path2/", "policy3")},
 			getUserByExternalIDResult: &User{
 				ID:  "123456",
 				Urn: CreateUrn("", RESOURCE_USER, "/path/", "user1"),
