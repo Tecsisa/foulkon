@@ -316,21 +316,22 @@ func TestPostgresRepo_GetUsersFiltered(t *testing.T) {
 				PathPrefix: "Path",
 				Offset:     0,
 				Limit:      20,
+				OrderBy:    "urn desc",
 			},
 			expectedResponse: []api.User{
-				{
-					ID:         "UserID1",
-					ExternalID: "ExternalID1",
-					Path:       "Path123",
-					Urn:        "urn1",
-					CreateAt:   now,
-					UpdateAt:   now,
-				},
 				{
 					ID:         "UserID2",
 					ExternalID: "ExternalID2",
 					Path:       "Path456",
 					Urn:        "urn2",
+					CreateAt:   now,
+					UpdateAt:   now,
+				},
+				{
+					ID:         "UserID1",
+					ExternalID: "ExternalID1",
+					Path:       "Path123",
+					Urn:        "urn1",
 					CreateAt:   now,
 					UpdateAt:   now,
 				},
@@ -634,7 +635,7 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 	type relation struct {
 		userID        string
 		groups        []Group
-		createAt      int64
+		createAt      []int64
 		groupNotFound bool
 	}
 	now := time.Now().UTC()
@@ -671,7 +672,7 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 						Org:      "Org",
 					},
 				},
-				createAt: now.UnixNano(),
+				createAt: []int64{now.UnixNano(), now.UnixNano()},
 			},
 			userID: "UserID",
 			filter: testFilter,
@@ -702,6 +703,62 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 				},
 			},
 		},
+		"OkCaseOrderBy": {
+			relation: &relation{
+				userID: "UserID",
+				groups: []Group{
+					{
+						ID:       "GroupID1",
+						Name:     "Name1",
+						Path:     "Path1",
+						Urn:      "urn1",
+						CreateAt: now.UnixNano(),
+						UpdateAt: now.UnixNano(),
+						Org:      "Org",
+					},
+					{
+						ID:       "GroupID2",
+						Name:     "Name2",
+						Path:     "Path2",
+						Urn:      "urn2",
+						CreateAt: now.UnixNano(),
+						UpdateAt: now.UnixNano(),
+						Org:      "Org",
+					},
+				},
+				createAt: []int64{now.UnixNano() - 1, now.UnixNano()},
+			},
+			userID: "UserID",
+			filter: &api.Filter{
+				OrderBy: "create_at desc",
+			},
+			expectedResponse: []GroupUser{
+				{
+					Group: &api.Group{
+						ID:       "GroupID2",
+						Name:     "Name2",
+						Path:     "Path2",
+						Urn:      "urn2",
+						CreateAt: now,
+						UpdateAt: now,
+						Org:      "Org",
+					},
+					CreateAt: now,
+				},
+				{
+					Group: &api.Group{
+						ID:       "GroupID1",
+						Name:     "Name1",
+						Path:     "Path1",
+						Urn:      "urn1",
+						CreateAt: now,
+						UpdateAt: now,
+						Org:      "Org",
+					},
+					CreateAt: now.Add(-1),
+				},
+			},
+		},
 		"ErrorCase": {
 			relation: &relation{
 				userID: "UserID",
@@ -713,7 +770,7 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 						ID: "GroupID2",
 					},
 				},
-				createAt:      now.UnixNano(),
+				createAt:      []int64{now.UnixNano(), now.UnixNano()},
 				groupNotFound: true,
 			},
 			userID: "UserID",
@@ -733,8 +790,8 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 
 		// Insert previous data
 		if test.relation != nil {
-			for _, group := range test.relation.groups {
-				if err := insertGroupUserRelation(test.relation.userID, group.ID, test.relation.createAt); err != nil {
+			for i, group := range test.relation.groups {
+				if err := insertGroupUserRelation(test.relation.userID, group.ID, test.relation.createAt[i]); err != nil {
 					t.Errorf("Test %v failed. Unexpected error inserting prevoius group user relations: %v", n, err)
 					continue
 				}

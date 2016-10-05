@@ -448,6 +448,51 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 				},
 			},
 		},
+		"OkCaseOrderBy": {
+			previousGroups: []Group{
+				{
+					ID:       "GroupID1",
+					Name:     "Name1",
+					Path:     "Path123",
+					Urn:      "urn1",
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
+					Org:      "Org1",
+				},
+				{
+					ID:       "GroupID2",
+					Name:     "Name2",
+					Path:     "Path456",
+					Urn:      "urn2",
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
+					Org:      "Org2",
+				},
+			},
+			filter: &api.Filter{
+				OrderBy: "path desc",
+			},
+			expectedResponse: []api.Group{
+				{
+					ID:       "GroupID2",
+					Name:     "Name2",
+					Path:     "Path456",
+					Urn:      "urn2",
+					CreateAt: now,
+					UpdateAt: now,
+					Org:      "Org2",
+				},
+				{
+					ID:       "GroupID1",
+					Name:     "Name1",
+					Path:     "Path123",
+					Urn:      "urn1",
+					CreateAt: now,
+					UpdateAt: now,
+					Org:      "Org1",
+				},
+			},
+		},
 		"OkCaseGetByOrgAndPathPrefix": {
 			previousGroups: []Group{
 				{
@@ -1040,7 +1085,7 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 	type relations struct {
 		users        []User
 		groupID      string
-		createAt     int64
+		createAt     []int64
 		userNotFound bool
 	}
 	now := time.Now().UTC()
@@ -1075,7 +1120,7 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 					},
 				},
 				groupID:  "GroupID",
-				createAt: now.UnixNano(),
+				createAt: []int64{now.UnixNano(), now.UnixNano()},
 			},
 			groupID: "GroupID",
 			filter:  testFilter,
@@ -1104,6 +1149,58 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 				},
 			},
 		},
+		"OkCaseOrderBy": {
+			relations: &relations{
+				users: []User{
+					{
+						ID:         "UserID1",
+						ExternalID: "ExternalID1",
+						Path:       "Path",
+						Urn:        "urn1",
+						CreateAt:   now.UnixNano(),
+						UpdateAt:   now.UnixNano(),
+					},
+					{
+						ID:         "UserID2",
+						ExternalID: "ExternalID2",
+						Path:       "Path",
+						Urn:        "urn2",
+						CreateAt:   now.UnixNano(),
+						UpdateAt:   now.UnixNano(),
+					},
+				},
+				groupID:  "GroupID",
+				createAt: []int64{now.UnixNano() - 1, now.UnixNano()},
+			},
+			groupID: "GroupID",
+			filter: &api.Filter{
+				OrderBy: "create_at desc",
+			},
+			expectedResponse: []GroupUser{
+				{
+					User: &api.User{
+						ID:         "UserID2",
+						ExternalID: "ExternalID2",
+						Path:       "Path",
+						Urn:        "urn2",
+						CreateAt:   now,
+						UpdateAt:   now,
+					},
+					CreateAt: now,
+				},
+				{
+					User: &api.User{
+						ID:         "UserID1",
+						ExternalID: "ExternalID1",
+						Path:       "Path",
+						Urn:        "urn1",
+						CreateAt:   now,
+						UpdateAt:   now,
+					},
+					CreateAt: now.Add(-1),
+				},
+			},
+		},
 		"ErrorCase": {
 			relations: &relations{
 				users: []User{
@@ -1113,6 +1210,7 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 				},
 				groupID:      "GroupID",
 				userNotFound: true,
+				createAt:     []int64{now.UnixNano()},
 			},
 			groupID: "GroupID",
 			filter:  testFilter,
@@ -1129,8 +1227,8 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 
 		// Insert previous data
 		if test.relations != nil {
-			for _, user := range test.relations.users {
-				if err := insertGroupUserRelation(user.ID, test.relations.groupID, test.relations.createAt); err != nil {
+			for x, user := range test.relations.users {
+				if err := insertGroupUserRelation(user.ID, test.relations.groupID, test.relations.createAt[x]); err != nil {
 					t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
 					continue
 				}
@@ -1355,7 +1453,7 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 	type relations struct {
 		policies       []Policy
 		groupID        string
-		createAt       int64
+		createAt       []int64
 		policyNotFound bool
 	}
 	now := time.Now().UTC()
@@ -1393,25 +1491,14 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 					},
 				},
 				groupID:  "GroupID",
-				createAt: now.UnixNano(),
+				createAt: []int64{now.UnixNano() - 1, now.UnixNano()},
 			},
 			statements: []Statement{},
 			groupID:    "GroupID",
-			filter:     testFilter,
+			filter: &api.Filter{
+				OrderBy: "create_at desc",
+			},
 			expectedResponse: []PolicyGroup{
-				{
-					Policy: &api.Policy{
-						ID:         "PolicyID1",
-						Name:       "Name1",
-						Org:        "org1",
-						Path:       "/path/",
-						CreateAt:   now,
-						UpdateAt:   now,
-						Urn:        "Urn1",
-						Statements: &[]api.Statement{},
-					},
-					CreateAt: now,
-				},
 				{
 					Policy: &api.Policy{
 						ID:         "PolicyID2",
@@ -1424,6 +1511,19 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 						Statements: &[]api.Statement{},
 					},
 					CreateAt: now,
+				},
+				{
+					Policy: &api.Policy{
+						ID:         "PolicyID1",
+						Name:       "Name1",
+						Org:        "org1",
+						Path:       "/path/",
+						CreateAt:   now,
+						UpdateAt:   now,
+						Urn:        "Urn1",
+						Statements: &[]api.Statement{},
+					},
+					CreateAt: now.Add(-1),
 				},
 			},
 		},
@@ -1450,7 +1550,7 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 					},
 				},
 				groupID:        "GroupID",
-				createAt:       now.UnixNano(),
+				createAt:       []int64{now.UnixNano(), now.UnixNano()},
 				policyNotFound: true,
 			},
 			statements: []Statement{},
@@ -1469,8 +1569,8 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 
 		// Insert previous data
 		if test.relations != nil {
-			for _, policy := range test.relations.policies {
-				if err := insertGroupPolicyRelation(test.relations.groupID, policy.ID, test.relations.createAt); err != nil {
+			for i, policy := range test.relations.policies {
+				if err := insertGroupPolicyRelation(test.relations.groupID, policy.ID, test.relations.createAt[i]); err != nil {
 					t.Errorf("Test %v failed. Unexpected error inserting previous group policy relations: %v", n, err)
 					continue
 				}
