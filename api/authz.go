@@ -136,6 +136,13 @@ func (api AuthAPI) GetAuthorizedExternalResources(requestInfo RequestInfo, actio
 		return nil, err
 	}
 
+	if len(allowedUrns) < 1 {
+		return nil, &Error{
+			Code:    UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to any resource", requestInfo.Identifier),
+		}
+	}
+
 	response := []string{}
 	for _, res := range allowedUrns {
 		response = append(response, res.GetUrn())

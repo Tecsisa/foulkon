@@ -71,18 +71,6 @@ func TestWorkerHandler_HandleGetAuthorizedExternalResources(t *testing.T) {
 				Message: "Error",
 			},
 		},
-		"ErrorCaseUnauthorizedErrorEmptyList": {
-			request: &AuthorizeResourcesRequest{
-				Resources: []string{},
-				Action:    api.USER_ACTION_GET_USER,
-			},
-			expectedStatusCode: http.StatusForbidden,
-			expectedError: api.Error{
-				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
-				Message: "User with externalId userID is not allowed to access to any resource",
-			},
-			getAuthorizedExternalResourcesResult: []string{},
-		},
 		"ErrorCaseUnknownApiError": {
 			request: &AuthorizeResourcesRequest{
 				Resources: []string{},
