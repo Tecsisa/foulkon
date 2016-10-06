@@ -44,6 +44,7 @@ type Worker struct {
 	GroupApi  api.GroupAPI
 	PolicyApi api.PolicyAPI
 	AuthzApi  api.AuthzAPI
+	ProxyApi  api.ProxyResourcesAPI
 
 	// Logger
 	Logger *logrus.Logger
@@ -83,7 +84,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 	log.Infof("Logger type: %v, LogLevel: %v", loggerType, log.Level.String())
 
 	// Start DB with API
-	var authApi api.AuthAPI
+	var authApi api.WorkerAPI
 
 	dbType, err := getMandatoryValue(config, "database.type")
 	if err != nil {
@@ -114,10 +115,11 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		repoDB := postgresql.PostgresRepo{
 			Dbmap: gormDB,
 		}
-		authApi = api.AuthAPI{
+		authApi = api.WorkerAPI{
 			GroupRepo:  repoDB,
 			UserRepo:   repoDB,
 			PolicyRepo: repoDB,
+			ProxyRepo:  repoDB,
 		}
 
 	default:

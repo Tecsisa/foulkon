@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -58,12 +57,9 @@ func main() {
 	}()
 
 	proxy.Logger.Infof("Server running in %v:%v", proxy.Host, proxy.Port)
-	if proxy.CertFile != "" && proxy.KeyFile != "" {
-		proxy.Logger.Error(http.ListenAndServeTLS(proxy.Host+":"+proxy.Port, proxy.CertFile, proxy.KeyFile, internalhttp.ProxyHandlerRouter(proxy)).Error())
-	} else {
-		proxy.Logger.Error(http.ListenAndServe(proxy.Host+":"+proxy.Port, internalhttp.ProxyHandlerRouter(proxy)).Error())
-	}
+	ps := internalhttp.NewProxy(proxy)
+	ps.Configuration()
+	proxy.Logger.Error(ps.Run().Error())
 
 	os.Exit(foulkon.CloseProxy())
-
 }

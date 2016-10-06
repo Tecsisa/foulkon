@@ -16,6 +16,7 @@ import (
 	"github.com/Tecsisa/foulkon/middleware/auth"
 	"github.com/Tecsisa/foulkon/middleware/logger"
 	"github.com/Tecsisa/foulkon/middleware/xrequestid"
+	"github.com/julienschmidt/httprouter"
 )
 
 const (
@@ -53,6 +54,9 @@ const (
 	GetAuthorizedGroupsMethod            = "GetAuthorizedGroups"
 	GetAuthorizedPoliciesMethod          = "GetAuthorizedPolicies"
 	GetAuthorizedExternalResourcesMethod = "GetAuthorizedExternalResources"
+
+	// PROXY API
+	GetProxyResourcesMethod = "GetProxyResources"
 )
 
 // Test server used to test handlers
@@ -60,6 +64,7 @@ var server *httptest.Server
 var proxy *httptest.Server
 var testApi *TestAPI
 var authConnector *TestConnector
+var proxyCore *foulkon.Proxy
 var testFilter = &api.Filter{
 	PathPrefix: "",
 	Org:        "",
@@ -134,7 +139,6 @@ func TestMain(m *testing.M) {
 	// Authenticator middleware
 	authenticatorMiddleware := auth.NewAuthenticatorMiddleware(authConnector, adminUser, adminPassword)
 	middlewares[middleware.AUTHENTICATOR_MIDDLEWARE] = authenticatorMiddleware
-	log.Infof("Created authenticator with admin username %v", adminUser)
 
 	// X-Request-Id middleware
 	xrequestidMiddleware := xrequestid.NewXRequestIdMiddleware()
@@ -156,62 +160,13 @@ func TestMain(m *testing.M) {
 
 	server = httptest.NewServer(WorkerHandlerRouter(worker))
 
-	proxyCore := &foulkon.Proxy{
+	proxyCore = &foulkon.Proxy{
 		Logger:     log,
 		WorkerHost: server.URL,
-		APIResources: []foulkon.APIResource{
-			{
-				Id:     "resource1",
-				Host:   server.URL,
-				Url:    USER_ID_URL,
-				Method: "GET",
-				Urn:    "urn:ews:example:instance1:resource/{userid}",
-				Action: "example:user",
-			},
-			{
-				Id:     "hostUnreachable",
-				Host:   "fail",
-				Url:    "/fail",
-				Method: "GET",
-				Urn:    "urn:ews:example:instance1:resource/fail",
-				Action: "example:fail",
-			},
-			{
-				Id:     "invalidHost",
-				Host:   "%&",
-				Url:    "/invalid",
-				Method: "GET",
-				Urn:    "urn:ews:example:instance1:resource/invalid",
-				Action: "example:invalid",
-			},
-			{
-				Id:     "invalidUrn",
-				Host:   server.URL,
-				Url:    "/invalidUrn",
-				Method: "GET",
-				Urn:    "%&",
-				Action: "example:invalid",
-			},
-			{
-				Id:     "urnPrefix",
-				Host:   server.URL,
-				Url:    "/urnPrefix",
-				Method: "GET",
-				Urn:    "urn:*",
-				Action: "&%",
-			},
-			{
-				Id:     "invalidAction",
-				Host:   server.URL,
-				Url:    "/invalidAction",
-				Method: "GET",
-				Urn:    "urn:ews:example:instance1:resource/user",
-				Action: "&%",
-			},
-		},
+		ProxyApi:   testApi,
 	}
 
-	proxy = httptest.NewServer(ProxyHandlerRouter(proxyCore))
+	proxy = httptest.NewServer(proxyHandlerRouter(proxyCore))
 
 	// Run tests
 	result := m.Run()
@@ -259,6 +214,8 @@ func makeTestApi() *TestAPI {
 	testApi.ArgsIn[GetAuthorizedPoliciesMethod] = make([]interface{}, 4)
 	testApi.ArgsIn[GetAuthorizedExternalResourcesMethod] = make([]interface{}, 3)
 
+	testApi.ArgsIn[GetProxyResourcesMethod] = make([]interface{}, 0)
+
 	testApi.ArgsOut[AddUserMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetUserByExternalIdMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[ListUsersMethod] = make([]interface{}, 3)
@@ -289,6 +246,8 @@ func makeTestApi() *TestAPI {
 	testApi.ArgsOut[GetAuthorizedGroupsMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetAuthorizedPoliciesMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetAuthorizedExternalResourcesMethod] = make([]interface{}, 2)
+
+	testApi.ArgsOut[GetProxyResourcesMethod] = make([]interface{}, 2)
 
 	return testApi
 }
@@ -684,6 +643,20 @@ func (t TestAPI) GetAuthorizedExternalResources(authenticatedUser api.RequestInf
 	return resourcesToReturn, err
 }
 
+// PROXY API
+
+func (t TestAPI) GetProxyResources() ([]api.ProxyResource, error) {
+	var proxyResources []api.ProxyResource
+	if t.ArgsOut[GetProxyResourcesMethod][0] != nil {
+		proxyResources = t.ArgsOut[GetProxyResourcesMethod][0].([]api.ProxyResource)
+	}
+	var err error
+	if t.ArgsOut[GetProxyResourcesMethod][1] != nil {
+		err = t.ArgsOut[GetProxyResourcesMethod][1].(error)
+	}
+	return proxyResources, err
+}
+
 // Private helper methods
 
 func addQueryParams(filter *api.Filter, r *http.Request) {
@@ -696,4 +669,68 @@ func addQueryParams(filter *api.Filter, r *http.Request) {
 		q.Add("Limit", fmt.Sprintf("%v", filter.Limit))
 		r.URL.RawQuery = q.Encode()
 	}
+}
+
+func proxyHandlerRouter(proxy *foulkon.Proxy) http.Handler {
+	// Create the muxer to handle the actual endpoints
+	router := httprouter.New()
+
+	proxyHandler := ProxyHandler{proxy: proxy, client: http.DefaultClient}
+
+	APIResources := []api.ProxyResource{
+		{
+			ID:     "resource1",
+			Host:   server.URL,
+			Url:    USER_ID_URL,
+			Method: "GET",
+			Urn:    "urn:ews:example:instance1:resource/{userid}",
+			Action: "example:user",
+		},
+		{
+			ID:     "hostUnreachable",
+			Host:   "fail",
+			Url:    "/fail",
+			Method: "GET",
+			Urn:    "urn:ews:example:instance1:resource/fail",
+			Action: "example:fail",
+		},
+		{
+			ID:     "invalidHost",
+			Host:   "%&",
+			Url:    "/invalid",
+			Method: "GET",
+			Urn:    "urn:ews:example:instance1:resource/invalid",
+			Action: "example:invalid",
+		},
+		{
+			ID:     "invalidUrn",
+			Host:   server.URL,
+			Url:    "/invalidUrn",
+			Method: "GET",
+			Urn:    "%&",
+			Action: "example:invalid",
+		},
+		{
+			ID:     "urnPrefix",
+			Host:   server.URL,
+			Url:    "/urnPrefix",
+			Method: "GET",
+			Urn:    "urn:*",
+			Action: "&%",
+		},
+		{
+			ID:     "invalidAction",
+			Host:   server.URL,
+			Url:    "/invalidAction",
+			Method: "GET",
+			Urn:    "urn:ews:example:instance1:resource/user",
+			Action: "&%",
+		},
+	}
+
+	for _, res := range APIResources {
+		router.Handle(res.Method, res.Url, proxyHandler.HandleRequest(res))
+	}
+
+	return router
 }

@@ -37,7 +37,7 @@ func (u User) GetUrn() string {
 
 // USER API IMPLEMENTATION
 
-func (api AuthAPI) AddUser(requestInfo RequestInfo, externalId string, path string) (*User, error) {
+func (api WorkerAPI) AddUser(requestInfo RequestInfo, externalId string, path string) (*User, error) {
 	// Validate fields
 	if !IsValidUserExternalID(externalId) {
 		return nil, &Error{
@@ -104,7 +104,7 @@ func (api AuthAPI) AddUser(requestInfo RequestInfo, externalId string, path stri
 	}
 }
 
-func (api AuthAPI) GetUserByExternalID(requestInfo RequestInfo, externalId string) (*User, error) {
+func (api WorkerAPI) GetUserByExternalID(requestInfo RequestInfo, externalId string) (*User, error) {
 	if !IsValidUserExternalID(externalId) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -148,7 +148,7 @@ func (api AuthAPI) GetUserByExternalID(requestInfo RequestInfo, externalId strin
 	}
 }
 
-func (api AuthAPI) ListUsers(requestInfo RequestInfo, filter *Filter) ([]string, int, error) {
+func (api WorkerAPI) ListUsers(requestInfo RequestInfo, filter *Filter) ([]string, int, error) {
 	// Check parameters
 	var total int
 	orderByValidColumns := api.UserRepo.OrderByValidColumns(USER_ACTION_LIST_USERS)
@@ -186,7 +186,7 @@ func (api AuthAPI) ListUsers(requestInfo RequestInfo, filter *Filter) ([]string,
 	return externalIds, total, nil
 }
 
-func (api AuthAPI) UpdateUser(requestInfo RequestInfo, externalId string, newPath string) (*User, error) {
+func (api WorkerAPI) UpdateUser(requestInfo RequestInfo, externalId string, newPath string) (*User, error) {
 	if !IsValidPath(newPath) {
 		return nil, &Error{
 			Code:    INVALID_PARAMETER_ERROR,
@@ -256,7 +256,7 @@ func (api AuthAPI) UpdateUser(requestInfo RequestInfo, externalId string, newPat
 
 }
 
-func (api AuthAPI) RemoveUser(requestInfo RequestInfo, externalId string) error {
+func (api WorkerAPI) RemoveUser(requestInfo RequestInfo, externalId string) error {
 	// Call repo to retrieve the user
 	user, err := api.GetUserByExternalID(requestInfo, externalId)
 	if err != nil {
@@ -291,7 +291,7 @@ func (api AuthAPI) RemoveUser(requestInfo RequestInfo, externalId string) error 
 	return nil
 }
 
-func (api AuthAPI) ListGroupsByUser(requestInfo RequestInfo, filter *Filter) ([]UserGroups, int, error) {
+func (api WorkerAPI) ListGroupsByUser(requestInfo RequestInfo, filter *Filter) ([]UserGroups, int, error) {
 	// Check parameters
 	var total int
 	orderByValidColumns := api.UserRepo.OrderByValidColumns(USER_ACTION_LIST_GROUPS_FOR_USER)

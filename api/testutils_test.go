@@ -38,6 +38,7 @@ const (
 	GetPoliciesFilteredMethod = "GetPoliciesFiltered"
 	GetAttachedGroupsMethod   = "GetAttachedGroups"
 	OrderByValidColumnsMethod = "OrderByValidColumns"
+	GetProxyResourcesMethod   = "GetProxyResources"
 )
 
 // TestRepo that implements all repo manager interfaces
@@ -130,14 +131,29 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[GetAttachedGroupsMethod] = make([]interface{}, 3)
 	testRepo.ArgsOut[OrderByValidColumnsMethod] = make([]interface{}, 1)
 
+	testRepo.ArgsOut[GetProxyResourcesMethod] = make([]interface{}, 2)
+
 	return testRepo
 }
 
-func makeTestAPI(testRepo *TestRepo) *AuthAPI {
-	api := &AuthAPI{
+func makeTestAPI(testRepo *TestRepo) *WorkerAPI {
+	api := &WorkerAPI{
 		UserRepo:   testRepo,
 		GroupRepo:  testRepo,
 		PolicyRepo: testRepo,
+		Logger: &log.Logger{
+			Out:       bytes.NewBuffer([]byte{}),
+			Formatter: &log.TextFormatter{},
+			Hooks:     make(log.LevelHooks),
+			Level:     log.DebugLevel,
+		},
+	}
+	return api
+}
+
+func makeProxyTestAPI(testRepo *TestRepo) *ProxyAPI {
+	api := &ProxyAPI{
+		ProxyRepo: testRepo,
 		Logger: &log.Logger{
 			Out:       bytes.NewBuffer([]byte{}),
 			Formatter: &log.TextFormatter{},
@@ -560,6 +576,22 @@ func (t TestRepo) OrderByValidColumns(action string) []string {
 		validColumns = t.ArgsOut[OrderByValidColumnsMethod][0].([]string)
 	}
 	return validColumns
+}
+
+//////////////
+// Proxy repo
+//////////////
+
+func (t TestRepo) GetProxyResources() ([]ProxyResource, error) {
+	var resources []ProxyResource
+	if t.ArgsOut[GetProxyResourcesMethod][0] != nil {
+		resources = t.ArgsOut[GetProxyResourcesMethod][0].([]ProxyResource)
+	}
+	var err error
+	if t.ArgsOut[GetProxyResourcesMethod][1] != nil {
+		err = t.ArgsOut[GetProxyResourcesMethod][1].(error)
+	}
+	return resources, err
 }
 
 // Private helper methods

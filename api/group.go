@@ -48,7 +48,7 @@ type GroupPolicies struct {
 
 // GROUP API IMPLEMENTATION
 
-func (api AuthAPI) AddGroup(requestInfo RequestInfo, org string, name string, path string) (*Group, error) {
+func (api WorkerAPI) AddGroup(requestInfo RequestInfo, org string, name string, path string) (*Group, error) {
 	// Validate fields
 	if !IsValidName(name) {
 		return nil, &Error{
@@ -123,7 +123,7 @@ func (api AuthAPI) AddGroup(requestInfo RequestInfo, org string, name string, pa
 
 }
 
-func (api AuthAPI) GetGroupByName(requestInfo RequestInfo, org string, name string) (*Group, error) {
+func (api WorkerAPI) GetGroupByName(requestInfo RequestInfo, org string, name string) (*Group, error) {
 	// Validate fields
 	if !IsValidName(name) {
 		return nil, &Error{
@@ -178,7 +178,7 @@ func (api AuthAPI) GetGroupByName(requestInfo RequestInfo, org string, name stri
 	}
 }
 
-func (api AuthAPI) ListGroups(requestInfo RequestInfo, filter *Filter) ([]GroupIdentity, int, error) {
+func (api WorkerAPI) ListGroups(requestInfo RequestInfo, filter *Filter) ([]GroupIdentity, int, error) {
 	// Validate fields
 	var total int
 	orderByValidColumns := api.UserRepo.OrderByValidColumns(GROUP_ACTION_LIST_GROUPS)
@@ -224,7 +224,7 @@ func (api AuthAPI) ListGroups(requestInfo RequestInfo, filter *Filter) ([]GroupI
 	return groupIDs, total, nil
 }
 
-func (api AuthAPI) UpdateGroup(requestInfo RequestInfo, org string, name string, newName string, newPath string) (*Group, error) {
+func (api WorkerAPI) UpdateGroup(requestInfo RequestInfo, org string, name string, newName string, newPath string) (*Group, error) {
 	// Validate fields
 	if !IsValidName(newName) {
 		return nil, &Error{
@@ -320,7 +320,7 @@ func (api AuthAPI) UpdateGroup(requestInfo RequestInfo, org string, name string,
 
 }
 
-func (api AuthAPI) RemoveGroup(requestInfo RequestInfo, org string, name string) error {
+func (api WorkerAPI) RemoveGroup(requestInfo RequestInfo, org string, name string) error {
 
 	// Call repo to retrieve the group
 	group, err := api.GetGroupByName(requestInfo, org, name)
@@ -358,7 +358,7 @@ func (api AuthAPI) RemoveGroup(requestInfo RequestInfo, org string, name string)
 	return nil
 }
 
-func (api AuthAPI) AddMember(requestInfo RequestInfo, externalId string, name string, org string) error {
+func (api WorkerAPI) AddMember(requestInfo RequestInfo, externalId string, name string, org string) error {
 
 	// Call repo to retrieve the group
 	groupDB, err := api.GetGroupByName(requestInfo, org, name)
@@ -420,7 +420,7 @@ func (api AuthAPI) AddMember(requestInfo RequestInfo, externalId string, name st
 	return nil
 }
 
-func (api AuthAPI) RemoveMember(requestInfo RequestInfo, externalId string, name string, org string) error {
+func (api WorkerAPI) RemoveMember(requestInfo RequestInfo, externalId string, name string, org string) error {
 
 	// Call repo to retrieve the group
 	groupDB, err := api.GetGroupByName(requestInfo, org, name)
@@ -483,7 +483,7 @@ func (api AuthAPI) RemoveMember(requestInfo RequestInfo, externalId string, name
 	return nil
 }
 
-func (api AuthAPI) ListMembers(requestInfo RequestInfo, filter *Filter) ([]GroupMembers, int, error) {
+func (api WorkerAPI) ListMembers(requestInfo RequestInfo, filter *Filter) ([]GroupMembers, int, error) {
 	// Validate fields
 	var total int
 	orderByValidColumns := api.UserRepo.OrderByValidColumns(GROUP_ACTION_LIST_MEMBERS)
@@ -538,7 +538,7 @@ func (api AuthAPI) ListMembers(requestInfo RequestInfo, filter *Filter) ([]Group
 	return members, total, nil
 }
 
-func (api AuthAPI) AttachPolicyToGroup(requestInfo RequestInfo, org string, name string, policyName string) error {
+func (api WorkerAPI) AttachPolicyToGroup(requestInfo RequestInfo, org string, name string, policyName string) error {
 
 	// Check if group exists
 	group, err := api.GetGroupByName(requestInfo, org, name)
@@ -598,7 +598,7 @@ func (api AuthAPI) AttachPolicyToGroup(requestInfo RequestInfo, org string, name
 	return nil
 }
 
-func (api AuthAPI) DetachPolicyToGroup(requestInfo RequestInfo, org string, name string, policyName string) error {
+func (api WorkerAPI) DetachPolicyToGroup(requestInfo RequestInfo, org string, name string, policyName string) error {
 
 	// Check if group exists
 	group, err := api.GetGroupByName(requestInfo, org, name)
@@ -659,7 +659,7 @@ func (api AuthAPI) DetachPolicyToGroup(requestInfo RequestInfo, org string, name
 	return nil
 }
 
-func (api AuthAPI) ListAttachedGroupPolicies(requestInfo RequestInfo, filter *Filter) ([]GroupPolicies, int, error) {
+func (api WorkerAPI) ListAttachedGroupPolicies(requestInfo RequestInfo, filter *Filter) ([]GroupPolicies, int, error) {
 	// Validate fields
 	var total int
 	orderByValidColumns := api.UserRepo.OrderByValidColumns(GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES)

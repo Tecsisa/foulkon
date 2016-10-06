@@ -360,20 +360,6 @@ func (ph *ProxyHandler) RespondInternalServerError(w http.ResponseWriter, proxyE
 	w.Write(b)
 }
 
-// Handler returns an http.Handler for the Proxy including all resources defined in proxy file.
-func ProxyHandlerRouter(proxy *foulkon.Proxy) http.Handler {
-	// Create the muxer to handle the actual endpoints
-	router := httprouter.New()
-
-	proxyHandler := ProxyHandler{proxy: proxy, client: http.DefaultClient}
-
-	for _, res := range proxy.APIResources {
-		router.Handle(res.Method, res.Url, proxyHandler.HandleRequest(res))
-	}
-
-	return router
-}
-
 // Private Helper Methods
 func writeErrorWithStatus(w http.ResponseWriter, apiError *api.Error, statusCode int) (http.ResponseWriter, error) {
 	b, err := json.Marshal(apiError)

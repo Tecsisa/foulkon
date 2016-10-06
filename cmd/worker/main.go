@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 
 	"os"
 
@@ -60,12 +59,9 @@ func main() {
 	}()
 
 	core.Logger.Infof("Server running in %v:%v", core.Host, core.Port)
-	if core.CertFile != "" && core.KeyFile != "" {
-		core.Logger.Error(http.ListenAndServeTLS(core.Host+":"+core.Port, core.CertFile, core.KeyFile, internalhttp.WorkerHandlerRouter(core)).Error())
-	} else {
-		core.Logger.Error(http.ListenAndServe(core.Host+":"+core.Port, internalhttp.WorkerHandlerRouter(core)).Error())
-	}
+	ws := internalhttp.NewWorker(core, internalhttp.WorkerHandlerRouter(core))
+	ws.Configuration()
+	core.Logger.Error(ws.Run().Error())
 
 	os.Exit(foulkon.CloseWorker())
-
 }

@@ -8,8 +8,13 @@ import (
 
 	"fmt"
 
+	"time"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/pelletier/go-toml"
+
+	"github.com/Tecsisa/foulkon/api"
+	"github.com/Tecsisa/foulkon/database/postgresql"
 )
 
 var proxyLogfile *os.File
@@ -27,21 +32,14 @@ type Proxy struct {
 	CertFile string
 	KeyFile  string
 
+	// API
+	ProxyApi api.ProxyResourcesAPI
+
+	// Refresh time
+	RefreshTime time.Duration
+
 	// Logger
 	Logger *logrus.Logger
-
-	// API Resources
-	APIResources []APIResource
-}
-
-// APIResource represents external API resources to authorize
-type APIResource struct {
-	Id     string
-	Host   string
-	Url    string
-	Method string
-	Urn    string
-	Action string
 }
 
 func NewProxy(config *toml.TomlTree) (*Proxy, error) {
@@ -64,64 +62,98 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 		loglevel = logrus.InfoLevel
 	}
 
-	logger := &logrus.Logger{
+	log = &logrus.Logger{
 		Out:       logOut,
 		Formatter: &logrus.JSONFormatter{},
 		Hooks:     make(logrus.LevelHooks),
 		Level:     loglevel,
 	}
-	logger.Infof("Logger type: %v, LogLevel: %v", loggerType, logger.Level.String())
+	log.Infof("Logger type: %v, LogLevel: %v", loggerType, log.Level.String())
 
-	// API Resources
-	resources := []APIResource{}
-	// Retrieve resource tree from toml config file
-	tree, ok := config.Get("resources").([]*toml.TomlTree)
-	if !ok {
-		err := errors.New("No resources retrieved from file")
-		logger.Error(err)
+	// Start DB with API
+	var prApi api.ProxyAPI
+
+	dbType, err := getMandatoryValue(config, "database.type")
+	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
-	for _, t := range tree {
-		resources = append(resources, APIResource{
-			Id:     getDefaultValue(t, "id", ""),
-			Host:   getDefaultValue(t, "host", ""),
-			Url:    getDefaultValue(t, "url", ""),
-			Method: getDefaultValue(t, "method", ""),
-			Urn:    getDefaultValue(t, "urn", ""),
-			Action: getDefaultValue(t, "action", ""),
-		})
-		logger.Infof("Added resource %v", getDefaultValue(t, "id", ""))
+	switch dbType {
+	case "postgres": // PostgreSQL DB
+		log.Info("Connecting to postgres database")
+		dbdsn, err := getMandatoryValue(config, "database.postgres.datasourcename")
+		if err != nil {
+			log.Error(err)
+			return nil, err
+		}
+		gormDB, err := postgresql.InitDb(dbdsn,
+			getDefaultValue(config, "database.postgres.idleconns", "5"),
+			getDefaultValue(config, "database.postgres.maxopenconns", "20"),
+			getDefaultValue(config, "database.postgres.connttl", "300"),
+		)
+		if err != nil {
+			log.Error(err)
+			return nil, err
+		}
+		db = gormDB.DB()
+		log.Info("Connected to postgres database")
+
+		// Create repository
+		repoDB := postgresql.PostgresRepo{
+			Dbmap: gormDB,
+		}
+		prApi = api.ProxyAPI{
+			ProxyRepo: repoDB,
+		}
+
+	default:
+		err := errors.New("Unexpected db_type value in configuration file (Maybe it is empty)")
+		log.Error(err)
+		return nil, err
 	}
+
+	prApi.Logger = log
 
 	host, err := getMandatoryValue(config, "server.host")
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
 		return nil, err
 	}
 	port, err := getMandatoryValue(config, "server.port")
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
 		return nil, err
 	}
 	workerHost, err := getMandatoryValue(config, "server.worker-host")
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
+		return nil, err
+	}
+
+	refresh, err := time.ParseDuration(getDefaultValue(config, "resources.refresh", "10s"))
+	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 
 	return &Proxy{
-		Host:         host,
-		Port:         port,
-		WorkerHost:   workerHost,
-		CertFile:     getDefaultValue(config, "server.certfile", ""),
-		KeyFile:      getDefaultValue(config, "server.keyfile", ""),
-		Logger:       logger,
-		APIResources: resources,
+		Host:        host,
+		Port:        port,
+		WorkerHost:  workerHost,
+		CertFile:    getDefaultValue(config, "server.certfile", ""),
+		KeyFile:     getDefaultValue(config, "server.keyfile", ""),
+		Logger:      log,
+		ProxyApi:    prApi,
+		RefreshTime: refresh,
 	}, nil
 }
 
 func CloseProxy() int {
 	status := 0
+	if err := db.Close(); err != nil {
+		log.Errorf("Couldn't close DB connection: %v", err)
+		status = 1
+	}
 	if proxyLogfile != nil {
 		if err := proxyLogfile.Close(); err != nil {
 			fmt.Fprintf(os.Stderr, "Couldn't close logfile: %v", err)

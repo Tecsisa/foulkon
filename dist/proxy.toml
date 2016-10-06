@@ -14,26 +14,12 @@ level = "debug"
 	[logger.file]
 	dir = "/tmp/foulkon/proxy.log"
 
-# Resources definition example
-[[resources]]
-    id = "resource1"
-    host = "https://httpbin.org/"
-    url = "/get"
-    method = "GET"
-    urn = "urn:ews:example:instance1:resource/get"
-    action = "example:get"
-[[resources]]
-    id = "resource2"
-    host = "https://httpbin.org/"
-    url = "/status/:code"
-    method = "GET"
-    urn = "urn:ews:example:instance1:resource/status/{code}"
-    action = "example:getCode"
-[[resources]]
-    id = "resource3"
-    host = "https://httpbin.org/"
-    url = "/post"
-    method = "POST"
-    urn = "urn:ews:example:instance1:resource/post"
-    action = "example:post"
-
+# Database config
+[database]
+type = "postgres"
+	# Postgres database config
+	[database.postgres]
+	datasourcename = "postgres://foulkon:password@localhost:5432/foulkondb?sslmode=disable"
+    idleconns = "5"
+    maxopenconns = "20"
+    connttl = "300"
