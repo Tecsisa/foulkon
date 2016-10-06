@@ -1,5 +1,29 @@
 # Change Log
 
+## [v0.2.0](https://github.com/Tecsisa/foulkon/tree/v0.2.0) ("2016-10-06")
+[Full Changelog](https://github.com/Tecsisa/foulkon/compare/v0.1.0...v0.2.0)
+
+**Implemented enhancements:**
+
+- Refactor http/authz.go [\#51](https://github.com/Tecsisa/foulkon/issues/51)
+- Add createAt field in relations [\#38](https://github.com/Tecsisa/foulkon/issues/38)
+- Add changelog and versioning mode [\#36](https://github.com/Tecsisa/foulkon/issues/36)
+- Limit resource number in resource request [\#34](https://github.com/Tecsisa/foulkon/issues/34)
+- Autogenerate vendor and remove folder from repo [\#33](https://github.com/Tecsisa/foulkon/issues/33)
+- Include all parameters into the filter struct [\#31](https://github.com/Tecsisa/foulkon/issues/31)
+- Add UpdateAt field [\#27](https://github.com/Tecsisa/foulkon/issues/27)
+- goimports in makefile [\#2](https://github.com/Tecsisa/foulkon/issues/2)
+
+**Fixed bugs:**
+
+- fix InvalidRequests tests in HTTP pkg [\#44](https://github.com/Tecsisa/foulkon/issues/44)
+- RemoveGroup don't remove policies relations [\#29](https://github.com/Tecsisa/foulkon/issues/29)
+- User identifier empty in log events [\#25](https://github.com/Tecsisa/foulkon/issues/25)
+
+**Closed issues:**
+
+- Travis won't fail if errors in test [\#46](https://github.com/Tecsisa/foulkon/issues/46)
+
 ## [v0.1.0](https://github.com/Tecsisa/foulkon/tree/v0.1.0) ("2016-09-14")
 **Implemented enhancements:**
 
