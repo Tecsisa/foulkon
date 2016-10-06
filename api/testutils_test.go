@@ -37,6 +37,7 @@ const (
 	RemovePolicyMethod        = "RemovePolicy"
 	GetPoliciesFilteredMethod = "GetPoliciesFiltered"
 	GetAttachedGroupsMethod   = "GetAttachedGroups"
+	OrderByValidColumnsMethod = "OrderByValidColumns"
 )
 
 // TestRepo that implements all repo manager interfaces
@@ -100,6 +101,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[RemovePolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetPoliciesFilteredMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetAttachedGroupsMethod] = make([]interface{}, 2)
+	testRepo.ArgsIn[OrderByValidColumnsMethod] = make([]interface{}, 1)
 
 	testRepo.ArgsOut[GetUserByExternalIDMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AddUserMethod] = make([]interface{}, 2)
@@ -126,6 +128,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[RemovePolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[GetPoliciesFilteredMethod] = make([]interface{}, 3)
 	testRepo.ArgsOut[GetAttachedGroupsMethod] = make([]interface{}, 3)
+	testRepo.ArgsOut[OrderByValidColumnsMethod] = make([]interface{}, 1)
 
 	return testRepo
 }
@@ -548,6 +551,15 @@ func (t TestRepo) GetAttachedGroups(policyID string, filter *Filter) ([]PolicyGr
 		err = t.ArgsOut[GetAttachedGroupsMethod][2].(error)
 	}
 	return groups, total, err
+}
+
+func (t TestRepo) OrderByValidColumns(action string) []string {
+	t.ArgsIn[OrderByValidColumnsMethod][0] = action
+	var validColumns []string
+	if t.ArgsOut[OrderByValidColumnsMethod][0] != nil {
+		validColumns = t.ArgsOut[OrderByValidColumnsMethod][0].([]string)
+	}
+	return validColumns
 }
 
 // Private helper methods

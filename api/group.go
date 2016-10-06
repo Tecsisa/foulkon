@@ -181,7 +181,8 @@ func (api AuthAPI) GetGroupByName(requestInfo RequestInfo, org string, name stri
 func (api AuthAPI) ListGroups(requestInfo RequestInfo, filter *Filter) ([]GroupIdentity, int, error) {
 	// Validate fields
 	var total int
-	err := validateFilter(filter)
+	orderByValidColumns := api.UserRepo.OrderByValidColumns(GROUP_ACTION_LIST_GROUPS)
+	err := validateFilter(filter, orderByValidColumns)
 	if err != nil {
 		return nil, total, err
 	}
@@ -485,7 +486,8 @@ func (api AuthAPI) RemoveMember(requestInfo RequestInfo, externalId string, name
 func (api AuthAPI) ListMembers(requestInfo RequestInfo, filter *Filter) ([]GroupMembers, int, error) {
 	// Validate fields
 	var total int
-	err := validateFilter(filter)
+	orderByValidColumns := api.UserRepo.OrderByValidColumns(GROUP_ACTION_LIST_MEMBERS)
+	err := validateFilter(filter, orderByValidColumns)
 	if err != nil {
 		return nil, total, err
 	}
@@ -660,7 +662,8 @@ func (api AuthAPI) DetachPolicyToGroup(requestInfo RequestInfo, org string, name
 func (api AuthAPI) ListAttachedGroupPolicies(requestInfo RequestInfo, filter *Filter) ([]GroupPolicies, int, error) {
 	// Validate fields
 	var total int
-	err := validateFilter(filter)
+	orderByValidColumns := api.UserRepo.OrderByValidColumns(GROUP_ACTION_LIST_ATTACHED_GROUP_POLICIES)
+	err := validateFilter(filter, orderByValidColumns)
 	if err != nil {
 		return nil, total, err
 	}

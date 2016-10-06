@@ -178,17 +178,17 @@ HTTP/1.1 200 OK
 
 ###  User List All
 
-List all users filtered by PathPrefix.
+List all users filtered, using optional query parameters.
 
 ```
-GET /api/v1/users?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}
+GET /api/v1/users?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/users?PathPrefix=$OPTIONAL_PATH_PREFIX&Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT \
+$ curl -n /api/v1/users?PathPrefix=$OPTIONAL_PATH_PREFIX&Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT&OrderBy=$COLUMNNAME-DESC \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -233,14 +233,14 @@ HTTP/1.1 200 OK
 List all groups that a user is a member.
 
 ```
-GET /api/v1/users/{user_externalId}/groups?Offset={optional_offset}&Limit={optional_limit}
+GET /api/v1/users/{user_externalId}/groups?Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-asc}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/users/$USER_EXTERNALID/groups?Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT \
+$ curl -n /api/v1/users/$USER_EXTERNALID/groups?Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT&OrderBy=$COLUMNNAME-ASC \
   -H "Authorization: Basic or Bearer XXX"
 ```
 

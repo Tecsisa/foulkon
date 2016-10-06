@@ -150,6 +150,9 @@ func (p PostgresRepo) GetPoliciesFiltered(filter *api.Filter) ([]api.Policy, int
 	if len(filter.PathPrefix) > 0 {
 		query = query.Where("path like ?", filter.PathPrefix+"%")
 	}
+	if len(filter.OrderBy) > 0 {
+		query = query.Order(filter.OrderBy)
+	}
 
 	// Error handling
 	if err := query.Find(&policies).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&policies).Error; err != nil {
@@ -283,7 +286,13 @@ func (p PostgresRepo) RemovePolicy(id string) error {
 func (p PostgresRepo) GetAttachedGroups(policyID string, filter *api.Filter) ([]api.PolicyGroupRelation, int, error) {
 	var total int
 	relations := []GroupPolicyRelation{}
-	query := p.Dbmap.Where("policy_id like ?", policyID).Find(&relations).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&relations)
+	query := p.Dbmap
+
+	if len(filter.OrderBy) > 0 {
+		query = query.Order(filter.OrderBy)
+	}
+
+	query.Where("policy_id like ?", policyID).Find(&relations).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&relations)
 
 	// Error Handling
 	if err := query.Error; err != nil {

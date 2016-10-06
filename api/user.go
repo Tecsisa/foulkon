@@ -151,7 +151,8 @@ func (api AuthAPI) GetUserByExternalID(requestInfo RequestInfo, externalId strin
 func (api AuthAPI) ListUsers(requestInfo RequestInfo, filter *Filter) ([]string, int, error) {
 	// Check parameters
 	var total int
-	err := validateFilter(filter)
+	orderByValidColumns := api.UserRepo.OrderByValidColumns(USER_ACTION_LIST_USERS)
+	err := validateFilter(filter, orderByValidColumns)
 	if err != nil {
 		return nil, total, err
 	}
@@ -293,7 +294,8 @@ func (api AuthAPI) RemoveUser(requestInfo RequestInfo, externalId string) error 
 func (api AuthAPI) ListGroupsByUser(requestInfo RequestInfo, filter *Filter) ([]UserGroups, int, error) {
 	// Check parameters
 	var total int
-	err := validateFilter(filter)
+	orderByValidColumns := api.UserRepo.OrderByValidColumns(USER_ACTION_LIST_GROUPS_FOR_USER)
+	err := validateFilter(filter, orderByValidColumns)
 	if err != nil {
 		return nil, total, err
 	}

@@ -375,7 +375,7 @@ func TestPostgresRepo_GetPolicyById(t *testing.T) {
 func TestPostgresRepo_GetPoliciesFiltered(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {
-		policy     *Policy
+		policies   []Policy
 		statements []Statement
 		// Postgres Repo Args
 		filter *api.Filter
@@ -384,38 +384,56 @@ func TestPostgresRepo_GetPoliciesFiltered(t *testing.T) {
 	}{
 		"OkCase": {
 			filter: &api.Filter{
-				PathPrefix: "/path/",
+				PathPrefix: "/",
 				Org:        "org1",
 				Offset:     0,
 				Limit:      20,
+				OrderBy:    "name desc",
 			},
-			policy: &Policy{
-				ID:       "1234",
-				Name:     "test",
-				Org:      "org1",
-				Path:     "/path/",
-				CreateAt: now.UnixNano(),
-				UpdateAt: now.UnixNano(),
-				Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
+			policies: []Policy{
+				{
+					ID:       "111",
+					Name:     "test1",
+					Org:      "org1",
+					Path:     "/path1/",
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
+					Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path1/", "test1"),
+				}, {
+					ID:       "222",
+					Name:     "test2",
+					Org:      "org1",
+					Path:     "/path2/",
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
+					Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path2/", "test2"),
+				},
 			},
 			statements: []Statement{
 				{
-					ID:        "0123",
+					ID:        "1",
 					Effect:    "allow",
-					PolicyID:  "1234",
+					PolicyID:  "111",
 					Actions:   api.USER_ACTION_GET_USER,
-					Resources: api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+					Resources: api.GetUrnPrefix("", api.RESOURCE_USER, "/path1/"),
+				},
+				{
+					ID:        "2",
+					Effect:    "allow",
+					PolicyID:  "222",
+					Actions:   api.USER_ACTION_GET_USER,
+					Resources: api.GetUrnPrefix("", api.RESOURCE_USER, "/path2/"),
 				},
 			},
 			expectedResponse: []api.Policy{
 				{
-					ID:       "1234",
-					Name:     "test",
+					ID:       "222",
+					Name:     "test2",
 					Org:      "org1",
-					Path:     "/path/",
+					Path:     "/path2/",
 					CreateAt: now,
 					UpdateAt: now,
-					Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
+					Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path2/", "test2"),
 					Statements: &[]api.Statement{
 						{
 							Effect: "allow",
@@ -423,7 +441,27 @@ func TestPostgresRepo_GetPoliciesFiltered(t *testing.T) {
 								api.USER_ACTION_GET_USER,
 							},
 							Resources: []string{
-								api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+								api.GetUrnPrefix("", api.RESOURCE_USER, "/path2/"),
+							},
+						},
+					},
+				},
+				{
+					ID:       "111",
+					Name:     "test1",
+					Org:      "org1",
+					Path:     "/path1/",
+					CreateAt: now,
+					UpdateAt: now,
+					Urn:      api.CreateUrn("org1", api.RESOURCE_POLICY, "/path1/", "test1"),
+					Statements: &[]api.Statement{
+						{
+							Effect: "allow",
+							Actions: []string{
+								api.USER_ACTION_GET_USER,
+							},
+							Resources: []string{
+								api.GetUrnPrefix("", api.RESOURCE_USER, "/path1/"),
 							},
 						},
 					},
@@ -447,8 +485,9 @@ func TestPostgresRepo_GetPoliciesFiltered(t *testing.T) {
 		cleanStatementTable()
 
 		// Insert previous data
-		if test.policy != nil {
-			err := insertPolicy(*test.policy, test.statements)
+		for i, policy := range test.policies {
+			var statement []Statement = []Statement{test.statements[i]}
+			err := insertPolicy(policy, statement)
 			if err != nil {
 				t.Errorf("Test %v failed. Error inserting policy/statements: %v", n, err)
 			}
@@ -741,7 +780,8 @@ func TestPostgresRepo_GetAttachedGroups(t *testing.T) {
 		previousPolicy   *Policy
 		statements       []Statement
 		filter           *api.Filter
-		group            *Group
+		group            []Group
+		createAt         []int64
 		expectedResponse []PolicyGroup
 	}{
 		"OkCase": {
@@ -763,28 +803,54 @@ func TestPostgresRepo_GetAttachedGroups(t *testing.T) {
 					Resources: api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
 				},
 			},
-			filter: testFilter,
-			group: &Group{
-				ID:       "GroupID",
-				Name:     "Name",
-				Path:     "Path",
-				Urn:      "urn",
-				CreateAt: now.UnixNano(),
-				UpdateAt: now.UnixNano(),
-				Org:      "Org",
+			filter: &api.Filter{
+				OrderBy: "create_at desc",
 			},
+			group: []Group{
+				{
+					ID:       "GroupID1",
+					Name:     "Name1",
+					Path:     "Path1",
+					Urn:      "urn1",
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
+					Org:      "Org1",
+				},
+				{
+					ID:       "GroupID2",
+					Name:     "Name2",
+					Path:     "Path2",
+					Urn:      "urn2",
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
+					Org:      "Org2",
+				},
+			},
+			createAt: []int64{now.UnixNano() - 1, now.UnixNano()},
 			expectedResponse: []PolicyGroup{
 				{
 					Group: &api.Group{
-						ID:       "GroupID",
-						Name:     "Name",
-						Path:     "Path",
-						Urn:      "urn",
+						ID:       "GroupID2",
+						Name:     "Name2",
+						Path:     "Path2",
+						Urn:      "urn2",
 						CreateAt: now,
 						UpdateAt: now,
-						Org:      "Org",
+						Org:      "Org2",
 					},
 					CreateAt: now,
+				},
+				{
+					Group: &api.Group{
+						ID:       "GroupID1",
+						Name:     "Name1",
+						Path:     "Path1",
+						Urn:      "urn1",
+						CreateAt: now,
+						UpdateAt: now,
+						Org:      "Org1",
+					},
+					CreateAt: now.Add(-1),
 				},
 			},
 		},
@@ -803,13 +869,13 @@ func TestPostgresRepo_GetAttachedGroups(t *testing.T) {
 			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
 			continue
 		}
-		if test.group != nil {
-			err := insertGroup(*test.group)
+		for i, group := range test.group {
+			err := insertGroup(group)
 			if err != nil {
 				t.Errorf("Test %v failed. Unexpected error inserting group: %v", n, err)
 				continue
 			}
-			err = insertGroupPolicyRelation(test.group.ID, test.previousPolicy.ID, now.UnixNano())
+			err = insertGroupPolicyRelation(group.ID, test.previousPolicy.ID, test.createAt[i])
 			if err != nil {
 				t.Errorf("Test %v failed. Unexpected error inserting group relation: %v", n, err)
 				continue
