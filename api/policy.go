@@ -54,7 +54,7 @@ func (s Statement) String() string {
 
 // POLICY API IMPLEMENTATION
 
-func (api AuthAPI) AddPolicy(requestInfo RequestInfo, name string, path string, org string, statements []Statement) (*Policy, error) {
+func (api WorkerAPI) AddPolicy(requestInfo RequestInfo, name string, path string, org string, statements []Statement) (*Policy, error) {
 	// Validate fields
 	if !IsValidName(name) {
 		return nil, &Error{
@@ -139,7 +139,7 @@ func (api AuthAPI) AddPolicy(requestInfo RequestInfo, name string, path string, 
 	}
 }
 
-func (api AuthAPI) GetPolicyByName(requestInfo RequestInfo, org string, policyName string) (*Policy, error) {
+func (api WorkerAPI) GetPolicyByName(requestInfo RequestInfo, org string, policyName string) (*Policy, error) {
 	// Validate fields
 	if !IsValidName(policyName) {
 		return nil, &Error{
@@ -192,7 +192,7 @@ func (api AuthAPI) GetPolicyByName(requestInfo RequestInfo, org string, policyNa
 	}
 }
 
-func (api AuthAPI) ListPolicies(requestInfo RequestInfo, filter *Filter) ([]PolicyIdentity, int, error) {
+func (api WorkerAPI) ListPolicies(requestInfo RequestInfo, filter *Filter) ([]PolicyIdentity, int, error) {
 	// Validate fields
 	var total int
 	orderByValidColumns := api.UserRepo.OrderByValidColumns(POLICY_ACTION_LIST_POLICIES)
@@ -237,7 +237,7 @@ func (api AuthAPI) ListPolicies(requestInfo RequestInfo, filter *Filter) ([]Poli
 	return policyIDs, total, nil
 }
 
-func (api AuthAPI) UpdatePolicy(requestInfo RequestInfo, org string, policyName string, newName string, newPath string,
+func (api WorkerAPI) UpdatePolicy(requestInfo RequestInfo, org string, policyName string, newName string, newPath string,
 	newStatements []Statement) (*Policy, error) {
 	// Validate fields
 	if !IsValidName(newName) {
@@ -344,7 +344,7 @@ func (api AuthAPI) UpdatePolicy(requestInfo RequestInfo, org string, policyName 
 	return updatedPolicy, nil
 }
 
-func (api AuthAPI) RemovePolicy(requestInfo RequestInfo, org string, name string) error {
+func (api WorkerAPI) RemovePolicy(requestInfo RequestInfo, org string, name string) error {
 
 	// Call repo to retrieve the policy
 	policy, err := api.GetPolicyByName(requestInfo, org, name)
@@ -379,7 +379,7 @@ func (api AuthAPI) RemovePolicy(requestInfo RequestInfo, org string, name string
 	return nil
 }
 
-func (api AuthAPI) ListAttachedGroups(requestInfo RequestInfo, filter *Filter) ([]PolicyGroups, int, error) {
+func (api WorkerAPI) ListAttachedGroups(requestInfo RequestInfo, filter *Filter) ([]PolicyGroups, int, error) {
 	// Validate fields
 	var total int
 	orderByValidColumns := api.UserRepo.OrderByValidColumns(POLICY_ACTION_LIST_ATTACHED_GROUPS)

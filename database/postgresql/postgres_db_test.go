@@ -416,3 +416,26 @@ func getStatementsCountFiltered(id string, policyId string, effect string, actio
 
 	return number, nil
 }
+
+// PROXY
+
+func cleanProxyResourcesTable() error {
+	if err := repoDB.Dbmap.Delete(&ProxyResource{}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func insertProxyResource(pr ProxyResource) error {
+	err := repoDB.Dbmap.Exec("INSERT INTO public.proxy_resources (id, host, url, method, urn, action) VALUES (?, ?, ?, ?, ?, ?)",
+		pr.ID, pr.Host, pr.Url, pr.Method, pr.Urn, pr.Action).Error
+
+	// Error handling
+	if err != nil {
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+	return nil
+}

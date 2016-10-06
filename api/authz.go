@@ -39,7 +39,7 @@ func (e ExternalResource) GetUrn() string {
 // AUTHZ API IMPLEMENTATION
 
 // GetAuthorizedUsers returns authorized users for specified resource+action
-func (api AuthAPI) GetAuthorizedUsers(requestInfo RequestInfo, resourceUrn string, action string, users []User) ([]User, error) {
+func (api WorkerAPI) GetAuthorizedUsers(requestInfo RequestInfo, resourceUrn string, action string, users []User) ([]User, error) {
 	resourcesToAuthorize := []Resource{}
 	for _, usr := range users {
 		resourcesToAuthorize = append(resourcesToAuthorize, usr)
@@ -56,7 +56,7 @@ func (api AuthAPI) GetAuthorizedUsers(requestInfo RequestInfo, resourceUrn strin
 }
 
 // GetAuthorizedGroups returns authorized users for specified user combined with resource+action
-func (api AuthAPI) GetAuthorizedGroups(requestInfo RequestInfo, resourceUrn string, action string, groups []Group) ([]Group, error) {
+func (api WorkerAPI) GetAuthorizedGroups(requestInfo RequestInfo, resourceUrn string, action string, groups []Group) ([]Group, error) {
 	resourcesToAuthorize := []Resource{}
 	for _, group := range groups {
 		resourcesToAuthorize = append(resourcesToAuthorize, group)
@@ -73,7 +73,7 @@ func (api AuthAPI) GetAuthorizedGroups(requestInfo RequestInfo, resourceUrn stri
 }
 
 // GetAuthorizedPolicies returns authorized policies for specified user combined with resource+action
-func (api AuthAPI) GetAuthorizedPolicies(requestInfo RequestInfo, resourceUrn string, action string, policies []Policy) ([]Policy, error) {
+func (api WorkerAPI) GetAuthorizedPolicies(requestInfo RequestInfo, resourceUrn string, action string, policies []Policy) ([]Policy, error) {
 	resourcesToAuthorize := []Resource{}
 	for _, policy := range policies {
 		resourcesToAuthorize = append(resourcesToAuthorize, policy)
@@ -90,7 +90,7 @@ func (api AuthAPI) GetAuthorizedPolicies(requestInfo RequestInfo, resourceUrn st
 }
 
 // GetAuthorizedExternalResources returns the resources where the specified user has the action granted
-func (api AuthAPI) GetAuthorizedExternalResources(requestInfo RequestInfo, action string, resources []string) ([]string, error) {
+func (api WorkerAPI) GetAuthorizedExternalResources(requestInfo RequestInfo, action string, resources []string) ([]string, error) {
 	// Validate parameters
 	if err := AreValidActions([]string{action}); err != nil {
 		// Transform to API error
@@ -154,7 +154,7 @@ func (api AuthAPI) GetAuthorizedExternalResources(requestInfo RequestInfo, actio
 // PRIVATE HELPER METHODS
 
 // getAuthorizedResources retrieves filtered resources where the authenticated user has permissions
-func (api AuthAPI) getAuthorizedResources(requestInfo RequestInfo, resourceUrn string, action string, resources []Resource) ([]Resource, error) {
+func (api WorkerAPI) getAuthorizedResources(requestInfo RequestInfo, resourceUrn string, action string, resources []Resource) ([]Resource, error) {
 	// If user is an admin return all resources without restriction
 	if requestInfo.Admin {
 		return resources, nil
@@ -183,7 +183,7 @@ func (api AuthAPI) getAuthorizedResources(requestInfo RequestInfo, resourceUrn s
 }
 
 // Get restrictions for this action and full resource or prefix resource, attached to this authenticated user
-func (api AuthAPI) getRestrictions(externalID string, action string, resource string) (*Restrictions, error) {
+func (api WorkerAPI) getRestrictions(externalID string, action string, resource string) (*Restrictions, error) {
 	// Get user if exists
 	user, err := api.UserRepo.GetUserByExternalID(externalID)
 
@@ -225,7 +225,7 @@ func (api AuthAPI) getRestrictions(externalID string, action string, resource st
 	return authResources, nil
 }
 
-func (api AuthAPI) getGroupsByUser(userID string) ([]Group, error) {
+func (api WorkerAPI) getGroupsByUser(userID string) ([]Group, error) {
 	userGroups, _, err := api.UserRepo.GetGroupsByUserID(userID, &Filter{})
 	if err != nil {
 		//Transform to DB error
@@ -246,7 +246,7 @@ func (api AuthAPI) getGroupsByUser(userID string) ([]Group, error) {
 }
 
 // Retrieve policies attached to a slice of groups
-func (api AuthAPI) getPoliciesByGroups(groups []Group) ([]Policy, error) {
+func (api WorkerAPI) getPoliciesByGroups(groups []Group) ([]Policy, error) {
 	if groups == nil || len(groups) < 1 {
 		return nil, nil
 	}

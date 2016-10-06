@@ -8,32 +8,39 @@ import (
 
 // TYPE DEFINITIONS
 
-// Interface that all resource types have to implement
+// Resource interface that all resource types have to implement
 type Resource interface {
 	// This method must return resource URN
 	GetUrn() string
 }
 
-// Interface for User-Group relationships
+// UserGroupRelation interface for User-Group relationships
 type UserGroupRelation interface {
 	GetUser() *User
 	GetGroup() *Group
 	GetDate() time.Time
 }
 
-// Interface for Policy-Group relationships
+// PolicyGroupRelation interface for Policy-Group relationships
 type PolicyGroupRelation interface {
 	GetGroup() *Group
 	GetPolicy() *Policy
 	GetDate() time.Time
 }
 
-// Foulkon API that implements API interfaces using repositories
-type AuthAPI struct {
+// WorkerAPI that implements API interfaces using repositories
+type WorkerAPI struct {
 	UserRepo   UserRepo
 	GroupRepo  GroupRepo
 	PolicyRepo PolicyRepo
+	ProxyRepo  ProxyRepo
 	Logger     *log.Logger
+}
+
+// ProxyAPI that implements API interfaces using repositories
+type ProxyAPI struct {
+	ProxyRepo ProxyRepo
+	Logger    *log.Logger
 }
 
 // Filter properties for database search
@@ -52,6 +59,7 @@ type Filter struct {
 
 // API INTERFACES WITH AUTHORIZATION
 
+// UserAPI interface
 type UserAPI interface {
 	// Store user in database. Throw error when parameters are invalid,
 	// user already exists or unexpected error happen.
@@ -78,6 +86,7 @@ type UserAPI interface {
 	ListGroupsByUser(requestInfo RequestInfo, filter *Filter) ([]UserGroups, int, error)
 }
 
+// GroupAPI interface
 type GroupAPI interface {
 	// Store group in database. Throw error when the input parameters are invalid,
 	// the group already exist or unexpected error happen.
@@ -125,6 +134,7 @@ type GroupAPI interface {
 	ListAttachedGroupPolicies(requestInfo RequestInfo, filter *Filter) ([]GroupPolicies, int, error)
 }
 
+// PolicyAPI interface
 type PolicyAPI interface {
 	// Store policy in database. Throw error when the input parameters are invalid,
 	// the policy already exist or unexpected error happen.
@@ -153,6 +163,7 @@ type PolicyAPI interface {
 	ListAttachedGroups(requestInfo RequestInfo, filter *Filter) ([]PolicyGroups, int, error)
 }
 
+// AuthzAPI interface
 type AuthzAPI interface {
 	// Retrieve list of authorized user resources filtered according to the input parameters. Throw error
 	// if requestInfo doesn't exist, requestInfo doesn't have access to any resources or unexpected error happen.
@@ -169,6 +180,12 @@ type AuthzAPI interface {
 	// Retrieve list of authorized external resources filtered according to the input parameters. Throw error
 	// if requestInfo doesn't exist, requestInfo doesn't have access to any resources or unexpected error happen.
 	GetAuthorizedExternalResources(requestInfo RequestInfo, action string, resources []string) ([]string, error)
+}
+
+// ProxyResourcesAPI interface to manage proxy resources
+type ProxyResourcesAPI interface {
+	// Retrieve list of proxy resources.
+	GetProxyResources() ([]ProxyResource, error)
 }
 
 // REPOSITORY INTERFACES
@@ -280,4 +297,10 @@ type PolicyRepo interface {
 
 	// OrderByValidColumns returns valid columns that you can use in OrderBy
 	OrderByValidColumns(action string) []string
+}
+
+// ProxyRepo contains all database operations
+type ProxyRepo interface {
+	// Retrieve proxy resources from database. Otherwise it throws an error.
+	GetProxyResources() ([]ProxyResource, error)
 }

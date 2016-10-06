@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/Tecsisa/foulkon/api"
-	"github.com/Tecsisa/foulkon/foulkon"
 	"github.com/Tecsisa/foulkon/middleware"
 	"github.com/julienschmidt/httprouter"
 	"github.com/satori/go.uuid"
@@ -25,9 +24,15 @@ const (
 	FORBIDDEN_ERROR       = "ForbiddenError"
 )
 
+// RESPONSES
+
+type ProxyResources struct {
+	Resources []api.ProxyResource `json:"resources, omitempty"`
+}
+
 var rUrnParam, _ = regexp.Compile(`\{(\w+)\}`)
 
-func (h *ProxyHandler) HandleRequest(resource foulkon.APIResource) httprouter.Handle {
+func (h *ProxyHandler) HandleRequest(resource api.ProxyResource) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		requestID := uuid.NewV4().String()
 		w.Header().Set(middleware.REQUEST_ID_HEADER, requestID)
@@ -67,6 +72,7 @@ func (h *ProxyHandler) HandleRequest(resource foulkon.APIResource) httprouter.Ha
 				}
 			}
 
+			defer res.Body.Close()
 			buffer := new(bytes.Buffer)
 			if _, err := buffer.ReadFrom(res.Body); err != nil {
 				h.TransactionErrorLog(r, requestID, workerRequestID, fmt.Sprintf("Error reading response from destination: %v", err.Error()))
@@ -124,6 +130,8 @@ func (h *ProxyHandler) checkAuthorization(r *http.Request, urn string, action st
 	if err != nil {
 		return workerRequestID, getErrorMessage(HOST_UNREACHABLE, err.Error())
 	}
+
+	defer res.Body.Close()
 
 	workerRequestID = res.Header.Get(middleware.REQUEST_ID_HEADER)
 

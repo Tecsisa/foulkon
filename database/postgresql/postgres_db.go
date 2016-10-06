@@ -45,7 +45,7 @@ func InitDb(datasourcename string, idleConns string, maxOpenConns string, connTT
 	}
 
 	// Create tables if not exist
-	err = db.AutoMigrate(&User{}, &Group{}, &Policy{}, &Statement{}, &GroupUserRelation{}, &GroupPolicyRelation{}).Error
+	err = db.AutoMigrate(&User{}, &Group{}, &Policy{}, &Statement{}, &GroupUserRelation{}, &GroupPolicyRelation{}, &ProxyResource{}).Error
 	if err != nil {
 		return nil, err
 	}
@@ -157,4 +157,19 @@ func (u PostgresRepo) OrderByValidColumns(action string) []string {
 	default:
 		return nil
 	}
+}
+
+// ProxyResource table
+type ProxyResource struct {
+	ID     string `gorm:"primary_key"`
+	Host   string `gorm:"not null"`
+	Url    string `gorm:"not null;unique_index:idx_url_method"`
+	Method string `gorm:"not null;unique_index:idx_url_method"`
+	Urn    string `gorm:"not null;unique"`
+	Action string `gorm:"not null"`
+}
+
+// ProxyResource's table name
+func (ProxyResource) TableName() string {
+	return "proxy_resources"
 }
