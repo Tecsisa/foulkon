@@ -1,0 +1,11 @@
+date-format="%Y-%m-%d"
+output=CHANGELOG.md
+issues=true
+pull-requests=false
+filter-by-milestone=false
+author=false
+unreleased-only=false
+unreleased=false
+compare-link=true
+include-labels=bug,enhancement
+future-release=v0.2.0
