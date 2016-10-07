@@ -44,9 +44,17 @@ func (mwh *MiddlewareHandler) Handle(apiHandler http.Handler) http.Handler {
 	handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		apiHandler.ServeHTTP(w, r)
 	})
-	handler = mwh.Middlewares[REQUEST_LOGGER_MIDDLEWARE].Action(handler)
-	handler = mwh.Middlewares[AUTHENTICATOR_MIDDLEWARE].Action(handler)
-	handler = mwh.Middlewares[XREQUESTID_MIDDLEWARE].Action(handler)
+	// Middleware execution order is upside-down because when adding an action
+	// it executes itself first, then the rest of the old handler.
+	if val, ok := mwh.Middlewares[REQUEST_LOGGER_MIDDLEWARE]; ok {
+		handler = val.Action(handler)
+	}
+	if val, ok := mwh.Middlewares[AUTHENTICATOR_MIDDLEWARE]; ok {
+		handler = val.Action(handler)
+	}
+	if val, ok := mwh.Middlewares[XREQUESTID_MIDDLEWARE]; ok {
+		handler = val.Action(handler)
+	}
 
 	return handler
 }

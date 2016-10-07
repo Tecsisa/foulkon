@@ -83,10 +83,10 @@ type TestConnector struct {
 	unauthenticated bool
 }
 
-func (tc TestConnector) Authenticate(h http.Handler) http.Handler {
-	if authConnector.unauthenticated {
+func (tc *TestConnector) Authenticate(h http.Handler) http.Handler {
+	if tc.unauthenticated {
 		// Reset value
-		authConnector.unauthenticated = false
+		tc.unauthenticated = false
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 		})

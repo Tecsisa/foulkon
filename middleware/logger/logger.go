@@ -38,8 +38,4 @@ func (reqLogger *RequestLoggerMiddleware) Action(next http.Handler) http.Handler
 	})
 }
 
-func (reqLogger *RequestLoggerMiddleware) GetInfo(_ *http.Request, mc *middleware.MiddlewareContext) {
-	if mc == nil {
-		mc = new(middleware.MiddlewareContext)
-	}
-}
+func (reqLogger *RequestLoggerMiddleware) GetInfo(r *http.Request, mc *middleware.MiddlewareContext) {}
