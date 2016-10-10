@@ -48,6 +48,14 @@ func TestRequestLoggerMiddleware_Action(t *testing.T) {
 		return
 	}
 
+	// Check context
+	mc := new(middleware.MiddlewareContext)
+	mw.GetInfo(req, mc)
+	if diff := pretty.Compare(mc, new(middleware.MiddlewareContext)); diff != "" {
+		t.Errorf("Test failed. Received different contexts (received/wanted) %v", diff)
+		return
+	}
+
 	// Check logger output
 	testLogBuffer := bytes.NewBufferString("")
 	testLogger := &logrus.Logger{

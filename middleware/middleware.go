@@ -13,12 +13,12 @@ const (
 	REQUEST_LOGGER_MIDDLEWARE = "REQUEST-LOGGER"
 )
 
-// MiddlewareHandler is handler with a middleware list to apply
+// MiddlewareHandler handles the HTTP request and applies its list of middlewares before calling the API
 type MiddlewareHandler struct {
 	Middlewares map[string]Middleware
 }
 
-// MiddlewareContext with all parameters used in the context of middlewares
+// MiddlewareContext struct contains all parameters used in the context of middlewares
 type MiddlewareContext struct {
 	// Authenticator middleware
 	UserId string
@@ -28,16 +28,16 @@ type MiddlewareContext struct {
 	XRequestId string
 }
 
-// Middleware interface with all operations that must be implemented
+// Middleware interface with operations that all middlewares must implement
 type Middleware interface {
-	// Action to do per each request
+	// Action to apply to each request
 	Action(next http.Handler) http.Handler
 
 	// Additional info that middleware use
 	GetInfo(r *http.Request, mc *MiddlewareContext)
 }
 
-// Handle method execute middlewares in correct order after API handler
+// Handle method execute middlewares in correct order before API handler
 func (mwh *MiddlewareHandler) Handle(apiHandler http.Handler) http.Handler {
 	var handler http.Handler
 	// Wrap target handler to use middleware
