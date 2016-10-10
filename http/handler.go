@@ -11,7 +11,6 @@ import (
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/foulkon"
 	"github.com/julienschmidt/httprouter"
-	"github.com/satori/go.uuid"
 )
 
 const (
@@ -51,9 +50,6 @@ const (
 
 	// Authorization URLs
 	RESOURCE_URL = API_VERSION_1 + "/resource"
-
-	// HTTP Header
-	REQUEST_ID_HEADER = "Request-ID"
 )
 
 // WORKER
@@ -198,15 +194,7 @@ func WorkerHandlerRouter(worker *foulkon.Worker) http.Handler {
 	// Resources authorized endpoint
 	router.POST(RESOURCE_URL, workerHandler.HandleGetAuthorizedExternalResources)
 
-	// Return handler with request logging
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestID := uuid.NewV4().String()
-		r.Header.Set(REQUEST_ID_HEADER, requestID)
-		w.Header().Add(REQUEST_ID_HEADER, requestID)
-		worker.Authenticator.Authenticate(router).ServeHTTP(w, r)
-		userID, _ := worker.Authenticator.GetAuthenticatedUser(r)
-		workerHandler.TransactionLog(r, requestID, userID, "")
-	})
+	return workerHandler.worker.MiddlewareHandler.Handle(router)
 }
 
 // HTTP WORKER responses
@@ -291,11 +279,12 @@ func (wh *WorkerHandler) RespondInternalServerError(r *http.Request, requestInfo
 // Worker Aux method
 
 func (wh *WorkerHandler) GetRequestInfo(r *http.Request) api.RequestInfo {
-	userID, admin := wh.worker.Authenticator.GetAuthenticatedUser(r)
+	// Retrieve request information from middleware context
+	mc := wh.worker.MiddlewareHandler.GetMiddlewareContext(r)
 	return api.RequestInfo{
-		Identifier: userID,
-		Admin:      admin,
-		RequestID:  r.Header.Get(REQUEST_ID_HEADER),
+		Identifier: mc.UserId,
+		Admin:      mc.Admin,
+		RequestID:  mc.XRequestId,
 	}
 }
 

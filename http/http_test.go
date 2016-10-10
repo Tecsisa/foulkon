@@ -9,10 +9,13 @@ import (
 	"bytes"
 	"fmt"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/Tecsisa/foulkon/api"
-	"github.com/Tecsisa/foulkon/auth"
 	"github.com/Tecsisa/foulkon/foulkon"
+	"github.com/Tecsisa/foulkon/middleware"
+	"github.com/Tecsisa/foulkon/middleware/auth"
+	"github.com/Tecsisa/foulkon/middleware/logger"
+	"github.com/Tecsisa/foulkon/middleware/xrequestid"
 )
 
 const (
@@ -80,13 +83,12 @@ type TestConnector struct {
 	unauthenticated bool
 }
 
-func (tc TestConnector) Authenticate(h http.Handler) http.Handler {
-	if authConnector.unauthenticated {
+func (tc *TestConnector) Authenticate(h http.Handler) http.Handler {
+	if tc.unauthenticated {
 		// Reset value
-		authConnector.unauthenticated = false
+		tc.unauthenticated = false
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
-			return
 		})
 	}
 	return h
@@ -99,11 +101,11 @@ func (tc TestConnector) RetrieveUserID(r http.Request) string {
 // Main Test that executes at first time and create all necessary data to work
 func TestMain(m *testing.M) {
 	// Create logger
-	logger := &log.Logger{
+	log := &logrus.Logger{
 		Out:       bytes.NewBuffer([]byte{}),
-		Formatter: &log.TextFormatter{},
-		Hooks:     make(log.LevelHooks),
-		Level:     log.DebugLevel,
+		Formatter: &logrus.TextFormatter{},
+		Hooks:     make(logrus.LevelHooks),
+		Level:     logrus.DebugLevel,
 	}
 
 	testApi = makeTestApi()
@@ -117,23 +119,36 @@ func TestMain(m *testing.M) {
 	adminUser := "admin"
 	adminPassword := "admin"
 
-	// Create authenticator
-	authenticator := auth.NewAuthenticator(authConnector, adminUser, adminPassword)
+	// Middlewares
+	middlewares := make(map[string]middleware.Middleware)
+
+	// Authenticator middleware
+	authenticatorMiddleware := auth.NewAuthenticatorMiddleware(authConnector, adminUser, adminPassword)
+	middlewares[middleware.AUTHENTICATOR_MIDDLEWARE] = authenticatorMiddleware
+	log.Infof("Created authenticator with admin username %v", adminUser)
+
+	// X-Request-Id middleware
+	xrequestidMiddleware := xrequestid.NewXRequestIdMiddleware()
+	middlewares[middleware.XREQUESTID_MIDDLEWARE] = xrequestidMiddleware
+
+	// Request Logger middleware
+	requestLoggerMiddleware := logger.NewRequestLoggerMiddleware(log)
+	middlewares[middleware.REQUEST_LOGGER_MIDDLEWARE] = requestLoggerMiddleware
 
 	// Return created core
 	worker := &foulkon.Worker{
-		Logger:        logger,
-		Authenticator: authenticator,
-		UserApi:       testApi,
-		GroupApi:      testApi,
-		PolicyApi:     testApi,
-		AuthzApi:      testApi,
+		Logger:            log,
+		MiddlewareHandler: &middleware.MiddlewareHandler{Middlewares: middlewares},
+		UserApi:           testApi,
+		GroupApi:          testApi,
+		PolicyApi:         testApi,
+		AuthzApi:          testApi,
 	}
 
 	server = httptest.NewServer(WorkerHandlerRouter(worker))
 
 	proxyCore := &foulkon.Proxy{
-		Logger:     logger,
+		Logger:     log,
 		WorkerHost: server.URL,
 		APIResources: []foulkon.APIResource{
 			{

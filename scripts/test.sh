@@ -7,13 +7,14 @@ echo "" > coverage.txt
 
 echo "--> Running tests"
 echo -e '----> Running unit tests'
-for d in $(go list ./... | grep -v '/vendor/' | egrep -v '/database/|auth|cmd/|foulkon/foulkon'); do
+for d in $(go list ./... | grep -v '/vendor/' | egrep -v '/database/|cmd/|auth/oidc|foulkon/foulkon'); do
     go test -race -coverprofile=profile.out -covermode=atomic $d || exit 1
     if [ -f profile.out ]; then
         cat profile.out >> coverage.txt
         rm profile.out
     fi
 done
+
 echo -e '\n----> Running connector tests'
 # Postgres
 echo -e '--------> Running PostgreSQL connector'

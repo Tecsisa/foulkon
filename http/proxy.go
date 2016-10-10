@@ -11,6 +11,7 @@ import (
 
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/foulkon"
+	"github.com/Tecsisa/foulkon/middleware"
 	"github.com/julienschmidt/httprouter"
 	"github.com/satori/go.uuid"
 )
@@ -28,7 +29,7 @@ var rUrnParam, _ = regexp.Compile(`\{(\w+)\}`)
 func (h *ProxyHandler) HandleRequest(resource foulkon.APIResource) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		requestID := uuid.NewV4().String()
-		w.Header().Set(REQUEST_ID_HEADER, requestID)
+		w.Header().Set(middleware.REQUEST_ID_HEADER, requestID)
 		// Retrieve parameters to replace in URN
 		parameters := getUrnParameters(resource.Urn)
 		urn := resource.Urn
@@ -123,7 +124,7 @@ func (h *ProxyHandler) checkAuthorization(r *http.Request, urn string, action st
 		return workerRequestID, getErrorMessage(HOST_UNREACHABLE, err.Error())
 	}
 
-	workerRequestID = res.Header.Get(REQUEST_ID_HEADER)
+	workerRequestID = res.Header.Get(middleware.REQUEST_ID_HEADER)
 
 	switch res.StatusCode {
 	case http.StatusUnauthorized:

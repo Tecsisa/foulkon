@@ -8,7 +8,7 @@ import (
 
 	"fmt"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/pelletier/go-toml"
 )
 
@@ -28,7 +28,7 @@ type Proxy struct {
 	KeyFile  string
 
 	// Logger
-	Logger *log.Logger
+	Logger *logrus.Logger
 
 	// API Resources
 	APIResources []APIResource
@@ -59,15 +59,15 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 		logOut = proxyLogfile
 	}
 	// Loglevel. defaults to INFO
-	loglevel, err := log.ParseLevel(getDefaultValue(config, "logger.level", "info"))
+	loglevel, err := logrus.ParseLevel(getDefaultValue(config, "logger.level", "info"))
 	if err != nil {
-		loglevel = log.InfoLevel
+		loglevel = logrus.InfoLevel
 	}
 
-	logger := &log.Logger{
+	logger := &logrus.Logger{
 		Out:       logOut,
-		Formatter: &log.JSONFormatter{},
-		Hooks:     make(log.LevelHooks),
+		Formatter: &logrus.JSONFormatter{},
+		Hooks:     make(logrus.LevelHooks),
 		Level:     loglevel,
 	}
 	logger.Infof("Logger type: %v, LogLevel: %v", loggerType, logger.Level.String())

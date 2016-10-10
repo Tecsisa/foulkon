@@ -1,4 +1,4 @@
-package auth
+package oidc
 
 import (
 	"net/http"
@@ -6,11 +6,9 @@ import (
 	"fmt"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/Tecsisa/foulkon/middleware"
+	"github.com/Tecsisa/foulkon/middleware/auth"
 	"github.com/emanoelxavier/openid2go/openid"
-)
-
-const (
-	USER_ID_HEADER = "X-FOULKON-USER-ID"
 )
 
 // OIDCAuthConnector represents an OIDC connector that implements interface of auth connector
@@ -18,7 +16,7 @@ type OIDCAuthConnector struct {
 	configuration openid.Configuration
 }
 
-func InitOIDCConnector(logger *log.Logger, provider string, clientids []string) (AuthConnector, error) {
+func InitOIDCConnector(logger *log.Logger, provider string, clientids []string) (auth.AuthConnector, error) {
 	getProviders := func() ([]openid.Provider, error) {
 		provider, err := openid.NewProvider(provider, clientids)
 
@@ -29,7 +27,7 @@ func InitOIDCConnector(logger *log.Logger, provider string, clientids []string) 
 		return []openid.Provider{provider}, nil
 	}
 	errorHandler := func(e error, rw http.ResponseWriter, r *http.Request) bool {
-		requestID := r.Header.Get("Request-ID")
+		requestID := r.Header.Get(middleware.REQUEST_ID_HEADER)
 		if validationErr, ok := e.(*openid.ValidationError); ok {
 			logger.WithFields(log.Fields{
 				"requestID": requestID,
@@ -52,16 +50,20 @@ func InitOIDCConnector(logger *log.Logger, provider string, clientids []string) 
 }
 
 // This method retrieves data from request an checks if user is correctly authenticated
-func (c OIDCAuthConnector) Authenticate(h http.Handler) http.Handler {
-	userHandler := func(u *openid.User, w http.ResponseWriter, r *http.Request) {
-		r.Header.Add(USER_ID_HEADER, u.ID)
-		h.ServeHTTP(w, r)
-	}
-	return openid.AuthenticateUser(&c.configuration, openid.UserHandlerFunc(userHandler))
+func (c OIDCAuthConnector) Authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userHandler := func(u *openid.User, w http.ResponseWriter, r *http.Request) {
+			r.Header.Add(middleware.USER_ID_HEADER, u.ID)
+			next.ServeHTTP(w, r)
+		}
+		authenticationHandler := openid.AuthenticateUser(&c.configuration, openid.UserHandlerFunc(userHandler))
+		authenticationHandler.ServeHTTP(w, r)
+	})
+
 }
 
 // Retrieve user from OIDC token
 func (c OIDCAuthConnector) RetrieveUserID(r http.Request) string {
-	userID := r.Header.Get(USER_ID_HEADER)
+	userID := r.Header.Get(middleware.USER_ID_HEADER)
 	return userID
 }
