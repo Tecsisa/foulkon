@@ -1,4 +1,4 @@
-package auth
+package oidc
 
 import (
 	"net/http"
@@ -7,6 +7,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/Tecsisa/foulkon/middleware"
+	"github.com/Tecsisa/foulkon/middleware/auth"
 	"github.com/emanoelxavier/openid2go/openid"
 )
 
@@ -15,7 +16,7 @@ type OIDCAuthConnector struct {
 	configuration openid.Configuration
 }
 
-func InitOIDCConnector(logger *log.Logger, provider string, clientids []string) (AuthConnector, error) {
+func InitOIDCConnector(logger *log.Logger, provider string, clientids []string) (auth.AuthConnector, error) {
 	getProviders := func() ([]openid.Provider, error) {
 		provider, err := openid.NewProvider(provider, clientids)
 

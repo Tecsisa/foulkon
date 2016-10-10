@@ -17,6 +17,7 @@ import (
 	"github.com/Tecsisa/foulkon/database/postgresql"
 	"github.com/Tecsisa/foulkon/middleware"
 	"github.com/Tecsisa/foulkon/middleware/auth"
+	"github.com/Tecsisa/foulkon/middleware/auth/oidc"
 	"github.com/Tecsisa/foulkon/middleware/logger"
 	"github.com/Tecsisa/foulkon/middleware/xrequestid"
 	"github.com/pelletier/go-toml"
@@ -143,7 +144,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		if err != nil {
 			return nil, err
 		}
-		authOidcConnector, err := auth.InitOIDCConnector(log, issuer, strings.Split(clientsids, ";"))
+		authOidcConnector, err := oidc.InitOIDCConnector(log, issuer, strings.Split(clientsids, ";"))
 		if err != nil {
 			log.Error(err)
 			return nil, err
