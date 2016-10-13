@@ -26,7 +26,7 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 		getUserByExternalIdErr            error
 		getAuthorizedExternalResourcesErr error
 		// Authentication
-		unauthenticated bool
+		authStatusCode int
 	}{
 		"OkCaseAdmin": {
 			expectedStatusCode: http.StatusOK,
@@ -93,13 +93,58 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 		},
 		"ErrorCaseUnauthenticated": {
 			expectedStatusCode: http.StatusForbidden,
+			authStatusCode:     http.StatusUnauthorized,
 			resource:           USER_ROOT_URL + "/user",
 			expectedError: api.Error{
 				Code:    FORBIDDEN_ERROR,
 				Message: "Forbidden resource. If you need access, contact the administrator",
 			},
 			getAuthorizedExternalResourcesResult: []string{"urn:ews:example:instance1:resource/user"},
-			unauthenticated:                      true,
+		},
+		"ErrorCaseForbidden": {
+			expectedStatusCode: http.StatusForbidden,
+			resource:           USER_ROOT_URL + "/user",
+			getUserByExternalIdResult: &api.User{
+				ID:         "UserID",
+				ExternalID: "ExternalID",
+				Path:       "Path",
+				Urn:        "urn",
+				CreateAt:   now,
+				UpdateAt:   now,
+			},
+			getAuthorizedExternalResourcesErr: &api.Error{
+				Code: api.UNAUTHORIZED_RESOURCES_ERROR,
+			},
+			expectedError: api.Error{
+				Code:    FORBIDDEN_ERROR,
+				Message: "Forbidden resource. If you need access, contact the administrator",
+			},
+		},
+		"ErrorCaseForbiddenDifferentResources": {
+			expectedStatusCode: http.StatusForbidden,
+			resource:           USER_ROOT_URL + "/user",
+			getUserByExternalIdResult: &api.User{
+				ID:         "UserID",
+				ExternalID: "ExternalID",
+				Path:       "Path",
+				Urn:        "urn",
+				CreateAt:   now,
+				UpdateAt:   now,
+			},
+			getAuthorizedExternalResourcesResult: []string{"urn:ews:example:instance1:resource/forbidden"},
+			expectedError: api.Error{
+				Code:    FORBIDDEN_ERROR,
+				Message: "Forbidden resource. If you need access, contact the administrator",
+			},
+		},
+		"ErrorCaseAuthBadRequest": {
+			expectedStatusCode: http.StatusBadRequest,
+			authStatusCode:     http.StatusBadRequest,
+			resource:           USER_ROOT_URL + "/user",
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Bad request",
+			},
 		},
 		"ErrorCaseWorkerError": {
 			expectedStatusCode: http.StatusInternalServerError,
@@ -110,14 +155,6 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 			},
 			getAuthorizedExternalResourcesErr: &api.Error{
 				Code: api.UNKNOWN_API_ERROR,
-			},
-		},
-		"ErrorCaseNotAllowed": {
-			expectedStatusCode: http.StatusForbidden,
-			resource:           USER_ROOT_URL + "/user",
-			expectedError: api.Error{
-				Code:    FORBIDDEN_ERROR,
-				Message: "Forbidden resource. If you need access, contact the administrator",
 			},
 		},
 		"ErrorCaseUnauthorized": {
@@ -145,10 +182,9 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
 			continue
 		}
-		if !test.unauthenticated {
-			req.SetBasicAuth("admin", "admin")
-		} else {
-			authConnector.unauthenticated = test.unauthenticated
+
+		if test.authStatusCode != 0 {
+			authConnector.statusCode = test.authStatusCode
 		}
 
 		res, err := client.Do(req)

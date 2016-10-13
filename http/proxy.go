@@ -21,6 +21,7 @@ const (
 	INVALID_DEST_HOST_URL = "InvalidDestinationHostURL"
 	HOST_UNREACHABLE      = "HostUnreachableError"
 	INTERNAL_SERVER_ERROR = "InternalServerError"
+	BAD_REQUEST           = "BadRequest"
 	FORBIDDEN_ERROR       = "ForbiddenError"
 )
 
@@ -81,7 +82,7 @@ func (h *ProxyHandler) HandleRequest(resource foulkon.APIResource) httprouter.Ha
 			switch apiError.Code {
 			case FORBIDDEN_ERROR:
 				h.RespondForbidden(w, getErrorMessage(FORBIDDEN_ERROR, ""))
-			case api.INVALID_PARAMETER_ERROR, api.REGEX_NO_MATCH:
+			case api.INVALID_PARAMETER_ERROR, api.REGEX_NO_MATCH, BAD_REQUEST:
 				h.RespondBadRequest(w, getErrorMessage(api.INVALID_PARAMETER_ERROR, "Bad request"))
 			default:
 				h.RespondInternalServerError(w, getErrorMessage(INTERNAL_SERVER_ERROR, "Internal server error. Contact the administrator"))
@@ -131,6 +132,8 @@ func (h *ProxyHandler) checkAuthorization(r *http.Request, urn string, action st
 		return workerRequestID, getErrorMessage(FORBIDDEN_ERROR, "Unauthenticated user")
 	case http.StatusForbidden:
 		return workerRequestID, getErrorMessage(FORBIDDEN_ERROR, fmt.Sprintf("Restricted access to urn %v", urn))
+	case http.StatusBadRequest:
+		return workerRequestID, getErrorMessage(BAD_REQUEST, "Invalid request")
 	case http.StatusOK:
 		authzResponse := AuthorizeResourcesResponse{}
 		err = json.NewDecoder(res.Body).Decode(&authzResponse)
