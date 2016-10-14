@@ -79,19 +79,29 @@ type TestAPI struct {
 
 // Aux connector
 type TestConnector struct {
-	userID          string
-	unauthenticated bool
+	userID     string
+	statusCode int
 }
 
 func (tc *TestConnector) Authenticate(h http.Handler) http.Handler {
-	if tc.unauthenticated {
-		// Reset value
-		tc.unauthenticated = false
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	var handler http.Handler
+
+	switch tc.statusCode {
+	case http.StatusBadRequest:
+		handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusBadRequest)
+		})
+
+	case http.StatusUnauthorized:
+		handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 		})
+	default:
+		handler = h
 	}
-	return h
+
+	tc.statusCode = 0
+	return handler
 }
 
 func (tc TestConnector) RetrieveUserID(r http.Request) string {
@@ -112,8 +122,7 @@ func TestMain(m *testing.M) {
 
 	// Instantiate Auth Connector
 	authConnector = &TestConnector{
-		userID:          "userID",
-		unauthenticated: false,
+		userID: "userID",
 	}
 
 	adminUser := "admin"
