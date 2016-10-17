@@ -45,8 +45,9 @@ func (h *ProxyHandler) HandleRequest(resource api.ProxyResource) httprouter.Hand
 		if workerRequestID, err := h.checkAuthorization(r, urn, resource.Action); err == nil {
 			destURL, err := url.Parse(resource.Host)
 			if err != nil {
-				h.TransactionErrorLog(r, requestID, workerRequestID, fmt.Sprintf("Error creating destination host URL: %v", err.Error()))
-				h.RespondInternalServerError(w, getErrorMessage(INVALID_DEST_HOST_URL, "Invalid destination host"))
+				apiErr := getErrorMessage(INVALID_DEST_HOST_URL, fmt.Sprintf("Error creating destination host URL: %v", err.Error()))
+				api.TransactionProxyErrorLogWithStatus(requestID, workerRequestID, r, http.StatusInternalServerError, apiErr)
+				h.RespondInternalServerError(w, apiErr)
 				return
 			}
 			r.URL.Host = destURL.Host
@@ -56,7 +57,8 @@ func (h *ProxyHandler) HandleRequest(resource api.ProxyResource) httprouter.Hand
 			// Retrieve requested resource
 			res, err := h.client.Do(r)
 			if err != nil {
-				h.TransactionErrorLog(r, requestID, workerRequestID, fmt.Sprintf("Error calling to destination host resource: %v", err.Error()))
+				apiErr := getErrorMessage(HOST_UNREACHABLE, fmt.Sprintf("Error calling to destination host resource: %v", err.Error()))
+				api.TransactionProxyErrorLogWithStatus(requestID, workerRequestID, r, http.StatusInternalServerError, apiErr)
 				h.RespondInternalServerError(w, getErrorMessage(HOST_UNREACHABLE, "Error calling destination resource"))
 				return
 			}
@@ -75,24 +77,29 @@ func (h *ProxyHandler) HandleRequest(resource api.ProxyResource) httprouter.Hand
 			defer res.Body.Close()
 			buffer := new(bytes.Buffer)
 			if _, err := buffer.ReadFrom(res.Body); err != nil {
-				h.TransactionErrorLog(r, requestID, workerRequestID, fmt.Sprintf("Error reading response from destination: %v", err.Error()))
-				h.RespondInternalServerError(w, getErrorMessage(INTERNAL_SERVER_ERROR, "Error reading response from destination"))
+				apiErr := getErrorMessage(INTERNAL_SERVER_ERROR, fmt.Sprintf("Error reading response from destination: %v", err.Error()))
+				api.TransactionProxyErrorLogWithStatus(requestID, workerRequestID, r, http.StatusInternalServerError, apiErr)
+				h.RespondInternalServerError(w, apiErr)
 				return
 			}
 			w.WriteHeader(res.StatusCode)
 			w.Write(buffer.Bytes())
-			h.TransactionLog(r, requestID, workerRequestID, "Request accepted")
+			api.TransactionProxyLog(requestID, workerRequestID, r, "Request accepted")
 		} else {
-			h.TransactionErrorLog(r, requestID, workerRequestID, fmt.Sprintf("Error in authorization: %v", err.Error()))
 			apiError := err.(*api.Error)
+			var statusCode int
 			switch apiError.Code {
 			case FORBIDDEN_ERROR:
+				statusCode = http.StatusForbidden
 				h.RespondForbidden(w, getErrorMessage(FORBIDDEN_ERROR, ""))
 			case api.INVALID_PARAMETER_ERROR, api.REGEX_NO_MATCH, BAD_REQUEST:
+				statusCode = http.StatusBadRequest
 				h.RespondBadRequest(w, getErrorMessage(api.INVALID_PARAMETER_ERROR, "Bad request"))
 			default:
+				statusCode = http.StatusInternalServerError
 				h.RespondInternalServerError(w, getErrorMessage(INTERNAL_SERVER_ERROR, "Internal server error. Contact the administrator"))
 			}
+			api.TransactionProxyErrorLogWithStatus(requestID, workerRequestID, r, statusCode, apiError)
 			return
 		}
 	}

@@ -123,7 +123,7 @@ func (api WorkerAPI) AddPolicy(requestInfo RequestInfo, name string, path string
 				}
 			}
 
-			LogOperation(api.Logger, requestInfo, fmt.Sprintf("Policy created %+v", createdPolicy))
+			LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("Policy created %+v", createdPolicy))
 			return createdPolicy, nil
 		default: // Unexpected error
 			return nil, &Error{
@@ -340,7 +340,7 @@ func (api WorkerAPI) UpdatePolicy(requestInfo RequestInfo, org string, policyNam
 		}
 	}
 
-	LogOperation(api.Logger, requestInfo, fmt.Sprintf("Policy updated from %+v to %+v", oldPolicy, updatedPolicy))
+	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("Policy updated from %+v to %+v", oldPolicy, updatedPolicy))
 	return updatedPolicy, nil
 }
 
@@ -375,7 +375,7 @@ func (api WorkerAPI) RemovePolicy(requestInfo RequestInfo, org string, name stri
 		}
 	}
 
-	LogOperation(api.Logger, requestInfo, fmt.Sprintf("Policy deleted %+v", policy))
+	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("Policy deleted %+v", policy))
 	return nil
 }
 

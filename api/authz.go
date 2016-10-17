@@ -166,7 +166,7 @@ func (api WorkerAPI) getAuthorizedResources(requestInfo RequestInfo, resourceUrn
 		return nil, err
 	}
 
-	api.Logger.Debugf("Restrictions: %v", *restrictions)
+	Log.Debugf("Restrictions: %v", *restrictions)
 
 	// Check if there are some restrictions for this urn resource
 	if len(restrictions.AllowedFullUrns) < 1 && len(restrictions.AllowedUrnPrefixes) < 1 {

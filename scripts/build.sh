@@ -2,8 +2,8 @@
 
 echo "--> Building..."
 #Make sure $GOPATH is set
-CGO_ENABLED=0 go install github.com/Tecsisa/foulkon/cmd/worker
-CGO_ENABLED=0 go install github.com/Tecsisa/foulkon/cmd/proxy
+CGO_ENABLED=0 go install github.com/Tecsisa/foulkon/cmd/worker || exit 1
+CGO_ENABLED=0 go install github.com/Tecsisa/foulkon/cmd/proxy || exit 1
 
 # If its dev mode, only build for ourself
 if [[ "${FOULKON_DEV}" ]]; then

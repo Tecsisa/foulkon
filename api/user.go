@@ -88,7 +88,7 @@ func (api WorkerAPI) AddUser(requestInfo RequestInfo, externalId string, path st
 					Message: dbError.Message,
 				}
 			}
-			LogOperation(api.Logger, requestInfo, fmt.Sprintf("User created %+v", createdUser))
+			LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("User created %+v", createdUser))
 			return createdUser, nil
 		default: // Unexpected error
 			return nil, &Error{
@@ -251,7 +251,7 @@ func (api WorkerAPI) UpdateUser(requestInfo RequestInfo, externalId string, newP
 		}
 	}
 
-	LogOperation(api.Logger, requestInfo, fmt.Sprintf("User updated from %+v to %+v", oldUser, updatedUser))
+	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("User updated from %+v to %+v", oldUser, updatedUser))
 	return updatedUser, nil
 
 }
@@ -287,7 +287,7 @@ func (api WorkerAPI) RemoveUser(requestInfo RequestInfo, externalId string) erro
 			Message: dbError.Message,
 		}
 	}
-	LogOperation(api.Logger, requestInfo, fmt.Sprintf("User deleted %+v", user))
+	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("User deleted %+v", user))
 	return nil
 }
 

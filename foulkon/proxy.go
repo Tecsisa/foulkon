@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/Tecsisa/foulkon/api"
 	"github.com/pelletier/go-toml"
 
-	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/database/postgresql"
 )
 
@@ -37,9 +37,6 @@ type Proxy struct {
 
 	// Refresh time
 	RefreshTime time.Duration
-
-	// Logger
-	Logger *logrus.Logger
 }
 
 func NewProxy(config *toml.TomlTree) (*Proxy, error) {
@@ -62,28 +59,28 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 		loglevel = logrus.InfoLevel
 	}
 
-	log = &logrus.Logger{
+	api.Log = &logrus.Logger{
 		Out:       logOut,
 		Formatter: &logrus.JSONFormatter{},
 		Hooks:     make(logrus.LevelHooks),
 		Level:     loglevel,
 	}
-	log.Infof("Logger type: %v, LogLevel: %v", loggerType, log.Level.String())
+	api.Log.Infof("Logger type: %v, LogLevel: %v", loggerType, api.Log.Level.String())
 
 	// Start DB with API
 	var prApi api.ProxyAPI
 
 	dbType, err := getMandatoryValue(config, "database.type")
 	if err != nil {
-		log.Error(err)
+		api.Log.Error(err)
 		return nil, err
 	}
 	switch dbType {
 	case "postgres": // PostgreSQL DB
-		log.Info("Connecting to postgres database")
+		api.Log.Info("Connecting to postgres database")
 		dbdsn, err := getMandatoryValue(config, "database.postgres.datasourcename")
 		if err != nil {
-			log.Error(err)
+			api.Log.Error(err)
 			return nil, err
 		}
 		gormDB, err := postgresql.InitDb(dbdsn,
@@ -92,11 +89,11 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 			getDefaultValue(config, "database.postgres.connttl", "300"),
 		)
 		if err != nil {
-			log.Error(err)
+			api.Log.Error(err)
 			return nil, err
 		}
 		db = gormDB.DB()
-		log.Info("Connected to postgres database")
+		api.Log.Info("Connected to postgres database")
 
 		// Create repository
 		repoDB := postgresql.PostgresRepo{
@@ -108,31 +105,29 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 
 	default:
 		err := errors.New("Unexpected db_type value in configuration file (Maybe it is empty)")
-		log.Error(err)
+		api.Log.Error(err)
 		return nil, err
 	}
 
-	prApi.Logger = log
-
 	host, err := getMandatoryValue(config, "server.host")
 	if err != nil {
-		log.Error(err)
+		api.Log.Error(err)
 		return nil, err
 	}
 	port, err := getMandatoryValue(config, "server.port")
 	if err != nil {
-		log.Error(err)
+		api.Log.Error(err)
 		return nil, err
 	}
 	workerHost, err := getMandatoryValue(config, "server.worker-host")
 	if err != nil {
-		log.Error(err)
+		api.Log.Error(err)
 		return nil, err
 	}
 
 	refresh, err := time.ParseDuration(getDefaultValue(config, "resources.refresh", "10s"))
 	if err != nil {
-		log.Error(err)
+		api.Log.Error(err)
 		return nil, err
 	}
 
@@ -142,7 +137,6 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 		WorkerHost:  workerHost,
 		CertFile:    getDefaultValue(config, "server.certfile", ""),
 		KeyFile:     getDefaultValue(config, "server.keyfile", ""),
-		Logger:      log,
 		ProxyApi:    prApi,
 		RefreshTime: refresh,
 	}, nil
@@ -151,7 +145,7 @@ func NewProxy(config *toml.TomlTree) (*Proxy, error) {
 func CloseProxy() int {
 	status := 0
 	if err := db.Close(); err != nil {
-		log.Errorf("Couldn't close DB connection: %v", err)
+		api.Log.Errorf("Couldn't close DB connection: %v", err)
 		status = 1
 	}
 	if proxyLogfile != nil {

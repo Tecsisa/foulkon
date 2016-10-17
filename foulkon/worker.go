@@ -27,7 +27,6 @@ import (
 var rEnvVar, _ = regexp.Compile(`^\$\{(\w+)\}$`)
 var db *sql.DB
 var workerLogfile *os.File
-var log *logrus.Logger
 
 // Worker is the Authorization server.
 type Worker struct {
@@ -45,9 +44,6 @@ type Worker struct {
 	PolicyApi api.PolicyAPI
 	AuthzApi  api.AuthzAPI
 	ProxyApi  api.ProxyResourcesAPI
-
-	// Logger
-	Logger *logrus.Logger
 
 	//  Middleware handler
 	MiddlewareHandler *middleware.MiddlewareHandler
@@ -75,28 +71,28 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		loglevel = logrus.InfoLevel
 	}
 
-	log = &logrus.Logger{
+	api.Log = &logrus.Logger{
 		Out:       logOut,
 		Formatter: &logrus.JSONFormatter{},
 		Hooks:     make(logrus.LevelHooks),
 		Level:     loglevel,
 	}
-	log.Infof("Logger type: %v, LogLevel: %v", loggerType, log.Level.String())
+	api.Log.Infof("Logger type: %v, LogLevel: %v", loggerType, api.Log.Level.String())
 
 	// Start DB with API
 	var authApi api.WorkerAPI
 
 	dbType, err := getMandatoryValue(config, "database.type")
 	if err != nil {
-		log.Error(err)
+		api.Log.Error(err)
 		return nil, err
 	}
 	switch dbType {
 	case "postgres": // PostgreSQL DB
-		log.Info("Connecting to postgres database")
+		api.Log.Info("Connecting to postgres database")
 		dbdsn, err := getMandatoryValue(config, "database.postgres.datasourcename")
 		if err != nil {
-			log.Error(err)
+			api.Log.Error(err)
 			return nil, err
 		}
 		gormDB, err := postgresql.InitDb(dbdsn,
@@ -105,11 +101,11 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 			getDefaultValue(config, "database.postgres.connttl", "300"),
 		)
 		if err != nil {
-			log.Error(err)
+			api.Log.Error(err)
 			return nil, err
 		}
 		db = gormDB.DB()
-		log.Info("Connected to postgres database")
+		api.Log.Info("Connected to postgres database")
 
 		// Create repository
 		repoDB := postgresql.PostgresRepo{
@@ -119,16 +115,13 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 			GroupRepo:  repoDB,
 			UserRepo:   repoDB,
 			PolicyRepo: repoDB,
-			ProxyRepo:  repoDB,
 		}
 
 	default:
 		err := errors.New("Unexpected db_type value in configuration file (Maybe it is empty)")
-		log.Error(err)
+		api.Log.Error(err)
 		return nil, err
 	}
-
-	authApi.Logger = log
 
 	// Instantiate Auth Connector
 	var authConnector auth.AuthConnector
@@ -146,32 +139,32 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		if err != nil {
 			return nil, err
 		}
-		authOidcConnector, err := oidc.InitOIDCConnector(log, issuer, strings.Split(clientsids, ";"))
+		authOidcConnector, err := oidc.InitOIDCConnector(issuer, strings.Split(clientsids, ";"))
 		if err != nil {
-			log.Error(err)
+			api.Log.Error(err)
 			return nil, err
 		}
 		authConnector = authOidcConnector
-		log.Infof("OIDC connector configured for issuer %v", issuer)
+		api.Log.Infof("OIDC connector configured for issuer %v", issuer)
 	default:
 		err := errors.New("Unexpected auth_connector_type value in configuration file (Maybe it is empty)")
-		log.Error(err)
+		api.Log.Error(err)
 		return nil, err
 	}
 
 	adminUser, err := getMandatoryValue(config, "admin.username")
 	if err != nil {
-		log.Error(err)
+		api.Log.Error(err)
 		return nil, err
 	}
 	adminPassword, err := getMandatoryValue(config, "admin.password")
 	if err != nil {
-		log.Error(err)
+		api.Log.Error(err)
 		return nil, err
 	}
 	if len(strings.TrimSpace(adminUser)) < 1 || len(strings.TrimSpace(adminPassword)) < 1 {
 		err := fmt.Errorf("Admin user config unexpected adminUser:%v, adminpassword:%v", adminUser, adminPassword)
-		log.Error(err)
+		api.Log.Error(err)
 		return nil, err
 	}
 
@@ -181,24 +174,24 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 	// Authenticator middleware
 	authenticatorMiddleware := auth.NewAuthenticatorMiddleware(authConnector, adminUser, adminPassword)
 	middlewares[middleware.AUTHENTICATOR_MIDDLEWARE] = authenticatorMiddleware
-	log.Infof("Created authenticator with admin username %v", adminUser)
+	api.Log.Infof("Created authenticator with admin username %v", adminUser)
 
 	// X-Request-Id middleware
 	xrequestidMiddleware := xrequestid.NewXRequestIdMiddleware()
 	middlewares[middleware.XREQUESTID_MIDDLEWARE] = xrequestidMiddleware
 
 	// Request Logger middleware
-	requestLoggerMiddleware := logger.NewRequestLoggerMiddleware(log)
+	requestLoggerMiddleware := logger.NewRequestLoggerMiddleware()
 	middlewares[middleware.REQUEST_LOGGER_MIDDLEWARE] = requestLoggerMiddleware
 
 	host, err := getMandatoryValue(config, "server.host")
 	if err != nil {
-		log.Error(err)
+		api.Log.Error(err)
 		return nil, err
 	}
 	port, err := getMandatoryValue(config, "server.port")
 	if err != nil {
-		log.Error(err)
+		api.Log.Error(err)
 		return nil, err
 	}
 
@@ -207,7 +200,6 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		Port:              port,
 		CertFile:          getDefaultValue(config, "server.certfile", ""),
 		KeyFile:           getDefaultValue(config, "server.keyfile", ""),
-		Logger:            log,
 		MiddlewareHandler: &middleware.MiddlewareHandler{Middlewares: middlewares},
 		UserApi:           authApi,
 		GroupApi:          authApi,
@@ -219,7 +211,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 func CloseWorker() int {
 	status := 0
 	if err := db.Close(); err != nil {
-		log.Errorf("Couldn't close DB connection: %v", err)
+		api.Log.Errorf("Couldn't close DB connection: %v", err)
 		status = 1
 	}
 	if workerLogfile != nil {

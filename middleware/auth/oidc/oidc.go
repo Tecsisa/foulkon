@@ -5,7 +5,7 @@ import (
 
 	"fmt"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/middleware"
 	"github.com/Tecsisa/foulkon/middleware/auth"
 	"github.com/emanoelxavier/openid2go/openid"
@@ -16,7 +16,8 @@ type OIDCAuthConnector struct {
 	configuration openid.Configuration
 }
 
-func InitOIDCConnector(logger *log.Logger, provider string, clientids []string) (auth.AuthConnector, error) {
+// InitOIDCConnector initializes OIDC connector configuration
+func InitOIDCConnector(provider string, clientids []string) (auth.AuthConnector, error) {
 	getProviders := func() ([]openid.Provider, error) {
 		provider, err := openid.NewProvider(provider, clientids)
 
@@ -29,14 +30,18 @@ func InitOIDCConnector(logger *log.Logger, provider string, clientids []string) 
 	errorHandler := func(e error, rw http.ResponseWriter, r *http.Request) bool {
 		requestID := r.Header.Get(middleware.REQUEST_ID_HEADER)
 		if validationErr, ok := e.(*openid.ValidationError); ok {
-			logger.WithFields(log.Fields{
-				"requestID": requestID,
-			}).Error(validationErr.Message)
+			apiError := &api.Error{
+				Code:    api.AUTHENTICATION_API_ERROR,
+				Message: validationErr.Message,
+			}
+			api.LogOperationError(requestID, "", apiError)
 			http.Error(rw, fmt.Sprintf("Error %v", validationErr.Message), validationErr.HTTPStatus)
 		} else {
-			logger.WithFields(log.Fields{
-				"requestID": requestID,
-			}).Error("Internal server error")
+			apiError := &api.Error{
+				Code:    api.AUTHENTICATION_API_ERROR,
+				Message: validationErr.Message,
+			}
+			api.LogOperationError(requestID, "", apiError)
 			http.Error(rw, "Unexpected error", http.StatusInternalServerError)
 		}
 

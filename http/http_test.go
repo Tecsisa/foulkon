@@ -6,10 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"bytes"
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
+	logrusTest "github.com/Sirupsen/logrus/hooks/test"
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/foulkon"
 	"github.com/Tecsisa/foulkon/middleware"
@@ -63,8 +62,8 @@ const (
 var server *httptest.Server
 var proxy *httptest.Server
 var testApi *TestAPI
+var hook *logrusTest.Hook
 var authConnector *TestConnector
-var proxyCore *foulkon.Proxy
 var testFilter = &api.Filter{
 	PathPrefix: "",
 	Org:        "",
@@ -116,12 +115,7 @@ func (tc TestConnector) RetrieveUserID(r http.Request) string {
 // Main Test that executes at first time and create all necessary data to work
 func TestMain(m *testing.M) {
 	// Create logger
-	log := &logrus.Logger{
-		Out:       bytes.NewBuffer([]byte{}),
-		Formatter: &logrus.TextFormatter{},
-		Hooks:     make(logrus.LevelHooks),
-		Level:     logrus.DebugLevel,
-	}
+	api.Log, hook = logrusTest.NewNullLogger()
 
 	testApi = makeTestApi()
 
@@ -145,12 +139,11 @@ func TestMain(m *testing.M) {
 	middlewares[middleware.XREQUESTID_MIDDLEWARE] = xrequestidMiddleware
 
 	// Request Logger middleware
-	requestLoggerMiddleware := logger.NewRequestLoggerMiddleware(log)
+	requestLoggerMiddleware := logger.NewRequestLoggerMiddleware()
 	middlewares[middleware.REQUEST_LOGGER_MIDDLEWARE] = requestLoggerMiddleware
 
 	// Return created core
 	worker := &foulkon.Worker{
-		Logger:            log,
 		MiddlewareHandler: &middleware.MiddlewareHandler{Middlewares: middlewares},
 		UserApi:           testApi,
 		GroupApi:          testApi,
@@ -160,8 +153,7 @@ func TestMain(m *testing.M) {
 
 	server = httptest.NewServer(WorkerHandlerRouter(worker))
 
-	proxyCore = &foulkon.Proxy{
-		Logger:     log,
+	proxyCore := &foulkon.Proxy{
 		WorkerHost: server.URL,
 		ProxyApi:   testApi,
 	}

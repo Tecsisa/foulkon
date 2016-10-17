@@ -141,12 +141,12 @@ func makeTestAPI(testRepo *TestRepo) *WorkerAPI {
 		UserRepo:   testRepo,
 		GroupRepo:  testRepo,
 		PolicyRepo: testRepo,
-		Logger: &log.Logger{
-			Out:       bytes.NewBuffer([]byte{}),
-			Formatter: &log.TextFormatter{},
-			Hooks:     make(log.LevelHooks),
-			Level:     log.DebugLevel,
-		},
+	}
+	Log = &log.Logger{
+		Out:       bytes.NewBuffer([]byte{}),
+		Formatter: &log.TextFormatter{},
+		Hooks:     make(log.LevelHooks),
+		Level:     log.DebugLevel,
 	}
 	return api
 }
@@ -154,12 +154,12 @@ func makeTestAPI(testRepo *TestRepo) *WorkerAPI {
 func makeProxyTestAPI(testRepo *TestRepo) *ProxyAPI {
 	api := &ProxyAPI{
 		ProxyRepo: testRepo,
-		Logger: &log.Logger{
-			Out:       bytes.NewBuffer([]byte{}),
-			Formatter: &log.TextFormatter{},
-			Hooks:     make(log.LevelHooks),
-			Level:     log.DebugLevel,
-		},
+	}
+	Log = &log.Logger{
+		Out:       bytes.NewBuffer([]byte{}),
+		Formatter: &log.TextFormatter{},
+		Hooks:     make(log.LevelHooks),
+		Level:     log.DebugLevel,
 	}
 	return api
 }
