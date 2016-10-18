@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"net/http"
@@ -24,7 +25,7 @@ type Meta struct {
 }
 
 type Command interface {
-	Run(args []string) int
+	Run(args []string) (string, error)
 }
 
 func main() {
@@ -113,19 +114,24 @@ To get more help, please execute this cli with a <command>
 		fmt.Printf("%s", help)
 		os.Exit(1)
 	}
-	os.Exit(command.Run(args[2:]))
+	msg, err := command.Run(args[2:])
+	if err != nil {
+		println(err.Error())
+		os.Exit(1)
+	}
+	println(msg)
+	os.Exit(0)
 }
 
 // Helper func for updating request params
-func (m *Meta) prepareRequest(method string, url string, postContent map[string]string, queryParams map[string]string) *http.Request {
+func (m *Meta) prepareRequest(method string, url string, postContent map[string]string, queryParams map[string]string) (*http.Request, error) {
 	url = m.address + url
 	// insert post content to body
 	var body *bytes.Buffer
 	if postContent != nil {
 		payload, err := json.Marshal(postContent)
 		if err != nil {
-			println(err)
-			os.Exit(1)
+			return nil, err
 		}
 		body = bytes.NewBuffer(payload)
 	}
@@ -135,8 +141,7 @@ func (m *Meta) prepareRequest(method string, url string, postContent map[string]
 	// initialize http request
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
-		println(err)
-		os.Exit(1)
+		return nil, err
 	}
 	// add basic auth
 	req.SetBasicAuth("admin", "admin")
@@ -150,34 +155,31 @@ func (m *Meta) prepareRequest(method string, url string, postContent map[string]
 		req.URL.RawQuery = values.Encode()
 	}
 
-	return req
+	return req, nil
 }
 
-func (m *Meta) makeRequest(req *http.Request, expectedStatusCode int, printResponse bool) int {
+func (m *Meta) makeRequest(req *http.Request) (string, error) {
 	resp, err := m.httpClient.Do(req)
 	if err != nil {
-		fmt.Print(err)
-		return 1
-	} else if resp.StatusCode == expectedStatusCode {
-		if printResponse {
-			// read body
-			buffer := new(bytes.Buffer)
-			buffer.ReadFrom(resp.Body)
-			// json pretty-print
-			var out bytes.Buffer
-			err := json.Indent(&out, buffer.Bytes(), "", "\t")
-			if err != nil {
-				println(err)
-				return 1
-			}
-			println(out.String())
-			return 0
-		} else {
-			println("Operation succeeded")
-			return 0
+		return "", err
+	}
+	// read body
+	buffer := new(bytes.Buffer)
+	buffer.ReadFrom(resp.Body)
+	// json pretty-print
+	var out bytes.Buffer
+	err = json.Indent(&out, buffer.Bytes(), "", "\t")
+	if err != nil {
+		return "", err
+	}
+	msg := out.String()
+	switch {
+	case resp.StatusCode >= 200 && resp.StatusCode < 300:
+		if msg == "" {
+			msg = "Operation succeeded"
 		}
-	} else {
-		println("Operation failed. Got HTTP status code " + strconv.Itoa(resp.StatusCode) + ", wanted " + strconv.Itoa(expectedStatusCode))
-		return 1
+		return msg, nil
+	default:
+		return "", errors.New("Operation failed, received HTTP status code " + strconv.Itoa(resp.StatusCode))
 	}
 }

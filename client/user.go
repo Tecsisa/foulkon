@@ -4,27 +4,29 @@ import (
 	"flag"
 
 	internalhttp "github.com/Tecsisa/foulkon/http"
-	"net/http"
 )
 
 type GetUserCommand struct {
 	Meta
 }
 
-func (c *GetUserCommand) Run(args []string) int {
+func (c *GetUserCommand) Run(args []string) (string, error) {
 	flagSet := flag.NewFlagSet("user get", flag.ExitOnError)
 	id := flagSet.String("id", "", "External user ID")
 	flagSet.Parse(args)
 
-	req := c.prepareRequest("GET", internalhttp.USER_ROOT_URL+"/"+*id, nil, nil)
-	return c.makeRequest(req, http.StatusOK, true)
+	req, err := c.prepareRequest("GET", internalhttp.USER_ROOT_URL+"/"+*id, nil, nil)
+	if err != nil {
+		return "", err
+	}
+	return c.makeRequest(req)
 }
 
 type GetAllUsersCommand struct {
 	Meta
 }
 
-func (c *GetAllUsersCommand) Run(args []string) int {
+func (c *GetAllUsersCommand) Run(args []string) (string, error) {
 	flagSet := flag.NewFlagSet("user get-all", flag.ExitOnError)
 	offset := flagSet.String("offset", "", "The offset of the items returned")
 	limit := flagSet.String("limit", "", "The maximum number of items in the response")
@@ -39,15 +41,18 @@ func (c *GetAllUsersCommand) Run(args []string) int {
 		"PathPrefix": *pathPrefix,
 	}
 
-	req := c.prepareRequest("GET", internalhttp.USER_ROOT_URL, nil, queryParams)
-	return c.makeRequest(req, http.StatusOK, true)
+	req, err := c.prepareRequest("GET", internalhttp.USER_ROOT_URL, nil, queryParams)
+	if err != nil {
+		return "", err
+	}
+	return c.makeRequest(req)
 }
 
 type GetUserGroupsCommand struct {
 	Meta
 }
 
-func (c *GetUserGroupsCommand) Run(args []string) int {
+func (c *GetUserGroupsCommand) Run(args []string) (string, error) {
 	flagSet := flag.NewFlagSet("user groups", flag.ExitOnError)
 	id := flagSet.String("id", "", "External user ID")
 	offset := flagSet.String("offset", "", "The offset of the items returned")
@@ -62,15 +67,18 @@ func (c *GetUserGroupsCommand) Run(args []string) int {
 	}
 	flagSet.Parse(args)
 
-	req := c.prepareRequest("GET", internalhttp.USER_ROOT_URL+"/"+*id+"/groups", nil, queryParams)
-	return c.makeRequest(req, http.StatusOK, true)
+	req, err := c.prepareRequest("GET", internalhttp.USER_ROOT_URL+"/"+*id+"/groups", nil, queryParams)
+	if err != nil {
+		return "", err
+	}
+	return c.makeRequest(req)
 }
 
 type CreateUserCommand struct {
 	Meta
 }
 
-func (c *CreateUserCommand) Run(args []string) int {
+func (c *CreateUserCommand) Run(args []string) (string, error) {
 	flagSet := flag.NewFlagSet("user-create", flag.ExitOnError)
 	externalId := flagSet.String("id", "", "User's external identifier")
 	path := flagSet.String("path", "", "User location")
@@ -81,19 +89,18 @@ func (c *CreateUserCommand) Run(args []string) int {
 		"path":       *path,
 	}
 
-	req := c.prepareRequest("POST", internalhttp.USER_ROOT_URL, body, nil)
-	return c.makeRequest(req, http.StatusCreated, true)
-}
-
-type DeleteUserCommand struct {
-	Meta
+	req, err := c.prepareRequest("POST", internalhttp.USER_ROOT_URL, body, nil)
+	if err != nil {
+		return "", err
+	}
+	return c.makeRequest(req)
 }
 
 type UpdateUserCommand struct {
 	Meta
 }
 
-func (c *UpdateUserCommand) Run(args []string) int {
+func (c *UpdateUserCommand) Run(args []string) (string, error) {
 	flagSet := flag.NewFlagSet("user update", flag.ExitOnError)
 	path := flagSet.String("path", "", "User location")
 	id := flagSet.String("id", "", "Existing user Id")
@@ -103,15 +110,25 @@ func (c *UpdateUserCommand) Run(args []string) int {
 		"path": *path,
 	}
 
-	req := c.prepareRequest("PUT", internalhttp.USER_ROOT_URL+"/"+*id, body, nil)
-	return c.makeRequest(req, http.StatusOK, true)
+	req, err := c.prepareRequest("PUT", internalhttp.USER_ROOT_URL+"/"+*id, body, nil)
+	if err != nil {
+		return "", err
+	}
+	return c.makeRequest(req)
 }
 
-func (c *DeleteUserCommand) Run(args []string) int {
+type DeleteUserCommand struct {
+	Meta
+}
+
+func (c *DeleteUserCommand) Run(args []string) (string, error) {
 	flagSet := flag.NewFlagSet("user get", flag.ExitOnError)
 	id := flagSet.String("id", "", "External user ID")
 	flagSet.Parse(args)
 
-	req := c.prepareRequest("DELETE", internalhttp.USER_ROOT_URL+"/"+*id, nil, nil)
-	return c.makeRequest(req, http.StatusNoContent, false)
+	req, err := c.prepareRequest("DELETE", internalhttp.USER_ROOT_URL+"/"+*id, nil, nil)
+	if err != nil {
+		return "", err
+	}
+	return c.makeRequest(req)
 }
