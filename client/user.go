@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"flag"
@@ -102,8 +102,8 @@ type UpdateUserCommand struct {
 
 func (c *UpdateUserCommand) Run(args []string) (string, error) {
 	flagSet := flag.NewFlagSet("user update", flag.ExitOnError)
-	path := flagSet.String("path", "", "User location")
 	id := flagSet.String("id", "", "Existing user Id")
+	path := flagSet.String("path", "", "User location")
 	flagSet.Parse(args)
 
 	body := map[string]string{
