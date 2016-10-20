@@ -6,6 +6,8 @@ import (
 	"os"
 	"regexp"
 
+	"strings"
+
 	"github.com/Tecsisa/foulkon/client/api"
 )
 
@@ -92,48 +94,22 @@ To get more help, please execute this cli with a <command>
 		switch args[1] {
 		case "get":
 			params := parseFlags(availableFlags, []string{FLAG_EXTERNALID}, args)
-
-			externalId := params[FLAG_EXTERNALID]
-
-			msg, err = clientApi.GetUser(externalId)
+			msg, err = clientApi.GetUser(params[FLAG_EXTERNALID])
 		case "get-all":
 			params := parseFlags(availableFlags, []string{FLAG_PATHPREFIX, FLAG_OFFSET, FLAG_LIMIT, FLAG_ORDERBY}, args)
-
-			pathprefix := params[FLAG_PATHPREFIX]
-			offset := params[FLAG_OFFSET]
-			limit := params[FLAG_LIMIT]
-			orderby := params[FLAG_ORDERBY]
-
-			msg, err = clientApi.GetAllUsers(pathprefix, offset, limit, orderby)
+			msg, err = clientApi.GetAllUsers(params[FLAG_PATHPREFIX], params[FLAG_OFFSET], params[FLAG_LIMIT], params[FLAG_ORDERBY])
 		case "groups":
 			params := parseFlags(availableFlags, []string{FLAG_EXTERNALID, FLAG_OFFSET, FLAG_LIMIT, FLAG_ORDERBY}, args)
-
-			externalid := params[FLAG_EXTERNALID]
-			offset := params[FLAG_OFFSET]
-			limit := params[FLAG_LIMIT]
-			orderby := params[FLAG_ORDERBY]
-
-			msg, err = clientApi.GetAllUsers(externalid, offset, limit, orderby)
+			msg, err = clientApi.GetAllUsers(params[FLAG_EXTERNALID], params[FLAG_OFFSET], params[FLAG_LIMIT], params[FLAG_ORDERBY])
 		case "create":
 			params := parseFlags(availableFlags, []string{FLAG_EXTERNALID, FLAG_PATH}, args)
-
-			externalId := params[FLAG_EXTERNALID]
-			path := params[FLAG_PATH]
-
-			msg, err = clientApi.CreateUser(externalId, path)
+			msg, err = clientApi.CreateUser(params[FLAG_EXTERNALID], params[FLAG_PATH])
 		case "delete":
 			params := parseFlags(availableFlags, []string{FLAG_EXTERNALID}, args)
-
-			externalId := params[FLAG_EXTERNALID]
-
-			msg, err = clientApi.DeleteUser(externalId)
+			msg, err = clientApi.DeleteUser(params[FLAG_EXTERNALID])
 		case "update":
 			params := parseFlags(availableFlags, []string{FLAG_EXTERNALID, FLAG_PATH}, args)
-
-			externalId := params[FLAG_EXTERNALID]
-			path := params[FLAG_PATH]
-
-			msg, err = clientApi.UpdateUser(externalId, path)
+			msg, err = clientApi.UpdateUser(params[FLAG_EXTERNALID], params[FLAG_PATH])
 		case "-h":
 			fmt.Printf(userHelp)
 			os.Exit(1)
@@ -170,7 +146,7 @@ func parseFlags(availableFlags map[string]string, validFlags []string, cliArgs [
 
 	for _, v := range validFlags {
 		if val := flagSet.Lookup(v); val != nil {
-			params[v] = val.Value.String()
+			params[strings.ToUpper(v)] = val.Value.String()
 		}
 	}
 

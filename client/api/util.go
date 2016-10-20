@@ -57,6 +57,9 @@ func (c *ClientAPI) makeRequest(req *http.Request) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	defer resp.Body.Close()
+
 	// read body
 	buffer := new(bytes.Buffer)
 	buffer.ReadFrom(resp.Body)
