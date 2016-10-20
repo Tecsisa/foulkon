@@ -12,10 +12,10 @@ func (c *ClientAPI) GetUser(externalId string) (string, error) {
 
 func (c *ClientAPI) GetAllUsers(pathPrefix, offset, limit, orderBy string) (string, error) {
 	urlParams := map[string]string{
-		"pathPrefix": pathPrefix,
-		"offset":     offset,
-		"limit":      limit,
-		"orderBy":    orderBy,
+		"PathPrefix": pathPrefix,
+		"Offset":     offset,
+		"Limit":      limit,
+		"OrderBy":    orderBy,
 	}
 	req, err := c.prepareRequest("GET", internalhttp.USER_ROOT_URL, nil, urlParams)
 	if err != nil {
@@ -26,9 +26,9 @@ func (c *ClientAPI) GetAllUsers(pathPrefix, offset, limit, orderBy string) (stri
 
 func (c *ClientAPI) GetUserGroups(externalId, offset, limit, orderBy string) (string, error) {
 	urlParams := map[string]string{
-		"offset":  offset,
-		"limit":   limit,
-		"orderBy": orderBy,
+		"Offset":  offset,
+		"Limit":   limit,
+		"OrderBy": orderBy,
 	}
 	req, err := c.prepareRequest("GET", internalhttp.USER_ROOT_URL+"/"+externalId+"/groups", nil, urlParams)
 	if err != nil {

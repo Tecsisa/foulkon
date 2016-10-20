@@ -6,8 +6,6 @@ import (
 	"os"
 	"regexp"
 
-	"strings"
-
 	"github.com/Tecsisa/foulkon/client/api"
 )
 
@@ -146,7 +144,7 @@ func parseFlags(availableFlags map[string]string, validFlags []string, cliArgs [
 
 	for _, v := range validFlags {
 		if val := flagSet.Lookup(v); val != nil {
-			params[strings.ToUpper(v)] = val.Value.String()
+			params[v] = val.Value.String()
 		}
 	}
 

@@ -61,15 +61,19 @@ func (c *ClientAPI) makeRequest(req *http.Request) (string, error) {
 	defer resp.Body.Close()
 
 	// read body
+	var msg string
 	buffer := new(bytes.Buffer)
-	buffer.ReadFrom(resp.Body)
-	// json pretty-print
-	var out bytes.Buffer
-	err = json.Indent(&out, buffer.Bytes(), "", "\t")
-	if err != nil {
-		return "", err
+	nb, _ := buffer.ReadFrom(resp.Body)
+	if nb != 0 {
+		// json pretty-print
+		var out bytes.Buffer
+		err = json.Indent(&out, buffer.Bytes(), "", "\t")
+		if err != nil {
+			return "", err
+		}
+		msg = out.String()
 	}
-	msg := out.String()
+
 	switch {
 	case resp.StatusCode >= 200 && resp.StatusCode < 300:
 		if msg == "" {
