@@ -1,4 +1,4 @@
-package client
+package api
 
 import (
 	"bytes"
@@ -18,8 +18,8 @@ type Command interface {
 }
 
 // Helper func for updating request params
-func (m *Meta) prepareRequest(method string, url string, postContent map[string]string, queryParams map[string]string) (*http.Request, error) {
-	url = m.Address + url
+func (c *ClientAPI) prepareRequest(method string, url string, postContent map[string]string, queryParams map[string]string) (*http.Request, error) {
+	url = c.Address + url
 	// insert post content to body
 	var body *bytes.Buffer
 	if postContent != nil {
@@ -52,8 +52,8 @@ func (m *Meta) prepareRequest(method string, url string, postContent map[string]
 	return req, nil
 }
 
-func (m *Meta) makeRequest(req *http.Request) (string, error) {
-	resp, err := m.HttpClient.Do(req)
+func (c *ClientAPI) makeRequest(req *http.Request) (string, error) {
+	resp, err := c.Do(req)
 	if err != nil {
 		return "", err
 	}

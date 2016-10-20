@@ -3,15 +3,20 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"regexp"
 
-	"github.com/Tecsisa/foulkon/client"
+	"github.com/Tecsisa/foulkon/client/api"
 )
 
 const (
 	DEFAULT_ADDRESS = "http://127.0.0.1:8080"
+	FLAG_EXTERNALID = "externalId"
+	FLAG_OFFSET     = "offset"
+	FLAG_LIMIT      = "limit"
+	FLAG_ORDERBY    = "orderBy"
+	FLAG_PATHPREFIX = "pathPrefix"
+	FLAG_PATH       = "path"
 )
 
 func main() {
@@ -27,7 +32,6 @@ Available commands:
 To get more help, please execute this cli with a <command>
 
 `
-
 	userHelp := `user actions:
 	get -id=xxx                   retrieve user xxx
 	get-all                       retrieve users
@@ -38,14 +42,22 @@ To get more help, please execute this cli with a <command>
 
 `
 
-	var httpClient http.Client
 	var address string
-	var command client.Command
+	var clientApi api.ClientAPI
 
 	args := os.Args[1:]
 	if len(args) < 2 {
 		fmt.Printf("%s", help)
 		os.Exit(1)
+	}
+
+	availableFlags := map[string]string{
+		FLAG_OFFSET:     "The offset of the items returned",
+		FLAG_LIMIT:      "The maximum number of items in the response",
+		FLAG_ORDERBY:    "Order data by field",
+		FLAG_PATHPREFIX: "Search starts from this path",
+		FLAG_EXTERNALID: "User's external identifier",
+		FLAG_PATH:       "User location",
 	}
 
 	// get foulkon address
@@ -65,35 +77,63 @@ To get more help, please execute this cli with a <command>
 		}
 	}
 
-	//meta := client.Meta{
-	//	address:    address,
-	//	httpClient: httpClient,
-	//}
-
-	meta := client.Meta{
-		Address:    address,
-		HttpClient: httpClient,
-	}
+	clientApi.Address = address
 
 	// force -h flag
 	if len(args) < 2 {
 		args = append(args, "-h")
 	}
 
+	var msg string
+	var err error
 	// parse command/action
 	switch args[0] {
 	case "user":
 		switch args[1] {
 		case "get":
-			command = &client.GetUserCommand{meta}
+			params := parseFlags(availableFlags, []string{FLAG_EXTERNALID}, args)
+
+			externalId := params[FLAG_EXTERNALID]
+
+			msg, err = clientApi.GetUser(externalId)
 		case "get-all":
-			command = &client.GetAllUsersCommand{meta}
+			params := parseFlags(availableFlags, []string{FLAG_PATHPREFIX, FLAG_OFFSET, FLAG_LIMIT, FLAG_ORDERBY}, args)
+
+			pathprefix := params[FLAG_PATHPREFIX]
+			offset := params[FLAG_OFFSET]
+			limit := params[FLAG_LIMIT]
+			orderby := params[FLAG_ORDERBY]
+
+			msg, err = clientApi.GetAllUsers(pathprefix, offset, limit, orderby)
 		case "groups":
-			command = &client.GetUserGroupsCommand{meta}
+			params := parseFlags(availableFlags, []string{FLAG_EXTERNALID, FLAG_OFFSET, FLAG_LIMIT, FLAG_ORDERBY}, args)
+
+			externalid := params[FLAG_EXTERNALID]
+			offset := params[FLAG_OFFSET]
+			limit := params[FLAG_LIMIT]
+			orderby := params[FLAG_ORDERBY]
+
+			msg, err = clientApi.GetAllUsers(externalid, offset, limit, orderby)
 		case "create":
-			command = &client.CreateUserCommand{meta}
+			params := parseFlags(availableFlags, []string{FLAG_EXTERNALID, FLAG_PATH}, args)
+
+			externalId := params[FLAG_EXTERNALID]
+			path := params[FLAG_PATH]
+
+			msg, err = clientApi.CreateUser(externalId, path)
 		case "delete":
-			command = &client.DeleteUserCommand{meta}
+			params := parseFlags(availableFlags, []string{FLAG_EXTERNALID}, args)
+
+			externalId := params[FLAG_EXTERNALID]
+
+			msg, err = clientApi.DeleteUser(externalId)
+		case "update":
+			params := parseFlags(availableFlags, []string{FLAG_EXTERNALID, FLAG_PATH}, args)
+
+			externalId := params[FLAG_EXTERNALID]
+			path := params[FLAG_PATH]
+
+			msg, err = clientApi.UpdateUser(externalId, path)
 		case "-h":
 			fmt.Printf(userHelp)
 			os.Exit(1)
@@ -105,11 +145,34 @@ To get more help, please execute this cli with a <command>
 		fmt.Printf("%s", help)
 		os.Exit(1)
 	}
-	msg, err := command.Run(args[2:])
 	if err != nil {
 		println(err.Error())
 		os.Exit(1)
 	}
 	println(msg)
 	os.Exit(0)
+}
+
+// Helper func for updating request params
+func parseFlags(availableFlags map[string]string, validFlags []string, cliArgs []string) map[string]string {
+	params := make(map[string]string)
+
+	flagSet := flag.NewFlagSet(cliArgs[0]+" "+cliArgs[1], flag.ExitOnError)
+
+	for _, val := range validFlags {
+		flagSet.String(val, "", availableFlags[val])
+	}
+
+	if err := flagSet.Parse(cliArgs[2:]); err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+	}
+
+	for _, v := range validFlags {
+		if val := flagSet.Lookup(v); val != nil {
+			params[v] = val.Value.String()
+		}
+	}
+
+	return params
 }
