@@ -1,0 +1,8 @@
+{{ template "header.html" }}
+    <div>
+        {{if .Token eq ""}}
+        You must login before you use endpoints to work with example resources. Click <a href="{{.WebBaseUrl}}/login">here</a> to log in.
+        {{end}}
+    </div>
+
+{{ template "footer.html" }}
