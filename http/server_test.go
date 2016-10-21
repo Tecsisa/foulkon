@@ -10,6 +10,8 @@ import (
 
 	"time"
 
+	"strings"
+
 	logrusTest "github.com/Sirupsen/logrus/hooks/test"
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/foulkon"
@@ -305,7 +307,7 @@ func TestWorkerServer_Run(t *testing.T) {
 				Host: "fail",
 			},
 			handler:       httprouter.New(),
-			expectedError: "listen tcp: lookup fail on 127.0.0.1:53: server misbehaving",
+			expectedError: "listen tcp: lookup fail",
 		},
 		"ErrorCaseListenTLS": {
 			worker: &foulkon.Worker{
@@ -314,7 +316,7 @@ func TestWorkerServer_Run(t *testing.T) {
 				KeyFile:  keyFile,
 			},
 			handler:       httprouter.New(),
-			expectedError: "listen tcp: lookup fail on 127.0.0.1:53: server misbehaving",
+			expectedError: "listen tcp: lookup fail",
 		},
 	}
 
@@ -322,8 +324,8 @@ func TestWorkerServer_Run(t *testing.T) {
 		var err error
 		srv := NewWorker(test.worker, test.handler)
 		err = srv.Run()
-		if diff := pretty.Compare(err.Error(), test.expectedError); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
+		if !strings.Contains(err.Error(), test.expectedError) {
+			t.Errorf("Test %v failed. Received different errors (received: %v / wanted: %v)", n, test.expectedError, err.Error())
 			continue
 		}
 	}
@@ -357,11 +359,12 @@ func TestProxyServer_Run(t *testing.T) {
 		"ErrorCaseListen": {
 			proxy: &foulkon.Proxy{
 				Host:        "fail",
+				Port:        "53",
 				RefreshTime: 1 * time.Millisecond,
 				ProxyApi:    testApi,
 				Logger:      proxyCore.Logger,
 			},
-			expectedError: "listen tcp: lookup fail on 127.0.0.1:53: server misbehaving",
+			expectedError: "listen tcp: lookup fail",
 		},
 	}
 	for n, test := range testcases {
@@ -372,8 +375,8 @@ func TestProxyServer_Run(t *testing.T) {
 		if test.expectedError != "" {
 			err = srv.Run()
 			if err != nil {
-				if diff := pretty.Compare(err.Error(), test.expectedError); diff != "" {
-					t.Errorf("Test %v failed. Received different errors (received/wanted) %v", n, diff)
+				if !strings.Contains(err.Error(), test.expectedError) {
+					t.Errorf("Test %v failed. Received different errors (received: %v / wanted: %v)", n, test.expectedError, err.Error())
 					continue
 				}
 			}

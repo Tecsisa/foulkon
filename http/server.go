@@ -16,7 +16,7 @@ import (
 	"github.com/kylelemons/godebug/pretty"
 )
 
-type ReloadHandlerFunc func(watch *ProxyServer)
+type ReloadHandlerFunc func(watch *ProxyServer) bool
 
 // ProxyServer struct with reload Handler extension
 type ProxyServer struct {
@@ -99,8 +99,9 @@ func (ps *ProxyServer) Run() error {
 	go func() {
 		for range timer.C {
 			// change the handler
-			ps.reloadFunc(ps)
-			ps.reloadServe <- struct{}{} // reset the listening binding
+			if ps.reloadFunc(ps) {
+				ps.reloadServe <- struct{}{} // reset the listening binding
+			}
 		}
 	}()
 
@@ -156,8 +157,8 @@ func NewWorker(worker *foulkon.Worker, h http.Handler) Server {
 }
 
 // RefreshResources implements reloadFunc
-func (ps *ProxyServer) RefreshResources(proxy *foulkon.Proxy) func(s *ProxyServer) {
-	return func(srv *ProxyServer) {
+func (ps *ProxyServer) RefreshResources(proxy *foulkon.Proxy) func(s *ProxyServer) bool {
+	return func(srv *ProxyServer) bool {
 		router := httprouter.New()
 
 		proxyHandler := ProxyHandler{proxy: proxy, client: http.DefaultClient}
@@ -166,7 +167,7 @@ func (ps *ProxyServer) RefreshResources(proxy *foulkon.Proxy) func(s *ProxyServe
 		newProxyResources, err := proxy.ProxyApi.GetProxyResources()
 		if err != nil {
 			proxy.Logger.Errorf("Unexpected error reading proxy resources from database %v", err)
-			return
+			return false
 		}
 
 		if diff := pretty.Compare(srv.currentResources, newProxyResources); diff != "" {
@@ -188,7 +189,9 @@ func (ps *ProxyServer) RefreshResources(proxy *foulkon.Proxy) func(s *ProxyServe
 			// If we had resources and those were deleted then handler must be
 			// created with empty router.
 			ps.Server.Handler = router
+			return true
 		}
+		return false
 	}
 }
 
