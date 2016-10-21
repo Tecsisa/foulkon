@@ -159,8 +159,6 @@ func NewWorker(worker *foulkon.Worker, h http.Handler) Server {
 // RefreshResources implements reloadFunc
 func (ps *ProxyServer) RefreshResources(proxy *foulkon.Proxy) func(s *ProxyServer) bool {
 	return func(srv *ProxyServer) bool {
-		router := httprouter.New()
-
 		proxyHandler := ProxyHandler{proxy: proxy, client: http.DefaultClient}
 
 		// Get proxy resources
@@ -171,6 +169,7 @@ func (ps *ProxyServer) RefreshResources(proxy *foulkon.Proxy) func(s *ProxyServe
 		}
 
 		if diff := pretty.Compare(srv.currentResources, newProxyResources); diff != "" {
+			router := httprouter.New()
 
 			defer srv.resourceLock.Unlock()
 			srv.resourceLock.Lock()
