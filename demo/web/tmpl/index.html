@@ -1,34 +1,42 @@
 {{ template "header.html" }}
-
-    <div>
-        {{if eq .Token ""}}
-            You must login before you use endpoints to work with example resources. Click <a href="{{.WebBaseUrl}}/login">here</a> to log in.
-        {{else}}
-            <table>
-                <tr>
-                    <td>User identifier</td>
-                    <td>{{.UserId}}</td>
-                </tr>
-                <tr>
-                    <th>Role</th>
-                    <th>Organization</th>
-                    <th>Joined</th>
-                </tr>
-                {{ $length := len .Roles }} {{ if eq $length 0 }}
-                <tr>
-                    <td>No roles yet</td>
-                </tr>
-                {{else}}
-                {{range $element := .Roles}}
-                <tr>
-                    <td>{{ $element.Name }}</td>
-                    <td>{{ $element.Org }}</td>
-                    <td>{{ $element.CreateAt.Format "Jan 02, 2006 15:04:05 UTC" }}</td>
-                </tr>
-                {{end}}
-                {{end}}
-            </table>
-        {{end}}
+<h1>Foulkon Example Demo</h1>
+<div>
+    {{if eq .Token ""}}
+    You must login before you use endpoints to work with example resources. Click <a href="{{.WebBaseUrl}}/login">here</a> to log in.
+    {{else}}
+    <div class="row">
+        <div class="col">
+            <b>User identifier: </b>
+            <span class="chip cyan white-text">123123213123123123321</span>
+        </div>
     </div>
+    <div class="row">
+        <div class="col">
+            <b>Email: </b>
+            <span>{{.Email}}</span>
+        </div>
+    </div>
+    <table class="striped">
+        <tr>
+            <th>Role</th>
+            <th>Organization</th>
+            <th>Joined</th>
+        </tr>
+        {{ $length := len .Roles }} {{ if eq $length 0 }}
+        <tr>
+            <td>No roles yet</td>
+        </tr>
+        {{else}}
+        {{range $element := .Roles}}
+        <tr>
+            <td>{{ $element.Name }}</td>
+            <td>{{ $element.Org }}</td>
+            <td>{{ $element.CreateAt.Format "Jan 02, 2006 15:04:05 UTC" }}</td>
+        </tr>
+        {{end}}
+        {{end}}
+    </table>
+    {{end}}
+</div>
 
 {{ template "footer.html" }}

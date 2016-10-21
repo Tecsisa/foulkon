@@ -8,15 +8,14 @@ import (
 	"net/http"
 	"os"
 
-	"strconv"
-
 	"fmt"
 	"net/url"
+
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/coreos/go-oidc/oidc"
 	"github.com/julienschmidt/httprouter"
-	"time"
 )
 
 // CONSTANTS
@@ -45,6 +44,7 @@ type Node struct {
 
 	// Profile
 	UserId string
+	Email  string
 	Token  string
 	Roles  []UserGroups
 
@@ -280,16 +280,14 @@ func HandleAddResource(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		if response.StatusCode != http.StatusOK {
+
+		if response.StatusCode != http.StatusCreated {
+
 			renderErrorTemplate(w, response.StatusCode, fmt.Sprintf("Add method error. Error code: %v", http.StatusText(response.StatusCode)))
 			return
 		}
 
-		if response.StatusCode == http.StatusOK {
-			node.Message = "Resource created!"
-		} else {
-			node.Message = "Error, status code received  " + strconv.Itoa(response.StatusCode)
-		}
+		node.Message = fmt.Sprintf("Resource with id %v and resource %v was created!", res.Id, res.Resource)
 
 		addTemplate.Execute(w, node)
 	} else {
@@ -339,7 +337,7 @@ func HandleUpdateResource(w http.ResponseWriter, r *http.Request, _ httprouter.P
 			return
 		}
 
-		node.Message = "Resource Updated!"
+		node.Message = fmt.Sprintf("Resource with id %v was updated to resource %v!", id, res.Resource)
 		updateTemplate.Execute(w, node)
 	} else {
 		node.Message = ""
@@ -377,7 +375,7 @@ func HandleRemoveResource(w http.ResponseWriter, r *http.Request, _ httprouter.P
 			return
 		}
 
-		node.Message = "Resource deleted!"
+		node.Message = fmt.Sprintf("Resource with id %v was removed", id)
 		removeTemplate.Execute(w, node)
 	} else {
 		node.Message = ""
@@ -427,6 +425,7 @@ func HandleCallbackFunc(c *oidc.Client) httprouter.Handle {
 
 		node.Token = tok.Encode()
 		node.UserId, _, _ = claims.StringClaim("sub")
+		node.Email, _, _ = claims.StringClaim("email")
 
 		http.Redirect(w, r, node.WebBaseUrl, http.StatusFound)
 	}

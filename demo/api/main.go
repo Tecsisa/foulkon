@@ -39,7 +39,7 @@ func HandleAddResource(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		resources[request.Id] = request.Resource
 		response = request
 	}
-	processHttpResponse(w, response, err, http.StatusOK)
+	processHttpResponse(w, response, err, http.StatusCreated)
 }
 
 func HandleGetResource(w http.ResponseWriter, _ *http.Request, ps httprouter.Params) {
