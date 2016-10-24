@@ -11,6 +11,7 @@ User API
 | **externalId** | *string* | User's external identifier | `"user1"` |
 | **id** | *uuid* | Unique user identifier | `"01234567-89ab-cdef-0123-456789abcdef"` |
 | **path** | *string* | User location | `"/example/admin/"` |
+| **updateAt** | *date-time* | The date timestamp of the last update | `"2015-01-01T12:00:00Z"` |
 | **urn** | *string* | User's Uniform Resource Name | `"urn:iws:iam::user/example/admin/user1"` |
 
 ### User Create
@@ -55,6 +56,7 @@ HTTP/1.1 201 Created
   "externalId": "user1",
   "path": "/example/admin/",
   "createdAt": "2015-01-01T12:00:00Z",
+  "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam::user/example/admin/user1"
 }
 ```
@@ -99,6 +101,7 @@ HTTP/1.1 200 OK
   "externalId": "user1",
   "path": "/example/admin/",
   "createdAt": "2015-01-01T12:00:00Z",
+  "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam::user/example/admin/user1"
 }
 ```
@@ -157,6 +160,7 @@ HTTP/1.1 200 OK
   "externalId": "user1",
   "path": "/example/admin/",
   "createdAt": "2015-01-01T12:00:00Z",
+  "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam::user/example/admin/user1"
 }
 ```

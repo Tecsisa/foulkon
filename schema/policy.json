@@ -71,6 +71,11 @@
           "format": "date-time",
           "type": "string"
         },
+        "updateAt": {
+          "description": "The date timestamp of the last update",
+          "format": "date-time",
+          "type": "string"
+        },
         "urn": {
           "description": "Policy's Uniform Resource Name",
           "example": "urn:iws:iam:org1:policy/example/admin/policy1",
@@ -181,6 +186,9 @@
         },
         "createdAt": {
           "$ref": "#/definitions/order2_policy/definitions/createdAt"
+        },
+        "updateAt": {
+          "$ref": "#/definitions/order2_policy/definitions/updateAt"
         },
         "urn": {
           "$ref": "#/definitions/order2_policy/definitions/urn"

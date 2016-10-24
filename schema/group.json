@@ -30,6 +30,11 @@
           "format": "date-time",
           "type": "string"
         },
+        "updateAt": {
+          "description": "The date timestamp of the last update",
+          "format": "date-time",
+          "type": "string"
+        },
         "urn": {
           "description": "Group's Uniform Resource Name",
           "example": "urn:iws:iam:tecsisa:group/example/admin/group1",
@@ -125,6 +130,9 @@
         },
         "createdAt": {
           "$ref": "#/definitions/order1_group/definitions/createdAt"
+        },
+        "updateAt": {
+          "$ref": "#/definitions/order1_group/definitions/updateAt"
         },
         "urn": {
           "$ref": "#/definitions/order1_group/definitions/urn"
