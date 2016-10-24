@@ -162,10 +162,14 @@ func TestNewProxy(t *testing.T) {
 
 		if test.expectedError != "" {
 			// Check error
+			ps := srv.(*ProxyServer)
+			ps.resourceLock.Lock()
 			if diff := pretty.Compare(test.expectedError, hook.LastEntry().Message); diff != "" {
 				t.Errorf("Test %v failed. Received different errors (received/wanted) %v", n, diff)
+				ps.resourceLock.Unlock()
 				continue
 			}
+			ps.resourceLock.Unlock()
 		} else {
 			// Check responses
 			if diff := pretty.Compare(ps.Addr, test.proxy.Host+":"+test.proxy.Port); diff != "" {
