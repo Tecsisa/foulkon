@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/foulkon"
 	internalhttp "github.com/Tecsisa/foulkon/http"
 	"github.com/pelletier/go-toml"
@@ -48,18 +49,18 @@ func main() {
 			sigrecv := <-sig
 			switch sigrecv {
 			case syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT:
-				proxy.Logger.Infof("Signal '%v' received, closing proxy...", sigrecv.String())
+				api.Log.Infof("Signal '%v' received, closing proxy...", sigrecv.String())
 				os.Exit(foulkon.CloseProxy())
 			default:
-				proxy.Logger.Warnf("Unknown OS signal received, ignoring...")
+				api.Log.Warnf("Unknown OS signal received, ignoring...")
 			}
 		}
 	}()
 
-	proxy.Logger.Infof("Server running in %v:%v", proxy.Host, proxy.Port)
+	api.Log.Infof("Server running in %v:%v", proxy.Host, proxy.Port)
 	ps := internalhttp.NewProxy(proxy)
 	ps.Configuration()
-	proxy.Logger.Error(ps.Run().Error())
+	api.Log.Error(ps.Run().Error())
 
 	os.Exit(foulkon.CloseProxy())
 }

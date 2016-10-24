@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-
-	"github.com/Sirupsen/logrus"
 )
 
 const (
@@ -308,11 +306,4 @@ func validateFilter(filter *Filter, validColumns []string) error {
 	}
 
 	return nil
-}
-
-func LogOperation(logger *logrus.Logger, requestInfo RequestInfo, message string) {
-	logger.WithFields(logrus.Fields{
-		"requestID": requestInfo.RequestID,
-		"userID":    requestInfo.Identifier,
-	}).Info(message)
 }

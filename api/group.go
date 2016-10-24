@@ -106,7 +106,7 @@ func (api WorkerAPI) AddGroup(requestInfo RequestInfo, org string, name string, 
 					Message: dbError.Message,
 				}
 			}
-			LogOperation(api.Logger, requestInfo, fmt.Sprintf("Group created %+v", createdGroup))
+			LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("Group created %+v", createdGroup))
 			return createdGroup, nil
 		default: // Unexpected error
 			return nil, &Error{
@@ -315,7 +315,7 @@ func (api WorkerAPI) UpdateGroup(requestInfo RequestInfo, org string, name strin
 		}
 	}
 
-	LogOperation(api.Logger, requestInfo, fmt.Sprintf("Group updated from %+v to %+v", oldGroup, updatedGroup))
+	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("Group updated from %+v to %+v", oldGroup, updatedGroup))
 	return updatedGroup, nil
 
 }
@@ -354,7 +354,7 @@ func (api WorkerAPI) RemoveGroup(requestInfo RequestInfo, org string, name strin
 		}
 	}
 
-	LogOperation(api.Logger, requestInfo, fmt.Sprintf("Group deleted %+v", group))
+	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("Group deleted %+v", group))
 	return nil
 }
 
@@ -416,7 +416,7 @@ func (api WorkerAPI) AddMember(requestInfo RequestInfo, externalId string, name 
 			Message: dbError.Message,
 		}
 	}
-	LogOperation(api.Logger, requestInfo, fmt.Sprintf("Member %+v added to group %+v", userDB, groupDB))
+	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("Member %+v added to group %+v", userDB, groupDB))
 	return nil
 }
 
@@ -479,7 +479,7 @@ func (api WorkerAPI) RemoveMember(requestInfo RequestInfo, externalId string, na
 		}
 	}
 
-	LogOperation(api.Logger, requestInfo, fmt.Sprintf("Member %+v removed from group %+v", userDB, groupDB))
+	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("Member %+v removed from group %+v", userDB, groupDB))
 	return nil
 }
 
@@ -594,7 +594,7 @@ func (api WorkerAPI) AttachPolicyToGroup(requestInfo RequestInfo, org string, na
 		}
 	}
 
-	LogOperation(api.Logger, requestInfo, fmt.Sprintf("Policy %+v attached to group %+v", policy, group))
+	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("Policy %+v attached to group %+v", policy, group))
 	return nil
 }
 
@@ -655,7 +655,7 @@ func (api WorkerAPI) DetachPolicyToGroup(requestInfo RequestInfo, org string, na
 		}
 	}
 
-	LogOperation(api.Logger, requestInfo, fmt.Sprintf("Policy %+v detached from group %+v", policy, group))
+	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("Policy %+v detached from group %+v", policy, group))
 	return nil
 }
 

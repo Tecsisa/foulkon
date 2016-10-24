@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/foulkon"
 	internalhttp "github.com/Tecsisa/foulkon/http"
 	"github.com/pelletier/go-toml"
@@ -50,18 +51,18 @@ func main() {
 			sigrecv := <-sig
 			switch sigrecv {
 			case syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT:
-				core.Logger.Infof("Signal '%v' received, closing worker...", sigrecv.String())
+				api.Log.Infof("Signal '%v' received, closing worker...", sigrecv.String())
 				os.Exit(foulkon.CloseWorker())
 			default:
-				core.Logger.Warnf("Unknown OS signal received, ignoring...")
+				api.Log.Warnf("Unknown OS signal received, ignoring...")
 			}
 		}
 	}()
 
-	core.Logger.Infof("Server running in %v:%v", core.Host, core.Port)
+	api.Log.Infof("Server running in %v:%v", core.Host, core.Port)
 	ws := internalhttp.NewWorker(core, internalhttp.WorkerHandlerRouter(core))
 	ws.Configuration()
-	core.Logger.Error(ws.Run().Error())
+	api.Log.Error(ws.Run().Error())
 
 	os.Exit(foulkon.CloseWorker())
 }

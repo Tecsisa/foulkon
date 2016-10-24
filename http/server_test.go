@@ -12,7 +12,6 @@ import (
 
 	"strings"
 
-	logrusTest "github.com/Sirupsen/logrus/hooks/test"
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/foulkon"
 	"github.com/julienschmidt/httprouter"
@@ -56,7 +55,6 @@ func TestNewWorker(t *testing.T) {
 
 func TestNewProxy(t *testing.T) {
 	testApi := makeTestApi()
-	logger, hook := logrusTest.NewNullLogger()
 	testcases := map[string]struct {
 		proxy *foulkon.Proxy
 
@@ -74,7 +72,6 @@ func TestNewProxy(t *testing.T) {
 				KeyFile:     "key",
 				RefreshTime: 10,
 				ProxyApi:    testApi,
-				Logger:      logger,
 			},
 			getProxyResourcesMethod: []api.ProxyResource{
 				{
@@ -105,7 +102,6 @@ func TestNewProxy(t *testing.T) {
 				KeyFile:     "key",
 				RefreshTime: 10,
 				ProxyApi:    testApi,
-				Logger:      logger,
 			},
 			getProxyResourcesMethod: []api.ProxyResource{
 				{
@@ -136,7 +132,6 @@ func TestNewProxy(t *testing.T) {
 				KeyFile:     "key",
 				RefreshTime: 10,
 				ProxyApi:    testApi,
-				Logger:      logger,
 			},
 			getProxyResourcesMethod: []api.ProxyResource{},
 			expectedResources:       []api.ProxyResource{},
@@ -149,7 +144,6 @@ func TestNewProxy(t *testing.T) {
 				KeyFile:     "key",
 				RefreshTime: 10,
 				ProxyApi:    testApi,
-				Logger:      logger,
 			},
 			getProxyResourcesError: api.Error{
 				Code:    INTERNAL_SERVER_ERROR,
@@ -168,10 +162,14 @@ func TestNewProxy(t *testing.T) {
 
 		if test.expectedError != "" {
 			// Check error
+			ps := srv.(*ProxyServer)
+			ps.resourceLock.Lock()
 			if diff := pretty.Compare(test.expectedError, hook.LastEntry().Message); diff != "" {
 				t.Errorf("Test %v failed. Received different errors (received/wanted) %v", n, diff)
+				ps.resourceLock.Unlock()
 				continue
 			}
+			ps.resourceLock.Unlock()
 		} else {
 			// Check responses
 			if diff := pretty.Compare(ps.Addr, test.proxy.Host+":"+test.proxy.Port); diff != "" {
@@ -343,7 +341,6 @@ func TestProxyServer_Run(t *testing.T) {
 			proxy: &foulkon.Proxy{
 				RefreshTime: 1 * time.Millisecond,
 				ProxyApi:    testApi,
-				Logger:      proxyCore.Logger,
 			},
 			expectedResources: []api.ProxyResource{
 				{
@@ -362,7 +359,6 @@ func TestProxyServer_Run(t *testing.T) {
 				Port:        "53",
 				RefreshTime: 1 * time.Millisecond,
 				ProxyApi:    testApi,
-				Logger:      proxyCore.Logger,
 			},
 			expectedError: "listen tcp: lookup fail",
 		},

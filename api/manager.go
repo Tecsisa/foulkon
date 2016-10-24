@@ -2,8 +2,6 @@ package api
 
 import (
 	"time"
-
-	log "github.com/Sirupsen/logrus"
 )
 
 // TYPE DEFINITIONS
@@ -33,14 +31,11 @@ type WorkerAPI struct {
 	UserRepo   UserRepo
 	GroupRepo  GroupRepo
 	PolicyRepo PolicyRepo
-	ProxyRepo  ProxyRepo
-	Logger     *log.Logger
 }
 
 // ProxyAPI that implements API interfaces using repositories
 type ProxyAPI struct {
 	ProxyRepo ProxyRepo
-	Logger    *log.Logger
 }
 
 // Filter properties for database search

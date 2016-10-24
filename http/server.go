@@ -164,7 +164,7 @@ func (ps *ProxyServer) RefreshResources(proxy *foulkon.Proxy) func(s *ProxyServe
 		// Get proxy resources
 		newProxyResources, err := proxy.ProxyApi.GetProxyResources()
 		if err != nil {
-			proxy.Logger.Errorf("Unexpected error reading proxy resources from database %v", err)
+			api.Log.Errorf("Unexpected error reading proxy resources from database %v", err)
 			return false
 		}
 
@@ -176,7 +176,7 @@ func (ps *ProxyServer) RefreshResources(proxy *foulkon.Proxy) func(s *ProxyServe
 			// writer lock
 			ps.currentResources = newProxyResources
 
-			proxy.Logger.Info("Updating resources ...")
+			api.Log.Info("Updating resources ...")
 			for _, res := range newProxyResources {
 				// Check if Url is empty. Handle doesn't accept empty path
 				if res.Url == "" {

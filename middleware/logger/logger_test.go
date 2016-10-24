@@ -7,8 +7,11 @@ import (
 	"testing"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus/hooks/test"
+	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/middleware"
 	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRequestLoggerMiddleware_Action(t *testing.T) {
@@ -19,15 +22,10 @@ func TestRequestLoggerMiddleware_Action(t *testing.T) {
 	})
 
 	// Create logger
-	logBuffer := bytes.NewBufferString("")
-	log := &logrus.Logger{
-		Out:       logBuffer,
-		Formatter: &logrus.TextFormatter{},
-		Hooks:     make(logrus.LevelHooks),
-		Level:     logrus.DebugLevel,
-	}
+	testLogger, hook := test.NewNullLogger()
+	api.Log = testLogger
 
-	mw := NewRequestLoggerMiddleware(log)
+	mw := NewRequestLoggerMiddleware()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	w := httptest.NewRecorder()
 	mw.Action(testHandler).ServeHTTP(w, req)
@@ -57,23 +55,12 @@ func TestRequestLoggerMiddleware_Action(t *testing.T) {
 	}
 
 	// Check logger output
-	testLogBuffer := bytes.NewBufferString("")
-	testLogger := &logrus.Logger{
-		Out:       testLogBuffer,
-		Formatter: &logrus.TextFormatter{},
-		Hooks:     make(logrus.LevelHooks),
-		Level:     logrus.DebugLevel,
-	}
-	testLogger.WithFields(logrus.Fields{
-		"requestID": req.Header.Get(middleware.REQUEST_ID_HEADER),
-		"method":    req.Method,
-		"URI":       req.RequestURI,
-		"address":   req.RemoteAddr,
-		"user":      req.Header.Get(middleware.USER_ID_HEADER),
-	}).Info("")
-	if diff := pretty.Compare(string(logBuffer.Bytes()), string(testLogBuffer.Bytes())); diff != "" {
-		t.Errorf("Test failed. Received different messages (received/wanted) %v", diff)
-		return
-	}
+	assert.Equal(t, 1, len(hook.Entries))
+	assert.Equal(t, logrus.InfoLevel, hook.LastEntry().Level)
+	assert.Equal(t, "", hook.LastEntry().Message)
+	assert.Empty(t, hook.LastEntry().Data["requestID"])
+	assert.Equal(t, http.MethodGet, hook.LastEntry().Data["httpMethod"])
+	assert.Equal(t, req.RemoteAddr, hook.LastEntry().Data["httpRemoteAddress"])
+	assert.Equal(t, req.RequestURI, hook.LastEntry().Data["httpURI"])
 
 }

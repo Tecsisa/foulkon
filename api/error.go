@@ -1,16 +1,15 @@
 package api
 
-import (
-	"fmt"
-
-	"github.com/Sirupsen/logrus"
-)
+import "fmt"
 
 const (
 	// Generic API error codes
 	UNKNOWN_API_ERROR            = "UnknownApiError"
 	INVALID_PARAMETER_ERROR      = "InvalidParameterError"
 	UNAUTHORIZED_RESOURCES_ERROR = "UnauthorizedResourcesError"
+
+	// Authentication API error code
+	AUTHENTICATION_API_ERROR = "AuthenticationApiError"
 
 	// User API error codes
 	USER_BY_EXTERNAL_ID_NOT_FOUND = "UserWithExternalIDNotFound"
@@ -43,11 +42,4 @@ type Error struct {
 
 func (e Error) Error() string {
 	return fmt.Sprintf("Code: %v, Message: %v", e.Code, e.Message)
-}
-
-func LogErrorMessage(logger *logrus.Logger, requestInfo RequestInfo, err *Error) {
-	logger.WithFields(logrus.Fields{
-		"requestID": requestInfo.RequestID,
-		"code":      err.Code,
-	}).Error(err.Message)
 }

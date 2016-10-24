@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/foulkon"
 	"github.com/julienschmidt/httprouter"
@@ -70,13 +69,13 @@ func (wh *WorkerHandler) processHttpRequest(r *http.Request, w http.ResponseWrit
 				Code:    api.INVALID_PARAMETER_ERROR,
 				Message: err.Error(),
 			}
-			api.LogErrorMessage(wh.worker.Logger, requestInfo, apiError)
+			api.LogOperationError(requestInfo.RequestID, requestInfo.Identifier, apiError)
 		}
 	}
 	filterData, err := getFilterData(r, ps)
 	if err != nil {
 		apiError = err.(*api.Error)
-		api.LogErrorMessage(wh.worker.Logger, requestInfo, apiError)
+		api.LogOperationError(requestInfo.RequestID, requestInfo.Identifier, apiError)
 	}
 	return requestInfo, filterData, apiError
 }
@@ -85,7 +84,7 @@ func (wh *WorkerHandler) processHttpResponse(r *http.Request, w http.ResponseWri
 	if err != nil {
 		// Transform to API errors
 		apiError := err.(*api.Error)
-		api.LogErrorMessage(wh.worker.Logger, requestInfo, apiError)
+		api.LogOperationError(requestInfo.RequestID, requestInfo.Identifier, apiError)
 		switch apiError.Code {
 		case api.USER_ALREADY_EXIST, api.GROUP_ALREADY_EXIST,
 			api.USER_IS_ALREADY_A_MEMBER_OF_GROUP,
@@ -121,22 +120,6 @@ func (wh *WorkerHandler) processHttpResponse(r *http.Request, w http.ResponseWri
 		wh.RespondNoContent(r, requestInfo, w)
 		break
 	}
-}
-
-func (wh *WorkerHandler) TransactionLog(r *http.Request, requestID string, userID string, msg string) {
-
-	// TODO: X-Forwarded headers?
-	//for header, _ := range r.Header {
-	//	println(header, ": ", r.Header.Get(header))
-	//}
-
-	wh.worker.Logger.WithFields(logrus.Fields{
-		"requestID": requestID,
-		"method":    r.Method,
-		"URI":       r.RequestURI,
-		"address":   r.RemoteAddr,
-		"user":      userID,
-	}).Info(msg)
 }
 
 // WorkerHandlerRouter returns http.Handler for the APIs.
@@ -265,14 +248,11 @@ func (wh *WorkerHandler) RespondForbidden(r *http.Request, requestInfo api.Reque
 // 5xx RESPONSES
 
 func (wh *WorkerHandler) RespondInternalServerError(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter) {
-	wh.worker.Logger.WithFields(logrus.Fields{
-		"requestID": requestInfo.RequestID,
-		"method":    r.Method,
-		"URI":       r.RequestURI,
-		"address":   r.RemoteAddr,
-		"user":      requestInfo.Identifier,
-		"status":    http.StatusInternalServerError,
-	}).Error("Internal server error")
+	err := &api.Error{
+		Code:    api.UNKNOWN_API_ERROR,
+		Message: "Internal server error",
+	}
+	api.TransactionResponseErrorLog(requestInfo.RequestID, requestInfo.Identifier, r, http.StatusInternalServerError, err)
 	w.WriteHeader(http.StatusInternalServerError)
 }
 
@@ -293,38 +273,6 @@ func (wh *WorkerHandler) GetRequestInfo(r *http.Request) api.RequestInfo {
 type ProxyHandler struct {
 	proxy  *foulkon.Proxy
 	client *http.Client
-}
-
-func (ph *ProxyHandler) TransactionErrorLog(r *http.Request, requestID string, workerRequestID string, msg string) {
-
-	// TODO: X-Forwarded headers
-	//for header, _ := range r.Header {
-	//	println(header, ": ", r.Header.Get(header))
-	//}
-
-	ph.proxy.Logger.WithFields(logrus.Fields{
-		"requestID":       requestID,
-		"method":          r.Method,
-		"URI":             r.URL.EscapedPath(),
-		"address":         r.RemoteAddr,
-		"workerRequestID": workerRequestID,
-	}).Error(msg)
-}
-
-func (ph *ProxyHandler) TransactionLog(r *http.Request, requestID string, workerRequestID string, msg string) {
-
-	// TODO: X-Forwarded headers
-	//for header, _ := range r.Header {
-	//	println(header, ": ", r.Header.Get(header))
-	//}
-
-	ph.proxy.Logger.WithFields(logrus.Fields{
-		"requestID":       requestID,
-		"method":          r.Method,
-		"URI":             r.URL.EscapedPath(),
-		"address":         r.RemoteAddr,
-		"workerRequestID": workerRequestID,
-	}).Info(msg)
 }
 
 func (ph *ProxyHandler) RespondForbidden(w http.ResponseWriter, proxyErr *api.Error) {
