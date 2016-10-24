@@ -27,6 +27,7 @@ Policy API
 | **org** | *string* | Policy organization | `"tecsisa"` |
 | **path** | *string* | Policy location | `"/example/admin/"` |
 | **statements** | *array* | Policy statements | `[{"effect":"allow","actions":["iam:getUser","iam:*"],"resources":["urn:everything:*"]}]` |
+| **updateAt** | *date-time* | The date timestamp of the last update | `"2015-01-01T12:00:00Z"` |
 | **urn** | *string* | Policy's Uniform Resource Name | `"urn:iws:iam:org1:policy/example/admin/policy1"` |
 
 ### Policy Create
@@ -84,6 +85,7 @@ HTTP/1.1 201 Created
   "name": "policy1",
   "path": "/example/admin/",
   "createdAt": "2015-01-01T12:00:00Z",
+  "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam:org1:policy/example/admin/policy1",
   "org": "tecsisa",
   "statements": [
@@ -156,6 +158,7 @@ HTTP/1.1 200 OK
   "name": "policy1",
   "path": "/example/admin/",
   "createdAt": "2015-01-01T12:00:00Z",
+  "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam:org1:policy/example/admin/policy1",
   "org": "tecsisa",
   "statements": [
@@ -227,6 +230,7 @@ HTTP/1.1 200 OK
   "name": "policy1",
   "path": "/example/admin/",
   "createdAt": "2015-01-01T12:00:00Z",
+  "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam:org1:policy/example/admin/policy1",
   "org": "tecsisa",
   "statements": [

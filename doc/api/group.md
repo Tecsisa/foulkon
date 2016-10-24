@@ -12,6 +12,7 @@ Group API
 | **name** | *string* | Group name | `"group1"` |
 | **org** | *string* | Group organization | `"tecsisa"` |
 | **path** | *string* | Group location | `"/example/admin/"` |
+| **updateAt** | *date-time* | The date timestamp of the last update | `"2015-01-01T12:00:00Z"` |
 | **urn** | *string* | Group's Uniform Resource Name | `"urn:iws:iam:tecsisa:group/example/admin/group1"` |
 
 ### Group Create
@@ -56,6 +57,7 @@ HTTP/1.1 201 Created
   "name": "group1",
   "path": "/example/admin/",
   "createdAt": "2015-01-01T12:00:00Z",
+  "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam:tecsisa:group/example/admin/group1",
   "org": "tecsisa"
 }
@@ -103,6 +105,7 @@ HTTP/1.1 200 OK
   "name": "group1",
   "path": "/example/admin/",
   "createdAt": "2015-01-01T12:00:00Z",
+  "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam:tecsisa:group/example/admin/group1",
   "org": "tecsisa"
 }
@@ -162,6 +165,7 @@ HTTP/1.1 200 OK
   "name": "group1",
   "path": "/example/admin/",
   "createdAt": "2015-01-01T12:00:00Z",
+  "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam:tecsisa:group/example/admin/group1",
   "org": "tecsisa"
 }

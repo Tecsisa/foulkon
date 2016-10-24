@@ -32,6 +32,11 @@
           "format": "date-time",
           "type": "string"
         },
+        "updateAt": {
+          "description": "The date timestamp of the last update",
+          "format": "date-time",
+          "type": "string"
+        },
         "urn": {
           "description": "User's Uniform Resource Name",
           "example": "urn:iws:iam::user/example/admin/user1",
@@ -118,6 +123,9 @@
         },
         "createdAt": {
           "$ref": "#/definitions/order1_user/definitions/createdAt"
+        },
+        "updateAt": {
+          "$ref": "#/definitions/order1_user/definitions/updateAt"
         },
         "urn": {
           "$ref": "#/definitions/order1_user/definitions/urn"
