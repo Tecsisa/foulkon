@@ -56,7 +56,7 @@ func (h *WorkerHandler) HandleAddGroup(w http.ResponseWriter, r *http.Request, p
 	request := &CreateGroupRequest{}
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, request)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call group API to create group
@@ -68,7 +68,7 @@ func (h *WorkerHandler) HandleGetGroupByName(w http.ResponseWriter, r *http.Requ
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call group API to retrieve group
@@ -80,7 +80,7 @@ func (h *WorkerHandler) HandleListGroups(w http.ResponseWriter, r *http.Request,
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call group API to retrieve group list
@@ -103,7 +103,7 @@ func (h *WorkerHandler) HandleListAllGroups(w http.ResponseWriter, r *http.Reque
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call group API to get all groups
@@ -123,7 +123,7 @@ func (h *WorkerHandler) HandleUpdateGroup(w http.ResponseWriter, r *http.Request
 	request := &UpdateGroupRequest{}
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, request)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call group API to update group
@@ -135,7 +135,7 @@ func (h *WorkerHandler) HandleRemoveGroup(w http.ResponseWriter, r *http.Request
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call group API to remove group
@@ -147,7 +147,7 @@ func (h *WorkerHandler) HandleAddMember(w http.ResponseWriter, r *http.Request, 
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call group API to add member to group
@@ -159,7 +159,7 @@ func (h *WorkerHandler) HandleRemoveMember(w http.ResponseWriter, r *http.Reques
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call group API to delete member from group
@@ -171,7 +171,7 @@ func (h *WorkerHandler) HandleListMembers(w http.ResponseWriter, r *http.Request
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call group API to list members of group
@@ -189,7 +189,7 @@ func (h *WorkerHandler) HandleAttachPolicyToGroup(w http.ResponseWriter, r *http
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call group API to attach policy to group
@@ -201,7 +201,7 @@ func (h *WorkerHandler) HandleDetachPolicyToGroup(w http.ResponseWriter, r *http
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call group API to detach policy from group
@@ -213,7 +213,7 @@ func (h *WorkerHandler) HandleListAttachedGroupPolicies(w http.ResponseWriter, r
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call group API to list group policies

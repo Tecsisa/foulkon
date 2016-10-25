@@ -51,7 +51,7 @@ func (h *WorkerHandler) HandleAddPolicy(w http.ResponseWriter, r *http.Request, 
 	request := &CreatePolicyRequest{}
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, request)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
@@ -64,7 +64,7 @@ func (h *WorkerHandler) HandleGetPolicyByName(w http.ResponseWriter, r *http.Req
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
@@ -77,7 +77,7 @@ func (h *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Reques
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call policy API to list policies
@@ -100,7 +100,7 @@ func (h *WorkerHandler) HandleListAllPolicies(w http.ResponseWriter, r *http.Req
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call policy API to list all policies
@@ -120,7 +120,7 @@ func (h *WorkerHandler) HandleUpdatePolicy(w http.ResponseWriter, r *http.Reques
 	request := &UpdatePolicyRequest{}
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, request)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call policy API to update policy
@@ -132,7 +132,7 @@ func (h *WorkerHandler) HandleRemovePolicy(w http.ResponseWriter, r *http.Reques
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call policy API to remove policy
@@ -144,7 +144,7 @@ func (h *WorkerHandler) HandleListAttachedGroups(w http.ResponseWriter, r *http.
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call policy API to list attached groups

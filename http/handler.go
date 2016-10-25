@@ -51,6 +51,13 @@ const (
 	RESOURCE_URL = API_VERSION_1 + "/resource"
 )
 
+// PROXY
+
+type ProxyHandler struct {
+	proxy  *foulkon.Proxy
+	client *http.Client
+}
+
 // WORKER
 
 type WorkerHandler struct {
@@ -60,7 +67,7 @@ type WorkerHandler struct {
 func (wh *WorkerHandler) processHttpRequest(r *http.Request, w http.ResponseWriter, ps httprouter.Params, request interface{}) (
 	requestInfo api.RequestInfo, filterData *api.Filter, apiError *api.Error) {
 	// Get Request Info
-	requestInfo = wh.GetRequestInfo(r)
+	requestInfo = wh.getRequestInfo(r)
 	// Decode request if passed
 	if request != nil {
 		err := json.NewDecoder(r.Body).Decode(&request)
@@ -85,40 +92,42 @@ func (wh *WorkerHandler) processHttpResponse(r *http.Request, w http.ResponseWri
 		// Transform to API errors
 		apiError := err.(*api.Error)
 		api.LogOperationError(requestInfo.RequestID, requestInfo.Identifier, apiError)
+		var statusCode int
 		switch apiError.Code {
 		case api.USER_ALREADY_EXIST, api.GROUP_ALREADY_EXIST,
 			api.USER_IS_ALREADY_A_MEMBER_OF_GROUP,
 			api.POLICY_IS_ALREADY_ATTACHED_TO_GROUP, api.POLICY_ALREADY_EXIST:
-			wh.RespondConflict(r, requestInfo, w, apiError)
-			break
+			// A conflict occurs
+			statusCode = http.StatusConflict
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
-			wh.RespondForbidden(r, requestInfo, w, apiError)
-			break
+			// No authorization success
+			statusCode = http.StatusForbidden
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND, api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
 			api.USER_IS_NOT_A_MEMBER_OF_GROUP, api.POLICY_IS_NOT_ATTACHED_TO_GROUP,
 			api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
-			wh.RespondNotFound(r, requestInfo, w, apiError)
-			break
+			// Resource or relation not found
+			statusCode = http.StatusNotFound
 		case api.INVALID_PARAMETER_ERROR, api.REGEX_NO_MATCH:
-			wh.RespondBadRequest(r, requestInfo, w, apiError)
-			break
+			// Unexpected input in validation parameters
+			statusCode = http.StatusBadRequest
 		default: // Unexpected API error
-			wh.RespondInternalServerError(r, requestInfo, w)
-			break
+			statusCode = http.StatusInternalServerError
 		}
+		WriteHttpResponse(r, w, requestInfo.RequestID, requestInfo.Identifier, statusCode, apiError)
 		return
 	}
 
-	switch responseCode {
-	case http.StatusOK:
-		wh.RespondOk(r, requestInfo, w, response)
-		break
-	case http.StatusCreated:
-		wh.RespondCreated(r, requestInfo, w, response)
-		break
-	case http.StatusNoContent:
-		wh.RespondNoContent(r, requestInfo, w)
-		break
+	// Write response data if everything is ok
+	WriteHttpResponse(r, w, requestInfo.RequestID, requestInfo.Identifier, responseCode, response)
+}
+
+func (wh *WorkerHandler) getRequestInfo(r *http.Request) api.RequestInfo {
+	// Retrieve request information from middleware context
+	mc := wh.worker.MiddlewareHandler.GetMiddlewareContext(r)
+	return api.RequestInfo{
+		Identifier: mc.UserId,
+		Admin:      mc.Admin,
+		RequestID:  mc.XRequestId,
 	}
 }
 
@@ -180,146 +189,29 @@ func WorkerHandlerRouter(worker *foulkon.Worker) http.Handler {
 	return workerHandler.worker.MiddlewareHandler.Handle(router)
 }
 
-// HTTP WORKER responses
+// WriteHttpResponse fill a http response with data, controlling marshalling errors
+func WriteHttpResponse(r *http.Request, w http.ResponseWriter, requestId string, userId string, statusCode int, value interface{}) {
+	// Set status code
+	w.WriteHeader(statusCode)
 
-// 2xx RESPONSES
-
-func (wh *WorkerHandler) RespondOk(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, value interface{}) {
-	b, err := json.Marshal(value)
-	if err != nil {
-		wh.RespondInternalServerError(r, requestInfo, w)
-		return
+	if value != nil {
+		b, err := json.Marshal(value)
+		if err != nil {
+			apiErr := &api.Error{
+				Code:    api.UNKNOWN_API_ERROR,
+				Message: err.Error(),
+			}
+			api.TransactionResponseErrorLog(requestId, userId, r, http.StatusInternalServerError, apiErr)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(b)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(b)
-}
-
-func (wh *WorkerHandler) RespondCreated(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, value interface{}) {
-	b, err := json.Marshal(value)
-	if err != nil {
-		wh.RespondInternalServerError(r, requestInfo, w)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	w.Write(b)
-}
-
-func (wh *WorkerHandler) RespondNoContent(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter) {
-	w.WriteHeader(http.StatusNoContent)
-}
-
-// 4xx RESPONSES
-
-func (wh *WorkerHandler) RespondNotFound(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, apiError *api.Error) {
-	w, err := writeErrorWithStatus(w, apiError, http.StatusNotFound)
-	if err != nil {
-		wh.RespondInternalServerError(r, requestInfo, w)
-		return
-	}
-}
-
-func (wh *WorkerHandler) RespondBadRequest(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, apiError *api.Error) {
-	w, err := writeErrorWithStatus(w, apiError, http.StatusBadRequest)
-	if err != nil {
-		wh.RespondInternalServerError(r, requestInfo, w)
-		return
-	}
-}
-
-func (wh *WorkerHandler) RespondConflict(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, apiError *api.Error) {
-	w, err := writeErrorWithStatus(w, apiError, http.StatusConflict)
-	if err != nil {
-		wh.RespondInternalServerError(r, requestInfo, w)
-		return
-	}
-}
-
-func (wh *WorkerHandler) RespondForbidden(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter, apiError *api.Error) {
-	w, err := writeErrorWithStatus(w, apiError, http.StatusForbidden)
-	if err != nil {
-		wh.RespondInternalServerError(r, requestInfo, w)
-		return
-	}
-}
-
-// 5xx RESPONSES
-
-func (wh *WorkerHandler) RespondInternalServerError(r *http.Request, requestInfo api.RequestInfo, w http.ResponseWriter) {
-	err := &api.Error{
-		Code:    api.UNKNOWN_API_ERROR,
-		Message: "Internal server error",
-	}
-	api.TransactionResponseErrorLog(requestInfo.RequestID, requestInfo.Identifier, r, http.StatusInternalServerError, err)
-	w.WriteHeader(http.StatusInternalServerError)
-}
-
-// Worker Aux method
-
-func (wh *WorkerHandler) GetRequestInfo(r *http.Request) api.RequestInfo {
-	// Retrieve request information from middleware context
-	mc := wh.worker.MiddlewareHandler.GetMiddlewareContext(r)
-	return api.RequestInfo{
-		Identifier: mc.UserId,
-		Admin:      mc.Admin,
-		RequestID:  mc.XRequestId,
-	}
-}
-
-// PROXY
-
-type ProxyHandler struct {
-	proxy  *foulkon.Proxy
-	client *http.Client
-}
-
-func (ph *ProxyHandler) RespondForbidden(w http.ResponseWriter, proxyErr *api.Error) {
-	b, err := json.Marshal(proxyErr)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusForbidden)
-	w.Write(b)
-}
-
-func (ph *ProxyHandler) RespondBadRequest(w http.ResponseWriter, proxyErr *api.Error) {
-	b, err := json.Marshal(proxyErr)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusBadRequest)
-	w.Write(b)
-}
-
-func (ph *ProxyHandler) RespondInternalServerError(w http.ResponseWriter, proxyErr *api.Error) {
-	b, err := json.Marshal(proxyErr)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusInternalServerError)
-	w.Write(b)
 }
 
 // Private Helper Methods
-func writeErrorWithStatus(w http.ResponseWriter, apiError *api.Error, statusCode int) (http.ResponseWriter, error) {
-	b, err := json.Marshal(apiError)
-	if err != nil {
-		return nil, err
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	w.Write(b)
-	return w, nil
-}
 
 func getFilterData(r *http.Request, ps httprouter.Params) (*api.Filter, error) {
 	var err error
