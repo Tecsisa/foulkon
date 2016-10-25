@@ -1,0 +1,21 @@
+{{ template "header.html" }}
+
+    <div>
+        <form action="/update" method="post">
+            <table>
+                <tr>
+                    <td>ID</td>
+                    <td><input type="text" name="id" required></td>
+                    <td>New resource</td>
+                    <td><input type="text" name="resource" required></td>
+                    <td><button type="submit">Send</button></td>
+                </tr>
+            </table>
+        </form>
+    </div>
+
+    <div>
+        {{ .Message }}
+    </div>
+
+{{ template "footer.html" }}

@@ -1,0 +1,23 @@
+{{ template "header.html" }}
+
+    <div>
+        <h3>Resources</h3>
+            {{ $length := len .ResourceTableElements.Resources }} {{ if eq $length 0 }}
+            List empty
+            {{else}}
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Resource</th>
+                </tr>
+                {{range $element := .ResourceTableElements.Resources}}
+                <tr>
+                    <td>{{ $element.Id }}</td>
+                    <td>{{ $element.Resource }}</td>
+                </tr>
+                {{end}}
+            </table>
+        {{end}}
+    </div>
+
+{{ template "footer.html" }}

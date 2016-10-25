@@ -51,12 +51,13 @@ func HandleGetResource(w http.ResponseWriter, _ *http.Request, ps httprouter.Par
 	processHttpResponse(w, response, nil, statusCode)
 }
 
-func HandlePutResource(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func HandlePutResource(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	request := &Resource{}
 	err := processHttpRequest(r, request)
 	var response *Resource
 	if err == nil {
-		resources[request.Id] = request.Resource
+		id := ps.ByName("id")
+		resources[id] = request.Resource
 		response = request
 	}
 	processHttpResponse(w, response, err, http.StatusOK)
