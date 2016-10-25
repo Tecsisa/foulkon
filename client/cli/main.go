@@ -12,14 +12,18 @@ import (
 
 const (
 	DEFAULT_ADDRESS     = "http://127.0.0.1:8000"
-	FLAG_EXTERNALID     = "externalId"
+	FLAG_EXTERNALID     = "extId"
 	FLAG_ORGANIZATIONID = "orgId"
+	FLAG_GROUPNAME      = "groupName"
+	FLAG_NEWGROUPNAME   = "newGroupName"
 	FLAG_POLICYNAME     = "policyName"
+	FLAG_USERNAME       = "userName"
 	FLAG_OFFSET         = "offset"
 	FLAG_LIMIT          = "limit"
 	FLAG_ORDERBY        = "orderBy"
 	FLAG_PATHPREFIX     = "pathPrefix"
 	FLAG_PATH           = "path"
+	FLAG_NEWPATH        = "newPath"
 	FLAG_EFFECT         = "effect"
 	FLAG_ACTIONS        = "actions"
 	FLAG_RESOURCES      = "resources"
@@ -39,12 +43,21 @@ To get more help, please execute this cli with a <command>
 
 `
 	userHelp := `User actions:
-	get -id=xxx                   retrieve user xxx
+	get -extId=xxx                   retrieve user xxx
 	get-all                       retrieve users
 	groups -id=xxx                retrieve user's groups
 	create -id=xxx -path=/path/   create user 'xxx' with path '/path/'
 	update -id=xxx -path=/new/    update user 'xxx' with path '/new/'
 	delete -id=xxx                delete user 'xxx'
+`
+	groupHelp := `Group actions:
+	get -groupName=xxx                   	retrieve group xxx
+	get-all                       		retrieve all groups
+	get-org-groups -orgId=xxx              	retrieve all groups within an organization xxx
+	policies-organization -orgId=yyy	retrieve all policies that belong to oranization 'yyy'
+	create -id=xxx -path=/path/   		create policy 'xxx' with path '/path/'
+	update -policyName=xxx -orgId=yyy    	update policy 'xxx' that belong to oranization 'yyy'
+	delete -policyName=xxx -orgId=yyy     	delete policy 'xxx' that belong to oranization 'yyy'
 `
 	policyHelp := `Policy actions:
 	get -policyName=xxx                   	retrieve policy xxx
@@ -124,6 +137,49 @@ To get more help, please execute this cli with a <command>
 			fallthrough
 		default:
 			msg = userHelp
+		}
+	case "group":
+		switch args[1] {
+		case "get":
+			params := parseFlags(availableFlags, []string{FLAG_ORGANIZATIONID, FLAG_POLICYNAME}, args)
+			msg, err = clientApi.GetGroup(params[FLAG_ORGANIZATIONID], params[FLAG_POLICYNAME])
+		case "get-all":
+			params := parseFlags(availableFlags, []string{FLAG_PATHPREFIX, FLAG_OFFSET, FLAG_LIMIT, FLAG_ORDERBY}, args)
+			msg, err = clientApi.GetAllGroups(params[FLAG_PATHPREFIX], params[FLAG_OFFSET], params[FLAG_LIMIT], params[FLAG_ORDERBY])
+		case "get-org-groups":
+			params := parseFlags(availableFlags, []string{FLAG_ORGANIZATIONID, FLAG_PATHPREFIX, FLAG_OFFSET, FLAG_LIMIT, FLAG_ORDERBY}, args)
+			msg, err = clientApi.GetGroupsByOrg(params[FLAG_ORGANIZATIONID], params[FLAG_PATHPREFIX], params[FLAG_OFFSET], params[FLAG_LIMIT], params[FLAG_ORDERBY])
+		case "create":
+			params := parseFlags(availableFlags, []string{FLAG_ORGANIZATIONID, FLAG_GROUPNAME, FLAG_PATH}, args)
+			msg, err = clientApi.CreateGroup(params[FLAG_ORGANIZATIONID], params[FLAG_GROUPNAME], params[FLAG_PATH])
+		case "update":
+			params := parseFlags(availableFlags, []string{FLAG_ORGANIZATIONID, FLAG_GROUPNAME, FLAG_NEWGROUPNAME, FLAG_NEWPATH}, args)
+			msg, err = clientApi.UpdateGroup(params[FLAG_ORGANIZATIONID], params[FLAG_GROUPNAME], params[FLAG_NEWGROUPNAME], params[FLAG_NEWPATH])
+		case "delete":
+			params := parseFlags(availableFlags, []string{FLAG_ORGANIZATIONID, FLAG_GROUPNAME}, args)
+			msg, err = clientApi.DeletePolicy(params[FLAG_ORGANIZATIONID], params[FLAG_GROUPNAME])
+		case "get-members":
+			params := parseFlags(availableFlags, []string{FLAG_ORGANIZATIONID, FLAG_GROUPNAME, FLAG_PATHPREFIX, FLAG_OFFSET, FLAG_LIMIT, FLAG_ORDERBY}, args)
+			msg, err = clientApi.GetGroupMembers(params[FLAG_ORGANIZATIONID], params[FLAG_GROUPNAME], params[FLAG_PATHPREFIX], params[FLAG_OFFSET], params[FLAG_LIMIT], params[FLAG_ORDERBY])
+		case "add-member":
+			params := parseFlags(availableFlags, []string{FLAG_ORGANIZATIONID, FLAG_GROUPNAME, FLAG_USERNAME}, args)
+			msg, err = clientApi.AddMemberToGroup(params[FLAG_ORGANIZATIONID], params[FLAG_GROUPNAME], params[FLAG_USERNAME])
+		case "remove-member":
+			params := parseFlags(availableFlags, []string{FLAG_ORGANIZATIONID, FLAG_GROUPNAME, FLAG_USERNAME}, args)
+			msg, err = clientApi.RemoveMemberToGroup(params[FLAG_ORGANIZATIONID], params[FLAG_GROUPNAME], params[FLAG_USERNAME])
+		case "get-policies":
+			params := parseFlags(availableFlags, []string{FLAG_ORGANIZATIONID, FLAG_GROUPNAME, FLAG_PATHPREFIX, FLAG_OFFSET, FLAG_LIMIT, FLAG_ORDERBY}, args)
+			msg, err = clientApi.GetGroupPolicies(params[FLAG_ORGANIZATIONID], params[FLAG_PATHPREFIX], params[FLAG_OFFSET], params[FLAG_LIMIT], params[FLAG_ORDERBY])
+		case "attach-policy":
+			params := parseFlags(availableFlags, []string{FLAG_ORGANIZATIONID, FLAG_GROUPNAME, FLAG_POLICYNAME}, args)
+			msg, err = clientApi.AttachPolicyToGroup(params[FLAG_ORGANIZATIONID], params[FLAG_GROUPNAME], params[FLAG_POLICYNAME])
+		case "detach-policy":
+			params := parseFlags(availableFlags, []string{FLAG_ORGANIZATIONID, FLAG_GROUPNAME, FLAG_POLICYNAME}, args)
+			msg, err = clientApi.DetachPolicyFromGroup(params[FLAG_ORGANIZATIONID], params[FLAG_GROUPNAME], params[FLAG_POLICYNAME])
+		case "-h":
+			fallthrough
+		default:
+			msg = groupHelp
 		}
 	case "policy":
 		switch args[1] {
