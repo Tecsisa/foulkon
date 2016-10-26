@@ -545,7 +545,6 @@ func renderErrorTemplate(w http.ResponseWriter, code int, msg string) {
 	node.HttpErrorStatusCode = code
 	node.ErrorMessage = msg
 	err := errorTemplate.Execute(w, node)
-
 	if err != nil {
 		logger.Info(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)

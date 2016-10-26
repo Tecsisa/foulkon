@@ -17,4 +17,3 @@ docker build -t tecsisa/foulkondemo -f demo/docker/Dockerfile . >/dev/null || ex
 
 echo "----> Starting Docker Compose..."
 docker-compose -f demo/docker/docker-compose.yml up --force-recreate --abort-on-container-exit
-
