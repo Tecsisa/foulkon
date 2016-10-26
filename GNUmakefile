@@ -19,6 +19,9 @@ deps:
 bin: generate format imports
 	@sh -c "'$(PWD)/scripts/build.sh'"
 
+demo:
+		@sh -c "'$(PWD)/demo/build-demo.sh'"
+
 release:
 	@$(MAKE) bin
 
@@ -74,4 +77,4 @@ bootstrap: deps
 travis:
 	@sh -c "'$(PWD)/scripts/travis.sh'"
 
-.PHONY: all dev deps bin release generate format imports test vet bootstrap travis
+.PHONY: all dev deps bin demo release generate format imports test vet bootstrap travis

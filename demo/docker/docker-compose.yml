@@ -1,0 +1,77 @@
+version: "2"
+services:
+  postgrescompose:
+    image: "postgres:9.5"
+    container_name: "postgrescompose"
+    hostname: "postgrescompose"
+    ports:
+      - "5432:5432"
+    command: "postgres"
+  foulkonworkercompose:
+    image: "tecsisa/foulkon:v0.2.0"
+    container_name: "foulkonworkercompose"
+    hostname: "foulkonworkercompose"
+    environment:
+      - FOULKON_WORKER_HOST=foulkonworkercompose
+      - FOULKON_WORKER_PORT=8000
+      - FOULKON_ADMIN_USER=admin
+      - FOULKON_ADMIN_PASS=admin
+      - FOULKON_WORKER_LOG_TYPE=default
+      - FOULKON_WORKER_LOG_LEVEL=info
+      - FOULKON_DB=postgres
+      - FOULKON_DB_POSTGRES_DS=postgres://postgres:password@postgrescompose:5432/postgres?sslmode=disable
+      - FOULKON_DB_POSTGRES_IDLECONNS=10
+      - FOULKON_DB_POSTGRES_MAXCONNS=20
+      - FOULKON_DB_POSTGRES_CONNTTL=300
+      - FOULKON_AUTH_TYPE=oidc
+      - FOULKON_AUTH_ISSUER=https://accounts.google.com
+      - FOULKON_AUTH_CLIENTID=google-client-identity
+    ports:
+      - "8000:8000"
+    command: "worker"
+    depends_on:
+      - postgrescompose
+  foulkondemoproxycompose:
+    image: "tecsisa/foulkondemo:latest"
+    container_name: "foulkondemoproxycompose"
+    hostname: "foulkondemoproxycompose"
+    environment:
+      - FOULKON_PROXY_HOST=foulkondemoproxycompose
+      - FOULKON_PROXY_PORT=8001
+      - FOULKON_PROXY_LOG_TYPE=default
+      - FOULKON_PROXY_LOG_LEVEL=info
+      - FOULKON_WORKER_URL=http://foulkonworkercompose:8000
+    ports:
+      - "8001:8001"
+    command: "proxy"
+    depends_on:
+      - postgrescompose
+      - foulkonworkercompose
+  foulkondemoapicompose:
+      image: "tecsisa/foulkondemo:latest"
+      container_name: "foulkondemoapicompose"
+      hostname: "foulkondemoapicompose"
+      environment:
+        - APIHOST=foulkondemoapicompose
+        - APIPORT=8100
+      ports:
+        - "8100:8100"
+      command: "api"
+      depends_on:
+        - postgrescompose
+        - foulkonworkercompose
+  foulkondemowebcompose:
+      image: "tecsisa/foulkondemo"
+      container_name: "foulkondemowebcompose"
+      hostname: "foulkondemowebcompose"
+      environment:
+        - APIHOST=foulkondemoproxycompose
+        - APIPORT=8001
+        - WEBHOST=foulkondemowebcompose
+        - WEBPORT=8101
+      ports:
+        - "8101:8101"
+      command: "web"
+      depends_on:
+        - postgrescompose
+        - foulkonworkercompose

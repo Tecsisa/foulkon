@@ -2,10 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/coreos/dex/pkg/log"
-	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"os"
+
+	"github.com/coreos/dex/pkg/log"
+	"github.com/julienschmidt/httprouter"
 )
 
 // CONSTANTS

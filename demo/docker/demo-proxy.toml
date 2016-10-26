@@ -1,0 +1,52 @@
+# Server config
+[server]
+host = "${FOULKON_PROXY_HOST}"
+port = "${FOULKON_PROXY_PORT}"
+certfile = "${FOULKON_PROXY_CERT_FILE_PATH}"
+keyfile = "${FOULKON_PROXY_KEY_FILE_PATH}"
+worker-host = "${FOULKON_WORKER_URL}"
+
+# Logger
+[logger]
+type = "${FOULKON_PROXY_LOG_TYPE}"
+level = "debug"
+	# Directory for file configuration
+	[logger.file]
+	dir = "${FOULKON_PROXY_LOG_PATH}"
+
+# Resources definition example
+[[resources]]
+    id = "resource1"
+    host = "http://foulkondemoapicompose:8100"
+    url = "/resources"
+    method = "GET"
+    urn = "urn:ews:foulkon:demo1:resource/list"
+    action = "example:list"
+[[resources]]
+    id = "resource2"
+    host = "http://foulkondemoapicompose:8100"
+    url = "/resources"
+    method = "POST"
+    urn = "urn:ews:foulkon:demo1:resource/add"
+    action = "example:add"
+[[resources]]
+    id = "resource3"
+    host = "http://foulkondemoapicompose:8100"
+    url = "/resources/:id"
+    method = "GET"
+    urn = "urn:ews:foulkon:demo1:resource/myresources/{id}"
+    action = "example:get"
+[[resources]]
+    id = "resource4"
+    host = "http://foulkondemoapicompose:8100"
+    url = "/resources/:id"
+    method = "PUT"
+    urn = "urn:ews:foulkon:demo1:resource/myresources/{id}"
+    action = "example:update"
+[[resources]]
+    id = "resource5"
+    host = "http://foulkondemoapicompose:8100"
+    url = "/resources/:id"
+    method = "DELETE"
+    urn = "urn:ews:foulkon:demo1:resource/myresources/{id}"
+    action = "example:delete"

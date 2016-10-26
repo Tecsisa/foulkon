@@ -8,9 +8,10 @@ import (
 	"net/http"
 	"os"
 
+	"strconv"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/julienschmidt/httprouter"
-	"strconv"
 )
 
 // CONSTANTS
@@ -20,19 +21,9 @@ const (
 	WEBPORT = "WEBPORT"
 	APIHOST = "APIHOST"
 	APIPORT = "APIPORT"
-
-	// Operations
-	ADD_OPERATION    = "Add"
-	GET_OPERATION    = "Get"
-	PUT_OPERATION    = "Put"
-	DELETE_OPERATION = "Delete"
-	LIST_OPERATION   = "List"
 )
 
 type Node struct {
-	// Operations
-	Operation string
-
 	// URLs
 	WebBaseUrl string
 	APIBaseUrl string
@@ -139,6 +130,8 @@ func HandleListResources(w http.ResponseWriter, _ *http.Request, _ httprouter.Pa
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	// TODO rsoleto: Change this when we have a oidc login
+	request.SetBasicAuth("admin", "admin")
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -198,6 +191,8 @@ func HandleAddResource(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		// TODO rsoleto: Change this when we have a oidc login
+		request.SetBasicAuth("admin", "admin")
 		response, err := client.Do(request)
 
 		if err != nil {
@@ -247,6 +242,8 @@ func HandleUpdateResource(w http.ResponseWriter, r *http.Request, _ httprouter.P
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		// TODO rsoleto: Change this when we have a oidc login
+		request.SetBasicAuth("admin", "admin")
 		response, err := client.Do(request)
 
 		if err != nil {
@@ -284,6 +281,8 @@ func HandleRemoveResource(w http.ResponseWriter, r *http.Request, _ httprouter.P
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		// TODO rsoleto: Change this when we have a oidc login
+		request.SetBasicAuth("admin", "admin")
 		response, err := client.Do(request)
 
 		if err != nil {
