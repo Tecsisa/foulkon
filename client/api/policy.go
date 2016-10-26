@@ -1,6 +1,11 @@
 package api
 
-import internalhttp "github.com/Tecsisa/foulkon/http"
+import (
+	"encoding/json"
+
+	"github.com/Tecsisa/foulkon/api"
+	internalhttp "github.com/Tecsisa/foulkon/http"
+)
 
 func (c *ClientAPI) GetPolicy(organizationId, policyName string) (string, error) {
 	req, err := c.prepareRequest("GET", internalhttp.API_VERSION_1+"/organizations/"+organizationId+"/policies/"+policyName, nil, nil)
@@ -10,7 +15,7 @@ func (c *ClientAPI) GetPolicy(organizationId, policyName string) (string, error)
 	return c.makeRequest(req)
 }
 
-func (c *ClientAPI) GetAllPolicy(pathPrefix, offset, limit, orderBy string) (string, error) {
+func (c *ClientAPI) GetAllPolicies(pathPrefix, offset, limit, orderBy string) (string, error) {
 	urlParams := map[string]string{
 		"PathPrefix": pathPrefix,
 		"Offset":     offset,
@@ -24,15 +29,18 @@ func (c *ClientAPI) GetAllPolicy(pathPrefix, offset, limit, orderBy string) (str
 	return c.makeRequest(req)
 }
 
-func (c *ClientAPI) CreatePolicy(organizationId, policyName, path, effect, actions, resources string) (string, error) {
-	body := map[string]string{
+func (c *ClientAPI) CreatePolicy(organizationId, policyName, path, statement string) (string, error) {
+
+	statementApi := []api.Statement{}
+	if err := json.Unmarshal([]byte(statement), &statementApi); err != nil {
+		panic(err)
+	}
+	body := map[string]interface{}{
 		"name":       policyName,
 		"path":       path,
-		"Statements": "\"Statements\" : [       {       \"Effect\" : \"allow\",       \"Actions\" : [\"iam:*\"],       \"Resources\" : [\"urn:everything:*\"]       }   ]",
-		//"effect":    effect,
-		//"actions":   actions,
-		//"resources": resources,
+		"Statements": statementApi,
 	}
+
 	req, err := c.prepareRequest("POST", internalhttp.API_VERSION_1+"/organizations/"+organizationId+"/policies", body, nil)
 	if err != nil {
 		return "", err
@@ -40,13 +48,23 @@ func (c *ClientAPI) CreatePolicy(organizationId, policyName, path, effect, actio
 	return c.makeRequest(req)
 }
 
-//func (c *ClientAPI) UpdatePolicy(organizationId, policyName string) (string, error) {
-//	req, err := c.prepareRequest("PUT", internalhttp.API_VERSION_1+"/organizations/"+organizationId+"/policies/"+policyName, nil, nil)
-//	if err != nil {
-//		return "", err
-//	}
-//	return c.makeRequest(req)
-//}
+func (c *ClientAPI) UpdatePolicy(organizationId, policyName, path, statement string) (string, error) {
+	statementApi := []api.Statement{}
+	if err := json.Unmarshal([]byte(statement), &statementApi); err != nil {
+		panic(err)
+	}
+	body := map[string]interface{}{
+		"name":       policyName,
+		"path":       path,
+		"Statements": statementApi,
+	}
+
+	req, err := c.prepareRequest("PUT", internalhttp.API_VERSION_1+"/organizations/"+organizationId+"/policies/"+policyName, body, nil)
+	if err != nil {
+		return "", err
+	}
+	return c.makeRequest(req)
+}
 
 func (c *ClientAPI) DeletePolicy(organizationId, policyName string) (string, error) {
 	req, err := c.prepareRequest("DELETE", internalhttp.API_VERSION_1+"/organizations/"+organizationId+"/policies/"+policyName, nil, nil)
@@ -56,7 +74,7 @@ func (c *ClientAPI) DeletePolicy(organizationId, policyName string) (string, err
 	return c.makeRequest(req)
 }
 
-func (c *ClientAPI) GetGroupsPolicy(organizationId, policyName, offset, limit, orderBy string) (string, error) {
+func (c *ClientAPI) GetGroupsAttached(organizationId, policyName, offset, limit, orderBy string) (string, error) {
 	urlParams := map[string]string{
 		"Offset":  offset,
 		"Limit":   limit,

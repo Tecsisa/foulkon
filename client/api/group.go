@@ -39,7 +39,7 @@ func (c *ClientAPI) GetGroupsByOrg(organizationId, pathPrefix, offset, limit, or
 }
 
 func (c *ClientAPI) CreateGroup(organizationId, groupName, path string) (string, error) {
-	body := map[string]string{
+	body := map[string]interface{}{
 		"name": groupName,
 		"path": path,
 	}
@@ -51,7 +51,7 @@ func (c *ClientAPI) CreateGroup(organizationId, groupName, path string) (string,
 }
 
 func (c *ClientAPI) UpdateGroup(organizationId, groupName, newName, newPath string) (string, error) {
-	body := map[string]string{
+	body := map[string]interface{}{
 		"name": newName,
 		"path": newPath,
 	}
@@ -72,9 +72,9 @@ func (c *ClientAPI) DeleteGroup(organizationId, groupName string) (string, error
 
 func (c *ClientAPI) GetGroupPolicies(organizationId, groupName, offset, limit, orderBy string) (string, error) {
 	urlParams := map[string]string{
-		"Offset":     offset,
-		"Limit":      limit,
-		"OrderBy":    orderBy,
+		"Offset":  offset,
+		"Limit":   limit,
+		"OrderBy": orderBy,
 	}
 	req, err := c.prepareRequest("GET", internalhttp.API_VERSION_1+"/organizations/"+organizationId+"/groups/"+groupName+"/policies", nil, urlParams)
 	if err != nil {

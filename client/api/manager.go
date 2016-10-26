@@ -11,6 +11,16 @@ type UserAPI interface {
 	DeleteUser(externalId string) (string, error)
 }
 
+type PolicyAPI interface {
+	GetPolicy(organizationId, policyName string) (string, error)
+	GetAllPolicies(pathPrefix, offset, limit, orderBy string) (string, error)
+	CreatePolicy(organizationId, policyName, path, statement string) (string, error)
+	UpdatePolicy(organizationId, policyName, path, statement string) (string, error)
+	DeletePolicy(organizationId, policyName string) (string, error)
+	GetGroupsAttached(organizationId, policyName, offset, limit, orderBy string) (string, error)
+	GetPoliciesOrganization(organizationId, pathPrefix, offset, limit, orderBy string) (string, error)
+}
+
 type GroupAPI interface {
 	GetGroup(organizationId, groupName string) (string, error)
 	GetAllGroups(pathPrefix, offset, limit, orderBy string) (string, error)

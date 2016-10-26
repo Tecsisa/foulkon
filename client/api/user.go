@@ -38,7 +38,7 @@ func (c *ClientAPI) GetUserGroups(externalId, offset, limit, orderBy string) (st
 }
 
 func (c *ClientAPI) CreateUser(externalId, path string) (string, error) {
-	body := map[string]string{
+	body := map[string]interface{}{
 		"externalId": externalId,
 		"path":       path,
 	}
@@ -51,7 +51,7 @@ func (c *ClientAPI) CreateUser(externalId, path string) (string, error) {
 }
 
 func (c *ClientAPI) UpdateUser(externalId, path string) (string, error) {
-	body := map[string]string{
+	body := map[string]interface{}{
 		"path": path,
 	}
 

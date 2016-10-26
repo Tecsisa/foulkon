@@ -9,7 +9,7 @@ import (
 )
 
 // Helper func for updating request params
-func (c *ClientAPI) prepareRequest(method, url string, postContent, queryParams map[string]string) (*http.Request, error) {
+func (c *ClientAPI) prepareRequest(method, url string, postContent map[string]interface{}, queryParams map[string]string) (*http.Request, error) {
 	url = c.Address + url
 	// insert post content to body
 	var body *bytes.Buffer
