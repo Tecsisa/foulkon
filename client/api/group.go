@@ -55,7 +55,7 @@ func (c *ClientAPI) UpdateGroup(organizationId, groupName, newName, newPath stri
 		"name": newName,
 		"path": newPath,
 	}
-	req, err := c.prepareRequest("PUT", internalhttp.API_VERSION_1+"/organizations/"+organizationId+"/policies/"+groupName, body, nil)
+	req, err := c.prepareRequest("PUT", internalhttp.API_VERSION_1+"/organizations/"+organizationId+"/groups/"+groupName, body, nil)
 	if err != nil {
 		return "", err
 	}
@@ -72,11 +72,11 @@ func (c *ClientAPI) DeleteGroup(organizationId, groupName string) (string, error
 
 func (c *ClientAPI) GetGroupPolicies(organizationId, groupName, offset, limit, orderBy string) (string, error) {
 	urlParams := map[string]string{
-		"Offset":  offset,
-		"Limit":   limit,
-		"OrderBy": orderBy,
+		"Offset":     offset,
+		"Limit":      limit,
+		"OrderBy":    orderBy,
 	}
-	req, err := c.prepareRequest("GET", internalhttp.API_VERSION_1+"/organizations/"+organizationId+"/groups/"+groupName+"/groups", nil, urlParams)
+	req, err := c.prepareRequest("GET", internalhttp.API_VERSION_1+"/organizations/"+organizationId+"/groups/"+groupName+"/policies", nil, urlParams)
 	if err != nil {
 		return "", err
 	}
@@ -114,15 +114,15 @@ func (c *ClientAPI) GetGroupMembers(organizationId, groupName, pathPrefix, offse
 }
 
 func (c *ClientAPI) AddMemberToGroup(organizationId, groupName, userName string) (string, error) {
-	req, err := c.prepareRequest("POST", internalhttp.API_VERSION_1+"/organizations/"+organizationId+"/groups/"+groupName+"/users"+userName, nil, nil)
+	req, err := c.prepareRequest("POST", internalhttp.API_VERSION_1+"/organizations/"+organizationId+"/groups/"+groupName+"/users/"+userName, nil, nil)
 	if err != nil {
 		return "", err
 	}
 	return c.makeRequest(req)
 }
 
-func (c *ClientAPI) RemoveMemberToGroup(organizationId, groupName, userName string) (string, error) {
-	req, err := c.prepareRequest("DELETE", internalhttp.API_VERSION_1+"/organizations/"+organizationId+"/groups/"+groupName+"/users"+userName, nil, nil)
+func (c *ClientAPI) RemoveMemberFromGroup(organizationId, groupName, userName string) (string, error) {
+	req, err := c.prepareRequest("DELETE", internalhttp.API_VERSION_1+"/organizations/"+organizationId+"/groups/"+groupName+"/users/"+userName, nil, nil)
 	if err != nil {
 		return "", err
 	}
