@@ -47,7 +47,7 @@ func (h *ProxyHandler) HandleRequest(resource api.ProxyResource) httprouter.Hand
 			if err != nil {
 				apiErr := getErrorMessage(INVALID_DEST_HOST_URL, fmt.Sprintf("Error creating destination host URL: %v", err.Error()))
 				api.TransactionProxyErrorLogWithStatus(requestID, workerRequestID, r, http.StatusInternalServerError, apiErr)
-				w.WriteHeader(http.StatusInternalServerError)
+				WriteHttpResponse(r, w, requestID, "", http.StatusInternalServerError, getErrorMessage(INVALID_DEST_HOST_URL, "Error creating destination host"))
 				return
 			}
 			r.URL.Host = destURL.Host

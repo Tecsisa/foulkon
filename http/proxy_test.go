@@ -14,7 +14,7 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 	now := time.Now()
 	testcases := map[string]struct {
 		expectedStatusCode int
-		expectedError      api.Error
+		expectedError      *api.Error
 		expectedResponse   api.User
 		resource           string
 		// Manager Results
@@ -52,7 +52,7 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 		"ErrorCaseInvalidParameter": {
 			expectedStatusCode: http.StatusBadRequest,
 			resource:           "/urnPrefix",
-			expectedError: api.Error{
+			expectedError: &api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
 				Message: "Bad request",
 			},
@@ -60,7 +60,7 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 		"ErrorCaseInvalidResources": {
 			expectedStatusCode: http.StatusBadRequest,
 			resource:           "/invalidUrn",
-			expectedError: api.Error{
+			expectedError: &api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
 				Message: "Bad request",
 			},
@@ -68,7 +68,7 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 		"ErrorCaseInvalidAction": {
 			expectedStatusCode: http.StatusBadRequest,
 			resource:           "/invalidAction",
-			expectedError: api.Error{
+			expectedError: &api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
 				Message: "Bad request",
 			},
@@ -76,16 +76,16 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 		"ErrorCaseInvalidHost": {
 			expectedStatusCode: http.StatusInternalServerError,
 			resource:           "/invalid",
-			expectedError: api.Error{
+			expectedError: &api.Error{
 				Code:    INVALID_DEST_HOST_URL,
-				Message: "Error calling destination host",
+				Message: "Error creating destination host",
 			},
 			getAuthorizedExternalResourcesResult: []string{"urn:ews:example:instance1:resource/invalid"},
 		},
 		"ErrorCaseHostUnreachable": {
 			expectedStatusCode: http.StatusInternalServerError,
 			resource:           "/fail",
-			expectedError: api.Error{
+			expectedError: &api.Error{
 				Code:    HOST_UNREACHABLE,
 				Message: "Error calling destination resource",
 			},
@@ -95,7 +95,7 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 			expectedStatusCode: http.StatusForbidden,
 			authStatusCode:     http.StatusUnauthorized,
 			resource:           USER_ROOT_URL + "/user",
-			expectedError: api.Error{
+			expectedError: &api.Error{
 				Code:    FORBIDDEN_ERROR,
 				Message: "Forbidden resource. If you need access, contact the administrator",
 			},
@@ -115,7 +115,7 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 			getAuthorizedExternalResourcesErr: &api.Error{
 				Code: api.UNAUTHORIZED_RESOURCES_ERROR,
 			},
-			expectedError: api.Error{
+			expectedError: &api.Error{
 				Code:    FORBIDDEN_ERROR,
 				Message: "Forbidden resource. If you need access, contact the administrator",
 			},
@@ -132,7 +132,7 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 				UpdateAt:   now,
 			},
 			getAuthorizedExternalResourcesResult: []string{"urn:ews:example:instance1:resource/forbidden"},
-			expectedError: api.Error{
+			expectedError: &api.Error{
 				Code:    FORBIDDEN_ERROR,
 				Message: "Forbidden resource. If you need access, contact the administrator",
 			},
@@ -141,7 +141,7 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 			expectedStatusCode: http.StatusBadRequest,
 			authStatusCode:     http.StatusBadRequest,
 			resource:           USER_ROOT_URL + "/user",
-			expectedError: api.Error{
+			expectedError: &api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
 				Message: "Bad request",
 			},
@@ -149,9 +149,9 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 		"ErrorCaseWorkerError": {
 			expectedStatusCode: http.StatusInternalServerError,
 			resource:           USER_ROOT_URL + "/user",
-			expectedError: api.Error{
+			expectedError: &api.Error{
 				Code:    INTERNAL_SERVER_ERROR,
-				Message: "There was a problem retrieving authorization, status code 500",
+				Message: "Internal server error. Contact the administrator",
 			},
 			getAuthorizedExternalResourcesErr: &api.Error{
 				Code: api.UNKNOWN_API_ERROR,
@@ -160,7 +160,7 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 		"ErrorCaseUnauthorized": {
 			expectedStatusCode: http.StatusForbidden,
 			resource:           USER_ROOT_URL + "/user",
-			expectedError: api.Error{
+			expectedError: &api.Error{
 				Code:    FORBIDDEN_ERROR,
 				Message: "Forbidden resource. If you need access, contact the administrator",
 			},
@@ -212,19 +212,19 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 					n, diff)
 				continue
 			}
-		case http.StatusInternalServerError: // Empty message so continue
-			continue
 		default:
-			apiError := api.Error{}
-			err = json.NewDecoder(res.Body).Decode(&apiError)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
-				continue
-			}
-			// Check result
-			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
+			if test.expectedError != nil {
+				apiError := api.Error{}
+				err = json.NewDecoder(res.Body).Decode(&apiError)
+				if err != nil {
+					t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
+					continue
+				}
+				// Check result
+				if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
+					t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
+					continue
+				}
 			}
 		}
 	}
