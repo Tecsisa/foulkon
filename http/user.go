@@ -41,7 +41,7 @@ func (h *WorkerHandler) HandleAddUser(w http.ResponseWriter, r *http.Request, _ 
 	request := &CreateUserRequest{}
 	requestInfo, _, apiErr := h.processHttpRequest(r, w, nil, request)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
@@ -54,7 +54,7 @@ func (h *WorkerHandler) HandleGetUserByExternalID(w http.ResponseWriter, r *http
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
@@ -67,7 +67,7 @@ func (h *WorkerHandler) HandleListUsers(w http.ResponseWriter, r *http.Request, 
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
@@ -88,7 +88,7 @@ func (h *WorkerHandler) HandleUpdateUser(w http.ResponseWriter, r *http.Request,
 	request := &UpdateUserRequest{}
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, request)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
@@ -101,7 +101,7 @@ func (h *WorkerHandler) HandleRemoveUser(w http.ResponseWriter, r *http.Request,
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
@@ -114,7 +114,7 @@ func (h *WorkerHandler) HandleListGroupsByUser(w http.ResponseWriter, r *http.Re
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 

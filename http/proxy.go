@@ -47,7 +47,7 @@ func (h *ProxyHandler) HandleRequest(resource api.ProxyResource) httprouter.Hand
 			if err != nil {
 				apiErr := getErrorMessage(INVALID_DEST_HOST_URL, fmt.Sprintf("Error creating destination host URL: %v", err.Error()))
 				api.TransactionProxyErrorLogWithStatus(requestID, workerRequestID, r, http.StatusInternalServerError, apiErr)
-				h.RespondInternalServerError(w, apiErr)
+				WriteHttpResponse(r, w, requestID, "", http.StatusInternalServerError, getErrorMessage(INVALID_DEST_HOST_URL, "Error creating destination host"))
 				return
 			}
 			r.URL.Host = destURL.Host
@@ -59,7 +59,7 @@ func (h *ProxyHandler) HandleRequest(resource api.ProxyResource) httprouter.Hand
 			if err != nil {
 				apiErr := getErrorMessage(HOST_UNREACHABLE, fmt.Sprintf("Error calling to destination host resource: %v", err.Error()))
 				api.TransactionProxyErrorLogWithStatus(requestID, workerRequestID, r, http.StatusInternalServerError, apiErr)
-				h.RespondInternalServerError(w, getErrorMessage(HOST_UNREACHABLE, "Error calling destination resource"))
+				WriteHttpResponse(r, w, requestID, "", http.StatusInternalServerError, getErrorMessage(HOST_UNREACHABLE, "Error calling destination resource"))
 				return
 			}
 
@@ -79,7 +79,7 @@ func (h *ProxyHandler) HandleRequest(resource api.ProxyResource) httprouter.Hand
 			if _, err := buffer.ReadFrom(res.Body); err != nil {
 				apiErr := getErrorMessage(INTERNAL_SERVER_ERROR, fmt.Sprintf("Error reading response from destination: %v", err.Error()))
 				api.TransactionProxyErrorLogWithStatus(requestID, workerRequestID, r, http.StatusInternalServerError, apiErr)
-				h.RespondInternalServerError(w, apiErr)
+				WriteHttpResponse(r, w, requestID, "", http.StatusInternalServerError, apiErr)
 				return
 			}
 			w.WriteHeader(res.StatusCode)
@@ -88,17 +88,19 @@ func (h *ProxyHandler) HandleRequest(resource api.ProxyResource) httprouter.Hand
 		} else {
 			apiError := err.(*api.Error)
 			var statusCode int
+			var responseErr *api.Error
 			switch apiError.Code {
 			case FORBIDDEN_ERROR:
 				statusCode = http.StatusForbidden
-				h.RespondForbidden(w, getErrorMessage(FORBIDDEN_ERROR, ""))
+				responseErr = getErrorMessage(FORBIDDEN_ERROR, "")
 			case api.INVALID_PARAMETER_ERROR, api.REGEX_NO_MATCH, BAD_REQUEST:
 				statusCode = http.StatusBadRequest
-				h.RespondBadRequest(w, getErrorMessage(api.INVALID_PARAMETER_ERROR, "Bad request"))
+				responseErr = getErrorMessage(api.INVALID_PARAMETER_ERROR, "Bad request")
 			default:
 				statusCode = http.StatusInternalServerError
-				h.RespondInternalServerError(w, getErrorMessage(INTERNAL_SERVER_ERROR, "Internal server error. Contact the administrator"))
+				responseErr = getErrorMessage(INTERNAL_SERVER_ERROR, "Internal server error. Contact the administrator")
 			}
+			WriteHttpResponse(r, w, requestID, "", statusCode, responseErr)
 			api.TransactionProxyErrorLogWithStatus(requestID, workerRequestID, r, statusCode, apiError)
 			return
 		}

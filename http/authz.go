@@ -22,12 +22,12 @@ type AuthorizeResourcesResponse struct {
 // HANDLERS
 
 func (h *WorkerHandler) HandleGetAuthorizedExternalResources(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	requestInfo := h.GetRequestInfo(r)
+	requestInfo := h.getRequestInfo(r)
 	// Process request
 	request := &AuthorizeResourcesRequest{}
 	requestInfo, _, apiErr := h.processHttpRequest(r, w, nil, request)
 	if apiErr != nil {
-		h.RespondBadRequest(r, requestInfo, w, apiErr)
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
