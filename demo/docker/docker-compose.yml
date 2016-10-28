@@ -4,8 +4,6 @@ services:
     image: "postgres:9.5"
     container_name: "postgrescompose"
     hostname: "postgrescompose"
-    ports:
-      - "5432:5432"
     command: "postgres"
   foulkonworkercompose:
     image: "tecsisa/foulkon:v0.2.0"
@@ -25,7 +23,7 @@ services:
       - FOULKON_DB_POSTGRES_CONNTTL=300
       - FOULKON_AUTH_TYPE=oidc
       - FOULKON_AUTH_ISSUER=https://accounts.google.com
-      - FOULKON_AUTH_CLIENTID=google-client-identity
+      - FOULKON_AUTH_CLIENTID=953874647871-gco7i6urt1i4clafgoeuo2gnicj2sg2q.apps.googleusercontent.com
     ports:
       - "8000:8000"
     command: "worker"
@@ -52,6 +50,8 @@ services:
       container_name: "foulkondemoapicompose"
       hostname: "foulkondemoapicompose"
       environment:
+        - FOULKON_WORKER_HOST=foulkonworkercompose
+        - FOULKON_WORKER_PORT=8000
         - APIHOST=foulkondemoapicompose
         - APIPORT=8100
       ports:
@@ -67,8 +67,11 @@ services:
       environment:
         - APIHOST=foulkondemoproxycompose
         - APIPORT=8001
-        - WEBHOST=foulkondemowebcompose
+        - WEBHOST=localhost
         - WEBPORT=8101
+        - OIDC_CLIENT_ID=953874647871-gco7i6urt1i4clafgoeuo2gnicj2sg2q.apps.googleusercontent.com
+        - OIDC_CLIENT_SECRET=T2P-Q8hxq5jfdR5EhPFGuFVs
+        - OIDC_IDP_DISCOVERY=https://accounts.google.com
       ports:
         - "8101:8101"
       command: "web"

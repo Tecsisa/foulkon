@@ -1,6 +1,30 @@
+<<<<<<< HEAD
 hash: 93d9eba9da07ecb1e8de03b355a36f05d853193e3107852c68713fd7aac5fd3c
 updated: 2017-09-04T10:16:05.262507613+02:00
+=======
+hash: f982b82d1f05b3ba8a0157938c1b843fbc0226b7adb6e78f3f00f806cd26f88c
+updated: 2016-10-27T12:24:03.814586358+02:00
+>>>>>>> updated templates and script to start with "make demo"
 imports:
+- name: github.com/coreos/dex
+  version: 4b9bdf163db85373f3ea59bb227dec445c618cbf
+  subpackages:
+  - pkg/log
+- name: github.com/coreos/go-oidc
+  version: 9fae754a41cbdc3be9cb97a180eb323b625db614
+  subpackages:
+  - http
+  - jose
+  - key
+  - oauth2
+  - oidc
+- name: github.com/coreos/pkg
+  version: fa94270d4bac0d8ae5dc6b71894e251aada93f74
+  subpackages:
+  - flagutil
+  - health
+  - httputil
+  - timeutil
 - name: github.com/dgrijalva/jwt-go
   version: 24c63f56522a87ec5339cc3567883f1039378fdb
 - name: github.com/emanoelxavier/openid2go
@@ -11,6 +35,8 @@ imports:
   version: 5174cc5c242a728b435ea2be8a2f7f998e15429b
 - name: github.com/jinzhu/inflection
   version: 74387dc39a75e970e7a3ae6a3386b5bd2e5c5cff
+- name: github.com/jonboulle/clockwork
+  version: 3f831b65b61282ba6bece21b91beea2edc4c887a
 - name: github.com/julienschmidt/httprouter
   version: 8c199fb6259ffc1af525cc3ad52ee60ba8359669
 - name: github.com/kylelemons/godebug

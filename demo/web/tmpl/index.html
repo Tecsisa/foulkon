@@ -2,8 +2,18 @@
 
     <div>
         {{if eq .Token ""}}
-            You must login before you use endpoints to work with example resources. Click <a href="{{.WebBaseUrl}}/">here</a> to log in.
+            You must login before you use endpoints to work with example resources. Click <a href="{{.WebBaseUrl}}/login">here</a> to log in.
         {{else}}
+            <table>
+                <tr>
+                    <td>User identifier</td>
+                    <td>{{.UserId}}</td>
+                </tr>
+                <tr>
+                    <td>Roles</td>
+                    <td>EMPTY YET</td>
+                </tr>
+            </table>
         {{end}}
     </div>
 
