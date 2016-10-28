@@ -49,6 +49,9 @@ const (
 
 	// Authorization URLs
 	RESOURCE_URL = API_VERSION_1 + "/resource"
+
+	// Foulkon configuration URL
+	ABOUT = "/about"
 )
 
 // PROXY
@@ -186,14 +189,14 @@ func WorkerHandlerRouter(worker *foulkon.Worker) http.Handler {
 	// Resources authorized endpoint
 	router.POST(RESOURCE_URL, workerHandler.HandleGetAuthorizedExternalResources)
 
+	// Current Foulkon configuration
+	router.GET(ABOUT, workerHandler.HandleGetCurrentConfig)
+
 	return workerHandler.worker.MiddlewareHandler.Handle(router)
 }
 
 // WriteHttpResponse fill a http response with data, controlling marshalling errors
 func WriteHttpResponse(r *http.Request, w http.ResponseWriter, requestId string, userId string, statusCode int, value interface{}) {
-	// Set status code
-	w.WriteHeader(statusCode)
-
 	if value != nil {
 		b, err := json.Marshal(value)
 		if err != nil {
@@ -205,10 +208,15 @@ func WriteHttpResponse(r *http.Request, w http.ResponseWriter, requestId string,
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Add("Content-Type", "application/json")
+		// Set status code
+		w.WriteHeader(statusCode)
 		w.Write(b)
+		return
 	}
 
+	// Set status code by default if interface isn't defined
+	w.WriteHeader(statusCode)
 }
 
 // Private Helper Methods

@@ -25,6 +25,21 @@ func TestLogOperation(t *testing.T) {
 	assert.Equal(t, userID, hook.LastEntry().Data["user"], "Error in test case")
 }
 
+func TestLogOperationWarn(t *testing.T) {
+	requestID := "123"
+	userID := "user123"
+	message := "message"
+
+	testLogger, hook := test.NewNullLogger()
+	Log = testLogger
+	LogOperationWarn(requestID, userID, message)
+	assert.Equal(t, 1, len(hook.Entries))
+	assert.Equal(t, logrus.WarnLevel, hook.LastEntry().Level, "Error in test case")
+	assert.Equal(t, message, hook.LastEntry().Message, "Error in test case")
+	assert.Equal(t, requestID, hook.LastEntry().Data["requestID"], "Error in test case")
+	assert.Equal(t, userID, hook.LastEntry().Data["user"], "Error in test case")
+}
+
 func TestLogOperationError(t *testing.T) {
 	requestID := "123"
 	userID := "user123"

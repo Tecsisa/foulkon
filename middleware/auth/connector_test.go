@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/Sirupsen/logrus/hooks/test"
+	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/middleware"
 	"github.com/kylelemons/godebug/pretty"
 )
@@ -40,12 +42,16 @@ func TestAuthenticatorMiddleware_Action(t *testing.T) {
 		w.Write([]byte(testMessage))
 		w.WriteHeader(http.StatusOK)
 	})
+	// Create logger
+	testLogger, hook := test.NewNullLogger()
+	api.Log = testLogger
 	testcases := map[string]struct {
 		// Middleware args
 		userID             string
 		password           string
 		unauthenticated    bool
 		admin              bool
+		expectedLog        string
 		expectedStatusCode int
 	}{
 		"OkCase": {
@@ -59,6 +65,14 @@ func TestAuthenticatorMiddleware_Action(t *testing.T) {
 			unauthenticated:    false,
 			expectedStatusCode: http.StatusOK,
 			admin:              true,
+		},
+		"OkCaseInvalidAdmin": {
+			userID:             "admin",
+			password:           "fail",
+			unauthenticated:    false,
+			expectedStatusCode: http.StatusOK,
+			admin:              true,
+			expectedLog:        "Trying to connect as admin, admin user/password invalid, delegating to connector...",
 		},
 		"OkCaseUnautenticated": {
 			userID:             "UserId",
@@ -83,6 +97,14 @@ func TestAuthenticatorMiddleware_Action(t *testing.T) {
 		}
 		// Check body
 		if res.StatusCode == http.StatusOK {
+			// Check logger
+			if testcase.expectedLog != "" {
+				if diff := pretty.Compare(testcase.expectedLog, hook.LastEntry().Message); diff != "" {
+					t.Errorf("Test %v failed. Received different logs (received/wanted) %v", n, diff)
+					return
+				}
+			}
+
 			buffer := new(bytes.Buffer)
 			if _, err := buffer.ReadFrom(res.Body); err != nil {
 				t.Errorf("Test %v failed. Unexpected error reading response: %v.", n, err)
