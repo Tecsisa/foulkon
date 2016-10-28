@@ -12,6 +12,8 @@ import (
 
 	"database/sql"
 
+	"strconv"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/database/postgresql"
@@ -21,6 +23,10 @@ import (
 	"github.com/Tecsisa/foulkon/middleware/logger"
 	"github.com/Tecsisa/foulkon/middleware/xrequestid"
 	"github.com/pelletier/go-toml"
+)
+
+const (
+	FOULKON_VERSION = "v0.3.0-SNAPSHOT"
 )
 
 // aux var for ${OS_ENV_VAR} regex
@@ -47,10 +53,34 @@ type Worker struct {
 
 	//  Middleware handler
 	MiddlewareHandler *middleware.MiddlewareHandler
+
+	// Current Foulkon configuration
+	Config WorkerConfig
+}
+
+// WorkerConfig
+type WorkerConfig struct {
+	// Logger Config
+	LoggerType    string
+	LoggerLevel   string
+	FileDirectory string
+
+	// Database Config
+	DBType       string
+	IdleConns    int
+	MaxOpenConns int
+	ConnTtl      int
+
+	// Authenticator Config
+	AuthType string
+	Issuer   string
+
+	Version string
 }
 
 // NewWorker creates a Worker using configuration values
 func NewWorker(config *toml.TomlTree) (*Worker, error) {
+	var wc WorkerConfig
 
 	// Create logger
 	var logOut io.Writer
@@ -65,11 +95,14 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		}
 		logOut = workerLogfile
 	}
+	wc.LoggerType = loggerType
+
 	// Logger level. Defaults to INFO
 	loglevel, err := logrus.ParseLevel(getDefaultValue(config, "logger.level", "info"))
 	if err != nil {
 		loglevel = logrus.InfoLevel
 	}
+	wc.LoggerLevel = loglevel.String()
 
 	api.Log = &logrus.Logger{
 		Out:       logOut,
@@ -87,6 +120,8 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		api.Log.Error(err)
 		return nil, err
 	}
+	wc.DBType = dbType
+
 	switch dbType {
 	case "postgres": // PostgreSQL DB
 		api.Log.Info("Connecting to postgres database")
@@ -95,11 +130,10 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 			api.Log.Error(err)
 			return nil, err
 		}
-		gormDB, err := postgresql.InitDb(dbdsn,
-			getDefaultValue(config, "database.postgres.idleconns", "5"),
-			getDefaultValue(config, "database.postgres.maxopenconns", "20"),
-			getDefaultValue(config, "database.postgres.connttl", "300"),
-		)
+		dbIdleconns := getDefaultValue(config, "database.postgres.idleconns", "5")
+		dbMaxopenconns := getDefaultValue(config, "database.postgres.maxopenconns", "20")
+		dbConttl := getDefaultValue(config, "database.postgres.connttl", "300")
+		gormDB, err := postgresql.InitDb(dbdsn, dbIdleconns, dbMaxopenconns, dbConttl)
 		if err != nil {
 			api.Log.Error(err)
 			return nil, err
@@ -116,6 +150,9 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 			UserRepo:   repoDB,
 			PolicyRepo: repoDB,
 		}
+		wc.IdleConns, _ = strconv.Atoi(dbIdleconns)
+		wc.MaxOpenConns, _ = strconv.Atoi(dbMaxopenconns)
+		wc.ConnTtl, _ = strconv.Atoi(dbConttl)
 
 	default:
 		err := errors.New("Unexpected db_type value in configuration file (Maybe it is empty)")
@@ -129,12 +166,16 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 	if err != nil {
 		return nil, err
 	}
+	wc.AuthType = authType
+
 	switch authType {
 	case "oidc":
 		issuer, err := getMandatoryValue(config, "authenticator.oidc.issuer")
 		if err != nil {
 			return nil, err
 		}
+		wc.Issuer = issuer
+
 		clientsids, err := getMandatoryValue(config, "authenticator.oidc.clientids")
 		if err != nil {
 			return nil, err
@@ -195,6 +236,8 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		return nil, err
 	}
 
+	wc.Version = FOULKON_VERSION
+
 	return &Worker{
 		Host:              host,
 		Port:              port,
@@ -205,6 +248,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		GroupApi:          authApi,
 		PolicyApi:         authApi,
 		AuthzApi:          authApi,
+		Config:            wc,
 	}, nil
 }
 

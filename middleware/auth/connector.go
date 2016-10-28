@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 
+	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/middleware"
 )
 
@@ -58,6 +59,11 @@ func (a *AuthenticatorMiddleware) getAuthenticatedUser(r *http.Request) (string,
 
 func isAdmin(r *http.Request, adminUser string, adminPassword string) bool {
 	username, password, ok := r.BasicAuth()
+	isAdmin := username == adminUser && password == adminPassword
+	if ok && !isAdmin {
+		msg := "Trying to connect as admin, admin user/password invalid, delegating to connector..."
+		api.LogOperationWarn(r.Header.Get(middleware.REQUEST_ID_HEADER), username, msg)
+	}
 	// Password is never stored in DB
-	return ok && username == adminUser && password == adminPassword
+	return ok && isAdmin
 }

@@ -15,6 +15,12 @@ func LogOperation(requestID string, userID string, message string) {
 	Log.WithFields(fields).Info(message)
 }
 
+// LogOperation logs a warning action with request identifier and user
+func LogOperationWarn(requestID string, userID string, message string) {
+	fields := getLogFields(requestID, userID, "", nil, 0, nil)
+	Log.WithFields(fields).Warn(message)
+}
+
 // LogErrorMessage logs an error action with request identifier and user
 func LogOperationError(requestID string, userID string, err *Error) {
 	fields := getLogFields(requestID, userID, "", nil, 0, err)

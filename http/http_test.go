@@ -142,6 +142,19 @@ func TestMain(m *testing.M) {
 	requestLoggerMiddleware := logger.NewRequestLoggerMiddleware()
 	middlewares[middleware.REQUEST_LOGGER_MIDDLEWARE] = requestLoggerMiddleware
 
+	config := foulkon.WorkerConfig{
+		LoggerType:    "test",
+		LoggerLevel:   "test",
+		FileDirectory: "test",
+		DBType:        "test",
+		IdleConns:     0,
+		MaxOpenConns:  0,
+		ConnTtl:       0,
+		AuthType:      "test",
+		Issuer:        "test",
+		Version:       "test",
+	}
+
 	// Return created core
 	worker := &foulkon.Worker{
 		MiddlewareHandler: &middleware.MiddlewareHandler{Middlewares: middlewares},
@@ -149,6 +162,7 @@ func TestMain(m *testing.M) {
 		GroupApi:          testApi,
 		PolicyApi:         testApi,
 		AuthzApi:          testApi,
+		Config:            config,
 	}
 
 	server = httptest.NewServer(WorkerHandlerRouter(worker))
