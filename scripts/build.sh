@@ -11,12 +11,11 @@ if [[ "${FOULKON_DEV}" ]]; then
     exit 0
 fi
 
-branch=$(git rev-parse --abbrev-ref HEAD)
-tag=$(git tag --points-at HEAD)
+echo "Current branch: <${TRAVIS_BRANCH}>, PR <${TRAVIS_PULL_REQUEST}>, current tag: <${TRAVIS_TAG}>"
 
-if [ "$tag" != "" ]; then
-    build=$tag
-elif [ "$branch" == "master" ]; then
+if [ "$TRAVIS_TAG" != "" ]; then
+    build=$TRAVIS_TAG
+elif [ "$TRAVIS_BRANCH" == "master" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then
     build="latest"
 else
     echo "Not in <master> branch or <tagged> commit, exiting..."
