@@ -93,6 +93,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		if err != nil {
 			return nil, err
 		}
+		wc.FileDirectory = logFileDir
 		logOut = workerLogfile
 	}
 	wc.LoggerType = loggerType
