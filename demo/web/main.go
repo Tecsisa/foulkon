@@ -16,6 +16,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/coreos/go-oidc/oidc"
 	"github.com/julienschmidt/httprouter"
+	"time"
 )
 
 // CONSTANTS
@@ -26,6 +27,10 @@ const (
 	APIHOST = "APIHOST"
 	APIPORT = "APIPORT"
 
+	// Foulkon
+	FOULKONHOST = "FOULKON_WORKER_HOST"
+	FOULKONPORT = "FOULKON_WORKER_PORT"
+
 	// OIDC
 	OIDCCLIENTID     = "OIDC_CLIENT_ID"
 	OIDCCLIENTSECRET = "OIDC_CLIENT_SECRET"
@@ -34,13 +39,14 @@ const (
 
 type Node struct {
 	// URLs
-	WebBaseUrl string
-	APIBaseUrl string
+	WebBaseUrl     string
+	APIBaseUrl     string
+	FoulkonBaseUrl string
 
 	// Profile
 	UserId string
 	Token  string
-	Roles  []string
+	Roles  []UserGroups
 
 	// Table Resources
 	ResourceTableElements *ResourceTableElements
@@ -56,6 +62,19 @@ type Node struct {
 type Resource struct {
 	Id       string `json:"id, omitempty"`
 	Resource string `json:"resource, omitempty"`
+}
+
+type UserGroups struct {
+	Org      string    `json:"org, omitempty"`
+	Name     string    `json:"name, omitempty"`
+	CreateAt time.Time `json:"joined, omitempty"`
+}
+
+type GetGroupsByUserIdResponse struct {
+	Groups []UserGroups `json:"groups, omitempty"`
+	Limit  int          `json:"limit, omitempty"`
+	Offset int          `json:"offset, omitempty"`
+	Total  int          `json:"total, omitempty"`
 }
 
 type UpdateResource struct {
@@ -88,6 +107,11 @@ func main() {
 	port := os.Getenv(WEBPORT)
 	webURL := "http://" + host + ":" + port
 	node.WebBaseUrl = webURL
+
+	// Get foulkon url
+	foulkonhost := os.Getenv(FOULKONHOST)
+	foulkonport := os.Getenv(FOULKONPORT)
+	node.FoulkonBaseUrl = "http://" + foulkonhost + ":" + foulkonport + "/api/v1"
 
 	logger = &logrus.Logger{
 		Out:       os.Stdout,
@@ -130,6 +154,47 @@ func main() {
 // HANDLERS
 
 func HandlePage(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
+	if node.Token != "" {
+		request, err := http.NewRequest(http.MethodGet, node.FoulkonBaseUrl+"/users/"+node.UserId+"/groups", nil)
+		if err != nil {
+			logger.Error(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		request.SetBasicAuth("admin", "admin")
+
+		response, err := client.Do(request)
+		if err != nil {
+			logger.Error(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer response.Body.Close()
+		if response.StatusCode != http.StatusOK {
+			err := mainTemplate.Execute(w, node)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		}
+
+		buffer := new(bytes.Buffer)
+		if _, err := buffer.ReadFrom(response.Body); err != nil {
+			logger.Error(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		res := new(GetGroupsByUserIdResponse)
+		if err := json.Unmarshal(buffer.Bytes(), &res); err != nil {
+			logger.Info(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		node.Roles = res.Groups
+
+	}
 	err := mainTemplate.Execute(w, node)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

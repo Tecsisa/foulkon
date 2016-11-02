@@ -69,6 +69,8 @@ services:
         - APIPORT=8001
         - WEBHOST=localhost
         - WEBPORT=8101
+        - FOULKON_WORKER_HOST=foulkonworkercompose
+        - FOULKON_WORKER_PORT=8000
         - OIDC_CLIENT_ID=953874647871-gco7i6urt1i4clafgoeuo2gnicj2sg2q.apps.googleusercontent.com
         - OIDC_CLIENT_SECRET=T2P-Q8hxq5jfdR5EhPFGuFVs
         - OIDC_IDP_DISCOVERY=https://accounts.google.com

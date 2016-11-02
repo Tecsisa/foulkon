@@ -10,9 +10,23 @@
                     <td>{{.UserId}}</td>
                 </tr>
                 <tr>
-                    <td>Roles</td>
-                    <td>EMPTY YET</td>
+                    <th>Role</th>
+                    <th>Organization</th>
+                    <th>Joined</th>
                 </tr>
+                {{ $length := len .Roles }} {{ if eq $length 0 }}
+                <tr>
+                    <td>No roles yet</td>
+                </tr>
+                {{else}}
+                {{range $element := .Roles}}
+                <tr>
+                    <td>{{ $element.Name }}</td>
+                    <td>{{ $element.Org }}</td>
+                    <td>{{ $element.CreateAt.Format "Jan 02, 2006 15:04:05 UTC" }}</td>
+                </tr>
+                {{end}}
+                {{end}}
             </table>
         {{end}}
     </div>
