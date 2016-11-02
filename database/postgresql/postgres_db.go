@@ -162,11 +162,11 @@ func (u PostgresRepo) OrderByValidColumns(action string) []string {
 // ProxyResource table
 type ProxyResource struct {
 	ID     string `gorm:"primary_key"`
-	Host   string `gorm:"not null"`
-	Url    string `gorm:"not null;unique_index:idx_url_method"`
-	Method string `gorm:"not null;unique_index:idx_url_method"`
-	Urn    string `gorm:"not null;unique"`
-	Action string `gorm:"not null"`
+	Host   string `gorm:"not null;unique_index:idx_resource"`
+	Url    string `gorm:"not null;unique_index:idx_resource"`
+	Method string `gorm:"not null;unique_index:idx_resource"`
+	Urn    string `gorm:"not null;unique_index:idx_resource"`
+	Action string `gorm:"not null;unique_index:idx_resource"`
 }
 
 // ProxyResource's table name
