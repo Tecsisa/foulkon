@@ -9,7 +9,7 @@ import (
 	"github.com/Sirupsen/logrus/hooks/test"
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/middleware"
-	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 )
 
 // Aux connector
@@ -91,40 +91,25 @@ func TestAuthenticatorMiddleware_Action(t *testing.T) {
 		mw.Action(testHandler).ServeHTTP(w, req)
 		res := w.Result()
 		// Check status code
-		if res.StatusCode != testcase.expectedStatusCode {
-			t.Errorf("Test %v failed. Unexpected status code. (received/wanted) %v / %v", n, w.Code, testcase.expectedStatusCode)
-			continue
-		}
+		assert.Equal(t, testcase.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
+
 		// Check body
 		if res.StatusCode == http.StatusOK {
 			// Check logger
 			if testcase.expectedLog != "" {
-				if diff := pretty.Compare(testcase.expectedLog, hook.LastEntry().Message); diff != "" {
-					t.Errorf("Test %v failed. Received different logs (received/wanted) %v", n, diff)
-					return
-				}
+				assert.Equal(t, testcase.expectedLog, hook.LastEntry().Message, "Error in test case %v", n)
 			}
 
 			buffer := new(bytes.Buffer)
-			if _, err := buffer.ReadFrom(res.Body); err != nil {
-				t.Errorf("Test %v failed. Unexpected error reading response: %v.", n, err)
-				return
-			}
-			if diff := pretty.Compare(string(buffer.Bytes()), testMessage); diff != "" {
-				t.Errorf("Test %v failed. Received different errors (received/wanted) %v", n, diff)
-				return
-			}
+			_, err := buffer.ReadFrom(res.Body)
+			assert.Nil(t, err, "Error in test case %v", n)
 
+			assert.Equal(t, string(buffer.Bytes()), testMessage, "Error in test case %v", n)
 			// Check Header
 			userID := req.Header.Get(middleware.USER_ID_HEADER)
-			if diff := pretty.Compare(userID, testcase.userID); diff != "" {
-				t.Errorf("Test %v failed. Received different users (received/wanted) %v", n, diff)
-				return
-			}
+			assert.Equal(t, testcase.userID, userID, "Error in test case %v", n)
 		}
-
 	}
-
 }
 
 func TestAuthenticatorMiddleware_GetInfo(t *testing.T) {
@@ -167,14 +152,8 @@ func TestAuthenticatorMiddleware_GetInfo(t *testing.T) {
 		mw.GetInfo(req, mc)
 
 		// Check user id
-		if mc.UserId != testcase.userID {
-			t.Errorf("Test %v failed. Different user ids received: (received/wanted) %v/%v.", n, mc.UserId, testcase.userID)
-		}
-
+		assert.Equal(t, testcase.userID, mc.UserId, "Error in test case %v", n)
 		// Check admin privilege
-		if mc.Admin != testcase.admin {
-			t.Errorf("Test %v failed. Different user admin privilege: (received/wanted) %v/%v.", n, mc.Admin, testcase.admin)
-		}
-
+		assert.Equal(t, testcase.admin, mc.Admin, "Error in test case %v", n)
 	}
 }

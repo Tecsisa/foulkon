@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tecsisa/foulkon/database"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAuthAPI_AddGroup(t *testing.T) {
@@ -990,9 +991,7 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 
 		groups, total, err := testAPI.ListGroups(testcase.requestInfo, testcase.filter)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedGroups, groups)
-		if testcase.totalResult != total {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", testcase, testcase.totalResult, total)
-		}
+		assert.Equal(t, testcase.totalResult, total, "Error in test case %v", x)
 	}
 }
 
@@ -3413,9 +3412,7 @@ func TestAuthAPI_ListMembers(t *testing.T) {
 
 		members, total, err := testAPI.ListMembers(testcase.requestInfo, testcase.filter)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedMembers, members)
-		if testcase.totalResult != total {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", testcase, testcase.totalResult, total)
-		}
+		assert.Equal(t, testcase.totalResult, total, "Error in test case %v", x)
 	}
 }
 
@@ -4933,8 +4930,6 @@ func TestAuthAPI_ListAttachedGroupPolicies(t *testing.T) {
 
 		policies, total, err := testAPI.ListAttachedGroupPolicies(testcase.requestInfo, testcase.filter)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedPolicies, policies)
-		if testcase.totalResult != total {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", testcase, testcase.totalResult, total)
-		}
+		assert.Equal(t, testcase.totalResult, total, "Error in test case %v", x)
 	}
 }

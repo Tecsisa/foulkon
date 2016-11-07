@@ -69,17 +69,15 @@ func TestTransactionRequestLog(t *testing.T) {
 	testLogger, hook := test.NewNullLogger()
 	Log = testLogger
 	req, err := http.NewRequest(httpMethod, httpAddress+httpURI, nil)
-	if err != nil {
-		t.Errorf("Received unexpected error creating request: %v", err)
-	}
+	assert.Equal(t, nil, err)
 	TransactionRequestLog(requestID, userID, req)
 	assert.Equal(t, 1, len(hook.Entries))
 	assert.Equal(t, logrus.InfoLevel, hook.LastEntry().Level, "Error in test case")
-	assert.Equal(t, "", hook.LastEntry().Message, "Error in test case")
+	assert.Empty(t, hook.LastEntry().Message, "Error in test case")
 	assert.Equal(t, requestID, hook.LastEntry().Data["requestID"], "Error in test case")
 	assert.Equal(t, httpMethod, hook.LastEntry().Data["httpMethod"], "Error in test case")
 	assert.Equal(t, httpAddress+httpURI, hook.LastEntry().Data["httpURI"], "Error in test case")
-	assert.Equal(t, "", hook.LastEntry().Data["httpRemoteAddress"], "Error in test case")
+	assert.Empty(t, hook.LastEntry().Data["httpRemoteAddress"], "Error in test case")
 }
 
 func TestTransactionResponseErrorLog(t *testing.T) {
@@ -96,9 +94,7 @@ func TestTransactionResponseErrorLog(t *testing.T) {
 	testLogger, hook := test.NewNullLogger()
 	Log = testLogger
 	req, reqerr := http.NewRequest(httpMethod, httpAddress+httpURI, nil)
-	if reqerr != nil {
-		t.Errorf("Received unexpected error creating request: %v", reqerr)
-	}
+	assert.Nil(t, reqerr, "Error in test case")
 	TransactionResponseErrorLog(requestID, "", req, httpStatusCode, err)
 	assert.Equal(t, 1, len(hook.Entries))
 	assert.Equal(t, logrus.ErrorLevel, hook.LastEntry().Level, "Error in test case")
@@ -107,7 +103,7 @@ func TestTransactionResponseErrorLog(t *testing.T) {
 	assert.Equal(t, err.Code, hook.LastEntry().Data["errorCode"], "Error in test case")
 	assert.Equal(t, httpMethod, hook.LastEntry().Data["httpMethod"], "Error in test case")
 	assert.Equal(t, httpAddress+httpURI, hook.LastEntry().Data["httpURI"], "Error in test case")
-	assert.Equal(t, "", hook.LastEntry().Data["httpRemoteAddress"], "Error in test case")
+	assert.Empty(t, hook.LastEntry().Data["httpRemoteAddress"], "Error in test case")
 	assert.Equal(t, httpStatusCode, hook.LastEntry().Data["httpStatusCode"], "Error in test case")
 }
 
@@ -142,9 +138,7 @@ func TestTransactionProxyLog(t *testing.T) {
 	Log = testLogger
 	for n, testcase := range testcases {
 		req, err := http.NewRequest(testcase.httpMethod, testcase.httpAddress+testcase.httpURI, nil)
-		if err != nil {
-			t.Errorf("Test case %v. Received unexpected error creating request: %v", testcase, err)
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 		TransactionProxyLog(testcase.requestID, testcase.workerRequestId, req, testcase.message)
 		assert.Equal(t, 1, len(hook.Entries))
 		assert.Equal(t, logrus.InfoLevel, hook.LastEntry().Level, "Error in test case %v", n)
@@ -157,7 +151,7 @@ func TestTransactionProxyLog(t *testing.T) {
 		}
 		assert.Equal(t, testcase.httpMethod, hook.LastEntry().Data["httpMethod"], "Error in test case %v", n)
 		assert.Equal(t, testcase.httpAddress+testcase.httpURI, hook.LastEntry().Data["httpURI"], "Error in test case %v", n)
-		assert.Equal(t, "", hook.LastEntry().Data["httpRemoteAddress"], "Error in test case %v", n)
+		assert.Empty(t, hook.LastEntry().Data["httpRemoteAddress"], "Error in test case %v", n)
 		hook.Reset()
 	}
 }
@@ -202,9 +196,7 @@ func TestTransactionProxyErrorLogWithStatus(t *testing.T) {
 	Log = testLogger
 	for n, testcase := range testcases {
 		req, err := http.NewRequest(testcase.httpMethod, testcase.httpAddress+testcase.httpURI, nil)
-		if err != nil {
-			t.Errorf("Test case %v. Received unexpected error creating request: %v", testcase, err)
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 		TransactionProxyErrorLogWithStatus(testcase.requestID, testcase.workerRequestId, req, testcase.httpStatusCode, testcase.err)
 		assert.Equal(t, 1, len(hook.Entries))
 		assert.Equal(t, logrus.ErrorLevel, hook.LastEntry().Level, "Error in test case %v", n)
@@ -218,7 +210,7 @@ func TestTransactionProxyErrorLogWithStatus(t *testing.T) {
 		assert.Equal(t, testcase.err.Code, hook.LastEntry().Data["errorCode"], "Error in test case %v", n)
 		assert.Equal(t, testcase.httpMethod, hook.LastEntry().Data["httpMethod"], "Error in test case %v", n)
 		assert.Equal(t, testcase.httpAddress+testcase.httpURI, hook.LastEntry().Data["httpURI"], "Error in test case %v", n)
-		assert.Equal(t, "", hook.LastEntry().Data["httpRemoteAddress"], "Error in test case %v", n)
+		assert.Empty(t, hook.LastEntry().Data["httpRemoteAddress"], "Error in test case %v", n)
 		assert.Equal(t, testcase.httpStatusCode, hook.LastEntry().Data["httpStatusCode"], "Error in test case %v", n)
 		hook.Reset()
 	}

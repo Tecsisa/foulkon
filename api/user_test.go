@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tecsisa/foulkon/database"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAuthAPI_AddUser(t *testing.T) {
@@ -951,9 +952,7 @@ func TestAuthAPI_ListUsers(t *testing.T) {
 		testRepo.ArgsOut[GetUsersFilteredMethod][2] = testcase.GetUsersFilteredMethodErr
 		users, total, err := testAPI.ListUsers(testcase.requestInfo, testcase.filter)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedResult, users)
-		if testcase.totalResult != total {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", x, testcase.totalResult, total)
-		}
+		assert.Equal(t, testcase.totalResult, total, "Error in test case %v", x)
 	}
 
 }
@@ -2051,9 +2050,7 @@ func TestAuthAPI_ListGroupsByUser(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesMethodResult
 		groups, total, err := testAPI.ListGroupsByUser(testcase.requestInfo, testcase.filter)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedResponse, groups)
-		if testcase.totalResult != total {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", testcase, testcase.totalResult, total)
-		}
+		assert.Equal(t, testcase.totalResult, total, "Error in test case %v", x)
 	}
 
 }

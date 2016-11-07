@@ -275,7 +275,7 @@ func (g PostgresRepo) GetGroupMembers(groupID string, filter *api.Filter) ([]api
 				}
 			}
 
-			membersList[i] = GroupUser{
+			membersList[i] = &GroupUser{
 				User:     user,
 				CreateAt: time.Unix(0, m.CreateAt).UTC(),
 			}
@@ -372,7 +372,7 @@ func (g PostgresRepo) GetAttachedPolicies(groupID string, filter *api.Filter) ([
 				}
 			}
 
-			policies[i] = PolicyGroup{
+			policies[i] = &PolicyGroup{
 				Policy:   policy,
 				CreateAt: time.Unix(0, r.CreateAt).UTC(),
 			}

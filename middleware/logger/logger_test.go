@@ -10,7 +10,6 @@ import (
 	"github.com/Sirupsen/logrus/hooks/test"
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/middleware"
-	"github.com/kylelemons/godebug/pretty"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,28 +30,19 @@ func TestRequestLoggerMiddleware_Action(t *testing.T) {
 	mw.Action(testHandler).ServeHTTP(w, req)
 	res := w.Result()
 	// Check status code
-	if res.StatusCode != http.StatusOK {
-		t.Errorf("Test failed. Unexpected status code. (received/wanted) %v / %v", w.Code, http.StatusOK)
-		return
-	}
+	assert.Equal(t, http.StatusOK, res.StatusCode, "Error in test")
+
 	// Check body
 	buffer := new(bytes.Buffer)
-	if _, err := buffer.ReadFrom(res.Body); err != nil {
-		t.Errorf("Test failed. Unexpected error reading response: %v.", err)
-		return
-	}
-	if diff := pretty.Compare(string(buffer.Bytes()), testMessage); diff != "" {
-		t.Errorf("Test failed. Received different errors (received/wanted) %v", diff)
-		return
-	}
+	_, err := buffer.ReadFrom(res.Body)
+	assert.Nil(t, err, "Error in test")
+
+	assert.Equal(t, string(buffer.Bytes()), testMessage)
 
 	// Check context
 	mc := new(middleware.MiddlewareContext)
 	mw.GetInfo(req, mc)
-	if diff := pretty.Compare(mc, new(middleware.MiddlewareContext)); diff != "" {
-		t.Errorf("Test failed. Received different contexts (received/wanted) %v", diff)
-		return
-	}
+	assert.Equal(t, new(middleware.MiddlewareContext), mc)
 
 	// Check logger output
 	assert.Equal(t, 1, len(hook.Entries))

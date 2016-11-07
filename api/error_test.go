@@ -1,6 +1,10 @@
 package api
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestError(t *testing.T) {
 	testcases := map[string]struct {
@@ -33,10 +37,6 @@ func TestError(t *testing.T) {
 	}
 
 	for x, testcase := range testcases {
-		if testcase.err.Error() != testcase.expectedMessage {
-			t.Errorf("Test %v failed. Received different messages (wanted:%v / received:%v)",
-				x, testcase.expectedMessage, testcase.err.Error())
-			continue
-		}
+		assert.Equal(t, testcase.expectedMessage, testcase.err.Error(), "Error in test case %v", x)
 	}
 }

@@ -11,7 +11,7 @@ import (
 	"fmt"
 
 	"github.com/Tecsisa/foulkon/api"
-	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWorkerHandler_HandleAddUser(t *testing.T) {
@@ -126,10 +126,7 @@ func TestWorkerHandler_HandleAddUser(t *testing.T) {
 		var body *bytes.Buffer
 		if test.request != nil {
 			jsonObject, err := json.Marshal(test.request)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected marshalling api request %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			body = bytes.NewBuffer(jsonObject)
 		}
 		if body == nil {
@@ -138,64 +135,35 @@ func TestWorkerHandler_HandleAddUser(t *testing.T) {
 
 		url := fmt.Sprintf(server.URL + USER_ROOT_URL)
 		req, err := http.NewRequest(http.MethodPost, url, body)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		res, err := client.Do(req)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		if test.request != nil {
 			// Check received parameters
-			if testApi.ArgsIn[AddUserMethod][1] != test.request.ExternalID {
-				t.Errorf("Test case %v. Received different ExternalID (wanted:%v / received:%v)", n, test.request.ExternalID, testApi.ArgsIn[AddUserMethod][1])
-				continue
-			}
-			if testApi.ArgsIn[AddUserMethod][2] != test.request.Path {
-				t.Errorf("Test case %v. Received different Path (wanted:%v / received:%v)", n, test.request.Path, testApi.ArgsIn[AddUserMethod][2])
-				continue
-			}
+			assert.Equal(t, test.request.ExternalID, testApi.ArgsIn[AddUserMethod][1], "Error in test case %v", n)
+			assert.Equal(t, test.request.Path, testApi.ArgsIn[AddUserMethod][2], "Error in test case %v", n)
 		}
 
 		// check status code
-		if test.expectedStatusCode != res.StatusCode {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
-			continue
-		}
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
 
 		switch res.StatusCode {
 		case http.StatusCreated:
-			response := api.User{}
+			response := &api.User{}
 			err = json.NewDecoder(res.Body).Decode(&response)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, response, "Error in test case %v", n)
 		case http.StatusInternalServerError: // Empty message so continue
 			continue
 		default:
 			apiError := api.Error{}
 			err = json.NewDecoder(res.Body).Decode(&apiError)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
 		}
 	}
 }
@@ -301,64 +269,38 @@ func TestWorkerHandler_HandleGetUserByExternalID(t *testing.T) {
 
 		url := fmt.Sprintf(server.URL+USER_ROOT_URL+"/%v", test.externalID)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		q := req.URL.Query()
 		q.Add("Offset", test.offset)
 		req.URL.RawQuery = q.Encode()
 
 		res, err := client.Do(req)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		if !test.ignoreArgsIn {
 			// Check received parameters
-			if testApi.ArgsIn[GetUserByExternalIdMethod][1] != test.externalID {
-				t.Errorf("Test case %v. Received different ExternalID (wanted:%v / received:%v)", n, test.externalID, testApi.ArgsIn[GetUserByExternalIdMethod][1])
-				continue
-			}
+			assert.Equal(t, test.externalID, testApi.ArgsIn[GetUserByExternalIdMethod][1], "Error in test case %v", n)
 		}
 
 		// check status code
-		if test.expectedStatusCode != res.StatusCode {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
-			continue
-		}
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
 
 		switch res.StatusCode {
 		case http.StatusOK:
-			response := api.User{}
+			response := &api.User{}
 			err = json.NewDecoder(res.Body).Decode(&response)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, response, "Error in test case %v", n)
 		case http.StatusInternalServerError: // Empty message so continue
 			continue
 		default:
 			apiError := api.Error{}
 			err = json.NewDecoder(res.Body).Decode(&apiError)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
 		}
 	}
 }
@@ -456,65 +398,40 @@ func TestWorkerHandler_HandleListUsers(t *testing.T) {
 
 		url := fmt.Sprintf(server.URL + USER_ROOT_URL)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		addQueryParams(test.filter, req)
 
 		res, err := client.Do(req)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
+
 		if !test.ignoreArgsIn {
 			// Check received parameter
 			filterData, ok := testApi.ArgsIn[ListUsersMethod][1].(*api.Filter)
 			if ok {
 				// Check result
-				if diff := pretty.Compare(filterData, test.filter); diff != "" {
-					t.Errorf("Test %v failed. Received different filters (received/wanted) %v", n, diff)
-					continue
-				}
+				assert.Equal(t, test.filter, filterData, "Error in test case %v", n)
 			}
 		}
 
 		// check status code
-		if test.expectedStatusCode != res.StatusCode {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
-			continue
-		}
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
 
 		switch res.StatusCode {
 		case http.StatusOK:
 			getUserExternalIDsResponse := GetUserExternalIDsResponse{}
 			err = json.NewDecoder(res.Body).Decode(&getUserExternalIDsResponse)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(getUserExternalIDsResponse, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, getUserExternalIDsResponse, "Error in test case %v", n)
 		case http.StatusInternalServerError: // Empty message so continue
 			continue
 		default:
 			apiError := api.Error{}
 			err = json.NewDecoder(res.Body).Decode(&apiError)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
 		}
 	}
 }
@@ -626,10 +543,7 @@ func TestWorkerHandler_HandleUpdateUser(t *testing.T) {
 		var body *bytes.Buffer
 		if test.request != nil {
 			jsonObject, err := json.Marshal(test.request)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected marshalling api request %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			body = bytes.NewBuffer(jsonObject)
 		}
 		if body == nil {
@@ -638,64 +552,35 @@ func TestWorkerHandler_HandleUpdateUser(t *testing.T) {
 
 		url := fmt.Sprintf(server.URL + USER_ROOT_URL + "/userid")
 		req, err := http.NewRequest(http.MethodPut, url, body)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		res, err := client.Do(req)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		if test.request != nil {
 			// Check received parameters
-			if testApi.ArgsIn[UpdateUserMethod][1] != "userid" {
-				t.Errorf("Test case %v. Received different ExternalID (wanted:%v / received:%v)", n, "userid", testApi.ArgsIn[UpdateUserMethod][1])
-				continue
-			}
-			if testApi.ArgsIn[UpdateUserMethod][2] != test.request.Path {
-				t.Errorf("Test case %v. Received different Path (wanted:%v / received:%v)", n, test.request.Path, testApi.ArgsIn[UpdateUserMethod][2])
-				continue
-			}
+			assert.Equal(t, "userid", testApi.ArgsIn[UpdateUserMethod][1], "Error in test case %v", n)
+			assert.Equal(t, test.request.Path, testApi.ArgsIn[UpdateUserMethod][2], "Error in test case %v", n)
 		}
 
 		// check status code
-		if test.expectedStatusCode != res.StatusCode {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
-			continue
-		}
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
 
 		switch res.StatusCode {
 		case http.StatusOK:
-			response := api.User{}
+			response := &api.User{}
 			err = json.NewDecoder(res.Body).Decode(&response)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, response, "Error in test case %v", n)
 		case http.StatusInternalServerError: // Empty message so continue
 			continue
 		default:
 			apiError := api.Error{}
 			err = json.NewDecoder(res.Body).Decode(&apiError)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
 		}
 	}
 }
@@ -784,34 +669,22 @@ func TestWorkerHandler_HandleRemoveUser(t *testing.T) {
 
 		url := fmt.Sprintf(server.URL+USER_ROOT_URL+"/%v", test.externalID)
 		req, err := http.NewRequest(http.MethodDelete, url, nil)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		q := req.URL.Query()
 		q.Add("Offset", test.offset)
 		req.URL.RawQuery = q.Encode()
 
 		res, err := client.Do(req)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		if !test.ignoreArgsIn {
 			// Check received parameters
-			if testApi.ArgsIn[RemoveUserMethod][1] != test.externalID {
-				t.Errorf("Test case %v. Received different ExternalID (wanted:%v / received:%v)", n, test.externalID, testApi.ArgsIn[RemoveUserMethod][1])
-				continue
-			}
+			assert.Equal(t, test.externalID, testApi.ArgsIn[RemoveUserMethod][1], "Error in test case %v", n)
 		}
 
 		// check status code
-		if test.expectedStatusCode != res.StatusCode {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
-			continue
-		}
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
 
 		switch res.StatusCode {
 		case http.StatusNoContent:
@@ -822,16 +695,9 @@ func TestWorkerHandler_HandleRemoveUser(t *testing.T) {
 		default:
 			apiError := api.Error{}
 			err = json.NewDecoder(res.Body).Decode(&apiError)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
 		}
 	}
 }
@@ -965,65 +831,40 @@ func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
 
 		url := fmt.Sprintf(server.URL+USER_ROOT_URL+"/%v/groups", test.filter.ExternalID)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		addQueryParams(test.filter, req)
 
 		res, err := client.Do(req)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
+
 		if !test.ignoreArgsIn {
 			// Check received parameters
 			filterData, ok := testApi.ArgsIn[ListGroupsByUserMethod][1].(*api.Filter)
 			if ok {
 				// Check result
-				if diff := pretty.Compare(filterData, test.filter); diff != "" {
-					t.Errorf("Test %v failed. Received different filters (received/wanted) %v", n, diff)
-					continue
-				}
+				assert.Equal(t, test.filter, filterData, "Error in test case %v", n)
 			}
 		}
 
 		// check status code
-		if test.expectedStatusCode != res.StatusCode {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
-			continue
-		}
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
 
 		switch res.StatusCode {
 		case http.StatusOK:
 			getGroupsByUserIdResponse := GetGroupsByUserIdResponse{}
 			err = json.NewDecoder(res.Body).Decode(&getGroupsByUserIdResponse)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(getGroupsByUserIdResponse, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, getGroupsByUserIdResponse, "Error in test case %v", n)
 		case http.StatusInternalServerError: // Empty message so continue
 			continue
 		default:
 			apiError := api.Error{}
 			err = json.NewDecoder(res.Body).Decode(&apiError)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
 		}
 	}
 }

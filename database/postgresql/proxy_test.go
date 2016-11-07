@@ -5,7 +5,7 @@ import (
 
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/database"
-	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPostgresRepo_GetProxyResources(t *testing.T) {
@@ -55,28 +55,20 @@ func TestPostgresRepo_GetProxyResources(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean proxy_resource database
-		cleanProxyResourcesTable()
+		cleanProxyResourcesTable(t, n)
 
 		// Insert previous data
 		if test.previousResources != nil {
 			for _, previousResource := range test.previousResources {
-				if err := insertProxyResource(previousResource); err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting previous proxy resources: %v", n, err)
-					continue
-				}
+				insertProxyResource(t, n, previousResource)
 			}
 		}
 
 		// Call to repository to get resources
 		res, err := repoDB.GetProxyResources()
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
+
 		// Check response
-		if diff := pretty.Compare(res, test.expectedResponse); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
+		assert.Equal(t, test.expectedResponse, res, "Error in test case %v", n)
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Tecsisa/foulkon/database"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetAuthorizedUsers(t *testing.T) {
@@ -87,11 +88,7 @@ func TestGetAuthorizedUsers(t *testing.T) {
 		checkMethodResponse(t, n, test.wantError, err, test.usersAuthorized, authorizedUsers)
 		if !test.requestInfo.Admin {
 			// Check received authenticated user in method GetUserByExternalID
-			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.requestInfo.Identifier {
-				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-					n, test.requestInfo.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
-				continue
-			}
+			assert.Equal(t, test.requestInfo.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0], "Error in test case %v", n)
 		}
 	}
 }
@@ -175,11 +172,7 @@ func TestGetAuthorizedGroups(t *testing.T) {
 		checkMethodResponse(t, n, test.wantError, err, test.groupsAuthorized, authorizedGroups)
 		if !test.requestInfo.Admin {
 			// Check received authenticated user in method GetUserByExternalID
-			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.requestInfo.Identifier {
-				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-					n, test.requestInfo.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
-				continue
-			}
+			assert.Equal(t, test.requestInfo.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0], "Error in test case %v", n)
 		}
 	}
 }
@@ -263,11 +256,7 @@ func TestGetAuthorizedPolicies(t *testing.T) {
 		checkMethodResponse(t, n, test.wantError, err, test.policiesAuthorized, authorizedPolicies)
 		if !test.requestInfo.Admin {
 			// Check received authenticated user in method GetUserByExternalID
-			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.requestInfo.Identifier {
-				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-					n, test.requestInfo.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
-				continue
-			}
+			assert.Equal(t, test.requestInfo.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0], "Error in test case %v", n)
 		}
 	}
 }
@@ -622,11 +611,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 		checkMethodResponse(t, n, test.wantError, err, test.expectedResources, resources)
 		if !test.requestInfo.Admin {
 			// Check received authenticated user in method GetUserByExternalID
-			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.requestInfo.Identifier {
-				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-					n, test.requestInfo.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
-				continue
-			}
+			assert.Equal(t, test.requestInfo.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0], "Error in test case %v", n)
 		}
 	}
 }
@@ -860,11 +845,7 @@ func TestGetAuthorizedResources(t *testing.T) {
 		checkMethodResponse(t, n, test.wantError, err, test.resourcesAuthorized, authorizedResources)
 		if !test.requestInfo.Admin {
 			// Check received authenticated user in method GetUserByExternalID
-			if testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.requestInfo.Identifier {
-				t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-					n, test.requestInfo.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
-				continue
-			}
+			assert.Equal(t, test.requestInfo.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0], "Error in test case %v", n)
 		}
 	}
 }
@@ -985,6 +966,7 @@ func TestGetRestrictions(t *testing.T) {
 				AllowedUrnPrefixes: []string{
 					GetUrnPrefix("example", RESOURCE_GROUP, "/path1/"),
 				},
+				AllowedFullUrns:   []string{},
 				DeniedFullUrns:    []string{},
 				DeniedUrnPrefixes: []string{},
 			},
@@ -1042,6 +1024,7 @@ func TestGetRestrictions(t *testing.T) {
 					GetUrnPrefix("example", RESOURCE_GROUP, "/path1/"),
 					GetUrnPrefix("example", RESOURCE_GROUP, "/path2/"),
 				},
+				AllowedFullUrns: []string{},
 				DeniedFullUrns: []string{
 					CreateUrn("example", RESOURCE_GROUP, "/path1/", "groupDeny"),
 					CreateUrn("example", RESOURCE_GROUP, "/path2/", "groupDeny"),
@@ -1113,23 +1096,12 @@ func TestGetRestrictions(t *testing.T) {
 
 		restrictions, err := testAPI.getRestrictions(test.authUserID, test.action, test.resourceUrn)
 		checkMethodResponse(t, n, test.wantError, err, test.expectedRestrictions, restrictions)
-		if test.wantError == nil && testRepo.ArgsIn[GetUserByExternalIDMethod][0] != test.authUserID {
-			t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-				n, test.authUserID, testRepo.ArgsIn[GetUserByExternalIDMethod][0])
-			continue
-		}
-
-		if param := testRepo.ArgsIn[GetGroupsByUserIDMethod][0]; test.wantError == nil && test.authUserID != "" && param != test.authUserID {
-			t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-				n, test.authUserID, testRepo.ArgsIn[GetGroupsByUserIDMethod][0])
-			continue
-		}
-
-		if param := testRepo.ArgsIn[GetAttachedPoliciesMethod][0]; test.wantError == nil && test.getGroupsByUserIDResult != nil &&
-			param != test.getGroupsByUserIDResult[0].Group.ID {
-			t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-				n, test.authUserID, testRepo.ArgsIn[GetAttachedPoliciesMethod][0])
-			continue
+		if test.wantError == nil {
+			assert.Equal(t, test.authUserID, testRepo.ArgsIn[GetUserByExternalIDMethod][0], "Error in test case %v", n)
+			assert.Equal(t, test.authUserID, testRepo.ArgsIn[GetGroupsByUserIDMethod][0], "Error in test case %v", n)
+			if test.getGroupsByUserIDResult != nil {
+				assert.Equal(t, test.getGroupsByUserIDResult[0].Group.ID, testRepo.ArgsIn[GetAttachedPoliciesMethod][0], "Error in test case %v", n)
+			}
 		}
 	}
 }
@@ -1190,11 +1162,7 @@ func TestGetGroupsByUser(t *testing.T) {
 
 		groups, err := testAPI.getGroupsByUser(test.userID)
 		checkMethodResponse(t, n, test.wantError, err, test.expectedGroups, groups)
-		if param := testRepo.ArgsIn[GetGroupsByUserIDMethod][0]; param != test.userID {
-			t.Errorf("Test %v failed. Received different user identifiers (wanted:%v / received:%v)",
-				n, test.userID, testRepo.ArgsIn[GetGroupsByUserIDMethod][0])
-			continue
-		}
+		assert.Equal(t, test.userID, testRepo.ArgsIn[GetGroupsByUserIDMethod][0], "Error in test case %v", n)
 	}
 }
 
@@ -1278,11 +1246,8 @@ func TestGetPoliciesByGroups(t *testing.T) {
 
 		policies, err := testAPI.getPoliciesByGroups(test.groups)
 		checkMethodResponse(t, n, test.wantError, err, test.expectedPolicies, policies)
-		if param := testRepo.ArgsIn[GetAttachedPoliciesMethod][0]; test.wantError == nil && len(test.groups) > 0 &&
-			param != test.groups[len(test.groups)-1].ID {
-			t.Errorf("Test %v failed. Received different group identifiers (wanted:%v / received:%v)",
-				n, test.groups[len(test.groups)-1].ID, testRepo.ArgsIn[GetAttachedPoliciesMethod][0])
-			continue
+		if test.wantError == nil && len(test.groups) > 0 {
+			assert.Equal(t, testRepo.ArgsIn[GetAttachedPoliciesMethod][0], test.groups[len(test.groups)-1].ID, "Error in test case %v", n)
 		}
 	}
 }

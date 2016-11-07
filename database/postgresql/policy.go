@@ -316,7 +316,7 @@ func (p PostgresRepo) GetAttachedGroups(policyID string, filter *api.Filter) ([]
 				}
 			}
 
-			groups[i] = PolicyGroup{
+			groups[i] = &PolicyGroup{
 				Group:    group,
 				CreateAt: time.Unix(0, r.CreateAt).UTC(),
 			}

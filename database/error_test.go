@@ -3,7 +3,7 @@ package database
 import (
 	"testing"
 
-	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestError(t *testing.T) {
@@ -37,10 +37,6 @@ func TestError(t *testing.T) {
 	}
 
 	for x, testcase := range testcases {
-		if diff := pretty.Compare(testcase.expectedMessage, testcase.error.Error()); diff != "" {
-			t.Errorf("Test %v failed. Received different messages (wanted / received) %v",
-				x, diff)
-			continue
-		}
+		assert.Equal(t, testcase.expectedMessage, testcase.error.Error(), "Error in test case %v", x)
 	}
 }

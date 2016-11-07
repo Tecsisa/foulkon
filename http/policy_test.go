@@ -10,7 +10,7 @@ import (
 	"fmt"
 
 	"github.com/Tecsisa/foulkon/api"
-	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
@@ -21,7 +21,7 @@ func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
 		request *CreatePolicyRequest
 		// Expected result
 		expectedStatusCode int
-		expectedResponse   *api.Policy
+		expectedResponse   api.Policy
 		expectedError      api.Error
 		// Manager Results
 		createPolicyResult *api.Policy
@@ -66,7 +66,7 @@ func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
 				},
 			},
 			expectedStatusCode: http.StatusCreated,
-			expectedResponse: &api.Policy{
+			expectedResponse: api.Policy{
 				ID:       "test1",
 				Name:     "test",
 				Org:      "org1",
@@ -206,10 +206,7 @@ func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
 		var body *bytes.Buffer
 		if test.request != nil {
 			jsonObject, err := json.Marshal(test.request)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected marshalling api request %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			body = bytes.NewBuffer(jsonObject)
 		}
 		if body == nil {
@@ -218,71 +215,37 @@ func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
 
 		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies", test.org)
 		req, err := http.NewRequest(http.MethodPost, url, body)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		res, err := client.Do(req)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		if test.request != nil {
 			// Check received parameters
-			if testApi.ArgsIn[AddPolicyMethod][1] != test.request.Name {
-				t.Errorf("Test case %v. Received different name (wanted:%v / received:%v)", n, test.request.Name, testApi.ArgsIn[AddPolicyMethod][1])
-				continue
-			}
-			if testApi.ArgsIn[AddPolicyMethod][2] != test.request.Path {
-				t.Errorf("Test case %v. Received different path (wanted:%v / received:%v)", n, test.request.Path, testApi.ArgsIn[AddPolicyMethod][2])
-				continue
-			}
-			if testApi.ArgsIn[AddPolicyMethod][3] != test.org {
-				t.Errorf("Test case %v. Received different org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[AddPolicyMethod][3])
-				continue
-			}
-			if diff := pretty.Compare(testApi.ArgsIn[AddPolicyMethod][4], test.request.Statements); diff != "" {
-				t.Errorf("Test %v failed. Received different statements (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.request.Name, testApi.ArgsIn[AddPolicyMethod][1], "Error in test case %v", n)
+			assert.Equal(t, test.request.Path, testApi.ArgsIn[AddPolicyMethod][2], "Error in test case %v", n)
+			assert.Equal(t, test.org, testApi.ArgsIn[AddPolicyMethod][3], "Error in test case %v", n)
+			assert.Equal(t, test.request.Statements, testApi.ArgsIn[AddPolicyMethod][4], "Error in test case %v", n)
 		}
 
 		// check status code
-		if test.expectedStatusCode != res.StatusCode {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
-			continue
-		}
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
 
 		switch res.StatusCode {
 		case http.StatusCreated:
 			response := api.Policy{}
 			err = json.NewDecoder(res.Body).Decode(&response)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, response, "Error in test case %v", n)
 		case http.StatusInternalServerError: // Empty message so continue
 			continue
 		default:
 			apiError := api.Error{}
 			err = json.NewDecoder(res.Body).Decode(&apiError)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
-				continue
-			}
-			// Check result
-			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check error
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
 		}
 	}
 }
@@ -297,8 +260,8 @@ func TestWorkerHandler_HandleGetPolicyByName(t *testing.T) {
 		ignoreArgsIn bool
 		// Expected result
 		expectedStatusCode int
-		expectedResponse   *api.Policy
-		expectedError      *api.Error
+		expectedResponse   api.Policy
+		expectedError      api.Error
 		// Manager Results
 		getPolicyByNameResult *api.Policy
 		// Manager Errors
@@ -308,7 +271,7 @@ func TestWorkerHandler_HandleGetPolicyByName(t *testing.T) {
 			org:                "org1",
 			policyName:         "p1",
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: &api.Policy{
+			expectedResponse: api.Policy{
 				ID:       "test1",
 				Name:     "test",
 				Org:      "org1",
@@ -359,7 +322,7 @@ func TestWorkerHandler_HandleGetPolicyByName(t *testing.T) {
 				Code:    api.INVALID_PARAMETER_ERROR,
 				Message: "Invalid parameter: Offset -1",
 			},
-			expectedError: &api.Error{
+			expectedError: api.Error{
 				Code:    api.INVALID_PARAMETER_ERROR,
 				Message: "Invalid parameter: Offset -1",
 			},
@@ -371,7 +334,7 @@ func TestWorkerHandler_HandleGetPolicyByName(t *testing.T) {
 			getPolicyByNameErr: &api.Error{
 				Code: api.POLICY_BY_ORG_AND_NAME_NOT_FOUND,
 			},
-			expectedError: &api.Error{
+			expectedError: api.Error{
 				Code: api.POLICY_BY_ORG_AND_NAME_NOT_FOUND,
 			},
 		},
@@ -382,7 +345,7 @@ func TestWorkerHandler_HandleGetPolicyByName(t *testing.T) {
 			getPolicyByNameErr: &api.Error{
 				Code: api.UNAUTHORIZED_RESOURCES_ERROR,
 			},
-			expectedError: &api.Error{
+			expectedError: api.Error{
 				Code: api.UNAUTHORIZED_RESOURCES_ERROR,
 			},
 		},
@@ -393,7 +356,7 @@ func TestWorkerHandler_HandleGetPolicyByName(t *testing.T) {
 			getPolicyByNameErr: &api.Error{
 				Code: api.INVALID_PARAMETER_ERROR,
 			},
-			expectedError: &api.Error{
+			expectedError: api.Error{
 				Code: api.INVALID_PARAMETER_ERROR,
 			},
 		},
@@ -404,7 +367,7 @@ func TestWorkerHandler_HandleGetPolicyByName(t *testing.T) {
 			getPolicyByNameErr: &api.Error{
 				Code: api.UNKNOWN_API_ERROR,
 			},
-			expectedError: &api.Error{
+			expectedError: api.Error{
 				Code: api.UNKNOWN_API_ERROR,
 			},
 		},
@@ -419,66 +382,39 @@ func TestWorkerHandler_HandleGetPolicyByName(t *testing.T) {
 
 		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies/%v", test.org, test.policyName)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		q := req.URL.Query()
 		q.Add("Offset", test.offset)
 		req.URL.RawQuery = q.Encode()
 
 		res, err := client.Do(req)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		if !test.ignoreArgsIn {
 			// Check received parameters
-			if testApi.ArgsIn[GetPolicyByNameMethod][1] != test.org {
-				t.Errorf("Test case %v. Received different org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[GetPolicyByNameMethod][1])
-				continue
-			}
-			if testApi.ArgsIn[GetPolicyByNameMethod][2] != test.policyName {
-				t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.policyName, testApi.ArgsIn[GetPolicyByNameMethod][2])
-				continue
-			}
+			assert.Equal(t, test.org, testApi.ArgsIn[GetPolicyByNameMethod][1], "Error in test case %v", n)
+			assert.Equal(t, test.policyName, testApi.ArgsIn[GetPolicyByNameMethod][2], "Error in test case %v", n)
 		}
 
 		// check status code
-		if test.expectedStatusCode != res.StatusCode {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
-			continue
-		}
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
 
 		switch res.StatusCode {
 		case http.StatusOK:
 			response := api.Policy{}
 			err = json.NewDecoder(res.Body).Decode(&response)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, response, "Error in test case %v", n)
 		case http.StatusInternalServerError: // Empty message so continue
 			continue
 		default:
 			apiError := api.Error{}
 			err = json.NewDecoder(res.Body).Decode(&apiError)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
-				continue
-			}
-			// Check result
-			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check error
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
 		}
 	}
 }
@@ -607,65 +543,39 @@ func TestWorkerHandler_HandleListPolicies(t *testing.T) {
 
 		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies", test.filter.Org)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		addQueryParams(test.filter, req)
 
 		res, err := client.Do(req)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		if !test.ignoreArgsIn {
 			// Check received parameters
 			filterData, ok := testApi.ArgsIn[ListPoliciesMethod][1].(*api.Filter)
 			if ok {
 				// Check result
-				if diff := pretty.Compare(filterData, test.filter); diff != "" {
-					t.Errorf("Test %v failed. Received different filters (received/wanted) %v", n, diff)
-					continue
-				}
+				assert.Equal(t, test.filter, filterData, "Error in test case %v", n)
 			}
 		}
 
-		if test.expectedStatusCode != res.StatusCode {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
-			continue
-		}
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
 
 		switch res.StatusCode {
 		case http.StatusOK:
 			listPoliciesResponse := ListPoliciesResponse{}
 			err = json.NewDecoder(res.Body).Decode(&listPoliciesResponse)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(listPoliciesResponse, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, listPoliciesResponse, "Error in test case %v", n)
 		case http.StatusInternalServerError: // Empty message so continue
 			continue
 		default:
 			apiError := api.Error{}
 			err = json.NewDecoder(res.Body).Decode(&apiError)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
-				continue
-			}
-			// Check result
-			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check error
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
 		}
 	}
 }
@@ -779,64 +689,40 @@ func TestWorkerHandler_HandleListAllPolicies(t *testing.T) {
 
 		url := fmt.Sprintf(server.URL + API_VERSION_1 + "/policies")
 		req, err := http.NewRequest(http.MethodGet, url, nil)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		addQueryParams(test.filter, req)
 
 		res, err := client.Do(req)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
+
 		if !test.ignoreArgsIn {
 			// Check received parameters
 			filterData, ok := testApi.ArgsIn[ListPoliciesMethod][1].(*api.Filter)
 			if ok {
 				// Check result
-				if diff := pretty.Compare(filterData, test.filter); diff != "" {
-					t.Errorf("Test %v failed. Received different filters (received/wanted) %v", n, diff)
-					continue
-				}
+				assert.Equal(t, test.filter, filterData, "Error in test case %v", n)
 			}
 		}
 
-		if test.expectedStatusCode != res.StatusCode {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
-			continue
-		}
+		// check status code
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
 
 		switch res.StatusCode {
 		case http.StatusOK:
 			listAllPoliciesResponse := ListAllPoliciesResponse{}
 			err = json.NewDecoder(res.Body).Decode(&listAllPoliciesResponse)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(listAllPoliciesResponse, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, listAllPoliciesResponse, "Error in test case %v", n)
 		case http.StatusInternalServerError: // Empty message so continue
 			continue
 		default:
 			apiError := api.Error{}
 			err = json.NewDecoder(res.Body).Decode(&apiError)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
 		}
 	}
 }
@@ -849,7 +735,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 		request *UpdatePolicyRequest
 		// Expected result
 		expectedStatusCode int
-		expectedResponse   *api.Policy
+		expectedResponse   api.Policy
 		expectedError      api.Error
 		// Manager Results
 		updatePolicyResult *api.Policy
@@ -874,7 +760,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 				},
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: &api.Policy{
+			expectedResponse: api.Policy{
 				ID:       "test1",
 				Name:     "policy1",
 				Path:     "/path/",
@@ -1051,10 +937,7 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 		var body *bytes.Buffer
 		if test.request != nil {
 			jsonObject, err := json.Marshal(test.request)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected marshalling api request %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			body = bytes.NewBuffer(jsonObject)
 		}
 		if body == nil {
@@ -1063,75 +946,38 @@ func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
 
 		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies/policy1", test.org)
 		req, err := http.NewRequest(http.MethodPut, url, body)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		res, err := client.Do(req)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		if test.request != nil {
 			// Check received parameters
-			if testApi.ArgsIn[UpdatePolicyMethod][1] != test.org {
-				t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[UpdatePolicyMethod][1])
-				continue
-			}
-			if testApi.ArgsIn[UpdatePolicyMethod][2] != "policy1" {
-				t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, "policy1", testApi.ArgsIn[UpdatePolicyMethod][2])
-				continue
-			}
-			if testApi.ArgsIn[UpdatePolicyMethod][3] != test.request.Name {
-				t.Errorf("Test case %v. Received different newName (wanted:%v / received:%v)", n, test.request.Name, testApi.ArgsIn[UpdatePolicyMethod][3])
-				continue
-			}
-			if testApi.ArgsIn[UpdatePolicyMethod][4] != test.request.Path {
-				t.Errorf("Test case %v. Received different Path (wanted:%v / received:%v)", n, test.request.Path, testApi.ArgsIn[UpdatePolicyMethod][4])
-				continue
-			}
-			if diff := pretty.Compare(testApi.ArgsIn[UpdatePolicyMethod][5], test.request.Statements); diff != "" {
-				t.Errorf("Test %v failed. Received different statements (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.org, testApi.ArgsIn[UpdatePolicyMethod][1], "Error in test case %v", n)
+			assert.Equal(t, "policy1", testApi.ArgsIn[UpdatePolicyMethod][2], "Error in test case %v", n)
+			assert.Equal(t, test.request.Name, testApi.ArgsIn[UpdatePolicyMethod][3], "Error in test case %v", n)
+			assert.Equal(t, test.request.Path, testApi.ArgsIn[UpdatePolicyMethod][4], "Error in test case %v", n)
+			assert.Equal(t, test.request.Statements, testApi.ArgsIn[UpdatePolicyMethod][5], "Error in test case %v", n)
 		}
 
 		// check status code
-		if test.expectedStatusCode != res.StatusCode {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
-			continue
-		}
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
 
 		switch res.StatusCode {
 		case http.StatusOK:
 			response := api.Policy{}
 			err = json.NewDecoder(res.Body).Decode(&response)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, response, "Error in test case %v", n)
 		case http.StatusInternalServerError: // Empty message so continue
 			continue
 		default:
 			apiError := api.Error{}
 			err = json.NewDecoder(res.Body).Decode(&apiError)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
-				continue
-			}
-			// Check result
-			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check error
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
 		}
 	}
 }
@@ -1223,38 +1069,23 @@ func TestWorkerHandler_HandleRemovePolicy(t *testing.T) {
 
 		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies/%v", test.org, test.policyName)
 		req, err := http.NewRequest(http.MethodDelete, url, nil)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		q := req.URL.Query()
 		q.Add("Offset", test.offset)
 		req.URL.RawQuery = q.Encode()
 
 		res, err := client.Do(req)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		if !test.ignoreArgsIn {
 			// Check received parameters
-			if testApi.ArgsIn[RemovePolicyMethod][1] != test.org {
-				t.Errorf("Test case %v. Received different Org (wanted:%v / received:%v)", n, test.org, testApi.ArgsIn[RemovePolicyMethod][1])
-				continue
-			}
-			if testApi.ArgsIn[RemovePolicyMethod][2] != test.policyName {
-				t.Errorf("Test case %v. Received different Name (wanted:%v / received:%v)", n, test.policyName, testApi.ArgsIn[RemovePolicyMethod][2])
-				continue
-			}
+			assert.Equal(t, test.org, testApi.ArgsIn[RemovePolicyMethod][1], "Error in test case %v", n)
+			assert.Equal(t, test.policyName, testApi.ArgsIn[RemovePolicyMethod][2], "Error in test case %v", n)
 		}
 
 		// check status code
-		if test.expectedStatusCode != res.StatusCode {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
-			continue
-		}
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
 
 		switch res.StatusCode {
 		case http.StatusNoContent:
@@ -1265,15 +1096,9 @@ func TestWorkerHandler_HandleRemovePolicy(t *testing.T) {
 		default:
 			apiError := api.Error{}
 			err = json.NewDecoder(res.Body).Decode(&apiError)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
-				continue
-			}
-			// Check result
-			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check error
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
 		}
 	}
 }
@@ -1402,64 +1227,40 @@ func TestWorkerHandler_HandleListAttachedGroups(t *testing.T) {
 
 		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies/%v/groups", test.filter.Org, test.filter.PolicyName)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		addQueryParams(test.filter, req)
 
 		res, err := client.Do(req)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		if !test.ignoreArgsIn {
 			// Check received parameters
 			filterData, ok := testApi.ArgsIn[ListAttachedGroupsMethod][1].(*api.Filter)
 			if ok {
 				// Check result
-				if diff := pretty.Compare(filterData, test.filter); diff != "" {
-					t.Errorf("Test %v failed. Received different filters (received/wanted) %v", n, diff)
-					continue
-				}
+				assert.Equal(t, test.filter, filterData, "Error in test case %v", n)
 			}
 		}
 
 		// check status code
-		if test.expectedStatusCode != res.StatusCode {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
-			continue
-		}
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
 
 		switch res.StatusCode {
 		case http.StatusOK:
 			GetAttachedGroupsMethodResponse := ListAttachedGroupsResponse{}
 			err = json.NewDecoder(res.Body).Decode(&GetAttachedGroupsMethodResponse)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(GetAttachedGroupsMethodResponse, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, GetAttachedGroupsMethodResponse, "Error in test case %v", n)
 		case http.StatusInternalServerError: // Empty message so continue
 			continue
 		default:
 			apiError := api.Error{}
 			err = json.NewDecoder(res.Body).Decode(&apiError)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
-				continue
-			}
-			// Check result
-			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check error
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
 		}
 	}
 }
