@@ -8,7 +8,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -614,23 +614,10 @@ func getResources(number int, baseUrn string) []string {
 
 func checkMethodResponse(t *testing.T, testcase string, expectedError error, receivedError error, expectedResponse interface{}, receivedResponse interface{}) {
 	if expectedError != nil {
-		apiError, ok := receivedError.(*Error)
-		if !ok || apiError == nil {
-			t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", testcase, receivedError)
-			return
-		}
-		if diff := pretty.Compare(apiError, expectedError); diff != "" {
-			t.Errorf("Test %v failed. Received different errors (received/wanted) %v", testcase, diff)
-			return
-		}
+		apiError, _ := receivedError.(*Error)
+		assert.Equal(t, apiError, expectedError, "Error in test case %v", testcase)
 	} else {
-		if receivedError != nil {
-			t.Errorf("Test %v failed: %v", testcase, receivedError)
-			return
-		}
-		if diff := pretty.Compare(receivedResponse, expectedResponse); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", testcase, diff)
-			return
-		}
+		assert.Nil(t, receivedError, "Error in test case %v", testcase)
+		assert.Equal(t, receivedResponse, expectedResponse, "Error in test case %v", testcase)
 	}
 }

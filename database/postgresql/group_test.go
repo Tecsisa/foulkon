@@ -6,7 +6,8 @@ import (
 
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/database"
-	"github.com/kylelemons/godebug/pretty"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPostgresRepo_AddGroup(t *testing.T) {
@@ -68,45 +69,25 @@ func TestPostgresRepo_AddGroup(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean user database
-		cleanGroupTable()
+		cleanGroupTable(t, n)
 
 		// Insert previous data
 		if test.previousGroup != nil {
-			err := insertGroup(*test.previousGroup)
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
-				continue
-			}
+			insertGroup(t, n, *test.previousGroup)
 		}
 		// Call to repository to store group
 		storedGroup, err := repoDB.AddGroup(*test.groupToCreate)
 		if test.expectedError != nil {
-			dbError, ok := err.(*database.Error)
-			if !ok || dbError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
-				continue
-			}
-			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, dbError, test.expectedError, "Error in test case %v", n)
 		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check response
-			if diff := pretty.Compare(storedGroup, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, storedGroup, test.expectedResponse, "Error in test case %v", n)
 			// Check database
-			groupNumber, err := getGroupsCountFiltered(test.groupToCreate.ID, test.groupToCreate.Name, test.groupToCreate.Path,
+			groupNumber := getGroupsCountFiltered(t, n, test.groupToCreate.ID, test.groupToCreate.Name, test.groupToCreate.Path,
 				test.groupToCreate.CreateAt.UnixNano(), test.groupToCreate.UpdateAt.UnixNano(), test.groupToCreate.Urn, test.groupToCreate.Org)
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error counting groups: %v", n, err)
-				continue
-			}
+
 			if groupNumber != 1 {
 				t.Errorf("Test %v failed. Received different group number: %v", n, groupNumber)
 				continue
@@ -170,35 +151,22 @@ func TestPostgresRepo_GetGroupByName(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean group database
-		cleanGroupTable()
+		cleanGroupTable(t, n)
 
 		// Insert previous data
 		if test.previousGroup != nil {
-			err := insertGroup(*test.previousGroup)
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
-				continue
-			}
+			insertGroup(t, n, *test.previousGroup)
 		}
 
 		// Call to repository to get group
 		receivedGroup, err := repoDB.GetGroupByName(test.org, test.name)
 		if test.expectedError != nil {
-			dbError, ok := err.(*database.Error)
-			if !ok || dbError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
-				continue
-			}
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
 		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check response
-			if diff := pretty.Compare(receivedGroup, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, receivedGroup, test.expectedResponse, "Error in test case %v", n)
 		}
 	}
 }
@@ -255,35 +223,22 @@ func TestPostgresRepo_GetGroupById(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean group database
-		cleanGroupTable()
+		cleanGroupTable(t, n)
 
 		// Insert previous data
 		if test.previousGroup != nil {
-			err := insertGroup(*test.previousGroup)
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
-				continue
-			}
+			insertGroup(t, n, *test.previousGroup)
 		}
 
 		// Call to repository to get group
 		receivedGroup, err := repoDB.GetGroupById(test.groupID)
 		if test.expectedError != nil {
-			dbError, ok := err.(*database.Error)
-			if !ok || dbError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
-				continue
-			}
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
 		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check response
-			if diff := pretty.Compare(receivedGroup, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, receivedGroup, test.expectedResponse, "Error in test case %v", n)
 		}
 	}
 }
@@ -579,33 +534,23 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean group database
-		cleanGroupTable()
+		cleanGroupTable(t, n)
 
 		// Insert previous data
 		if test.previousGroups != nil {
 			for _, previousGroup := range test.previousGroups {
-				if err := insertGroup(previousGroup); err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting previous groups: %v", n, err)
-					continue
-				}
+				insertGroup(t, n, previousGroup)
 			}
 		}
 		// Call to repository to get groups
 		receivedGroups, total, err := repoDB.GetGroupsFiltered(test.filter)
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
+
 		// Check total
-		if total != len(test.expectedResponse) {
-			t.Errorf("Test %v failed. Received different total elements: %v", n, total)
-			continue
-		}
+		assert.Equal(t, total, len(test.expectedResponse), "Error in test case %v", n)
+
 		// Check response
-		if diff := pretty.Compare(receivedGroups, test.expectedResponse); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
+		assert.Equal(t, receivedGroups, test.expectedResponse, "Error in test case %v", n)
 	}
 }
 
@@ -689,53 +634,29 @@ func TestPostgresRepo_UpdateGroup(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean group database
-		cleanGroupTable()
+		cleanGroupTable(t, n)
 
 		// Insert previous data
 		if test.previousGroups != nil {
 			for _, previousGroup := range test.previousGroups {
-				err := insertGroup(previousGroup)
-				if err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
-					continue
-				}
+				insertGroup(t, n, previousGroup)
 			}
 		}
 
 		// Call to repository to update group
 		updatedGroup, err := repoDB.UpdateGroup(*test.groupToUpdate)
 		if test.expectedError != nil {
-			dbError, ok := err.(*database.Error)
-			if !ok || dbError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
-				continue
-			}
-			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
 		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check response
-			if diff := pretty.Compare(updatedGroup, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, updatedGroup, test.expectedResponse, "Error in test case %v", n)
 			// Check database
-			groupNumber, err := getGroupsCountFiltered(test.expectedResponse.ID, test.expectedResponse.Name, test.expectedResponse.Path,
+			groupNumber := getGroupsCountFiltered(t, n, test.expectedResponse.ID, test.expectedResponse.Name, test.expectedResponse.Path,
 				test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.UpdateAt.UnixNano(), test.expectedResponse.Urn,
 				test.expectedResponse.Org)
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error counting groups: %v", n, err)
-				continue
-			}
-			if groupNumber != 1 {
-				t.Fatalf("Test %v failed. Received different group number: %v", n, groupNumber)
-				continue
-			}
+			assert.Equal(t, 1, groupNumber, "Error in test case %v", n)
 		}
 	}
 }
@@ -810,103 +731,54 @@ func TestPostgresRepo_RemoveGroup(t *testing.T) {
 	}
 
 	for n, test := range testcases {
-		cleanGroupTable()
-		cleanGroupUserRelationTable()
-		cleanGroupPolicyRelationTable()
+		cleanGroupTable(t, n)
+		cleanGroupUserRelationTable(t, n)
+		cleanGroupPolicyRelationTable(t, n)
 
 		// Insert previous data
 		if test.previousGroups != nil {
 			for _, g := range test.previousGroups {
-				if err := insertGroup(g); err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting previous group %v: %v", n, g.ID, err)
-					continue
-				}
+				insertGroup(t, n, g)
 			}
+
 		}
 		if test.userRelations != nil {
 			for _, rel := range test.userRelations {
-				if err := insertGroupUserRelation(rel.userID, rel.groupID, rel.CreateAt); err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
-					continue
-				}
+				insertGroupUserRelation(t, n, rel.userID, rel.groupID, rel.CreateAt)
 			}
 		}
 		if test.policyRelations != nil {
 			for _, rel := range test.policyRelations {
-				if err := insertGroupPolicyRelation(rel.groupID, rel.policyID, rel.CreateAt); err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting previous group policy relations: %v", n, err)
-					continue
-				}
+				insertGroupPolicyRelation(t, n, rel.groupID, rel.policyID, rel.CreateAt)
 			}
 		}
 		// Call to repository to remove group
 		err := repoDB.RemoveGroup(test.groupToDelete)
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		// Check database
-		groupNumber, err := getGroupsCountFiltered(test.groupToDelete, "", "", 0, 0, "", "")
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting groups: %v", n, err)
-			continue
-		}
-		if groupNumber != 0 {
-			t.Errorf("Test %v failed. Received different group number: %v", n, groupNumber)
-			continue
-		}
+		groupNumber := getGroupsCountFiltered(t, n, test.groupToDelete, "", "", 0, 0, "", "")
+		assert.Equal(t, 0, groupNumber, "Error in test case %v", n)
 
 		// Check total groups
-		totalGroupNumber, err := getGroupsCountFiltered("", "", "", 0, 0, "", "")
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting total groups: %v", n, err)
-			continue
-		}
-		if totalGroupNumber != 1 {
-			t.Errorf("Test %v failed. Received different total group number: %v", n, totalGroupNumber)
-			continue
-		}
+		totalGroupNumber := getGroupsCountFiltered(t, n, "", "", "", 0, 0, "", "")
+		assert.Equal(t, 1, totalGroupNumber, "Error in test case %v", n)
 
 		// Check group user relations
-		relations, err := getGroupUserRelations(test.groupToDelete, "")
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting group user relations: %v", n, err)
-			continue
-		}
-		if relations != 0 {
-			t.Errorf("Test %v failed. Received different group user relation number: %v", n, relations)
-			continue
-		}
+		relations := getGroupUserRelations(t, n, test.groupToDelete, "")
+		assert.Equal(t, 0, relations, "Error in test case %v", n)
 
 		// Check total group user relations
-		totalRelations, err := getGroupUserRelations("", "")
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting total group user relations: %v", n, err)
-			continue
-		}
-		if totalRelations != 1 {
-			t.Errorf("Test %v failed. Received different total group user relation number: %v", n, totalRelations)
-			continue
-		}
+		totalRelations := getGroupUserRelations(t, n, "", "")
+		assert.Equal(t, 1, totalRelations, "Error in test case %v", n)
 
 		// Check group policy relations
-		relations, err = getGroupPolicyRelationCount("", test.groupToDelete)
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting group policy relations: %v", n, err)
-			continue
-		}
-		if relations != 0 {
-			t.Errorf("Test %v failed. Received different group policy relation number: %v", n, relations)
-			continue
-		}
+		relations = getGroupPolicyRelationCount(t, n, "", test.groupToDelete)
+		assert.Equal(t, 0, relations, "Error in test case %v", n)
 
 		// Check total group policy relations
-		totalRelations, err = getGroupPolicyRelationCount("", "")
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting total group policy relations: %v", n, err)
-			continue
-		}
-		if totalRelations != 1 {
-			t.Errorf("Test %v failed. Received different total group policy relation number: %v", n, totalRelations)
-			continue
-		}
+		totalRelations = getGroupPolicyRelationCount(t, n, "", "")
+		assert.Equal(t, 1, totalRelations, "Error in test case %v", n)
 	}
 }
 
@@ -926,39 +798,26 @@ func TestPostgresRepo_AddMember(t *testing.T) {
 			groupID: "GroupID",
 			expectedError: &database.Error{
 				Code:    database.INTERNAL_ERROR,
-				Message: "pq: null value in column user_id violates not-null constraint",
+				Message: "pq: null value in column \"user_id\" violates not-null constraint",
 			},
 		},
 	}
 
 	for n, test := range testcases {
 		// Clean GroupUserRelation database
-		cleanGroupUserRelationTable()
+		cleanGroupUserRelationTable(t, n)
 
 		// Call to repository to store member
 		err := repoDB.AddMember(test.userID, test.groupID)
 		if test.expectedError != nil {
-			dbError, ok := err.(*database.Error)
-			if !ok || dbError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
-				continue
-			}
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
 		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 
 			// Check database
-			relations, err := getGroupUserRelations(test.groupID, test.userID)
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error counting relations: %v", n, err)
-				continue
-			}
-			if relations != 1 {
-				t.Errorf("Test %v failed. Received different relations number: %v", n, relations)
-				continue
-			}
+			relations := getGroupUserRelations(t, n, test.groupID, test.userID)
+			assert.Equal(t, 1, relations, "Error in test case %v", n)
 		}
 	}
 }
@@ -992,34 +851,20 @@ func TestPostgresRepo_RemoveMember(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean GroupUserRelation database
-		cleanGroupUserRelationTable()
+		cleanGroupUserRelationTable(t, n)
 
 		// Insert previous data
 		if test.relation != nil {
-			if err := insertGroupUserRelation(test.relation.userID, test.relation.groupID, test.relation.createAt); err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
-				continue
-			}
+			insertGroupUserRelation(t, n, test.relation.userID, test.relation.groupID, test.relation.createAt)
 		}
 
 		// Call to repository to remove member
 		err := repoDB.RemoveMember(test.userID, test.groupID)
-
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		// Check database
-		relations, err := getGroupUserRelations(test.groupID, test.userID)
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting relations: %v", n, err)
-			continue
-		}
-		if relations != 0 {
-			t.Errorf("Test %v failed. Received different relations number: %v", n, relations)
-			continue
-		}
+		relations := getGroupUserRelations(t, n, test.groupID, test.userID)
+		assert.Equal(t, 0, relations, "Error in test case %v", n)
 	}
 }
 
@@ -1057,27 +902,18 @@ func TestPostgresRepo_IsMemberOfGroup(t *testing.T) {
 	}
 
 	for n, test := range testcases {
-		cleanGroupUserRelationTable()
+		cleanGroupUserRelationTable(t, n)
 
 		// Insert previous data
 		if test.relation != nil {
-			if err := insertGroupUserRelation(test.relation.userID, test.relation.groupID, test.relation.createAt); err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
-				continue
-			}
+			insertGroupUserRelation(t, n, test.relation.userID, test.relation.groupID, test.relation.createAt)
 		}
 
 		isMember, err := repoDB.IsMemberOfGroup(test.member, test.group)
+		assert.Nil(t, err, "Error in test case %v", n)
 
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-			continue
-		}
 		// Check response
-		if diff := pretty.Compare(isMember, test.isMember); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
+		assert.Equal(t, isMember, test.isMember, "Error in test case %v", n)
 	}
 }
 
@@ -1096,7 +932,7 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 		groupID string
 		filter  *api.Filter
 		// Expected result
-		expectedResponse []GroupUser
+		expectedResponse []*GroupUser
 		expectedError    *database.Error
 	}{
 		"OkCase": {
@@ -1124,7 +960,7 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 			},
 			groupID: "GroupID",
 			filter:  testFilter,
-			expectedResponse: []GroupUser{
+			expectedResponse: []*GroupUser{
 				{
 					User: &api.User{
 						ID:         "UserID1",
@@ -1170,19 +1006,19 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 					},
 				},
 				groupID:  "GroupID",
-				createAt: []int64{now.UnixNano() - 1, now.UnixNano()},
+				createAt: []int64{now.UnixNano(), now.Add(-1).UnixNano()},
 			},
 			groupID: "GroupID",
 			filter: &api.Filter{
 				OrderBy: "create_at desc",
 			},
-			expectedResponse: []GroupUser{
+			expectedResponse: []*GroupUser{
 				{
 					User: &api.User{
-						ID:         "UserID2",
-						ExternalID: "ExternalID2",
+						ID:         "UserID1",
+						ExternalID: "ExternalID1",
 						Path:       "Path",
-						Urn:        "urn2",
+						Urn:        "urn1",
 						CreateAt:   now,
 						UpdateAt:   now,
 					},
@@ -1190,10 +1026,10 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 				},
 				{
 					User: &api.User{
-						ID:         "UserID1",
-						ExternalID: "ExternalID1",
+						ID:         "UserID2",
+						ExternalID: "ExternalID2",
 						Path:       "Path",
-						Urn:        "urn1",
+						Urn:        "urn2",
 						CreateAt:   now,
 						UpdateAt:   now,
 					},
@@ -1222,21 +1058,15 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 	}
 
 	for n, test := range testcases {
-		cleanUserTable()
-		cleanGroupUserRelationTable()
+		cleanUserTable(t, n)
+		cleanGroupUserRelationTable(t, n)
 
 		// Insert previous data
 		if test.relations != nil {
 			for x, user := range test.relations.users {
-				if err := insertGroupUserRelation(user.ID, test.relations.groupID, test.relations.createAt[x]); err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
-					continue
-				}
+				insertGroupUserRelation(t, n, user.ID, test.relations.groupID, test.relations.createAt[x])
 				if !test.relations.userNotFound {
-					if err := insertUser(user); err != nil {
-						t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
-						continue
-					}
+					insertUser(t, n, user)
 				}
 			}
 
@@ -1244,29 +1074,18 @@ func TestPostgresRepo_GetGroupMembers(t *testing.T) {
 
 		receivedUsers, total, err := repoDB.GetGroupMembers(test.groupID, test.filter)
 		if test.expectedError != nil {
-			dbError, ok := err.(*database.Error)
-			if !ok || dbError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
-				continue
-			}
-			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
 		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check total
-			if total != len(test.expectedResponse) {
-				t.Errorf("Test %v failed. Received different total elements: %v", n, total)
-				continue
-			}
+			assert.Equal(t, len(test.expectedResponse), total, "Error in test case %v", n)
+
 			// Check response
-			if diff := pretty.Compare(receivedUsers, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
+			for i, r := range receivedUsers {
+				assert.Equal(t, test.expectedResponse[i].GetGroup(), r.GetGroup(), "Error in test case %v", n)
+				assert.Equal(t, test.expectedResponse[i].GetUser(), r.GetUser(), "Error in test case %v", n)
+				assert.Equal(t, test.expectedResponse[i].GetDate(), r.GetDate(), "Error in test case %v", n)
 			}
 		}
 	}
@@ -1287,39 +1106,25 @@ func TestPostgresRepo_AttachPolicy(t *testing.T) {
 		"ErrorCaseInternalError": {
 			expectedError: &database.Error{
 				Code:    database.INTERNAL_ERROR,
-				Message: "pq: null value in column user_id violates not-null constraint",
+				Message: "pq: null value in column \"group_id\" violates not-null constraint",
 			},
 		},
 	}
 
 	for n, test := range testcases {
 		// Clean GroupPolicyRelation database
-		cleanGroupPolicyRelationTable()
+		cleanGroupPolicyRelationTable(t, n)
 
 		// Call to repository to attach policy
 		err := repoDB.AttachPolicy(test.groupID, test.policyID)
 		if test.expectedError != nil {
-			dbError, ok := err.(*database.Error)
-			if !ok || dbError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
-				continue
-			}
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
 		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
-			}
-
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check database
-			relations, err := getGroupPolicyRelationCount(test.policyID, test.groupID)
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error counting relations: %v", n, err)
-				continue
-			}
-			if relations != 1 {
-				t.Errorf("Test %v failed. Received different relations number: %v", n, relations)
-				continue
-			}
+			relations := getGroupPolicyRelationCount(t, n, test.policyID, test.groupID)
+			assert.Equal(t, 1, relations, "Error in test case %v", n)
 		}
 	}
 }
@@ -1353,34 +1158,20 @@ func TestPostgresRepo_DetachPolicy(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean GroupPolicyRelation database
-		cleanGroupPolicyRelationTable()
+		cleanGroupPolicyRelationTable(t, n)
 
 		// Insert previous data
 		if test.relation != nil {
-			if err := insertGroupPolicyRelation(test.relation.groupID, test.relation.policyID, test.relation.createAt); err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting previous group policy relations: %v", n, err)
-				continue
-			}
+			insertGroupPolicyRelation(t, n, test.relation.groupID, test.relation.policyID, test.relation.createAt)
 		}
 
 		// Call to repository to detach policy
 		err := repoDB.DetachPolicy(test.groupID, test.policyID)
-
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		// Check database
-		relations, err := getGroupPolicyRelationCount(test.policyID, test.groupID)
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting relations: %v", n, err)
-			continue
-		}
-		if relations != 0 {
-			t.Errorf("Test %v failed. Received different relations number: %v", n, relations)
-			continue
-		}
+		relations := getGroupPolicyRelationCount(t, n, test.policyID, test.groupID)
+		assert.Equal(t, 0, relations, "Error in test case %v", n)
 	}
 }
 
@@ -1424,28 +1215,17 @@ func TestPostgresRepo_IsAttachedToGroup(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean GroupPolicyRelation database
-		cleanGroupPolicyRelationTable()
+		cleanGroupPolicyRelationTable(t, n)
 
 		// Insert previous data
 		if test.relation != nil {
-			if err := insertGroupPolicyRelation(test.relation.groupID, test.relation.policyID, test.relation.createAt); err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting previous group policy relations: %v", n, err)
-				continue
-			}
+			insertGroupPolicyRelation(t, n, test.relation.groupID, test.relation.policyID, test.relation.createAt)
 		}
 
 		// Call repository to check if policy is attached to group
 		result, err := repoDB.IsAttachedToGroup(test.groupID, test.policyID)
-
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-			continue
-		}
-
-		if result != test.expectedResult {
-			t.Errorf("Test %v failed. Received %v, expected %v", n, result, test.expectedResult)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
+		assert.Equal(t, test.expectedResult, result, "Error in test case %v", n)
 	}
 }
 
@@ -1465,7 +1245,7 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 		groupID string
 		filter  *api.Filter
 		// Expected result
-		expectedResponse []PolicyGroup
+		expectedResponse []*PolicyGroup
 		expectedError    *database.Error
 	}{
 		"OkCase": {
@@ -1498,7 +1278,7 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 			filter: &api.Filter{
 				OrderBy: "create_at desc",
 			},
-			expectedResponse: []PolicyGroup{
+			expectedResponse: []*PolicyGroup{
 				{
 					Policy: &api.Policy{
 						ID:         "PolicyID2",
@@ -1564,21 +1344,15 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 	}
 
 	for n, test := range testcases {
-		cleanPolicyTable()
-		cleanGroupPolicyRelationTable()
+		cleanPolicyTable(t, n)
+		cleanGroupPolicyRelationTable(t, n)
 
 		// Insert previous data
 		if test.relations != nil {
 			for i, policy := range test.relations.policies {
-				if err := insertGroupPolicyRelation(test.relations.groupID, policy.ID, test.relations.createAt[i]); err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting previous group policy relations: %v", n, err)
-					continue
-				}
+				insertGroupPolicyRelation(t, n, test.relations.groupID, policy.ID, test.relations.createAt[i])
 				if !test.relations.policyNotFound {
-					if err := insertPolicy(policy, test.statements); err != nil {
-						t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
-						continue
-					}
+					insertPolicy(t, n, policy, test.statements)
 				}
 			}
 
@@ -1586,29 +1360,19 @@ func TestPostgresRepo_GetAttachedPolicies(t *testing.T) {
 
 		receivedPolicies, total, err := repoDB.GetAttachedPolicies(test.groupID, test.filter)
 		if test.expectedError != nil {
-			dbError, ok := err.(*database.Error)
-			if !ok || dbError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
-				continue
-			}
-			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
 		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
+
 			// Check total
-			if total != len(test.expectedResponse) {
-				t.Errorf("Test %v failed. Received different total elements: %v", n, total)
-				continue
-			}
+			assert.Equal(t, len(test.expectedResponse), total, "Error in test case %v", n)
+
 			// Check response
-			if diff := pretty.Compare(receivedPolicies, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
+			for i, r := range receivedPolicies {
+				assert.Equal(t, test.expectedResponse[i].GetGroup(), r.GetGroup(), "Error in test case %v", n)
+				assert.Equal(t, test.expectedResponse[i].GetPolicy(), r.GetPolicy(), "Error in test case %v", n)
+				assert.Equal(t, test.expectedResponse[i].GetDate(), r.GetDate(), "Error in test case %v", n)
 			}
 		}
 	}

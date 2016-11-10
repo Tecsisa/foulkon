@@ -199,7 +199,7 @@ func (u PostgresRepo) GetGroupsByUserID(id string, filter *api.Filter) ([]api.Us
 					Message: err.Error(),
 				}
 			}
-			groups[i] = GroupUser{
+			groups[i] = &GroupUser{
 				Group:    group,
 				CreateAt: time.Unix(0, r.CreateAt).UTC(),
 			}

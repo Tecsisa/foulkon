@@ -6,7 +6,7 @@ import (
 
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/database"
-	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPostgresRepo_AddPolicy(t *testing.T) {
@@ -108,63 +108,35 @@ func TestPostgresRepo_AddPolicy(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean policy database
-		cleanPolicyTable()
-		cleanStatementTable()
+		cleanPolicyTable(t, n)
+		cleanStatementTable(t, n)
 
 		// Call to repository to add a policy
 		if test.previousPolicy != nil {
-			err := insertPolicy(*test.previousPolicy, test.statements)
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
-			}
+			insertPolicy(t, n, *test.previousPolicy, test.statements)
 		}
 		receivedPolicy, err := repoDB.AddPolicy(test.policy)
 		if test.expectedError != nil {
-			dbError, ok := err.(*database.Error)
-			if !ok || dbError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
-				continue
-			}
-			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
 		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check response
-			if diff := pretty.Compare(receivedPolicy, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, receivedPolicy, "Error in test case %v", n)
 			// Check database
-			policyNumber, err := getPoliciesCountFiltered(test.policy.ID, test.policy.Org, test.policy.Name, test.policy.Path, test.policy.CreateAt.UnixNano(), test.policy.Urn)
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error counting policies: %v", n, err)
-				continue
-			}
-			if policyNumber != 1 {
-				t.Errorf("Test %v failed. Received different policies number: %v", n, policyNumber)
-				continue
-			}
+			policyNumber := getPoliciesCountFiltered(t, n, test.policy.ID, test.policy.Org, test.policy.Name, test.policy.Path, test.policy.CreateAt.UnixNano(), test.policy.Urn)
+			assert.Equal(t, 1, policyNumber, "Error in test case %v", n)
+
 			for _, statement := range *test.policy.Statements {
-				statementNumber, err := getStatementsCountFiltered(
+				statementNumber := getStatementsCountFiltered(
+					t,
+					n,
 					"",
 					"",
 					statement.Effect,
 					stringArrayToString(statement.Actions),
 					stringArrayToString(statement.Resources))
-				if err != nil {
-					t.Errorf("Test %v failed. Unexpected error counting statements: %v", n, err)
-					continue
-				}
-				if statementNumber != 1 {
-					t.Errorf("Test %v failed. Received different statements number: %v", n, statementNumber)
-					continue
-				}
+				assert.Equal(t, 1, statementNumber, "Error in test case %v", n)
 			}
 		}
 	}
@@ -236,38 +208,22 @@ func TestPostgresRepo_GetPolicyByName(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean policy database
-		cleanPolicyTable()
-		cleanStatementTable()
+		cleanPolicyTable(t, n)
+		cleanStatementTable(t, n)
 
 		// Insert previous data
 		if test.policy != nil {
-			err := insertPolicy(*test.policy, test.statements)
-			if err != nil {
-				t.Errorf("Test %v failed. Error inserting policy/statements: %v", n, err)
-			}
+			insertPolicy(t, n, *test.policy, test.statements)
 		}
 		// Call to repository to get a policy
 		receivedPolicy, err := repoDB.GetPolicyByName(test.org, test.name)
 		if test.expectedError != nil {
-			dbError, ok := err.(*database.Error)
-			if !ok || dbError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
-				continue
-			}
-			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
 		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check response
-			if diff := pretty.Compare(receivedPolicy, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, receivedPolicy, "Error in test case %v", n)
 		}
 	}
 }
@@ -335,38 +291,22 @@ func TestPostgresRepo_GetPolicyById(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean policy database
-		cleanPolicyTable()
-		cleanStatementTable()
+		cleanPolicyTable(t, n)
+		cleanStatementTable(t, n)
 
 		// Insert previous data
 		if test.policy != nil {
-			err := insertPolicy(*test.policy, test.statements)
-			if err != nil {
-				t.Errorf("Test %v failed. Error inserting policy/statements: %v", n, err)
-			}
+			insertPolicy(t, n, *test.policy, test.statements)
 		}
 		// Call to repository to get a policy
 		receivedPolicy, err := repoDB.GetPolicyById(test.id)
 		if test.expectedError != nil {
-			dbError, ok := err.(*database.Error)
-			if !ok || dbError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
-				continue
-			}
-			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
 		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check response
-			if diff := pretty.Compare(receivedPolicy, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, receivedPolicy, "Error in test case %v", n)
 		}
 
 	}
@@ -481,65 +421,57 @@ func TestPostgresRepo_GetPoliciesFiltered(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean policy database
-		cleanPolicyTable()
-		cleanStatementTable()
+		cleanPolicyTable(t, n)
+		cleanStatementTable(t, n)
 
 		// Insert previous data
 		for i, policy := range test.policies {
 			var statement []Statement = []Statement{test.statements[i]}
-			err := insertPolicy(policy, statement)
-			if err != nil {
-				t.Errorf("Test %v failed. Error inserting policy/statements: %v", n, err)
-			}
+			insertPolicy(t, n, policy, statement)
 		}
 		// Call to repository to get a policy
 		receivedPolicy, total, err := repoDB.GetPoliciesFiltered(test.filter)
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
+
 		// Check total
-		if total != len(test.expectedResponse) {
-			t.Errorf("Test %v failed. Received different total elements: %v", n, total)
-			continue
-		}
+		assert.Equal(t, len(test.expectedResponse), total, "Error in test case %v", n)
+
 		// Check response
-		if diff := pretty.Compare(receivedPolicy, test.expectedResponse); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
+		assert.Equal(t, test.expectedResponse, receivedPolicy, "Error in test case %v", n)
 	}
 }
 
 func TestPostgresRepo_UpdatePolicy(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {
-		previousPolicy *api.Policy
-		policy         api.Policy
+		previousPolicies   []Policy
+		previousStatements []Statement
+		policy             *api.Policy
 		// Expected result
 		expectedResponse *api.Policy
 	}{
 		"OkCase": {
-			previousPolicy: &api.Policy{
-				ID:       "test1",
-				Name:     "test",
-				Org:      "123",
-				Path:     "/path/",
-				CreateAt: now,
-				Urn:      api.CreateUrn("123", api.RESOURCE_POLICY, "/path/", "test"),
-				Statements: &[]api.Statement{
-					{
-						Effect: "allow",
-						Actions: []string{
-							api.USER_ACTION_GET_USER,
-						},
-						Resources: []string{
-							api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
-						},
-					},
+			previousPolicies: []Policy{
+				{
+					ID:       "test1",
+					Name:     "test",
+					Org:      "123",
+					Path:     "/path/",
+					CreateAt: now.UnixNano(),
+					UpdateAt: now.UnixNano(),
+					Urn:      api.CreateUrn("123", api.RESOURCE_POLICY, "/path/", "test"),
 				},
 			},
-			policy: api.Policy{
+			previousStatements: []Statement{
+				{
+					ID:        "1",
+					PolicyID:  "111",
+					Effect:    "allow",
+					Actions:   api.USER_ACTION_GET_USER,
+					Resources: api.GetUrnPrefix("", api.RESOURCE_USER, "/path/"),
+				},
+			},
+			policy: &api.Policy{
 				ID:       "test1",
 				Name:     "newName",
 				Org:      "123",
@@ -582,27 +514,20 @@ func TestPostgresRepo_UpdatePolicy(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean policy database
-		cleanPolicyTable()
-		cleanStatementTable()
+		cleanPolicyTable(t, n)
+		cleanStatementTable(t, n)
 
 		// Call to repository to add a policy
-		if test.previousPolicy != nil {
-			_, err := repoDB.AddPolicy(*test.previousPolicy)
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
+		if test.previousPolicies != nil {
+			for _, p := range test.previousPolicies {
+				insertPolicy(t, n, p, test.previousStatements)
 			}
 		}
-		receivedPolicy, err := repoDB.UpdatePolicy(test.policy)
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-			continue
-		}
+		receivedPolicy, err := repoDB.UpdatePolicy(*test.policy)
+		assert.Nil(t, err, "Error in test case %v", n)
+
 		// Check response
-		if diff := pretty.Compare(receivedPolicy, test.expectedResponse); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
+		assert.Equal(t, test.expectedResponse, receivedPolicy, "Error in test case %v", n)
 	}
 }
 
@@ -686,91 +611,48 @@ func TestPostgresRepo_RemovePolicy(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean policy database
-		cleanPolicyTable()
-		cleanStatementTable()
-		cleanGroupTable()
-		cleanGroupPolicyRelationTable()
+		cleanPolicyTable(t, n)
+		cleanStatementTable(t, n)
+		cleanGroupTable(t, n)
+		cleanGroupPolicyRelationTable(t, n)
 
 		// insert previous policy
 		if test.previousPolicies != nil {
 			for _, p := range test.previousPolicies {
-				err := insertPolicy(p.policy, p.statements)
-				if err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting previous policies: %v", n, err)
-					continue
-				}
+				insertPolicy(t, n, p.policy, p.statements)
 			}
 		}
 		if test.relations != nil {
 			for _, rel := range test.relations {
-				err := insertGroupPolicyRelation(rel.groupID, rel.policyID, rel.createAt)
-				if err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting group relation: %v", n, err)
-					continue
-				}
+				insertGroupPolicyRelation(t, n, rel.groupID, rel.policyID, rel.createAt)
 			}
 		}
 		err := repoDB.RemovePolicy(test.policyToDelete)
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-			continue
-		}
-		// Check database
-		policyNumber, err := getPoliciesCountFiltered(test.policyToDelete, "", "", "", 0, "")
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting policies: %v", n, err)
-			continue
-		}
-		if policyNumber != 0 {
-			t.Errorf("Test %v failed. Received different policies number: %v", n, policyNumber)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
-		statementNumber, err := getStatementsCountFiltered(
+		// Check database
+		policyNumber := getPoliciesCountFiltered(t, n, test.policyToDelete, "", "", "", 0, "")
+		assert.Equal(t, 0, policyNumber, "Error in test case %v", n)
+
+		statementNumber := getStatementsCountFiltered(
+			t,
+			n,
 			"",
 			test.policyToDelete,
 			"",
 			"",
 			"")
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting statements: %v", n, err)
-			continue
-		}
-		if statementNumber != 0 {
-			t.Errorf("Test %v failed. Received different statements number: %v", n, statementNumber)
-			continue
-		}
+		assert.Equal(t, 0, statementNumber, "Error in test case %v", n)
 
 		// Check total policy number
-		totalPolicyNumber, err := getPoliciesCountFiltered("", "", "", "", 0, "")
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting total policies: %v", n, err)
-			continue
-		}
-		if totalPolicyNumber != 1 {
-			t.Errorf("Test %v failed. Received different total policy number: %v", n, totalPolicyNumber)
-			continue
-		}
+		totalPolicyNumber := getPoliciesCountFiltered(t, n, "", "", "", "", 0, "")
+		assert.Equal(t, 1, totalPolicyNumber, "Error in test case %v", n)
 
-		totalStatementNumber, err := getStatementsCountFiltered("", "", "", "", "")
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting statements: %v", n, err)
-			continue
-		}
-		if totalStatementNumber != 1 {
-			t.Errorf("Test %v failed. Received different total statements number: %v", n, totalStatementNumber)
-			continue
-		}
+		totalStatementNumber := getStatementsCountFiltered(t, n, "", "", "", "", "")
+		assert.Equal(t, 1, totalStatementNumber, "Error in test case %v", n)
 
-		totalGroupPolicyRelationNumber, err := getGroupPolicyRelationCount("", "")
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting total group policy relations: %v", n, err)
-			continue
-		}
-		if totalGroupPolicyRelationNumber != 1 {
-			t.Errorf("Test %v failed. Received different total relations group policy number: %v", n, totalGroupPolicyRelationNumber)
-			continue
-		}
+		totalGroupPolicyRelationNumber := getGroupPolicyRelationCount(t, n, "", "")
+		assert.Equal(t, 1, totalGroupPolicyRelationNumber, "Error in test case %v", n)
 	}
 }
 
@@ -782,7 +664,7 @@ func TestPostgresRepo_GetAttachedGroups(t *testing.T) {
 		filter           *api.Filter
 		group            []Group
 		createAt         []int64
-		expectedResponse []PolicyGroup
+		expectedResponse []*PolicyGroup
 	}{
 		"OkCase": {
 			previousPolicy: &Policy{
@@ -827,7 +709,7 @@ func TestPostgresRepo_GetAttachedGroups(t *testing.T) {
 				},
 			},
 			createAt: []int64{now.UnixNano() - 1, now.UnixNano()},
-			expectedResponse: []PolicyGroup{
+			expectedResponse: []*PolicyGroup{
 				{
 					Group: &api.Group{
 						ID:       "GroupID2",
@@ -858,44 +740,29 @@ func TestPostgresRepo_GetAttachedGroups(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean database
-		cleanPolicyTable()
-		cleanStatementTable()
-		cleanGroupTable()
-		cleanGroupPolicyRelationTable()
+		cleanPolicyTable(t, n)
+		cleanStatementTable(t, n)
+		cleanGroupTable(t, n)
+		cleanGroupPolicyRelationTable(t, n)
 
 		// Call to repository to add a policy
-		err := insertPolicy(*test.previousPolicy, test.statements)
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-			continue
-		}
+		insertPolicy(t, n, *test.previousPolicy, test.statements)
 		for i, group := range test.group {
-			err := insertGroup(group)
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting group: %v", n, err)
-				continue
-			}
-			err = insertGroupPolicyRelation(group.ID, test.previousPolicy.ID, test.createAt[i])
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting group relation: %v", n, err)
-				continue
-			}
+			insertGroup(t, n, group)
+			insertGroupPolicyRelation(t, n, group.ID, test.previousPolicy.ID, test.createAt[i])
 		}
 
 		groups, total, err := repoDB.GetAttachedGroups(test.previousPolicy.ID, test.filter)
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
+
 		// Check total
-		if total != len(test.expectedResponse) {
-			t.Errorf("Test %v failed. Received different total elements: %v", n, total)
-			continue
-		}
+		assert.Equal(t, len(test.expectedResponse), total, "Error in test case %v", n)
+
 		// Check response
-		if diff := pretty.Compare(groups, test.expectedResponse); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
+		for i, r := range groups {
+			assert.Equal(t, test.expectedResponse[i].GetGroup(), r.GetGroup(), "Error in test case %v", n)
+			assert.Equal(t, test.expectedResponse[i].GetPolicy(), r.GetPolicy(), "Error in test case %v", n)
+			assert.Equal(t, test.expectedResponse[i].GetDate(), r.GetDate(), "Error in test case %v", n)
 		}
 	}
 }
@@ -931,10 +798,7 @@ func Test_dbPolicyToAPIPolicy(t *testing.T) {
 	for n, test := range testcases {
 		receivedAPIPolicy := dbPolicyToAPIPolicy(test.dbPolicy)
 		// Check response
-		if diff := pretty.Compare(receivedAPIPolicy, test.apiPolicy); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
+		assert.Equal(t, test.apiPolicy, receivedAPIPolicy, "Error in test case %v", n)
 	}
 }
 
@@ -1010,10 +874,7 @@ func Test_dbStatementsToAPIStatements(t *testing.T) {
 	for n, test := range testcases {
 		receivedAPIStatements := dbStatementsToAPIStatements(test.dbStatements)
 		// Check response
-		if diff := pretty.Compare(receivedAPIStatements, test.apiStatements); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
+		assert.Equal(t, test.apiStatements, receivedAPIStatements, "Error in test case %v", n)
 	}
 }
 
@@ -1040,9 +901,6 @@ func Test_stringArrayToString(t *testing.T) {
 	for n, test := range testcases {
 		receivedString := stringArrayToString(test.arrayString)
 		// Check response
-		if diff := pretty.Compare(receivedString, test.expectedString); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
+		assert.Equal(t, test.expectedString, receivedString, "Error in test case %v", n)
 	}
 }

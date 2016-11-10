@@ -9,8 +9,7 @@ import (
 	"errors"
 
 	"github.com/Tecsisa/foulkon/api"
-	"github.com/Tecsisa/foulkon/database"
-	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 )
 
 var repoDB PostgresRepo
@@ -68,10 +67,7 @@ func TestInitDb(t *testing.T) {
 
 	for n, test := range testcases {
 		_, err := InitDb("postgres://postgres:password@localhost:54320/postgres?sslmode=disable", test.idle, test.max, test.ttl)
-		if diff := pretty.Compare(err, test.expectedError); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
+		assert.Equal(t, test.expectedError, err, "Error in test case %v", n)
 	}
 
 }
@@ -111,49 +107,36 @@ func TestPostgresRepo_OrderByValidColumns(t *testing.T) {
 		},
 		"OkCaseOtherActions": {
 			action:          "other",
-			expectedColumns: []string{},
+			expectedColumns: nil,
 		},
 	}
 
 	for n, test := range testcases {
 		validColumns := PostgresRepo{}.OrderByValidColumns(test.action)
-		if diff := pretty.Compare(validColumns, test.expectedColumns); diff != "" {
-			t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-		}
+		assert.Equal(t, test.expectedColumns, validColumns, "Error in test case %v", n)
 	}
 }
 
 // Aux methods
 
-func insertUser(user User) error {
+func insertUser(t *testing.T, testcase string, user User) {
 	err := repoDB.Dbmap.Exec("INSERT INTO public.users (id, external_id, path, create_at, update_at, urn) VALUES (?, ?, ?, ?, ?, ?)",
 		user.ID, user.ExternalID, user.Path, user.CreateAt, user.UpdateAt, user.Urn).Error
 
 	// Error handling
-	if err != nil {
-		return &database.Error{
-			Code:    database.INTERNAL_ERROR,
-			Message: err.Error(),
-		}
-	}
-	return nil
+	assert.Nil(t, err, "Error in test case %v", testcase)
 }
 
-func insertGroupUserRelation(userID string, groupID string, createAt int64) error {
+func insertGroupUserRelation(t *testing.T, testcase string, userID string, groupID string, createAt int64) {
 	err := repoDB.Dbmap.Exec("INSERT INTO public.group_user_relations (user_id, group_id, create_at) VALUES (?, ?, ?)",
 		userID, groupID, createAt).Error
 
 	// Error handling
-	if err != nil {
-		return &database.Error{
-			Code:    database.INTERNAL_ERROR,
-			Message: err.Error(),
-		}
-	}
-	return nil
+	assert.Nil(t, err, "Error in test case %v", testcase)
 }
 
-func getUsersCountFiltered(id string, externalID string, path string, createAt int64, updateAt int64, urn string, pathPrefix string) (int, error) {
+func getUsersCountFiltered(t *testing.T, testcase string,
+	id string, externalID string, path string, createAt int64, updateAt int64, urn string, pathPrefix string) int {
 	query := repoDB.Dbmap.Table(User{}.TableName())
 	if id != "" {
 		query = query.Where("id = ?", id)
@@ -177,44 +160,33 @@ func getUsersCountFiltered(id string, externalID string, path string, createAt i
 		query = query.Where("urn = ?", urn)
 	}
 	var number int
-	if err := query.Count(&number).Error; err != nil {
-		return 0, err
-	}
+	err := query.Count(&number).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
 
-	return number, nil
+	return number
 }
 
-func cleanUserTable() error {
-	if err := repoDB.Dbmap.Delete(&User{}).Error; err != nil {
-		return err
-	}
-	return nil
+func cleanUserTable(t *testing.T, testcase string) {
+	err := repoDB.Dbmap.Delete(&User{}).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
 }
 
-func cleanGroupUserRelationTable() error {
-	if err := repoDB.Dbmap.Delete(&GroupUserRelation{}).Error; err != nil {
-		return err
-	}
-	return nil
+func cleanGroupUserRelationTable(t *testing.T, testcase string) {
+	err := repoDB.Dbmap.Delete(&GroupUserRelation{}).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
 }
 
 // GROUP
 
-func insertGroup(group Group) error {
+func insertGroup(t *testing.T, testcase string, group Group) {
 	err := repoDB.Dbmap.Exec("INSERT INTO public.groups (id, name, path, create_at, update_at, urn, org) VALUES (?, ?, ?, ?, ?, ?, ?)",
 		group.ID, group.Name, group.Path, group.CreateAt, group.UpdateAt, group.Urn, group.Org).Error
 
-	// Error handling
-	if err != nil {
-		return &database.Error{
-			Code:    database.INTERNAL_ERROR,
-			Message: err.Error(),
-		}
-	}
-	return nil
+	assert.Nil(t, err, "Error in test case %v", testcase)
 }
 
-func getGroupsCountFiltered(id string, name string, path string, createAt int64, updateAt int64, urn string, org string) (int, error) {
+func getGroupsCountFiltered(t *testing.T, testcase string,
+	id string, name string, path string, createAt int64, updateAt int64, urn string, org string) int {
 	query := repoDB.Dbmap.Table(Group{}.TableName())
 	if id != "" {
 		query = query.Where("id = ?", id)
@@ -238,14 +210,13 @@ func getGroupsCountFiltered(id string, name string, path string, createAt int64,
 		query = query.Where("org = ?", org)
 	}
 	var number int
-	if err := query.Count(&number).Error; err != nil {
-		return 0, err
-	}
+	err := query.Count(&number).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
 
-	return number, nil
+	return number
 }
 
-func getGroupUserRelations(groupID string, userID string) (int, error) {
+func getGroupUserRelations(t *testing.T, testcase string, groupID string, userID string) int {
 	query := repoDB.Dbmap.Table(GroupUserRelation{}.TableName())
 	if groupID != "" {
 		query = query.Where("group_id = ?", groupID)
@@ -255,86 +226,59 @@ func getGroupUserRelations(groupID string, userID string) (int, error) {
 	}
 
 	var number int
-	if err := query.Count(&number).Error; err != nil {
-		return 0, err
-	}
+	err := query.Count(&number).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
 
-	return number, nil
+	return number
 }
 
-func cleanGroupTable() error {
-	if err := repoDB.Dbmap.Delete(&Group{}).Error; err != nil {
-		return err
-	}
-	return nil
+func cleanGroupTable(t *testing.T, testcase string) {
+	err := repoDB.Dbmap.Delete(&Group{}).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
 }
 
-func cleanGroupPolicyRelationTable() error {
-	if err := repoDB.Dbmap.Delete(&GroupPolicyRelation{}).Error; err != nil {
-		return err
-	}
-	return nil
+func cleanGroupPolicyRelationTable(t *testing.T, testcase string) {
+	err := repoDB.Dbmap.Delete(&GroupPolicyRelation{}).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
 }
 
 // POLICY
 
-func cleanPolicyTable() error {
-	if err := repoDB.Dbmap.Delete(&Policy{}).Error; err != nil {
-		return err
-	}
-	return nil
+func cleanPolicyTable(t *testing.T, testcase string) {
+	err := repoDB.Dbmap.Delete(&Policy{}).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
 }
 
-func cleanStatementTable() error {
-	if err := repoDB.Dbmap.Delete(&Statement{}).Error; err != nil {
-		return err
-	}
-	return nil
+func cleanStatementTable(t *testing.T, testcase string) {
+	err := repoDB.Dbmap.Delete(&Statement{}).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
 }
 
-func insertPolicy(policy Policy, statements []Statement) error {
+func insertPolicy(t *testing.T, testcase string, policy Policy, statements []Statement) {
 	err := repoDB.Dbmap.Exec("INSERT INTO public.policies (id, name, org, path, create_at, update_at, urn) VALUES (?, ?, ?, ?, ?, ?, ?)",
 		policy.ID, policy.Name, policy.Org, policy.Path, policy.CreateAt, policy.UpdateAt, policy.Urn).Error
 
 	// Error handling
-	if err != nil {
-		return &database.Error{
-			Code:    database.INTERNAL_ERROR,
-			Message: err.Error(),
-		}
-	}
+	assert.Nil(t, err, "Error in test case %v", testcase)
 
 	for _, v := range statements {
 		v.PolicyID = policy.ID
-		err = insertStatements(v)
+		insertStatements(t, testcase, v)
 		// Error handling
-		if err != nil {
-			return &database.Error{
-				Code:    database.INTERNAL_ERROR,
-				Message: err.Error(),
-			}
-		}
+		assert.Nil(t, err, "Error in test case %v", testcase)
 	}
-
-	return nil
 }
 
-func insertStatements(statement Statement) error {
+func insertStatements(t *testing.T, testcase string, statement Statement) {
 	err := repoDB.Dbmap.Exec("INSERT INTO public.statements (id, policy_id, effect, actions, resources) VALUES (?, ?, ?, ?, ?)",
 		statement.ID, statement.PolicyID, statement.Effect, statement.Actions, statement.Resources).Error
 
 	// Error handling
-	if err != nil {
-		return &database.Error{
-			Code:    database.INTERNAL_ERROR,
-			Message: err.Error(),
-		}
-	}
-
-	return nil
+	assert.Nil(t, err, "Error in test case %v", testcase)
 }
 
-func getPoliciesCountFiltered(id string, org string, name string, path string, createAt int64, urn string) (int, error) {
+func getPoliciesCountFiltered(t *testing.T, testcase string,
+	id string, org string, name string, path string, createAt int64, urn string) int {
 	query := repoDB.Dbmap.Table(Policy{}.TableName())
 	if id != "" {
 		query = query.Where("id = ?", id)
@@ -355,14 +299,13 @@ func getPoliciesCountFiltered(id string, org string, name string, path string, c
 		query = query.Where("urn = ?", urn)
 	}
 	var number int
-	if err := query.Count(&number).Error; err != nil {
-		return 0, err
-	}
+	err := query.Count(&number).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
 
-	return number, nil
+	return number
 }
 
-func getGroupPolicyRelationCount(policyID string, groupID string) (int, error) {
+func getGroupPolicyRelationCount(t *testing.T, testcase string, policyID string, groupID string) int {
 	query := repoDB.Dbmap.Table(GroupPolicyRelation{}.TableName())
 	if policyID != "" {
 		query = query.Where("policy_id = ?", policyID)
@@ -371,28 +314,22 @@ func getGroupPolicyRelationCount(policyID string, groupID string) (int, error) {
 		query = query.Where("group_id = ?", groupID)
 	}
 	var number int
-	if err := query.Count(&number).Error; err != nil {
-		return 0, err
-	}
+	err := query.Count(&number).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
 
-	return number, nil
+	return number
 }
 
-func insertGroupPolicyRelation(groupID string, policyID string, createAt int64) error {
+func insertGroupPolicyRelation(t *testing.T, testcase string, groupID string, policyID string, createAt int64) {
 	err := repoDB.Dbmap.Exec("INSERT INTO public.group_policy_relations (group_id, policy_id, create_at) VALUES (?, ?, ?)",
 		groupID, policyID, createAt).Error
 
 	// Error handling
-	if err != nil {
-		return &database.Error{
-			Code:    database.INTERNAL_ERROR,
-			Message: err.Error(),
-		}
-	}
-	return nil
+	assert.Nil(t, err, "Error in test case %v", testcase)
 }
 
-func getStatementsCountFiltered(id string, policyId string, effect string, actions string, resources string) (int, error) {
+func getStatementsCountFiltered(t *testing.T, testcase string,
+	id string, policyId string, effect string, actions string, resources string) int {
 	query := repoDB.Dbmap.Table(Statement{}.TableName())
 	if id != "" {
 		query = query.Where("id = ?", id)
@@ -410,32 +347,23 @@ func getStatementsCountFiltered(id string, policyId string, effect string, actio
 		query = query.Where("resources = ?", resources)
 	}
 	var number int
-	if err := query.Count(&number).Error; err != nil {
-		return 0, err
-	}
+	err := query.Count(&number).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
 
-	return number, nil
+	return number
 }
 
 // PROXY
 
-func cleanProxyResourcesTable() error {
-	if err := repoDB.Dbmap.Delete(&ProxyResource{}).Error; err != nil {
-		return err
-	}
-	return nil
+func cleanProxyResourcesTable(t *testing.T, testcase string) {
+	err := repoDB.Dbmap.Delete(&ProxyResource{}).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
 }
 
-func insertProxyResource(pr ProxyResource) error {
+func insertProxyResource(t *testing.T, testcase string, pr ProxyResource) {
 	err := repoDB.Dbmap.Exec("INSERT INTO public.proxy_resources (id, host, url, method, urn, action) VALUES (?, ?, ?, ?, ?, ?)",
 		pr.ID, pr.Host, pr.Url, pr.Method, pr.Urn, pr.Action).Error
 
 	// Error handling
-	if err != nil {
-		return &database.Error{
-			Code:    database.INTERNAL_ERROR,
-			Message: err.Error(),
-		}
-	}
-	return nil
+	assert.Nil(t, err, "Error in testcase %v", testcase)
 }

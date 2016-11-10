@@ -6,7 +6,7 @@ import (
 
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/database"
-	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPostgresRepo_AddUser(t *testing.T) {
@@ -64,51 +64,27 @@ func TestPostgresRepo_AddUser(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean user database
-		cleanUserTable()
+		cleanUserTable(t, n)
 
 		// Insert previous data
 		if test.previousUser != nil {
-			if err := insertUser(*test.previousUser); err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
-				continue
-			}
+			insertUser(t, n, *test.previousUser)
 		}
 		// Call to repository to store an user
 		storedUser, err := repoDB.AddUser(*test.userToCreate)
 		if test.expectedError != nil {
-			dbError, ok := err.(*database.Error)
-			if !ok || dbError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
-				continue
-			}
-			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
 		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
+
 			// Check response
-			if diff := pretty.Compare(storedUser, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, storedUser, "Error in test case %v", n)
 			// Check database
-			userNumber, err := getUsersCountFiltered(test.expectedResponse.ID, test.expectedResponse.ExternalID, test.expectedResponse.Path,
+			userNumber := getUsersCountFiltered(t, n, test.expectedResponse.ID, test.expectedResponse.ExternalID, test.expectedResponse.Path,
 				test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.UpdateAt.UnixNano(), test.expectedResponse.Urn, "")
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
-				continue
-			}
-			if userNumber != 1 {
-				t.Errorf("Test %v failed. Received different user number: %v", n, userNumber)
-				continue
-			}
-
+			assert.Equal(t, 1, userNumber, "Error in test case %v", n)
 		}
-
 	}
 }
 
@@ -161,37 +137,22 @@ func TestPostgresRepo_GetUserByExternalID(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean user database
-		cleanUserTable()
+		cleanUserTable(t, n)
 
 		// Insert previous data
 		if test.previousUser != nil {
-			if err := insertUser(*test.previousUser); err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
-				continue
-			}
+			insertUser(t, n, *test.previousUser)
 		}
 		// Call to repository to get an user
 		receivedUser, err := repoDB.GetUserByExternalID(test.externalID)
 		if test.expectedError != nil {
-			dbError, ok := err.(*database.Error)
-			if !ok || dbError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
-				continue
-			}
-			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
 		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
+
 			// Check response
-			if diff := pretty.Compare(receivedUser, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, receivedUser, "Error in test case %v", n)
 		}
 
 	}
@@ -246,40 +207,23 @@ func TestPostgresRepo_GetUserByID(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean user database
-		cleanUserTable()
+		cleanUserTable(t, n)
 
 		// Insert previous data
 		if test.previousUser != nil {
-			if err := insertUser(*test.previousUser); err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
-				continue
-			}
+			insertUser(t, n, *test.previousUser)
 		}
 		// Call to repository to get an user
 		receivedUser, err := repoDB.GetUserByID(test.userID)
 		if test.expectedError != nil {
-			dbError, ok := err.(*database.Error)
-			if !ok || dbError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
-				continue
-			}
-			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
 		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
+
 			// Check response
-			if diff := pretty.Compare(receivedUser, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
-
+			assert.Equal(t, test.expectedResponse, receivedUser, "Error in test case %v", n)
 		}
-
 	}
 }
 
@@ -402,34 +346,23 @@ func TestPostgresRepo_GetUsersFiltered(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean user database
-		cleanUserTable()
+		cleanUserTable(t, n)
 
 		// Insert previous data
 		if test.previousUsers != nil {
 			for _, previousUser := range test.previousUsers {
-				if err := insertUser(previousUser); err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
-					continue
-				}
+				insertUser(t, n, previousUser)
 			}
 		}
 		// Call to repository to get users
 		receivedUsers, total, err := repoDB.GetUsersFiltered(test.filter)
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-			continue
-		}
-		// Check total
-		if total != len(test.expectedResponse) {
-			t.Errorf("Test %v failed. Received different total elements: %v", n, total)
-			continue
-		}
-		// Check response
-		if diff := pretty.Compare(receivedUsers, test.expectedResponse); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
+		// Check total
+		assert.Equal(t, len(test.expectedResponse), total, "Error in test case %v", n)
+
+		// Check response
+		assert.Equal(t, test.expectedResponse, receivedUsers, "Error in test case %v", n)
 	}
 }
 
@@ -473,39 +406,22 @@ func TestPostgresRepo_UpdateUser(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean user database
-		cleanUserTable()
+		cleanUserTable(t, n)
 
 		// Insert previous data
 		if test.previousUser != nil {
-			if err := insertUser(*test.previousUser); err != nil {
-				t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
-				continue
-			}
+			insertUser(t, n, *test.previousUser)
 		}
 		// Call to repository to update an user
 		updatedUser, err := repoDB.UpdateUser(*test.userToUpdate)
+		assert.Nil(t, err, "Error in test case %v", n)
 
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-			continue
-		}
 		// Check response
-		if diff := pretty.Compare(updatedUser, test.expectedResponse); diff != "" {
-			t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-			continue
-		}
+		assert.Equal(t, test.expectedResponse, updatedUser, "Error in test case %v", n)
 		// Check database
-		userNumber, err := getUsersCountFiltered(test.expectedResponse.ID, test.expectedResponse.ExternalID, test.expectedResponse.Path,
+		userNumber := getUsersCountFiltered(t, n, test.expectedResponse.ID, test.expectedResponse.ExternalID, test.expectedResponse.Path,
 			test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.UpdateAt.UnixNano(), test.expectedResponse.Urn, "")
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
-			continue
-		}
-		if userNumber != 1 {
-			t.Fatalf("Test %v failed. Received different user number: %v", n, userNumber)
-			continue
-		}
-
+		assert.Equal(t, 1, userNumber, "Error in test case %v", n)
 	}
 }
 
@@ -561,73 +477,39 @@ func TestPostgresRepo_RemoveUser(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean user database
-		cleanUserTable()
-		cleanGroupUserRelationTable()
+		cleanUserTable(t, n)
+		cleanGroupUserRelationTable(t, n)
 
 		// Insert previous data
 		if test.previousUsers != nil {
 			for _, usr := range test.previousUsers {
-				if err := insertUser(usr); err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting previous users: %v", n, err)
-					continue
-				}
+				insertUser(t, n, usr)
 			}
 		}
 		if test.relations != nil {
 			for _, rel := range test.relations {
-				if err := insertGroupUserRelation(rel.userID, rel.groupID, rel.createAt); err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting previous group user relations: %v", n, err)
-					continue
-				}
+				insertGroupUserRelation(t, n, rel.userID, rel.groupID, rel.createAt)
 			}
 		}
 		// Call to repository to remove user
 		err := repoDB.RemoveUser(test.userToDelete)
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		// Check database
-		userNumber, err := getUsersCountFiltered(test.userToDelete, "", "", 0, 0, "", "")
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting users: %v", n, err)
-			continue
-		}
-		if userNumber != 0 {
-			t.Errorf("Test %v failed. Received different user number: %v", n, userNumber)
-			continue
-		}
+		userNumber := getUsersCountFiltered(t, n, test.userToDelete, "", "", 0, 0, "", "")
+		assert.Equal(t, 0, userNumber, "Error in test case %v", n)
 
 		// Check total users
-		totalUserNumber, err := getUsersCountFiltered("", "", "", 0, 0, "", "")
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting total users: %v", n, err)
-			continue
-		}
-		if totalUserNumber != 1 {
-			t.Errorf("Test %v failed. Received different total user number: %v", n, totalUserNumber)
-			continue
-		}
+		totalUserNumber := getUsersCountFiltered(t, n, "", "", "", 0, 0, "", "")
+		assert.Equal(t, 1, totalUserNumber, "Error in test case %v", n)
 
 		// Check user deleted relations
-		relations, err := getGroupUserRelations("", test.userToDelete)
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting group user relations: %v", n, err)
-			continue
-		}
-		if relations != 0 {
-			t.Errorf("Test %v failed. Received different group user relation number: %v", n, relations)
-			continue
-		}
+		relations := getGroupUserRelations(t, n, "", test.userToDelete)
+		assert.Equal(t, 0, relations, "Error in test case %v", n)
 
 		// Check total user relations
-		totalRelations, err := getGroupUserRelations("", "")
-		if err != nil {
-			t.Errorf("Test %v failed. Unexpected error counting total group user relations: %v", n, err)
-			continue
-		}
-		if totalRelations != 1 {
-			t.Errorf("Test %v failed. Received different total group user relation number: %v", n, totalRelations)
-			continue
-		}
-
+		totalRelations := getGroupUserRelations(t, n, "", "")
+		assert.Equal(t, 1, totalRelations, "Error in test case %v", n)
 	}
 }
 
@@ -646,7 +528,7 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 		userID string
 		filter *api.Filter
 		// Expected result
-		expectedResponse []GroupUser
+		expectedResponse []*GroupUser
 		expectedError    *database.Error
 	}{
 		"OkCase": {
@@ -676,7 +558,7 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 			},
 			userID: "UserID",
 			filter: testFilter,
-			expectedResponse: []GroupUser{
+			expectedResponse: []*GroupUser{
 				{
 					Group: &api.Group{
 						ID:       "GroupID1",
@@ -732,7 +614,7 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 			filter: &api.Filter{
 				OrderBy: "create_at desc",
 			},
-			expectedResponse: []GroupUser{
+			expectedResponse: []*GroupUser{
 				{
 					Group: &api.Group{
 						ID:       "GroupID2",
@@ -784,53 +666,36 @@ func TestPostgresRepo_GetGroupsByUserID(t *testing.T) {
 
 	for n, test := range testcases {
 		// Clean database
-		cleanUserTable()
-		cleanGroupTable()
-		cleanGroupUserRelationTable()
+		cleanUserTable(t, n)
+		cleanGroupTable(t, n)
+		cleanGroupUserRelationTable(t, n)
 
 		// Insert previous data
 		if test.relation != nil {
 			for i, group := range test.relation.groups {
-				if err := insertGroupUserRelation(test.relation.userID, group.ID, test.relation.createAt[i]); err != nil {
-					t.Errorf("Test %v failed. Unexpected error inserting prevoius group user relations: %v", n, err)
-					continue
-				}
+				insertGroupUserRelation(t, n, test.relation.userID, group.ID, test.relation.createAt[i])
 				if !test.relation.groupNotFound {
-					if err := insertGroup(group); err != nil {
-						t.Errorf("Test %v failed. Unexpected error inserting previous data: %v", n, err)
-						continue
-					}
+					insertGroup(t, n, group)
 				}
 			}
 		}
 		// Call to repository to get groups associated
 		receivedUsers, total, err := repoDB.GetGroupsByUserID(test.userID, test.filter)
 		if test.expectedError != nil {
-			dbError, ok := err.(*database.Error)
-			if !ok || dbError == nil {
-				t.Errorf("Test %v failed. Unexpected data retrieved from error: %v", n, err)
-				continue
-			}
-			if diff := pretty.Compare(dbError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
 		} else {
-			if err != nil {
-				t.Errorf("Test %v failed. Unexpected error: %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
+
 			// Check total
-			if total != len(test.expectedResponse) {
-				t.Errorf("Test %v failed. Received different total elements: %v", n, total)
-				continue
-			}
+			assert.Equal(t, len(test.expectedResponse), total, "Error in test case %v", n)
+
 			// Check response
-			if diff := pretty.Compare(receivedUsers, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
+			for i, r := range receivedUsers {
+				assert.Equal(t, test.expectedResponse[i].GetGroup(), r.GetGroup(), "Error in test case %v", n)
+				assert.Equal(t, test.expectedResponse[i].GetUser(), r.GetUser(), "Error in test case %v", n)
+				assert.Equal(t, test.expectedResponse[i].GetDate(), r.GetDate(), "Error in test case %v", n)
 			}
 		}
-
 	}
 }

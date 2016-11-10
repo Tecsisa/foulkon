@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/Tecsisa/foulkon/api"
-	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGroupUser_GetUser(t *testing.T) {
@@ -32,11 +32,7 @@ func TestGroupUser_GetUser(t *testing.T) {
 	}
 
 	for x, testcase := range testcases {
-		if diff := pretty.Compare(testcase.expectedResult, testcase.relation.GetUser()); diff != "" {
-			t.Errorf("Test %v failed. Received different messages (wanted / received) %v",
-				x, diff)
-			continue
-		}
+		assert.Equal(t, testcase.expectedResult, testcase.relation.GetUser(), "Error in test case %v", x)
 	}
 }
 
@@ -66,11 +62,7 @@ func TestGroupUser_GetGroup(t *testing.T) {
 	}
 
 	for x, testcase := range testcases {
-		if diff := pretty.Compare(testcase.expectedResult, testcase.relation.GetGroup()); diff != "" {
-			t.Errorf("Test %v failed. Received different messages (wanted / received) %v",
-				x, diff)
-			continue
-		}
+		assert.Equal(t, testcase.expectedResult, testcase.relation.GetGroup(), "Error in test case %v", x)
 	}
 }
 
@@ -89,11 +81,7 @@ func TestGroupUser_GetDate(t *testing.T) {
 	}
 
 	for x, testcase := range testcases {
-		if diff := pretty.Compare(testcase.expectedResult, testcase.relation.GetDate()); diff != "" {
-			t.Errorf("Test %v failed. Received different messages (wanted / received) %v",
-				x, diff)
-			continue
-		}
+		assert.Equal(t, testcase.expectedResult, testcase.relation.GetDate(), "Error in test case %v", x)
 	}
 }
 
@@ -123,11 +111,7 @@ func TestPolicyGroup_GetPolicy(t *testing.T) {
 	}
 
 	for x, testcase := range testcases {
-		if diff := pretty.Compare(testcase.expectedResult, testcase.relation.GetPolicy()); diff != "" {
-			t.Errorf("Test %v failed. Received different messages (wanted / received) %v",
-				x, diff)
-			continue
-		}
+		assert.Equal(t, testcase.expectedResult, testcase.relation.GetPolicy(), "Error in test case %v", x)
 	}
 }
 
@@ -157,11 +141,7 @@ func TestPolicyGroup_GetGroup(t *testing.T) {
 	}
 
 	for x, testcase := range testcases {
-		if diff := pretty.Compare(testcase.expectedResult, testcase.relation.GetGroup()); diff != "" {
-			t.Errorf("Test %v failed. Received different messages (wanted / received) %v",
-				x, diff)
-			continue
-		}
+		assert.Equal(t, testcase.expectedResult, testcase.relation.GetGroup(), "Error in test case %v", x)
 	}
 }
 
@@ -180,10 +160,6 @@ func TestPolicyGroup_GetDate(t *testing.T) {
 	}
 
 	for x, testcase := range testcases {
-		if diff := pretty.Compare(testcase.expectedResult, testcase.relation.GetDate()); diff != "" {
-			t.Errorf("Test %v failed. Received different messages (wanted / received) %v",
-				x, diff)
-			continue
-		}
+		assert.Equal(t, testcase.expectedResult, testcase.relation.GetDate(), "Error in test case %v", x)
 	}
 }

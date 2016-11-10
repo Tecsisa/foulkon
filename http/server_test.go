@@ -15,7 +15,7 @@ import (
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/foulkon"
 	"github.com/julienschmidt/httprouter"
-	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewWorker(t *testing.T) {
@@ -32,25 +32,10 @@ func TestNewWorker(t *testing.T) {
 	ws := srv.(*WorkerServer)
 
 	// Check responses
-	if diff := pretty.Compare(ws.Addr, worker.Host+":"+worker.Port); diff != "" {
-		t.Errorf("Test failed. Received different Addr (received/wanted) %v", diff)
-		return
-	}
-
-	if diff := pretty.Compare(ws.certFile, worker.CertFile); diff != "" {
-		t.Errorf("Test failed. Received different certFile (received/wanted) %v", diff)
-		return
-	}
-
-	if diff := pretty.Compare(ws.keyFile, worker.KeyFile); diff != "" {
-		t.Errorf("Test failed. Received different keyFile (received/wanted) %v", diff)
-		return
-	}
-
-	if diff := pretty.Compare(ws.Handler, handler); diff != "" {
-		t.Errorf("Test failed. Received different keyFile (received/wanted) %v", diff)
-		return
-	}
+	assert.Equal(t, worker.Host+":"+worker.Port, ws.Addr, "Error in test")
+	assert.Equal(t, worker.CertFile, ws.certFile, "Error in test")
+	assert.Equal(t, worker.KeyFile, ws.keyFile, "Error in test")
+	assert.Equal(t, handler, ws.Handler, "Error in test")
 }
 
 func TestNewProxy(t *testing.T) {
@@ -134,7 +119,6 @@ func TestNewProxy(t *testing.T) {
 				ProxyApi:    testApi,
 			},
 			getProxyResourcesMethod: []api.ProxyResource{},
-			expectedResources:       []api.ProxyResource{},
 		},
 		"ErrorCaseGetProxyResources": {
 			proxy: &foulkon.Proxy{
@@ -164,38 +148,15 @@ func TestNewProxy(t *testing.T) {
 			// Check error
 			ps := srv.(*ProxyServer)
 			ps.resourceLock.Lock()
-			if diff := pretty.Compare(test.expectedError, hook.LastEntry().Message); diff != "" {
-				t.Errorf("Test %v failed. Received different errors (received/wanted) %v", n, diff)
-				ps.resourceLock.Unlock()
-				continue
-			}
+			assert.Equal(t, test.expectedError, hook.LastEntry().Message, "Error in test case %v", n)
 			ps.resourceLock.Unlock()
 		} else {
 			// Check responses
-			if diff := pretty.Compare(ps.Addr, test.proxy.Host+":"+test.proxy.Port); diff != "" {
-				t.Errorf("Test %v failed. Received different Addr (received/wanted) %v", n, diff)
-				continue
-			}
-
-			if diff := pretty.Compare(ps.certFile, test.proxy.CertFile); diff != "" {
-				t.Errorf("Test %v failed. Received different certFile (received/wanted) %v", n, diff)
-				continue
-			}
-
-			if diff := pretty.Compare(ps.keyFile, test.proxy.KeyFile); diff != "" {
-				t.Errorf("Test %v failed. Received different keyFile (received/wanted) %v", n, diff)
-				continue
-			}
-
-			if diff := pretty.Compare(ps.refreshTime, test.proxy.RefreshTime); diff != "" {
-				t.Errorf("Test %v failed. Received different refreshTime (received/wanted) %v", n, diff)
-				continue
-			}
-
-			if diff := pretty.Compare(ps.currentResources, test.expectedResources); diff != "" {
-				t.Errorf("Test %v failed. Received different resources (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, test.proxy.Host+":"+test.proxy.Port, ps.Addr, "Error in test case %v", n)
+			assert.Equal(t, test.proxy.CertFile, ps.certFile, "Error in test case %v", n)
+			assert.Equal(t, test.proxy.KeyFile, ps.keyFile, "Error in test case %v", n)
+			assert.Equal(t, test.proxy.RefreshTime, ps.refreshTime, "Error in test case %v", n)
+			assert.Equal(t, test.expectedResources, ps.currentResources, "Error in test case %v", n)
 		}
 	}
 }
@@ -220,20 +181,14 @@ func Test_strSliceContains(t *testing.T) {
 
 	for n, test := range testcases {
 		result := strSliceContains(test.ss, test.s)
-		if result != test.expectedResult {
-			t.Errorf("Test %v failed. Received different responses (received/wanted)", n)
-			continue
-		}
+		assert.Equal(t, test.expectedResult, result, "Error in test case %v", n)
 	}
 }
 
 func TestWorkerServer_Configuration(t *testing.T) {
 	ws := WorkerServer{}
 	err := ws.Configuration()
-	if diff := pretty.Compare(err, nil); diff != "" {
-		t.Errorf("Test failed. Received different errors (received/wanted) %v", diff)
-		return
-	}
+	assert.Nil(t, err, "Error in test")
 }
 
 func TestProxyServer_Configuration(t *testing.T) {
@@ -273,20 +228,12 @@ func TestProxyServer_Configuration(t *testing.T) {
 		test.ps.TLSConfig = &tls.Config{}
 		err = test.ps.Configuration()
 		if test.expectedError != "" {
-			if err != nil {
-				if diff := pretty.Compare(err.Error(), test.expectedError); diff != "" {
-					t.Errorf("Test %v failed. Received different errors (received/wanted) %v", n, diff)
-					continue
-				}
-			} else {
-				t.Errorf("Test %v failed. No errors received", n)
-				continue
+			ok := assert.NotNil(t, err, "Error in test case %v", n)
+			if ok {
+				assert.Equal(t, test.expectedError, err.Error(), "Error in test case %v", n)
 			}
 		} else {
-			if diff := pretty.Compare(test.ps.Addr, test.expectedAddr); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedAddr, test.ps.Addr, "Error in test case %v", n)
 		}
 	}
 }
@@ -322,10 +269,7 @@ func TestWorkerServer_Run(t *testing.T) {
 		var err error
 		srv := NewWorker(test.worker, test.handler)
 		err = srv.Run()
-		if !strings.Contains(err.Error(), test.expectedError) {
-			t.Errorf("Test %v failed. Received different errors (received: %v / wanted: %v)", n, test.expectedError, err.Error())
-			continue
-		}
+		assert.True(t, strings.Contains(err.Error(), test.expectedError), "Error in test case %v", n)
 	}
 }
 
@@ -371,10 +315,7 @@ func TestProxyServer_Run(t *testing.T) {
 		if test.expectedError != "" {
 			err = srv.Run()
 			if err != nil {
-				if !strings.Contains(err.Error(), test.expectedError) {
-					t.Errorf("Test %v failed. Received different errors (received: %v / wanted: %v)", n, test.expectedError, err.Error())
-					continue
-				}
+				assert.True(t, strings.Contains(err.Error(), test.expectedError), "Error in test case %v", n)
 			}
 		} else {
 			testApi.ArgsOut[GetProxyResourcesMethod][0] = []api.ProxyResource{
@@ -398,10 +339,7 @@ func TestProxyServer_Run(t *testing.T) {
 			ps := srv.(*ProxyServer)
 
 			ps.resourceLock.Lock()
-			if diff := pretty.Compare(ps.currentResources, test.expectedResources); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResources, ps.currentResources, "Error in test case %v", n)
 			ps.resourceLock.Unlock()
 		}
 	}

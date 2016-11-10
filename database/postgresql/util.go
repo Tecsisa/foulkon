@@ -14,17 +14,17 @@ type GroupUser struct {
 }
 
 // GetUser returns a member of a GroupUser relation
-func (gu GroupUser) GetUser() *api.User {
+func (gu *GroupUser) GetUser() *api.User {
 	return gu.User
 }
 
 // GetGroup returns a Group of a GroupUser relation
-func (gu GroupUser) GetGroup() *api.Group {
+func (gu *GroupUser) GetGroup() *api.Group {
 	return gu.Group
 }
 
 // GetDate returns the date when the relation was created
-func (gu GroupUser) GetDate() time.Time {
+func (gu *GroupUser) GetDate() time.Time {
 	return gu.CreateAt
 }
 
@@ -36,16 +36,16 @@ type PolicyGroup struct {
 }
 
 // GetGroup returns a Group of a PolicyGroup relation
-func (pg PolicyGroup) GetGroup() *api.Group {
+func (pg *PolicyGroup) GetGroup() *api.Group {
 	return pg.Group
 }
 
 // GetPolicy returns a Policy of a PolicyGroup relation
-func (pg PolicyGroup) GetPolicy() *api.Policy {
+func (pg *PolicyGroup) GetPolicy() *api.Policy {
 	return pg.Policy
 }
 
 // GetDate returns the date when the relation was created
-func (pg PolicyGroup) GetDate() time.Time {
+func (pg *PolicyGroup) GetDate() time.Time {
 	return pg.CreateAt
 }

@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/Tecsisa/foulkon/api"
-	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWorkerHandler_HandleGetAuthorizedExternalResources(t *testing.T) {
@@ -94,60 +94,36 @@ func TestWorkerHandler_HandleGetAuthorizedExternalResources(t *testing.T) {
 		var body *bytes.Buffer
 		if test.request != nil {
 			jsonObject, err := json.Marshal(test.request)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected marshalling api request %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			body = bytes.NewBuffer(jsonObject)
 		}
 		if body == nil {
 			body = bytes.NewBuffer([]byte{})
 		}
 		req, err := http.NewRequest(http.MethodPost, server.URL+RESOURCE_URL, body)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		res, err := client.Do(req)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		// check status code
-		if test.expectedStatusCode != res.StatusCode {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
-			continue
-		}
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
 
 		switch res.StatusCode {
 		case http.StatusOK:
 			authorizeResourcesResponse := AuthorizeResourcesResponse{}
 			err = json.NewDecoder(res.Body).Decode(&authorizeResourcesResponse)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(authorizeResourcesResponse, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, authorizeResourcesResponse, "Error in test case %v", n)
 		case http.StatusInternalServerError: // Empty message so continue
 			continue
 		default:
 			apiError := api.Error{}
 			err = json.NewDecoder(res.Body).Decode(&apiError)
-			if err != nil {
-				t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
-				continue
-			}
+			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
-			if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-				t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
 		}
 	}
 }

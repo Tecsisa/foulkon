@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/Tecsisa/foulkon/middleware"
-	"github.com/kylelemons/godebug/pretty"
 	"github.com/satori/go.uuid"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestXRequestIdMiddleware_Action(t *testing.T) {
@@ -24,30 +24,20 @@ func TestXRequestIdMiddleware_Action(t *testing.T) {
 	mw.Action(testHandler).ServeHTTP(w, req)
 	res := w.Result()
 	// Check status code
-	if res.StatusCode != http.StatusOK {
-		t.Errorf("Test failed. Unexpected status code. (received/wanted) %v / %v", w.Code, http.StatusOK)
-		return
-	}
+	assert.Equal(t, http.StatusOK, res.StatusCode, "Error in test")
+
 	// Check body
 	buffer := new(bytes.Buffer)
-	if _, err := buffer.ReadFrom(res.Body); err != nil {
-		t.Errorf("Test failed. Unexpected error reading response: %v.", err)
-		return
-	}
-	if diff := pretty.Compare(string(buffer.Bytes()), testMessage); diff != "" {
-		t.Errorf("Test failed. Received different errors (received/wanted) %v", diff)
-		return
-	}
+	_, err := buffer.ReadFrom(res.Body)
+	assert.Nil(t, err, "Error in test")
+
+	assert.Equal(t, string(buffer.Bytes()), testMessage)
 
 	// Check Header
 	header := req.Header.Get(middleware.REQUEST_ID_HEADER)
 
-	_, err := uuid.FromString(header)
-	if err != nil {
-		t.Errorf("Test failed. Invalid uuid received from header: %v", header)
-		return
-	}
-
+	_, err = uuid.FromString(header)
+	assert.Nil(t, err, "Error in test")
 }
 
 func TestXRequestIdMiddleware_GetInfo(t *testing.T) {
@@ -58,8 +48,5 @@ func TestXRequestIdMiddleware_GetInfo(t *testing.T) {
 	mc := new(middleware.MiddlewareContext)
 	mw.GetInfo(req, mc)
 	// Check request id value from context
-	if mc.XRequestId != testuuid {
-		t.Errorf("Test failed. Received differents ids. (received/wanted) %v / %v", mc.XRequestId, testuuid)
-		return
-	}
+	assert.Equal(t, mc.XRequestId, testuuid, "Error in test")
 }

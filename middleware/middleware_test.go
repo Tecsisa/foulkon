@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -62,29 +62,18 @@ func TestMiddlewareHandler_Handle(t *testing.T) {
 		res := w.Result()
 
 		// Check status code
-		if res.StatusCode != http.StatusOK {
-			t.Errorf("Test %v failed. Unexpected status code. (received/wanted) %v / %v", x, w.Code, http.StatusOK)
-			continue
-		}
+		assert.Equal(t, http.StatusOK, res.StatusCode, "Error in test case %v", x)
 
 		// Check body
 		buffer := new(bytes.Buffer)
-		if _, err := buffer.ReadFrom(res.Body); err != nil {
-			t.Errorf("Test %v failed. Unexpected error reading response: %v.", x, err)
-			continue
-		}
-		if diff := pretty.Compare(string(buffer.Bytes()), testMessage); diff != "" {
-			t.Errorf("Test %v failed. Received different errors (received/wanted) %v", x, diff)
-			continue
-		}
+		_, err := buffer.ReadFrom(res.Body)
+		assert.Nil(t, err, "Error in test case %v", x)
+
+		assert.Equal(t, string(buffer.Bytes()), testMessage)
 
 		// Check Header
 		expectedHeader := XREQUESTID_MIDDLEWARE + AUTHENTICATOR_MIDDLEWARE + REQUEST_LOGGER_MIDDLEWARE
-		if diff := pretty.Compare(req.Header.Get(TEST_HEADER_NAME), expectedHeader); diff != "" {
-			t.Errorf("Test %v failed. Received different header value (received/wanted) %v", x, diff)
-			continue
-		}
-
+		assert.Equal(t, expectedHeader, req.Header.Get(TEST_HEADER_NAME))
 	}
 
 }
@@ -125,11 +114,7 @@ func TestMiddlewareHandler_GetMiddlewareContext(t *testing.T) {
 		testmc := mwh.GetMiddlewareContext(req)
 
 		// Check context
-		if diff := pretty.Compare(testmc, testcase.expectedContext); diff != "" {
-			t.Errorf("Test %v failed. Received different context (received/wanted) %v", x, diff)
-			continue
-		}
-
+		assert.Equal(t, testcase.expectedContext, testmc, "Error in test case %v", x)
 	}
 
 }

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Tecsisa/foulkon/api"
-	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestProxyHandler_HandleRequest(t *testing.T) {
@@ -177,27 +177,18 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 		testApi.ArgsOut[GetUserByExternalIdMethod][1] = test.getUserByExternalIdErr
 
 		req, err := http.NewRequest(http.MethodGet, proxy.URL+test.resource, nil)
-
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error creating http request %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		if test.authStatusCode != 0 {
 			authConnector.statusCode = test.authStatusCode
 		}
 
 		res, err := client.Do(req)
-		if err != nil {
-			t.Errorf("Test case %v. Unexpected error calling server %v", n, err)
-			continue
-		}
+		assert.Nil(t, err, "Error in test case %v", n)
 
 		// check status code
-		if test.expectedStatusCode != res.StatusCode {
-			t.Errorf("Test case %v. Received different http status code (wanted:%v / received:%v)", n, test.expectedStatusCode, res.StatusCode)
-			continue
-		}
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
+
 		switch res.StatusCode {
 		case http.StatusOK:
 			response := api.User{}
@@ -207,24 +198,14 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 				continue
 			}
 			// Check result
-			if diff := pretty.Compare(response, test.expectedResponse); diff != "" {
-				t.Errorf("Test %v failed. Received different responses (received/wanted) %v",
-					n, diff)
-				continue
-			}
+			assert.Equal(t, test.expectedResponse, response, "Error in test case %v", n)
 		default:
 			if test.expectedError != nil {
-				apiError := api.Error{}
+				apiError := &api.Error{}
 				err = json.NewDecoder(res.Body).Decode(&apiError)
-				if err != nil {
-					t.Errorf("Test case %v. Unexpected error parsing error response %v", n, err)
-					continue
-				}
-				// Check result
-				if diff := pretty.Compare(apiError, test.expectedError); diff != "" {
-					t.Errorf("Test %v failed. Received different error response (received/wanted) %v", n, diff)
-					continue
-				}
+				assert.Nil(t, err, "Error in test case %v", n)
+				// Check error
+				assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
 			}
 		}
 	}
