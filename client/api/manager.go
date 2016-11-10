@@ -36,6 +36,10 @@ type GroupAPI interface {
 	RemoveMemberFromGroup(organizationId, groupName, userName string) (string, error)
 }
 
+type AuthorizeAPI interface {
+	GetAuthorizedResources(action, resources string) (string, error)
+}
+
 type ClientAPI struct {
 	Address     string
 	requestInfo map[string]string

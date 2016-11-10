@@ -24,21 +24,24 @@ const (
 	FLAG_NEWPATH        = "newPath"
 	FLAG_PATH           = "path"
 	FLAG_STATEMENT      = "statement"
+	FLAG_ACTION         = "action"
+	FLAG_RESOURCES      = "resources"
 )
 
 type Cli struct {
-	UserApi   api.UserAPI
-	GroupApi  api.GroupAPI
-	PolicyApi api.PolicyAPI
+	UserApi      api.UserAPI
+	GroupApi     api.GroupAPI
+	PolicyApi    api.PolicyAPI
+	AuthorizeAPI api.AuthorizeAPI
 }
 
-// Helper func for updating request params
-func parseFlags(availableFlags map[string]string, validFlags, cliArgs []string, requireFlags int) map[string]string {
+//parseFlags is a helper function that return the input flags as a map
+func parseFlags(availableFlags map[string]string, cmdValidFlags, cliArgs []string, requiredFlags int) map[string]string {
 	params := make(map[string]string)
 
 	flagSet := flag.NewFlagSet(cliArgs[0]+" "+cliArgs[1], flag.ExitOnError)
 
-	for _, val := range validFlags {
+	for _, val := range cmdValidFlags {
 		flagSet.String(val, "", availableFlags[val])
 	}
 
@@ -47,9 +50,9 @@ func parseFlags(availableFlags map[string]string, validFlags, cliArgs []string, 
 		os.Exit(1)
 	}
 
-	for i, v := range validFlags {
+	for i, v := range cmdValidFlags {
 		val := flagSet.Lookup(v).Value.String()
-		if i < requireFlags && val == "" {
+		if i < requiredFlags && val == "" {
 			return nil
 		}
 		params[v] = val
@@ -59,7 +62,6 @@ func parseFlags(availableFlags map[string]string, validFlags, cliArgs []string, 
 }
 
 func main() {
-
 	availableFlags := map[string]string{
 		FLAG_OFFSET:         "Offset of returned items",
 		FLAG_EXTERNALID:     "User's external identifier",
@@ -74,6 +76,8 @@ func main() {
 		FLAG_NEWGROUPNAME:   "New group name",
 		FLAG_USERNAME:       "User's Name",
 		FLAG_NEWPATH:        "New Path",
+		FLAG_ACTION:         "Action applied over the resources",
+		FLAG_RESOURCES:      "List of resources",
 	}
 
 	help := `Foulkon CLI usage: foulkon [-address=http://1.2.3.4:8080] <command> <action> [<args>]
@@ -117,13 +121,20 @@ To get more help, please execute this cli with a <command>`
 	`
 
 	policyHelp := `Policy actions:
-	get -orgId=yyy -policyName=xxx   				retrieve policy xxx that belong to organizaation 'yyy'
+	get -orgId=yyy -policyName=xxx   				retrieve policy xxx that belong to organization 'yyy'
 	get-all <optionalParams>					retrieve all policies
-	groups-attached -orgId=yyy -policyName=xxx <optionalParams>    	retrieve all groups with policy 'xxx', that belong to organizaation 'yyy', attached to
+	groups-attached -orgId=yyy -policyName=xxx <optionalParams>    	retrieve all groups with policy 'xxx' attached to, that belong to organizaation 'yyy'
 	policies-organization -orgId=yyy <optionalParams>		retrieve all policies that belong to oranization 'yyy'
 	create -orgId=yyy -policyName=xxx -path=/path/ -statement=zzz  	create policy 'xxx' with path '/path/' that belong to organizaation 'yyy' and with statements 'zzz'(JSON format)
 	update -orgId=yyy -policyName=xxx -statement=zzz	 	update policy 'xxx' with path '/path/' that belong to organizaation 'yyy' and new statements 'zzz'(JSON format)
 	delete -orgId=yyy -policyName=xxx 				delete policy 'xxx' that belong to oranization 'yyy'
+
+	Optional Parameters:
+	-pathPrefix, -offset, -limit, -orderBy				Control de output in list actions
+	`
+
+	authorizeHelp := `Authorize actions:
+	auth-resources  -action=xxx -resources=yyy		get a list of authorized resources according to action 'xxx' and list of resources 'yyy'(JSON format)
 
 	Optional Parameters:
 	-pathPrefix, -offset, -limit, -orderBy			Control de output in list actions
@@ -132,8 +143,9 @@ To get more help, please execute this cli with a <command>`
 	var cli Cli
 	clientApi := &api.ClientAPI{}
 	cli.UserApi = clientApi
-
 	cli.PolicyApi = clientApi
+	cli.GroupApi = clientApi
+	cli.AuthorizeAPI = clientApi
 
 	//remove program path name from args
 	args := os.Args[1:]
@@ -142,31 +154,23 @@ To get more help, please execute this cli with a <command>`
 	flag.StringVar(&clientApi.Address, "address", DEFAULT_ADDRESS, "Foulkon Worker address")
 	flag.Parse()
 
-	// remove address flag
+	// remove address flag and format help flag
 	for i, arg := range args {
-		if arg == "-address" || arg == "--address" {
-			args = append(args[:i], args[i+2:]...)
-			break
-		}
-		if strings.Contains(arg, "address=") {
+		if strings.Contains(arg, "-address=") {
 			args = append(args[:i], args[i+1:]...)
-			break
 		}
-	}
 
-	// remove help flag
-	for i, arg := range args {
 		if arg == "help" {
-			args[i] = "--help"
-			break
+			args[i] = "-help"
 		}
 	}
 
-	// force -h flag
+	// force -help flag
 	if len(args) < 2 {
-		args = append(args, "--help")
+		args = append(args, "-help")
 	}
 
+	//statement_cli_example := ./cli policy create -orgId=tecsisa -path=/example/ -policyName=policy21 -statement='[{"effect":"allow","actions":["iam:getUser","iam:*"],"resources":["urn:everything:*"]}]'
 	//statement_example := `[{"effect":"allow","actions":["iam:getUser","iam:*"],"resources":["urn:everything:*"]}]`
 	var msg string
 	var err error
@@ -176,7 +180,6 @@ To get more help, please execute this cli with a <command>`
 	case "user":
 		switch args[1] {
 		case "get":
-
 			if params := parseFlags(availableFlags, []string{FLAG_EXTERNALID}, args, 1); params == nil {
 				msg = userHelp
 			} else {
@@ -212,11 +215,12 @@ To get more help, please execute this cli with a <command>`
 			} else {
 				msg, err = cli.UserApi.UpdateUser(params[FLAG_EXTERNALID], params[FLAG_PATH])
 			}
-		case "--help":
+		case "-help":
 			fallthrough
 		default:
 			msg = userHelp
 		}
+
 	case "policy":
 		switch args[1] {
 		case "get":
@@ -341,18 +345,31 @@ To get more help, please execute this cli with a <command>`
 			} else {
 				msg, err = cli.GroupApi.DetachPolicyFromGroup(params[FLAG_ORGANIZATIONID], params[FLAG_GROUPNAME], params[FLAG_POLICYNAME])
 			}
-		case "-h":
+		case "-help":
 			fallthrough
 		default:
 			msg = groupHelp
+		}
+	case "authorize":
+		switch args[1] {
+		case "auth-resources":
+			if params := parseFlags(availableFlags, []string{FLAG_ACTION, FLAG_RESOURCES}, args, 2); params == nil {
+				msg = authorizeHelp
+			} else {
+				msg, err = cli.AuthorizeAPI.GetAuthorizedResources(params[FLAG_ACTION], params[FLAG_RESOURCES])
+			}
+		case "-help":
+			fallthrough
+		default:
+			msg = authorizeHelp
 		}
 	default:
 		msg = help
 	}
 	if err != nil {
-		println(err.Error())
+		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	println(msg)
+	fmt.Println(msg)
 	os.Exit(0)
 }

@@ -33,7 +33,7 @@ func (c *ClientAPI) CreatePolicy(organizationId, policyName, path, statement str
 
 	statementApi := []api.Statement{}
 	if err := json.Unmarshal([]byte(statement), &statementApi); err != nil {
-		panic(err)
+		return "", err
 	}
 	body := map[string]interface{}{
 		"name":       policyName,
@@ -51,7 +51,7 @@ func (c *ClientAPI) CreatePolicy(organizationId, policyName, path, statement str
 func (c *ClientAPI) UpdatePolicy(organizationId, policyName, path, statement string) (string, error) {
 	statementApi := []api.Statement{}
 	if err := json.Unmarshal([]byte(statement), &statementApi); err != nil {
-		panic(err)
+		return "", err
 	}
 	body := map[string]interface{}{
 		"name":       policyName,
