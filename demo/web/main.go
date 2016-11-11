@@ -16,7 +16,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/coreos/go-oidc/oidc"
 	"github.com/julienschmidt/httprouter"
-	"time"
 )
 
 // CONSTANTS
