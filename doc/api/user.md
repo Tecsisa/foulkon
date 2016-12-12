@@ -177,7 +177,7 @@ HTTP/1.1 200 OK
 | ------- | ------- | ------- | ------- |
 | **limit** | *integer* | The maximum number of items in the response (as set in the query or by default) | `20` |
 | **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
-| **total** | *integer* | The total number of items available to return | `50` |
+| **total** | *integer* | The total number of items available to return | `2` |
 | **users** | *array* | User identifiers | `["User1","User2"]` |
 
 ###  User List All
@@ -211,7 +211,7 @@ HTTP/1.1 200 OK
   ],
   "offset": 0,
   "limit": 20,
-  "total": 50
+  "total": 2
 }
 ```
 
@@ -230,7 +230,7 @@ HTTP/1.1 200 OK
 | **groups/org** | *string* | Group organization | `"tecsisa"` |
 | **limit** | *integer* | The maximum number of items in the response (as set in the query or by default) | `20` |
 | **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
-| **total** | *integer* | The total number of items available to return | `50` |
+| **total** | *integer* | The total number of items available to return | `1` |
 
 ###  List user groups
 
@@ -266,7 +266,7 @@ HTTP/1.1 200 OK
   ],
   "offset": 0,
   "limit": 20,
-  "total": 50
+  "total": 1
 }
 ```
 

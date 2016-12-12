@@ -181,7 +181,7 @@
         },
         "total": {
           "description": "The total number of items available to return",
-          "example": 50,
+          "example": 2,
           "type": "integer"
         }
       }
@@ -231,7 +231,7 @@
         },
         "total": {
           "description": "The total number of items available to return",
-          "example": 50,
+          "example": 1,
           "type": "integer"
         }
       }
@@ -305,7 +305,7 @@
         },
         "total": {
           "description": "The total number of items available to return",
-          "example": 50,
+          "example": 1,
           "type": "integer"
         }
       }
@@ -379,7 +379,7 @@
         },
         "total": {
           "description": "The total number of items available to return",
-          "example": 50,
+          "example": 1,
           "type": "integer"
         }
       }

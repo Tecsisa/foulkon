@@ -1,0 +1,267 @@
+{
+  "$schema": "",
+  "type": "object",
+  "definitions": {
+    "order1_resource_entity": {
+      "$schema": "",
+      "title": "Resource",
+      "description": "Entity with the external resource information",
+      "strictProperties": true,
+      "type": "object",
+      "definitions": {
+        "host": {
+          "description": "Scheme + registered name (hostname) or IP address",
+          "example": "https://httpbin.org",
+          "type": "string"
+        },
+        "path": {
+          "description": "Relative path for destination host.",
+          "example": "/example",
+          "type": "string"
+        },
+        "method": {
+          "description": "HTTP Method definition",
+          "example": "GET",
+          "type": "string"
+        },
+        "urn": {
+          "description": "Uniform Resource Name for this resource",
+          "example": "urn:example:*",
+          "type": "string"
+        },
+        "action": {
+          "description": "Action related to this resource",
+          "example": "example:get",
+          "type": "string"
+        }
+      },
+      "properties": {
+        "host": {
+          "$ref": "#/definitions/order1_resource_entity/definitions/host"
+        },
+        "path": {
+          "$ref": "#/definitions/order1_resource_entity/definitions/path"
+        },
+        "method": {
+          "$ref": "#/definitions/order1_resource_entity/definitions/method"
+        },
+        "urn": {
+          "$ref": "#/definitions/order1_resource_entity/definitions/urn"
+        },
+        "action": {
+          "$ref": "#/definitions/order1_resource_entity/definitions/action"
+        }
+      }
+    },
+    "order2_proxy_resource": {
+      "$schema": "",
+      "title": "Proxy Resource",
+      "description": "Proxy Resource API",
+      "strictProperties": true,
+      "type": "object",
+      "definitions": {
+        "id": {
+          "description": "Unique policy identifier",
+          "readOnly": true,
+          "format": "uuid",
+          "type": "string"
+        },
+        "name": {
+          "description": "Proxy resource name",
+          "example": "Example",
+          "type": "string"
+        },
+        "path": {
+          "description": "Proxy resource location",
+          "example": "/example/admin/",
+          "type": "string"
+        },
+        "createdAt": {
+          "description": "Proxy resource creation date",
+          "format": "date-time",
+          "type": "string"
+        },
+        "updateAt": {
+          "description": "The date timestamp of the last update",
+          "format": "date-time",
+          "type": "string"
+        },
+        "urn": {
+          "description": "Uniform Resource Name",
+          "example": "urn:iws:iam:org:proxy/example/admin",
+          "type": "string"
+        },
+        "org": {
+          "description": "Proxy resource organization",
+          "example": "tecsisa",
+          "type": "string"
+        },
+        "resource": {
+          "description": "Resource entity",
+          "$ref": "#/definitions/order1_resource_entity"
+        }
+      },
+      "links": [
+        {
+          "description": "Create a new proxy resource.",
+          "href": "/api/v1/organizations/{organization_id}/proxy-resource",
+          "method": "POST",
+          "rel": "create",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "schema": {
+            "properties": {
+              "name": {
+                "$ref": "#/definitions/order2_proxy_resource/definitions/name"
+              },
+              "path": {
+                "$ref": "#/definitions/order2_proxy_resource/definitions/path"
+              },
+              "resource": {
+                "$ref": "#/definitions/order2_proxy_resource/definitions/resource"
+              }
+            },
+            "required": [
+              "name",
+              "path",
+              "resource"
+            ],
+            "type": "object"
+          },
+          "title": "Create"
+        },
+        {
+          "description": "Update an existing proxy resource.",
+          "href": "/api/v1/organizations/{organization_id}/proxy-resource/{proxy_resource_name}",
+          "method": "PUT",
+          "rel": "update",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "schema": {
+            "properties": {
+              "name": {
+                "$ref": "#/definitions/order2_proxy_resource/definitions/name"
+              },
+              "path": {
+                "$ref": "#/definitions/order2_proxy_resource/definitions/path"
+              },
+              "resource": {
+                "$ref": "#/definitions/order2_proxy_resource/definitions/resource"
+              }
+            },
+            "required": [
+              "name",
+              "path",
+              "resource"
+            ],
+            "type": "object"
+          },
+          "title": "Update"
+        },
+        {
+          "description": "Delete an existing proxy resource.",
+          "href": "/api/v1/organizations/{organization_id}/proxy-resource/{proxy_resource_name}",
+          "method": "DELETE",
+          "rel": "empty",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Delete"
+        },
+        {
+          "description": "Get an existing proxy resource.",
+          "href": "/api/v1/organizations/{organization_id}/proxy-resource/{proxy_resource_name}",
+          "method": "GET",
+          "rel": "self",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Get"
+        }
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/order2_proxy_resource/definitions/id"
+        },
+        "name": {
+          "$ref": "#/definitions/order2_proxy_resource/definitions/name"
+        },
+        "path": {
+          "$ref": "#/definitions/order2_proxy_resource/definitions/path"
+        },
+        "createdAt": {
+          "$ref": "#/definitions/order2_proxy_resource/definitions/createdAt"
+        },
+        "updateAt": {
+          "$ref": "#/definitions/order2_proxy_resource/definitions/updateAt"
+        },
+        "urn": {
+          "$ref": "#/definitions/order2_proxy_resource/definitions/urn"
+        },
+        "org": {
+          "$ref": "#/definitions/order2_proxy_resource/definitions/org"
+        },
+        "resource": {
+          "$ref": "#/definitions/order2_proxy_resource/definitions/resource"
+        }
+      }
+    },
+    "order3_ProxyResourceReference": {
+      "$schema": "",
+      "title": "Organization's proxy resources",
+      "description": "",
+      "strictProperties": true,
+      "type": "object",
+      "links": [
+        {
+          "description": "List all proxy resources by organization.",
+          "href": "/api/v1/organizations/{organization_id}/proxy-resource?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}",
+          "method": "GET",
+          "rel": "self",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "List"
+        }
+      ],
+      "properties": {
+        "resources": {
+          "description": "List of proxy resources",
+          "example": ["ProxyResourceName1, ProxyResourceName2"],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "offset": {
+          "description": "The offset of the items returned (as set in the query or by default)",
+          "example": 0,
+          "type": "integer"
+        },
+        "limit": {
+          "description": "The maximum number of items in the response (as set in the query or by default)",
+          "example": 20,
+          "type": "integer"
+        },
+        "total": {
+          "description": "The total number of items available to return",
+          "example": 2,
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "properties": {
+    "order1_resource_entity": {
+      "$ref": "#/definitions/order1_resource_entity"
+    },
+    "order2_proxy_resource": {
+      "$ref": "#/definitions/order2_proxy_resource"
+    },
+    "order3_ProxyResourceReference": {
+      "$ref": "#/definitions/order3_ProxyResourceReference"
+    }
+  }
+}
