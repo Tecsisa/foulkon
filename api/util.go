@@ -11,6 +11,7 @@ const (
 	RESOURCE_GROUP  = "group"
 	RESOURCE_USER   = "user"
 	RESOURCE_POLICY = "policy"
+	RESOURCE_PROXY  = "proxy"
 
 	// Constraints
 	MAX_EXTERNAL_ID_LENGTH = 128
@@ -51,6 +52,10 @@ const (
 	POLICY_ACTION_GET_POLICY           = "iam:GetPolicy"
 	POLICY_ACTION_LIST_ATTACHED_GROUPS = "iam:ListAttachedGroups"
 	POLICY_ACTION_LIST_POLICIES        = "iam:ListPolicies"
+
+	// Proxy resource actions
+	PROXY_ACTION_CREATE_RESOURCE = "iam:CreateProxyResource"
+	PROXY_ACTION_LIST_RESOURCES  = "iam:ListProxyResources"
 )
 
 var (
@@ -66,6 +71,8 @@ var (
 	rWordResourcePrefix, _ = regexp.Compile(`^[\w+\-_.@]+\*$`)
 	rUrn, _                = regexp.Compile(`^\*$|^[\w+\-@.]+\*?$|^[\w+\-@.]+\*?$|^[\w+\-@.]+(/?([\w+\-@.]+/)*([\w+\-@.]|[*])+)?$`)
 	rUrnExclude, _         = regexp.Compile(`[/]{2,}|[:]{2,}|[*]{2,}`)
+	rUrl, _                = regexp.Compile(`^/$|^/[\w+/\-_]+\w$`)
+	rHost, _               = regexp.Compile(`^https?:/{2}[\w+\/\-_.]+(:\d{1,5})?$`)
 )
 
 func CreateUrn(org string, resource string, path string, name string) string {
@@ -115,6 +122,38 @@ func IsValidEffect(effect string) error {
 			Message: fmt.Sprintf("Invalid effect: %v - Only 'allow' and 'deny' accepted", effect),
 		}
 	}
+	return nil
+}
+
+func IsValidProxyResource(resource *ResourceEntity) error {
+	//err generator helper
+	errFunc := func(parameter string) error {
+		return &Error{
+			Code:    REGEX_NO_MATCH,
+			Message: fmt.Sprintf("No regex match in parameter: %v", parameter),
+		}
+	}
+	if !rHost.MatchString(resource.Host) {
+		return errFunc(resource.Host)
+	}
+
+	if !rUrl.MatchString(resource.Url) {
+		return errFunc(resource.Url)
+	}
+
+	if resource.Method != "GET" && resource.Method != "POST" && resource.Method != "PUT" &&
+		resource.Method != "DELETE" && resource.Method != "PATCH" {
+		return errFunc(resource.Method)
+	}
+
+	if err := AreValidResources([]string{resource.Urn}); err != nil {
+		return err
+	}
+
+	if err := AreValidActions([]string{resource.Action}); err != nil {
+		return err
+	}
+
 	return nil
 }
 

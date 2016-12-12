@@ -249,7 +249,6 @@ func TestPostgresRepo_GetGroupsFiltered(t *testing.T) {
 		// Previous data
 		previousGroups []Group
 		// Postgres Repo Args
-		org    string
 		filter *api.Filter
 		// Expected result
 		expectedResponse []api.Group

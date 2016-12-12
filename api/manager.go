@@ -31,6 +31,7 @@ type WorkerAPI struct {
 	UserRepo   UserRepo
 	GroupRepo  GroupRepo
 	PolicyRepo PolicyRepo
+	ProxyRepo  ProxyRepo
 }
 
 // ProxyAPI that implements API interfaces using repositories
@@ -172,15 +173,29 @@ type AuthzAPI interface {
 	// if requestInfo doesn't exist, requestInfo doesn't have access to any resources or unexpected error happen.
 	GetAuthorizedPolicies(requestInfo RequestInfo, resourceUrn string, action string, policies []Policy) ([]Policy, error)
 
+	// Retrieve list of authorized proxy resources filtered according to the input parameters. Throw error
+	// if requestInfo doesn't exist, requestInfo doesn't have access to any resources or unexpected error happen.
+	GetAuthorizedProxyResources(requestInfo RequestInfo, resourceUrn string, action string, proxyResources []ProxyResource) ([]ProxyResource, error)
+
 	// Retrieve list of authorized external resources filtered according to the input parameters. Throw error
 	// if requestInfo doesn't exist, requestInfo doesn't have access to any resources or unexpected error happen.
 	GetAuthorizedExternalResources(requestInfo RequestInfo, action string, resources []string) ([]string, error)
 }
 
-// ProxyResourcesAPI interface to manage proxy resources
-type ProxyResourcesAPI interface {
+// InternalProxyAPI interface to manage proxy resources
+type InternalProxyAPI interface {
 	// Retrieve list of proxy resources.
 	GetProxyResources() ([]ProxyResource, error)
+}
+
+// WorkerProxyResourcesAPI interface to manage proxy resources
+type ProxyResourcesAPI interface {
+	// Store proxy resource in database. Throw error when the input parameters are invalid,
+	// the proxy resource already exist or unexpected error happen.
+	AddProxyResource(requestInfo RequestInfo, name string, org string, path string, resource ResourceEntity) (*ProxyResource, error)
+
+	// Retrieve list of proxy resources.
+	ListProxyResources(requestInfo RequestInfo, filter *Filter) ([]ProxyResourceIdentity, int, error)
 }
 
 // REPOSITORY INTERFACES
@@ -297,5 +312,14 @@ type PolicyRepo interface {
 // ProxyRepo contains all database operations
 type ProxyRepo interface {
 	// Retrieve proxy resources from database. Otherwise it throws an error.
-	GetProxyResources() ([]ProxyResource, error)
+	GetProxyResources(filter *Filter) ([]ProxyResource, int, error)
+
+	// Retrieve proxy resource from database if it exists. Otherwise it throws an error.
+	GetProxyResourceByName(org string, name string) (*ProxyResource, error)
+
+	// Store proxy resource in database if there aren't errors.
+	AddProxyResource(proxyResource ProxyResource) (*ProxyResource, error)
+
+	// OrderByValidColumns returns valid columns that you can use in OrderBy
+	OrderByValidColumns(action string) []string
 }

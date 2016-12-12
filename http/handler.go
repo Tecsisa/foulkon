@@ -25,6 +25,7 @@ const (
 	// API root reference
 	API_ROOT      = "/api"
 	API_VERSION_1 = API_ROOT + "/v1"
+	PROXY         = "/proxy"
 
 	// Organization API ROOT
 	ORG_ROOT = "/organizations/:" + ORG_NAME
@@ -46,6 +47,9 @@ const (
 	POLICY_ROOT_URL      = API_VERSION_1 + ORG_ROOT + "/policies"
 	POLICY_ID_URL        = POLICY_ROOT_URL + URI_PATH_PREFIX + POLICY_NAME
 	POLICY_ID_GROUPS_URL = POLICY_ROOT_URL + URI_PATH_PREFIX + POLICY_NAME + "/groups"
+
+	// Proxy resource API urls
+	PROXY_RESOURCE_ROOT_URL = API_VERSION_1 + ORG_ROOT + PROXY + "/resources"
 
 	// Authorization URLs
 	RESOURCE_URL = API_VERSION_1 + "/resource"
@@ -99,6 +103,7 @@ func (wh *WorkerHandler) processHttpResponse(r *http.Request, w http.ResponseWri
 		switch apiError.Code {
 		case api.USER_ALREADY_EXIST, api.GROUP_ALREADY_EXIST,
 			api.USER_IS_ALREADY_A_MEMBER_OF_GROUP,
+			api.PROXY_RESOURCE_ALREADY_EXIST,
 			api.POLICY_IS_ALREADY_ATTACHED_TO_GROUP, api.POLICY_ALREADY_EXIST:
 			// A conflict occurs
 			statusCode = http.StatusConflict
@@ -185,6 +190,10 @@ func WorkerHandlerRouter(worker *foulkon.Worker) http.Handler {
 
 	// Special endpoint without organization URI for policies
 	router.GET(API_VERSION_1+"/policies", workerHandler.HandleListAllPolicies)
+
+	// Proxy Resources api
+	router.GET(PROXY_RESOURCE_ROOT_URL, workerHandler.HandleListProxyResource)
+	router.POST(PROXY_RESOURCE_ROOT_URL, workerHandler.HandleAddProxyResource)
 
 	// Resources authorized endpoint
 	router.POST(RESOURCE_URL, workerHandler.HandleGetAuthorizedExternalResources)

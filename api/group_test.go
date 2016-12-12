@@ -22,7 +22,6 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 		getGroupsByUserIDResult   []TestUserGroupRelation
 		getAttachedPoliciesResult []TestPolicyGroupRelation
 		getGroupByName            *Group
-		addMemberMethodResult     *Group
 		// Manager Errors
 		getGroupByNameMethodErr      error
 		getUserByExternalIDMethodErr error
@@ -144,12 +143,6 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 				ID:         "543210",
 				ExternalID: "1234",
 				Path:       "/path/",
-			},
-			addMemberMethodResult: &Group{
-				ID:   "543210",
-				Name: "group1",
-				Org:  "org1",
-				Path: "/example/",
 			},
 		},
 		"ErrorCaseNotAuthenticatedUser": {

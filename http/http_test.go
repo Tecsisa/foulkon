@@ -53,9 +53,12 @@ const (
 	GetAuthorizedGroupsMethod            = "GetAuthorizedGroups"
 	GetAuthorizedPoliciesMethod          = "GetAuthorizedPolicies"
 	GetAuthorizedExternalResourcesMethod = "GetAuthorizedExternalResources"
+	GetAuthorizedProxyResources          = "GetAuthorizedProxyResources"
 
 	// PROXY API
-	GetProxyResourcesMethod = "GetProxyResources"
+	AddProxyResourceMethod   = "AddProxyResource"
+	GetProxyResourcesMethod  = "GetProxyResources"
+	ListProxyResourcesMethod = "ListProxyResources"
 )
 
 // Test server used to test handlers
@@ -162,6 +165,7 @@ func TestMain(m *testing.M) {
 		GroupApi:          testApi,
 		PolicyApi:         testApi,
 		AuthzApi:          testApi,
+		ProxyApi:          testApi,
 		Config:            config,
 	}
 
@@ -219,8 +223,11 @@ func makeTestApi() *TestAPI {
 	testApi.ArgsIn[GetAuthorizedGroupsMethod] = make([]interface{}, 4)
 	testApi.ArgsIn[GetAuthorizedPoliciesMethod] = make([]interface{}, 4)
 	testApi.ArgsIn[GetAuthorizedExternalResourcesMethod] = make([]interface{}, 3)
+	testApi.ArgsIn[GetAuthorizedProxyResources] = make([]interface{}, 4)
 
+	testApi.ArgsIn[AddProxyResourceMethod] = make([]interface{}, 5)
 	testApi.ArgsIn[GetProxyResourcesMethod] = make([]interface{}, 0)
+	testApi.ArgsIn[ListProxyResourcesMethod] = make([]interface{}, 3)
 
 	testApi.ArgsOut[AddUserMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetUserByExternalIdMethod] = make([]interface{}, 2)
@@ -252,8 +259,11 @@ func makeTestApi() *TestAPI {
 	testApi.ArgsOut[GetAuthorizedGroupsMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetAuthorizedPoliciesMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetAuthorizedExternalResourcesMethod] = make([]interface{}, 2)
+	testApi.ArgsOut[GetAuthorizedProxyResources] = make([]interface{}, 2)
 
+	testApi.ArgsOut[AddProxyResourceMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetProxyResourcesMethod] = make([]interface{}, 2)
+	testApi.ArgsOut[ListProxyResourcesMethod] = make([]interface{}, 3)
 
 	return testApi
 }
@@ -649,7 +659,27 @@ func (t TestAPI) GetAuthorizedExternalResources(authenticatedUser api.RequestInf
 	return resourcesToReturn, err
 }
 
+func (t TestAPI) GetAuthorizedProxyResources(authenticatedUser api.RequestInfo, resourceUrn string, action string, proxyResources []api.ProxyResource) ([]api.ProxyResource, error) {
+	return nil, nil
+}
+
 // PROXY API
+func (t TestAPI) AddProxyResource(authenticatedUser api.RequestInfo, name string, org string, path string, resource api.ResourceEntity) (*api.ProxyResource, error) {
+	t.ArgsIn[AddProxyResourceMethod][0] = authenticatedUser
+	t.ArgsIn[AddProxyResourceMethod][1] = name
+	t.ArgsIn[AddProxyResourceMethod][2] = path
+	t.ArgsIn[AddProxyResourceMethod][3] = org
+	t.ArgsIn[AddProxyResourceMethod][4] = resource
+	var proxyResource *api.ProxyResource
+	if t.ArgsOut[AddProxyResourceMethod][0] != nil {
+		proxyResource = t.ArgsOut[AddProxyResourceMethod][0].(*api.ProxyResource)
+	}
+	var err error
+	if t.ArgsOut[AddProxyResourceMethod][1] != nil {
+		err = t.ArgsOut[AddProxyResourceMethod][1].(error)
+	}
+	return proxyResource, err
+}
 
 func (t TestAPI) GetProxyResources() ([]api.ProxyResource, error) {
 	var proxyResources []api.ProxyResource
@@ -661,6 +691,25 @@ func (t TestAPI) GetProxyResources() ([]api.ProxyResource, error) {
 		err = t.ArgsOut[GetProxyResourcesMethod][1].(error)
 	}
 	return proxyResources, err
+}
+
+func (t TestAPI) ListProxyResources(authenticatedUser api.RequestInfo, filter *api.Filter) ([]api.ProxyResourceIdentity, int, error) {
+	t.ArgsIn[ListProxyResourcesMethod][0] = authenticatedUser
+	t.ArgsIn[ListProxyResourcesMethod][1] = filter
+
+	var proxyResources []api.ProxyResourceIdentity
+	var total int
+	if t.ArgsOut[ListProxyResourcesMethod][1] != nil {
+		total = t.ArgsOut[ListProxyResourcesMethod][1].(int)
+	}
+	if t.ArgsOut[ListProxyResourcesMethod][0] != nil {
+		proxyResources = t.ArgsOut[ListProxyResourcesMethod][0].([]api.ProxyResourceIdentity)
+	}
+	var err error
+	if t.ArgsOut[ListProxyResourcesMethod][2] != nil {
+		err = t.ArgsOut[ListProxyResourcesMethod][2].(error)
+	}
+	return proxyResources, total, err
 }
 
 // Private helper methods
@@ -685,57 +734,69 @@ func proxyHandlerRouter(proxy *foulkon.Proxy) http.Handler {
 
 	APIResources := []api.ProxyResource{
 		{
-			ID:     "resource1",
-			Host:   server.URL,
-			Url:    USER_ID_URL,
-			Method: "GET",
-			Urn:    "urn:ews:example:instance1:resource/{userid}",
-			Action: "example:user",
+			ID: "resource1",
+			Resource: api.ResourceEntity{
+				Host:   server.URL,
+				Url:    USER_ID_URL,
+				Method: "GET",
+				Urn:    "urn:ews:example:instance1:resource/{userid}",
+				Action: "example:user",
+			},
 		},
 		{
-			ID:     "hostUnreachable",
-			Host:   "fail",
-			Url:    "/fail",
-			Method: "GET",
-			Urn:    "urn:ews:example:instance1:resource/fail",
-			Action: "example:fail",
+			ID: "hostUnreachable",
+			Resource: api.ResourceEntity{
+				Host:   "fail",
+				Url:    "/fail",
+				Method: "GET",
+				Urn:    "urn:ews:example:instance1:resource/fail",
+				Action: "example:fail",
+			},
 		},
 		{
-			ID:     "invalidHost",
-			Host:   "%&",
-			Url:    "/invalid",
-			Method: "GET",
-			Urn:    "urn:ews:example:instance1:resource/invalid",
-			Action: "example:invalid",
+			ID: "invalidHost",
+			Resource: api.ResourceEntity{
+				Host:   "%&",
+				Url:    "/invalid",
+				Method: "GET",
+				Urn:    "urn:ews:example:instance1:resource/invalid",
+				Action: "example:invalid",
+			},
 		},
 		{
-			ID:     "invalidUrn",
-			Host:   server.URL,
-			Url:    "/invalidUrn",
-			Method: "GET",
-			Urn:    "%&",
-			Action: "example:invalid",
+			ID: "invalidUrn",
+			Resource: api.ResourceEntity{
+				Host:   server.URL,
+				Url:    "/invalidUrn",
+				Method: "GET",
+				Urn:    "%&",
+				Action: "example:invalid",
+			},
 		},
 		{
-			ID:     "urnPrefix",
-			Host:   server.URL,
-			Url:    "/urnPrefix",
-			Method: "GET",
-			Urn:    "urn:*",
-			Action: "&%",
+			ID: "urnPrefix",
+			Resource: api.ResourceEntity{
+				Host:   server.URL,
+				Url:    "/urnPrefix",
+				Method: "GET",
+				Urn:    "urn:*",
+				Action: "&%",
+			},
 		},
 		{
-			ID:     "invalidAction",
-			Host:   server.URL,
-			Url:    "/invalidAction",
-			Method: "GET",
-			Urn:    "urn:ews:example:instance1:resource/user",
-			Action: "&%",
+			ID: "invalidAction",
+			Resource: api.ResourceEntity{
+				Host:   server.URL,
+				Url:    "/invalidAction",
+				Method: "GET",
+				Urn:    "urn:ews:example:instance1:resource/user",
+				Action: "&%",
+			},
 		},
 	}
 
 	for _, res := range APIResources {
-		router.Handle(res.Method, res.Url, proxyHandler.HandleRequest(res))
+		router.Handle(res.Resource.Method, res.Resource.Url, proxyHandler.HandleRequest(res))
 	}
 
 	return router

@@ -181,7 +181,7 @@ func (api WorkerAPI) GetGroupByName(requestInfo RequestInfo, org string, name st
 func (api WorkerAPI) ListGroups(requestInfo RequestInfo, filter *Filter) ([]GroupIdentity, int, error) {
 	// Validate fields
 	var total int
-	orderByValidColumns := api.UserRepo.OrderByValidColumns(GROUP_ACTION_LIST_GROUPS)
+	orderByValidColumns := api.GroupRepo.OrderByValidColumns(GROUP_ACTION_LIST_GROUPS)
 	err := validateFilter(filter, orderByValidColumns)
 	if err != nil {
 		return nil, total, err

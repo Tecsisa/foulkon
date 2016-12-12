@@ -651,7 +651,7 @@ func TestValidateFilter(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: fmt.Sprintf("Invalid parameter: group #@!^*"),
+				Message: "Invalid parameter: group #@!^*",
 			},
 		},
 		"ErrorCaseInvalidExtID": {
@@ -665,7 +665,7 @@ func TestValidateFilter(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: fmt.Sprintf("Invalid parameter: externalID #@!^*"),
+				Message: "Invalid parameter: externalID #@!^*",
 			},
 		},
 		"ErrorCaseInvalidPolicyName": {
@@ -679,7 +679,7 @@ func TestValidateFilter(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: fmt.Sprintf("Invalid parameter: policy #@!^*"),
+				Message: "Invalid parameter: policy #@!^*",
 			},
 		},
 		"ErrorCaseInvalidOrderBy": {
@@ -694,7 +694,7 @@ func TestValidateFilter(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: fmt.Sprintf("Invalid parameter: OrderBy fail-fail"),
+				Message: "Invalid parameter: OrderBy fail-fail",
 			},
 		},
 		"ErrorCaseInvalidOrderByColumn": {
@@ -710,13 +710,92 @@ func TestValidateFilter(t *testing.T) {
 			OrderByValidColumns: []string{"val1", "val2"},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: fmt.Sprintf("Invalid parameter: OrderBy column xxx"),
+				Message: "Invalid parameter: OrderBy column xxx",
 			},
 		},
 	}
 
 	for x, testcase := range testcases {
 		err := validateFilter(testcase.filter, testcase.OrderByValidColumns)
+		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
+	}
+}
+
+func TestIsValidProxyResource(t *testing.T) {
+	testcases := map[string]struct {
+		// Method args
+		resource *ResourceEntity
+		// Expected results
+		wantError error
+	}{
+		"OKCase": {
+			resource: &ResourceEntity{
+				Host:   "http://host.com",
+				Url:    "/url",
+				Method: "GET",
+				Urn:    "urn:ews:example:instance1:resource/get",
+				Action: "action",
+			},
+		},
+		"ErrorCaseInvalidHost": {
+			resource: &ResourceEntity{
+				Host: "~32&",
+			},
+			wantError: &Error{
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in parameter: ~32&",
+			},
+		},
+		"ErrorCaseInvalidUrl": {
+			resource: &ResourceEntity{
+				Host: "http://host.com",
+				Url:  "invalid",
+			},
+			wantError: &Error{
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in parameter: invalid",
+			},
+		},
+		"ErrorCaseInvalidMethod": {
+			resource: &ResourceEntity{
+				Host:   "http://host.com",
+				Url:    "/url",
+				Method: "INVALID",
+			},
+			wantError: &Error{
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in parameter: INVALID",
+			},
+		},
+		"ErrorCaseInvalidUrn": {
+			resource: &ResourceEntity{
+				Host:   "http://host.com",
+				Url:    "/url",
+				Method: "GET",
+				Urn:    "~~&",
+			},
+			wantError: &Error{
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in resource: ~~&",
+			},
+		},
+		"ErrorCaseInvalidAction": {
+			resource: &ResourceEntity{
+				Host:   "http://host.com",
+				Url:    "/url",
+				Method: "GET",
+				Urn:    "urn:ews:example:instance1:resource/get",
+				Action: "iam:",
+			},
+			wantError: &Error{
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in action: iam:",
+			},
+		},
+	}
+
+	for x, testcase := range testcases {
+		err := IsValidProxyResource(testcase.resource)
 		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }

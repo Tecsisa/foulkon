@@ -33,7 +33,7 @@ type Proxy struct {
 	KeyFile  string
 
 	// API
-	ProxyApi api.ProxyResourcesAPI
+	ProxyApi api.InternalProxyAPI
 
 	// Refresh time
 	RefreshTime time.Duration

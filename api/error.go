@@ -31,6 +31,10 @@ const (
 	POLICY_ALREADY_EXIST             = "PolicyAlreadyExist"
 	POLICY_BY_ORG_AND_NAME_NOT_FOUND = "PolicyWithOrgAndNameNotFound"
 
+	// Proxy resources API error codes
+	PROXY_RESOURCE_ALREADY_EXIST             = "ProxyResourceAlreadyExist"
+	PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND = "ProxyResourceWithOrgAndNameNotFound"
+
 	// Regex error
 	REGEX_NO_MATCH = "RegexNoMatch"
 )

@@ -12,33 +12,35 @@ import (
 )
 
 const (
-	GetUserByExternalIDMethod = "GetUserByExternalID"
-	AddUserMethod             = "AddUser"
-	UpdateUserMethod          = "UpdateUser"
-	GetUsersFilteredMethod    = "GetUsersFiltered"
-	GetGroupsByUserIDMethod   = "GetGroupsByUserID"
-	RemoveUserMethod          = "RemoveUser"
-	GetGroupByNameMethod      = "GetGroupByName"
-	IsMemberOfGroupMethod     = "IsMemberOfGroup"
-	GetGroupMembersMethod     = "GetGroupMembers"
-	IsAttachedToGroupMethod   = "IsAttachedToGroup"
-	GetAttachedPoliciesMethod = "GetAttachedPolicies"
-	GetGroupsFilteredMethod   = "GetGroupsFiltered"
-	RemoveGroupMethod         = "RemoveGroup"
-	AddGroupMethod            = "AddGroup"
-	AddMemberMethod           = "AddMember"
-	RemoveMemberMethod        = "RemoveMember"
-	UpdateGroupMethod         = "UpdateGroup"
-	AttachPolicyMethod        = "AttachPolicy"
-	DetachPolicyMethod        = "DetachPolicy"
-	GetPolicyByNameMethod     = "GetPolicyByName"
-	AddPolicyMethod           = "AddPolicy"
-	UpdatePolicyMethod        = "UpdatePolicy"
-	RemovePolicyMethod        = "RemovePolicy"
-	GetPoliciesFilteredMethod = "GetPoliciesFiltered"
-	GetAttachedGroupsMethod   = "GetAttachedGroups"
-	OrderByValidColumnsMethod = "OrderByValidColumns"
-	GetProxyResourcesMethod   = "GetProxyResources"
+	GetUserByExternalIDMethod    = "GetUserByExternalID"
+	AddUserMethod                = "AddUser"
+	UpdateUserMethod             = "UpdateUser"
+	GetUsersFilteredMethod       = "GetUsersFiltered"
+	GetGroupsByUserIDMethod      = "GetGroupsByUserID"
+	RemoveUserMethod             = "RemoveUser"
+	GetGroupByNameMethod         = "GetGroupByName"
+	IsMemberOfGroupMethod        = "IsMemberOfGroup"
+	GetGroupMembersMethod        = "GetGroupMembers"
+	IsAttachedToGroupMethod      = "IsAttachedToGroup"
+	GetAttachedPoliciesMethod    = "GetAttachedPolicies"
+	GetGroupsFilteredMethod      = "GetGroupsFiltered"
+	RemoveGroupMethod            = "RemoveGroup"
+	AddGroupMethod               = "AddGroup"
+	AddMemberMethod              = "AddMember"
+	RemoveMemberMethod           = "RemoveMember"
+	UpdateGroupMethod            = "UpdateGroup"
+	AttachPolicyMethod           = "AttachPolicy"
+	DetachPolicyMethod           = "DetachPolicy"
+	GetPolicyByNameMethod        = "GetPolicyByName"
+	AddPolicyMethod              = "AddPolicy"
+	UpdatePolicyMethod           = "UpdatePolicy"
+	RemovePolicyMethod           = "RemovePolicy"
+	GetPoliciesFilteredMethod    = "GetPoliciesFiltered"
+	GetAttachedGroupsMethod      = "GetAttachedGroups"
+	OrderByValidColumnsMethod    = "OrderByValidColumns"
+	GetProxyResourcesMethod      = "GetProxyResources"
+	AddProxyResourceMethod       = "AddProxyResource"
+	GetProxyResourceByNameMethod = "GetProxyResourceByName"
 )
 
 // TestRepo that implements all repo manager interfaces
@@ -103,6 +105,9 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[GetPoliciesFilteredMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetAttachedGroupsMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[OrderByValidColumnsMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[GetProxyResourcesMethod] = make([]interface{}, 2)
+	testRepo.ArgsIn[AddProxyResourceMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[GetProxyResourceByNameMethod] = make([]interface{}, 2)
 
 	testRepo.ArgsOut[GetUserByExternalIDMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AddUserMethod] = make([]interface{}, 2)
@@ -130,8 +135,9 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[GetPoliciesFilteredMethod] = make([]interface{}, 3)
 	testRepo.ArgsOut[GetAttachedGroupsMethod] = make([]interface{}, 3)
 	testRepo.ArgsOut[OrderByValidColumnsMethod] = make([]interface{}, 1)
-
-	testRepo.ArgsOut[GetProxyResourcesMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[GetProxyResourcesMethod] = make([]interface{}, 3)
+	testRepo.ArgsOut[AddProxyResourceMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[GetProxyResourceByNameMethod] = make([]interface{}, 2)
 
 	return testRepo
 }
@@ -141,6 +147,7 @@ func makeTestAPI(testRepo *TestRepo) *WorkerAPI {
 		UserRepo:   testRepo,
 		GroupRepo:  testRepo,
 		PolicyRepo: testRepo,
+		ProxyRepo:  testRepo,
 	}
 	Log = &log.Logger{
 		Out:       bytes.NewBuffer([]byte{}),
@@ -582,16 +589,52 @@ func (t TestRepo) OrderByValidColumns(action string) []string {
 // Proxy repo
 //////////////
 
-func (t TestRepo) GetProxyResources() ([]ProxyResource, error) {
+func (t TestRepo) AddProxyResource(pr ProxyResource) (*ProxyResource, error) {
+	t.ArgsIn[AddProxyResourceMethod][0] = pr
+	var created *ProxyResource
+	if t.ArgsOut[AddProxyResourceMethod][0] != nil {
+		created = t.ArgsOut[AddProxyResourceMethod][0].(*ProxyResource)
+	}
+	var err error
+	if t.ArgsOut[AddProxyResourceMethod][1] != nil {
+		err = t.ArgsOut[AddProxyResourceMethod][1].(error)
+	}
+	return created, err
+}
+
+func (t TestRepo) GetProxyResourceByName(org string, name string) (*ProxyResource, error) {
+	t.ArgsIn[GetProxyResourceByNameMethod][0] = org
+	t.ArgsIn[GetProxyResourceByNameMethod][1] = name
+	if specialFunc, ok := t.SpecialFuncs[GetProxyResourceByNameMethod].(func(org string, name string) (*ProxyResource, error)); ok && specialFunc != nil {
+		return specialFunc(org, name)
+	}
+	var proxyResource *ProxyResource
+	if t.ArgsOut[GetProxyResourceByNameMethod][0] != nil {
+		proxyResource = t.ArgsOut[GetProxyResourceByNameMethod][0].(*ProxyResource)
+	}
+	var err error
+	if t.ArgsOut[GetProxyResourceByNameMethod][1] != nil {
+		err = t.ArgsOut[GetProxyResourceByNameMethod][1].(error)
+	}
+	return proxyResource, err
+}
+
+func (t TestRepo) GetProxyResources(filter *Filter) ([]ProxyResource, int, error) {
+	t.ArgsIn[GetProxyResourcesMethod][0] = filter
+
 	var resources []ProxyResource
 	if t.ArgsOut[GetProxyResourcesMethod][0] != nil {
 		resources = t.ArgsOut[GetProxyResourcesMethod][0].([]ProxyResource)
 	}
-	var err error
+	var total int
 	if t.ArgsOut[GetProxyResourcesMethod][1] != nil {
-		err = t.ArgsOut[GetProxyResourcesMethod][1].(error)
+		total = t.ArgsOut[GetProxyResourcesMethod][1].(int)
 	}
-	return resources, err
+	var err error
+	if t.ArgsOut[GetProxyResourcesMethod][2] != nil {
+		err = t.ArgsOut[GetProxyResourcesMethod][2].(error)
+	}
+	return resources, total, err
 }
 
 // Private helper methods
