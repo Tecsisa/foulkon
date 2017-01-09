@@ -14,10 +14,11 @@ import (
 
 const (
 	// Constants for values in url
-	USER_ID     = "userid"
-	GROUP_NAME  = "groupname"
-	POLICY_NAME = "policyname"
-	ORG_NAME    = "orgname"
+	USER_ID             = "userid"
+	GROUP_NAME          = "groupname"
+	POLICY_NAME         = "policyname"
+	PROXY_RESOURCE_NAME = "proxyresourcename"
+	ORG_NAME            = "orgname"
 
 	// URI Path param prefix
 	URI_PATH_PREFIX = "/:"
@@ -50,6 +51,7 @@ const (
 
 	// Proxy resource API urls
 	PROXY_RESOURCE_ROOT_URL = API_VERSION_1 + ORG_ROOT + PROXY + "/resources"
+	PROXY_RESOURCE_ID_URL   = PROXY_RESOURCE_ROOT_URL + URI_PATH_PREFIX + PROXY_RESOURCE_NAME
 
 	// Authorization URLs
 	RESOURCE_URL = API_VERSION_1 + "/resource"
@@ -112,7 +114,7 @@ func (wh *WorkerHandler) processHttpResponse(r *http.Request, w http.ResponseWri
 			statusCode = http.StatusForbidden
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND, api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
 			api.USER_IS_NOT_A_MEMBER_OF_GROUP, api.POLICY_IS_NOT_ATTACHED_TO_GROUP,
-			api.POLICY_BY_ORG_AND_NAME_NOT_FOUND:
+			api.POLICY_BY_ORG_AND_NAME_NOT_FOUND, api.PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND:
 			// Resource or relation not found
 			statusCode = http.StatusNotFound
 		case api.INVALID_PARAMETER_ERROR, api.REGEX_NO_MATCH:
@@ -195,6 +197,8 @@ func WorkerHandlerRouter(worker *foulkon.Worker) http.Handler {
 	router.GET(PROXY_RESOURCE_ROOT_URL, workerHandler.HandleListProxyResource)
 	router.POST(PROXY_RESOURCE_ROOT_URL, workerHandler.HandleAddProxyResource)
 
+	router.GET(PROXY_RESOURCE_ID_URL, workerHandler.HandleGetProxyResourceByName)
+
 	// Resources authorized endpoint
 	router.POST(RESOURCE_URL, workerHandler.HandleGetAuthorizedExternalResources)
 
@@ -264,13 +268,14 @@ func getFilterData(r *http.Request, ps httprouter.Params) (*api.Filter, error) {
 	}
 
 	return &api.Filter{
-		PathPrefix: r.URL.Query().Get("PathPrefix"),
-		Org:        org,
-		ExternalID: ps.ByName(USER_ID),
-		PolicyName: ps.ByName(POLICY_NAME),
-		GroupName:  ps.ByName(GROUP_NAME),
-		Offset:     offset,
-		Limit:      limit,
-		OrderBy:    r.URL.Query().Get("OrderBy"),
+		PathPrefix:        r.URL.Query().Get("PathPrefix"),
+		Org:               org,
+		ExternalID:        ps.ByName(USER_ID),
+		PolicyName:        ps.ByName(POLICY_NAME),
+		GroupName:         ps.ByName(GROUP_NAME),
+		ProxyResourceName: ps.ByName(PROXY_RESOURCE_NAME),
+		Offset:            offset,
+		Limit:             limit,
+		OrderBy:           r.URL.Query().Get("OrderBy"),
 	}, nil
 }

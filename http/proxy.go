@@ -138,6 +138,19 @@ func (h *WorkerHandler) HandleAddProxyResource(w http.ResponseWriter, r *http.Re
 	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusCreated)
 }
 
+func (h *WorkerHandler) HandleGetProxyResourceByName(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Process request
+	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	if apiErr != nil {
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		return
+	}
+
+	// Call policy API to retrieve policy
+	response, err := h.worker.ProxyApi.GetProxyResourceByName(requestInfo, filterData.Org, filterData.ProxyResourceName)
+	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
+}
+
 func (h *WorkerHandler) HandleListProxyResource(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
 	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)

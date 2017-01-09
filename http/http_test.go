@@ -56,9 +56,10 @@ const (
 	GetAuthorizedProxyResources          = "GetAuthorizedProxyResources"
 
 	// PROXY API
-	AddProxyResourceMethod   = "AddProxyResource"
-	GetProxyResourcesMethod  = "GetProxyResources"
-	ListProxyResourcesMethod = "ListProxyResources"
+	AddProxyResourceMethod       = "AddProxyResource"
+	GetProxyResourceByNameMethod = "GetProxyResourceByName"
+	GetProxyResourcesMethod      = "GetProxyResources"
+	ListProxyResourcesMethod     = "ListProxyResources"
 )
 
 // Test server used to test handlers
@@ -226,6 +227,7 @@ func makeTestApi() *TestAPI {
 	testApi.ArgsIn[GetAuthorizedProxyResources] = make([]interface{}, 4)
 
 	testApi.ArgsIn[AddProxyResourceMethod] = make([]interface{}, 5)
+	testApi.ArgsIn[GetProxyResourceByNameMethod] = make([]interface{}, 3)
 	testApi.ArgsIn[GetProxyResourcesMethod] = make([]interface{}, 0)
 	testApi.ArgsIn[ListProxyResourcesMethod] = make([]interface{}, 3)
 
@@ -262,6 +264,7 @@ func makeTestApi() *TestAPI {
 	testApi.ArgsOut[GetAuthorizedProxyResources] = make([]interface{}, 2)
 
 	testApi.ArgsOut[AddProxyResourceMethod] = make([]interface{}, 2)
+	testApi.ArgsOut[GetProxyResourceByNameMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetProxyResourcesMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[ListProxyResourcesMethod] = make([]interface{}, 3)
 
@@ -679,6 +682,21 @@ func (t TestAPI) AddProxyResource(authenticatedUser api.RequestInfo, name string
 		err = t.ArgsOut[AddProxyResourceMethod][1].(error)
 	}
 	return proxyResource, err
+}
+
+func (t TestAPI) GetProxyResourceByName(authenticatedUser api.RequestInfo, org string, name string) (*api.ProxyResource, error) {
+	t.ArgsIn[GetProxyResourceByNameMethod][0] = authenticatedUser
+	t.ArgsIn[GetProxyResourceByNameMethod][1] = org
+	t.ArgsIn[GetProxyResourceByNameMethod][2] = name
+	var pr *api.ProxyResource
+	if t.ArgsOut[GetProxyResourceByNameMethod][0] != nil {
+		pr = t.ArgsOut[GetProxyResourceByNameMethod][0].(*api.ProxyResource)
+	}
+	var err error
+	if t.ArgsOut[GetProxyResourceByNameMethod][1] != nil {
+		err = t.ArgsOut[GetProxyResourceByNameMethod][1].(error)
+	}
+	return pr, err
 }
 
 func (t TestAPI) GetProxyResources() ([]api.ProxyResource, error) {

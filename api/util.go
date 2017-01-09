@@ -54,8 +54,9 @@ const (
 	POLICY_ACTION_LIST_POLICIES        = "iam:ListPolicies"
 
 	// Proxy resource actions
-	PROXY_ACTION_CREATE_RESOURCE = "iam:CreateProxyResource"
-	PROXY_ACTION_LIST_RESOURCES  = "iam:ListProxyResources"
+	PROXY_ACTION_CREATE_RESOURCE    = "iam:CreateProxyResource"
+	PROXY_ACTION_LIST_RESOURCES     = "iam:ListProxyResources"
+	PROXY_ACTION_GET_PROXY_RESOURCE = "iam:GetProxyResource"
 )
 
 var (

@@ -135,6 +135,61 @@ func (api WorkerAPI) AddProxyResource(requestInfo RequestInfo, name string, org 
 	}
 }
 
+func (api WorkerAPI) GetProxyResourceByName(requestInfo RequestInfo, org string, name string) (*ProxyResource, error) {
+	// Validate fields
+	if !IsValidName(name) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: name %v", name),
+		}
+	}
+	if !IsValidOrg(org) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: org %v", org),
+		}
+	}
+
+	// Call repo to retrieve the proxy resource
+	proxyResource, err := api.ProxyRepo.GetProxyResourceByName(org, name)
+
+	// Error handling
+	if err != nil {
+		// Transform to DB error
+		dbError := err.(*database.Error)
+		// Proxy resource doesn't exist in DB
+		switch dbError.Code {
+		case database.PROXY_RESOURCE_NOT_FOUND:
+			return nil, &Error{
+				Code:    PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		default:
+			return nil, &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: dbError.Message,
+			}
+		}
+	}
+
+	// Check restrictions
+	proxyResourceFiltered, err := api.GetAuthorizedProxyResources(requestInfo, proxyResource.Urn, PROXY_ACTION_GET_PROXY_RESOURCE, []ProxyResource{*proxyResource})
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if we have our user authorized
+	if len(proxyResourceFiltered) > 0 {
+		proxyResourceFiltered := proxyResourceFiltered[0]
+		return &proxyResourceFiltered, nil
+	}
+	return nil, &Error{
+		Code: UNAUTHORIZED_RESOURCES_ERROR,
+		Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
+			requestInfo.Identifier, proxyResource.Urn),
+	}
+}
+
 func (api WorkerAPI) ListProxyResources(requestInfo RequestInfo, filter *Filter) ([]ProxyResourceIdentity, int, error) {
 	// Validate fields
 	var total int

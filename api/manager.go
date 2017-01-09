@@ -41,11 +41,12 @@ type ProxyAPI struct {
 
 // Filter properties for database search
 type Filter struct {
-	PathPrefix string
-	Org        string
-	ExternalID string
-	PolicyName string
-	GroupName  string
+	PathPrefix        string
+	Org               string
+	ExternalID        string
+	PolicyName        string
+	GroupName         string
+	ProxyResourceName string
 	// Pagination
 	Offset int
 	Limit  int
@@ -193,6 +194,10 @@ type ProxyResourcesAPI interface {
 	// Store proxy resource in database. Throw error when the input parameters are invalid,
 	// the proxy resource already exist or unexpected error happen.
 	AddProxyResource(requestInfo RequestInfo, name string, org string, path string, resource ResourceEntity) (*ProxyResource, error)
+
+	// Retrieve proxy resource from database. Throw error when the input parameters are invalid,
+	// Proxy resource doesn't exist or unexpected error happen.
+	GetProxyResourceByName(requestInfo RequestInfo, org string, name string) (*ProxyResource, error)
 
 	// Retrieve list of proxy resources.
 	ListProxyResources(requestInfo RequestInfo, filter *Filter) ([]ProxyResourceIdentity, int, error)
