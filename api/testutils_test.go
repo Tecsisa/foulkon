@@ -39,6 +39,7 @@ const (
 	GetAttachedGroupsMethod      = "GetAttachedGroups"
 	OrderByValidColumnsMethod    = "OrderByValidColumns"
 	GetProxyResourcesMethod      = "GetProxyResources"
+	RemoveProxyResourceMethod    = "RemoveProxyResource"
 	AddProxyResourceMethod       = "AddProxyResource"
 	GetProxyResourceByNameMethod = "GetProxyResourceByName"
 )
@@ -106,6 +107,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[GetAttachedGroupsMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[OrderByValidColumnsMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetProxyResourcesMethod] = make([]interface{}, 2)
+	testRepo.ArgsIn[RemoveProxyResourceMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[AddProxyResourceMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetProxyResourceByNameMethod] = make([]interface{}, 2)
 
@@ -136,6 +138,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[GetAttachedGroupsMethod] = make([]interface{}, 3)
 	testRepo.ArgsOut[OrderByValidColumnsMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[GetProxyResourcesMethod] = make([]interface{}, 3)
+	testRepo.ArgsOut[RemoveProxyResourceMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[AddProxyResourceMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[GetProxyResourceByNameMethod] = make([]interface{}, 2)
 
@@ -635,6 +638,15 @@ func (t TestRepo) GetProxyResources(filter *Filter) ([]ProxyResource, int, error
 		err = t.ArgsOut[GetProxyResourcesMethod][2].(error)
 	}
 	return resources, total, err
+}
+
+func (t TestRepo) RemoveProxyResource(id string) error {
+	t.ArgsIn[RemoveProxyResourceMethod][0] = id
+	var err error
+	if t.ArgsOut[RemoveProxyResourceMethod][0] != nil {
+		err = t.ArgsOut[RemoveProxyResourceMethod][0].(error)
+	}
+	return err
 }
 
 // Private helper methods

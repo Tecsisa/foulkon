@@ -170,6 +170,18 @@ func (h *WorkerHandler) HandleListProxyResource(w http.ResponseWriter, r *http.R
 	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 
+func (h *WorkerHandler) HandleRemoveProxyResource(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Process request
+	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	if apiErr != nil {
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		return
+	}
+	// Call proxy resource API to remove proxy resource
+	err := h.worker.ProxyApi.RemoveProxyResource(requestInfo, filterData.Org, filterData.ProxyResourceName)
+	h.processHttpResponse(r, w, requestInfo, nil, err, http.StatusNoContent)
+}
+
 func (h *ProxyHandler) checkAuthorization(r *http.Request, urn string, action string) (string, error) {
 	workerRequestID := "None"
 	if !isFullUrn(urn) {

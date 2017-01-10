@@ -761,3 +761,127 @@ func TestWorkerHandler_HandleListProxyResource(t *testing.T) {
 		}
 	}
 }
+
+func TestWorkerHandler_HandleRemoveProxyResource(t *testing.T) {
+	testcases := map[string]struct {
+		// API method args
+		org          string
+		name         string
+		offset       string
+		ignoreArgsIn bool
+		// Expected result
+		expectedStatusCode int
+		expectedError      api.Error
+		// Manager Errors
+		removeProxyResource error
+	}{
+		"OKCase": {
+			org:                "org",
+			name:               "pr",
+			expectedStatusCode: http.StatusNoContent,
+		},
+		"ErrorCaseInvalidRequest": {
+			org:                "org",
+			name:               "pr",
+			offset:             "-1",
+			ignoreArgsIn:       true,
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
+			removeProxyResource: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
+		},
+		"ErrorCaseGroupNotFound": {
+			org:                "org",
+			name:               "pr",
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code:    api.PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "Group not found",
+			},
+			removeProxyResource: &api.Error{
+				Code:    api.PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "Group not found",
+			},
+		},
+		"ErrorCaseInvalidParameterError": {
+			org:                "org",
+			name:               "InvalidID",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+			removeProxyResource: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+		},
+		"ErrorCaseUnauthorizedResourcesError": {
+			org:                "org",
+			name:               "UnauthorizedID",
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+			removeProxyResource: &api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+		},
+		"ErrorCaseUnknownApiError": {
+			org:                "org",
+			name:               "ExceptionID",
+			expectedStatusCode: http.StatusInternalServerError,
+			removeProxyResource: &api.Error{
+				Code:    api.UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+		testApi.ArgsOut[RemoveProxyResourceMethod][0] = test.removeProxyResource
+
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/proxy/resources/%v", test.org, test.name)
+		req, err := http.NewRequest(http.MethodDelete, url, nil)
+		assert.Nil(t, err, "Error in test case %v", n)
+
+		q := req.URL.Query()
+		q.Add("Offset", test.offset)
+		req.URL.RawQuery = q.Encode()
+
+		res, err := client.Do(req)
+		assert.Nil(t, err, "Error in test case %v", n)
+
+		if !test.ignoreArgsIn {
+			// Check received parameters
+			assert.Equal(t, test.org, testApi.ArgsIn[RemoveProxyResourceMethod][1], "Error in test case %v", n)
+			assert.Equal(t, test.name, testApi.ArgsIn[RemoveProxyResourceMethod][2], "Error in test case %v", n)
+		}
+
+		// check status code
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
+
+		switch res.StatusCode {
+		case http.StatusNoContent:
+			// No message expected
+			continue
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check error
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
+		}
+	}
+}

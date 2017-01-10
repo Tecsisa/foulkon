@@ -55,6 +55,7 @@ const (
 
 	// Proxy resource actions
 	PROXY_ACTION_CREATE_RESOURCE    = "iam:CreateProxyResource"
+	PROXY_ACTION_DELETE_RESOURCE    = "iam:DeleteProxyResource"
 	PROXY_ACTION_LIST_RESOURCES     = "iam:ListProxyResources"
 	PROXY_ACTION_GET_PROXY_RESOURCE = "iam:GetProxyResource"
 )

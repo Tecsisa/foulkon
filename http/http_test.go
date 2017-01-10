@@ -59,6 +59,7 @@ const (
 	AddProxyResourceMethod       = "AddProxyResource"
 	GetProxyResourceByNameMethod = "GetProxyResourceByName"
 	GetProxyResourcesMethod      = "GetProxyResources"
+	RemoveProxyResourceMethod    = "RemoveProxyResource"
 	ListProxyResourcesMethod     = "ListProxyResources"
 )
 
@@ -229,6 +230,7 @@ func makeTestApi() *TestAPI {
 	testApi.ArgsIn[AddProxyResourceMethod] = make([]interface{}, 5)
 	testApi.ArgsIn[GetProxyResourceByNameMethod] = make([]interface{}, 3)
 	testApi.ArgsIn[GetProxyResourcesMethod] = make([]interface{}, 0)
+	testApi.ArgsIn[RemoveProxyResourceMethod] = make([]interface{}, 3)
 	testApi.ArgsIn[ListProxyResourcesMethod] = make([]interface{}, 3)
 
 	testApi.ArgsOut[AddUserMethod] = make([]interface{}, 2)
@@ -266,6 +268,7 @@ func makeTestApi() *TestAPI {
 	testApi.ArgsOut[AddProxyResourceMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetProxyResourceByNameMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetProxyResourcesMethod] = make([]interface{}, 2)
+	testApi.ArgsOut[RemoveProxyResourceMethod] = make([]interface{}, 1)
 	testApi.ArgsOut[ListProxyResourcesMethod] = make([]interface{}, 3)
 
 	return testApi
@@ -728,6 +731,17 @@ func (t TestAPI) ListProxyResources(authenticatedUser api.RequestInfo, filter *a
 		err = t.ArgsOut[ListProxyResourcesMethod][2].(error)
 	}
 	return proxyResources, total, err
+}
+
+func (t TestAPI) RemoveProxyResource(authenticatedUser api.RequestInfo, org string, name string) error {
+	t.ArgsIn[RemoveProxyResourceMethod][0] = authenticatedUser
+	t.ArgsIn[RemoveProxyResourceMethod][1] = org
+	t.ArgsIn[RemoveProxyResourceMethod][2] = name
+	var err error
+	if t.ArgsOut[RemoveProxyResourceMethod][0] != nil {
+		err = t.ArgsOut[RemoveProxyResourceMethod][0].(error)
+	}
+	return err
 }
 
 // Private helper methods

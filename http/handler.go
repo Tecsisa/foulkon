@@ -197,6 +197,8 @@ func WorkerHandlerRouter(worker *foulkon.Worker) http.Handler {
 	router.GET(PROXY_RESOURCE_ROOT_URL, workerHandler.HandleListProxyResource)
 	router.POST(PROXY_RESOURCE_ROOT_URL, workerHandler.HandleAddProxyResource)
 
+	router.DELETE(PROXY_RESOURCE_ID_URL, workerHandler.HandleRemoveProxyResource)
+
 	router.GET(PROXY_RESOURCE_ID_URL, workerHandler.HandleGetProxyResourceByName)
 
 	// Resources authorized endpoint

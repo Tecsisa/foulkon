@@ -399,6 +399,411 @@ func TestWorkerAPI_GetProxyResourceByName(t *testing.T) {
 	}
 }
 
+func TestWorkerAPI_RemoveProxyResource(t *testing.T) {
+	testcases := map[string]struct {
+		// API method args
+		requestInfo RequestInfo
+		name        string
+		org         string
+		// Expected Result
+		wantError error
+		// Manager Results
+		getUserByExternalIDResult          *User
+		getGroupsByUserIDResult            []TestUserGroupRelation
+		getAttachedPoliciesResult          []TestPolicyGroupRelation
+		getProxyResourceByNameMethodResult *ProxyResource
+		// API Errors
+		getUserByExternalIDMethodErr error
+		getProxyResourceByMethodErr  error
+		removeProxyResourceMethodErr error
+		getGroupsByUserIDError       error
+	}{
+		"OKCaseAdmin": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			name: "pr",
+			org:  "org",
+			getProxyResourceByNameMethodResult: &ProxyResource{
+				ID:   "12345",
+				Name: "pr",
+				Org:  "org",
+				Path: "/path/",
+				Resource: ResourceEntity{
+					Host:   "http://example.com",
+					Url:    "/url",
+					Method: "GET",
+					Action: "example:get",
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
+			},
+		},
+		"OKCase": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "pr",
+			org:  "org",
+			getProxyResourceByNameMethodResult: &ProxyResource{
+				ID:   "12345",
+				Name: "pr",
+				Org:  "org",
+				Path: "/path/",
+				Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
+				Resource: ResourceEntity{
+					Host:   "http://example.com",
+					Url:    "/url",
+					Method: "GET",
+					Action: "example:get",
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
+			},
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
+				{
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org",
+						Path: "/example/",
+						Urn:  CreateUrn("org", RESOURCE_POLICY, "/example/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									PROXY_ACTION_DELETE_RESOURCE,
+									PROXY_ACTION_GET_PROXY_RESOURCE,
+								},
+								Resources: []string{
+									GetUrnPrefix("org", RESOURCE_PROXY, "/path/"),
+								},
+							},
+						},
+					},
+				},
+			},
+			getGroupsByUserIDResult: []TestUserGroupRelation{
+				{
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org",
+						Urn:  CreateUrn("org", RESOURCE_GROUP, "/example/", "group"),
+					},
+				},
+			},
+		},
+		"ErrorCaseInvalidName": {
+			name: "invalid*",
+			org:  "org",
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: name invalid*",
+			},
+		},
+		"ErrorCaseInvalidOrg": {
+			name: "pr",
+			org:  "**^!$%&",
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: org **^!$%&",
+			},
+		},
+		"ErrorCaseProxyResourceNotFound": {
+			name: "pr",
+			org:  "org",
+			wantError: &Error{
+				Code: PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND,
+			},
+			getProxyResourceByMethodErr: &database.Error{
+				Code: database.PROXY_RESOURCE_NOT_FOUND,
+			},
+		},
+		"ErrorCaseUnauthorizedUser": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			org:  "org",
+			name: "pr",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
+			},
+			getProxyResourceByNameMethodResult: &ProxyResource{
+				ID:   "12345",
+				Name: "pr",
+				Org:  "org",
+				Path: "/path/",
+				Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
+				Resource: ResourceEntity{
+					Host:   "http://example.com",
+					Url:    "/url",
+					Method: "GET",
+					Action: "example:get",
+				},
+			},
+			getUserByExternalIDMethodErr: &database.Error{
+				Code: database.USER_NOT_FOUND,
+			},
+		},
+		"ErrorCaseImplicitUnauthorizedDeleteProxyResource": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "pr",
+			org:  "org",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org:proxy/path/pr",
+			},
+			getProxyResourceByNameMethodResult: &ProxyResource{
+				ID:   "12345",
+				Name: "pr",
+				Org:  "org",
+				Path: "/path/",
+				Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
+				Resource: ResourceEntity{
+					Host:   "http://example.com",
+					Url:    "/url",
+					Method: "GET",
+					Action: "example:get",
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("org", RESOURCE_USER, "/example/", "123456"),
+			},
+			getGroupsByUserIDResult: []TestUserGroupRelation{
+				{
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org",
+						Urn:  CreateUrn("org", RESOURCE_GROUP, "/example/", "group"),
+					},
+				},
+			},
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
+				{
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org",
+						Path: "/example/",
+						Urn:  CreateUrn("org", RESOURCE_POLICY, "/example/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									PROXY_ACTION_GET_PROXY_RESOURCE,
+								},
+								Resources: []string{
+									GetUrnPrefix("org", RESOURCE_PROXY, ""),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"ErrorCaseExplicitUnauthorizedDeleteProxyResource": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "pr",
+			org:  "org",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org:proxy/path/pr",
+			},
+			getProxyResourceByNameMethodResult: &ProxyResource{
+				ID:   "12345",
+				Name: "pr",
+				Org:  "org",
+				Path: "/path/",
+				Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
+				Resource: ResourceEntity{
+					Host:   "http://example.com",
+					Url:    "/url",
+					Method: "GET",
+					Action: "example:get",
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("org", RESOURCE_USER, "/example/", "123456"),
+			},
+			getGroupsByUserIDResult: []TestUserGroupRelation{
+				{
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org",
+						Urn:  CreateUrn("org", RESOURCE_GROUP, "/example/", "group1"),
+					},
+				},
+			},
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
+				{
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org",
+						Path: "/example/",
+						Urn:  CreateUrn("org", RESOURCE_POLICY, "/example/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									PROXY_ACTION_DELETE_RESOURCE,
+									PROXY_ACTION_GET_PROXY_RESOURCE,
+								},
+								Resources: []string{
+									GetUrnPrefix("org", RESOURCE_PROXY, ""),
+								},
+							},
+							{
+								Effect: "deny",
+								Actions: []string{
+									PROXY_ACTION_DELETE_RESOURCE,
+								},
+								Resources: []string{
+									GetUrnPrefix("org", RESOURCE_PROXY, "/path/pr"),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"ErrorCaseNoPermissions": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "pr",
+			org:  "org",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:iam:org:proxy/path/pr",
+			},
+			getProxyResourceByNameMethodResult: &ProxyResource{
+				ID:   "12345",
+				Name: "pr",
+				Org:  "org",
+				Path: "/path/",
+				Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
+				Resource: ResourceEntity{
+					Host:   "http://example.com",
+					Url:    "/url",
+					Method: "GET",
+					Action: "example:get",
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("org", RESOURCE_USER, "/example/", "123456"),
+			},
+			getGroupsByUserIDResult: []TestUserGroupRelation{
+				{
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org",
+						Urn:  CreateUrn("org", RESOURCE_GROUP, "/example/", "group1"),
+					},
+				},
+			},
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
+				{
+					Policy: &Policy{
+						ID:         "POLICY-USER-ID",
+						Name:       "policyUser",
+						Org:        "org1",
+						Path:       "/example/",
+						Urn:        CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+						Statements: &[]Statement{},
+					},
+				},
+			},
+		},
+		"ErrorCaseDeleteProxyResourceDBErr": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			name: "pr",
+			org:  "org",
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+			getProxyResourceByNameMethodResult: &ProxyResource{
+				ID:   "12345",
+				Name: "pr",
+				Org:  "org",
+				Path: "/path/",
+				Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
+				Resource: ResourceEntity{
+					Host:   "http://example.com",
+					Url:    "/url",
+					Method: "GET",
+					Action: "example:get",
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
+			},
+			removeProxyResourceMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+		},
+	}
+
+	for n, testcase := range testcases {
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
+
+		testRepo.ArgsOut[GetProxyResourceByNameMethod][0] = testcase.getProxyResourceByNameMethodResult
+		testRepo.ArgsOut[GetProxyResourceByNameMethod][1] = testcase.getProxyResourceByMethodErr
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = testcase.getGroupsByUserIDError
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
+		testRepo.ArgsOut[RemoveProxyResourceMethod][0] = testcase.removeProxyResourceMethodErr
+
+		err := testAPI.RemoveProxyResource(testcase.requestInfo, testcase.org, testcase.name)
+		checkMethodResponse(t, n, testcase.wantError, err, nil, nil)
+	}
+}
+
 func TestWorkerAPI_ListProxyResources(t *testing.T) {
 	testcases := map[string]struct {
 		// API Method args
@@ -799,7 +1204,7 @@ func TestWorkerAPI_AddProxyResource(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidOrg": {
-			name: "n1",
+			name: "pr",
 			org:  "*%~#@|",
 			path: "/example/",
 			wantError: &Error{
@@ -808,7 +1213,7 @@ func TestWorkerAPI_AddProxyResource(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidPath": {
-			name: "group1",
+			name: "pr",
 			org:  "org1",
 			path: "/**%%/*123",
 			wantError: &Error{
@@ -817,7 +1222,7 @@ func TestWorkerAPI_AddProxyResource(t *testing.T) {
 			},
 		},
 		"ErrorCaseInvalidResource": {
-			name: "group1",
+			name: "pr",
 			org:  "org1",
 			path: "/path/",
 			resource: ResourceEntity{

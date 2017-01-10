@@ -201,6 +201,10 @@ type ProxyResourcesAPI interface {
 
 	// Retrieve list of proxy resources.
 	ListProxyResources(requestInfo RequestInfo, filter *Filter) ([]ProxyResourceIdentity, int, error)
+
+	// Remove proxy resource stored in database.
+	// Throw error if the input parameters are invalid, the proxy resource doesn't exist or unexpected error happen.
+	RemoveProxyResource(requestInfo RequestInfo, org string, name string) error
 }
 
 // REPOSITORY INTERFACES
@@ -324,6 +328,10 @@ type ProxyRepo interface {
 
 	// Store proxy resource in database if there aren't errors.
 	AddProxyResource(proxyResource ProxyResource) (*ProxyResource, error)
+
+	// Remove proxy resource stored in database.
+	// Throw error if there are problems during transaction.
+	RemoveProxyResource(proxyResourceID string) error
 
 	// OrderByValidColumns returns valid columns that you can use in OrderBy
 	OrderByValidColumns(action string) []string

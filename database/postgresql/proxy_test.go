@@ -391,3 +391,71 @@ func TestPostgresRepo_AddProxyResource(t *testing.T) {
 		}
 	}
 }
+
+func TestPostgresRepo_RemoveProxyResource(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		// Previous data
+		previousProxyResources []ProxyResource
+		// Postgres Repo Args
+		proxyResourceToDelete string
+	}{
+		"OKCase": {
+			previousProxyResources: []ProxyResource{
+				{
+					ID:          "PrID1",
+					Name:        "Name1",
+					Org:         "Org1",
+					Path:        "/path/",
+					Urn:         "urn",
+					Host:        "http://example.com",
+					Url:         "/url",
+					Method:      "GET",
+					Action:      "example:get",
+					UrnResource: "urnResource",
+					CreateAt:    now.UnixNano(),
+					UpdateAt:    now.UnixNano(),
+				},
+				{
+					ID:          "PrID2",
+					Name:        "Name2",
+					Org:         "Org2",
+					Path:        "/path/",
+					Urn:         "urn2",
+					Host:        "http://example2.com",
+					Url:         "/url2",
+					Method:      "GET",
+					Action:      "example:get2",
+					UrnResource: "urnResource2",
+					CreateAt:    now.UnixNano(),
+					UpdateAt:    now.UnixNano(),
+				},
+			},
+			proxyResourceToDelete: "PrID1",
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean proxy resource database
+		cleanProxyResourcesTable(t, n)
+
+		// Insert previous data
+		if test.previousProxyResources != nil {
+			for _, pr := range test.previousProxyResources {
+				insertProxyResource(t, n, pr)
+			}
+		}
+
+		// Call to repository to remove proxy resource
+		err := repoDB.RemoveProxyResource(test.proxyResourceToDelete)
+		assert.Nil(t, err, "Error in test case %v", n)
+
+		// Check database
+		prNumber := getProxyResourcesCountFiltered(t, n, test.proxyResourceToDelete, "", "", "", "", 0, 0)
+		assert.Equal(t, 0, prNumber, "Error in test case %v", n)
+
+		// Check total proxy resources
+		totalPrNumber := getProxyResourcesCountFiltered(t, n, "", "", "", "", "", 0, 0)
+		assert.Equal(t, 1, totalPrNumber, "Error in test case %v", n)
+	}
+}

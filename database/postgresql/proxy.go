@@ -99,6 +99,21 @@ func (p PostgresRepo) AddProxyResource(proxyResource api.ProxyResource) (*api.Pr
 	return dbResourceToApiResource(proxyResourceDB), nil
 }
 
+func (p PostgresRepo) RemoveProxyResource(id string) error {
+	// Remove proxy resource
+	query := p.Dbmap.Where("id like ?", id).Delete(&ProxyResource{})
+
+	// Error handling
+	if err := query.Error; err != nil {
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	return nil
+}
+
 // PRIVATE HELPER METHODS
 
 // Transform a proxyResource retrieved from db into a proxyResource for API

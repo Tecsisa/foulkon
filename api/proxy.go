@@ -190,6 +190,42 @@ func (api WorkerAPI) GetProxyResourceByName(requestInfo RequestInfo, org string,
 	}
 }
 
+func (api WorkerAPI) RemoveProxyResource(requestInfo RequestInfo, org string, name string) error {
+	// Call repo to retrieve the proxy resource
+	proxyResource, err := api.GetProxyResourceByName(requestInfo, org, name)
+	if err != nil {
+		return err
+	}
+
+	// Check restrictions
+	proxyResourcesFiltered, err := api.GetAuthorizedProxyResources(requestInfo, proxyResource.Urn, PROXY_ACTION_DELETE_RESOURCE, []ProxyResource{*proxyResource})
+	if err != nil {
+		return err
+	}
+	if len(proxyResourcesFiltered) < 1 {
+		return &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
+				requestInfo.Identifier, proxyResource.Urn),
+		}
+	}
+
+	err = api.ProxyRepo.RemoveProxyResource(proxyResource.ID)
+
+	// Error handling
+	if err != nil {
+		// Transform to DB error
+		dbError := err.(*database.Error)
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("Proxy resource deleted %+v", proxyResource))
+	return nil
+}
+
 func (api WorkerAPI) ListProxyResources(requestInfo RequestInfo, filter *Filter) ([]ProxyResourceIdentity, int, error) {
 	// Validate fields
 	var total int
