@@ -26,7 +26,6 @@ const (
 	// API root reference
 	API_ROOT      = "/api"
 	API_VERSION_1 = API_ROOT + "/v1"
-	PROXY         = "/proxy"
 
 	// Organization API ROOT
 	ORG_ROOT = "/organizations/:" + ORG_NAME
@@ -50,7 +49,7 @@ const (
 	POLICY_ID_GROUPS_URL = POLICY_ROOT_URL + URI_PATH_PREFIX + POLICY_NAME + "/groups"
 
 	// Proxy resource API urls
-	PROXY_RESOURCE_ROOT_URL = API_VERSION_1 + ORG_ROOT + PROXY + "/resources"
+	PROXY_RESOURCE_ROOT_URL = API_VERSION_1 + ORG_ROOT + "/proxy-resources"
 	PROXY_RESOURCE_ID_URL   = PROXY_RESOURCE_ROOT_URL + URI_PATH_PREFIX + PROXY_RESOURCE_NAME
 
 	// Authorization URLs

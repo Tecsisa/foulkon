@@ -731,7 +731,7 @@ func TestIsValidProxyResource(t *testing.T) {
 		"OKCase": {
 			resource: &ResourceEntity{
 				Host:   "http://host.com",
-				Url:    "/url",
+				Path:   "/path",
 				Method: "GET",
 				Urn:    "urn:ews:example:instance1:resource/get",
 				Action: "action",
@@ -746,10 +746,10 @@ func TestIsValidProxyResource(t *testing.T) {
 				Message: "No regex match in parameter: ~32&",
 			},
 		},
-		"ErrorCaseInvalidUrl": {
+		"ErrorCaseInvalidPath": {
 			resource: &ResourceEntity{
 				Host: "http://host.com",
-				Url:  "invalid",
+				Path: "invalid",
 			},
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
@@ -759,7 +759,7 @@ func TestIsValidProxyResource(t *testing.T) {
 		"ErrorCaseInvalidMethod": {
 			resource: &ResourceEntity{
 				Host:   "http://host.com",
-				Url:    "/url",
+				Path:   "/path",
 				Method: "INVALID",
 			},
 			wantError: &Error{
@@ -770,7 +770,7 @@ func TestIsValidProxyResource(t *testing.T) {
 		"ErrorCaseInvalidUrn": {
 			resource: &ResourceEntity{
 				Host:   "http://host.com",
-				Url:    "/url",
+				Path:   "/path",
 				Method: "GET",
 				Urn:    "~~&",
 			},
@@ -782,7 +782,7 @@ func TestIsValidProxyResource(t *testing.T) {
 		"ErrorCaseInvalidAction": {
 			resource: &ResourceEntity{
 				Host:   "http://host.com",
-				Url:    "/url",
+				Path:   "/path",
 				Method: "GET",
 				Urn:    "urn:ews:example:instance1:resource/get",
 				Action: "iam:",

@@ -236,7 +236,7 @@ func TestWorkerHandler_HandleAddProxyResource(t *testing.T) {
 				Path: "/path/",
 				Resource: api.ResourceEntity{
 					Host:   "Host",
-					Url:    "/url",
+					Path:   "/path",
 					Method: "GET",
 					Urn:    "urn",
 					Action: "action",
@@ -249,7 +249,7 @@ func TestWorkerHandler_HandleAddProxyResource(t *testing.T) {
 				Path: "/path/",
 				Resource: api.ResourceEntity{
 					Host:   "Host",
-					Url:    "/url",
+					Path:   "/path",
 					Method: "GET",
 					Urn:    "urn",
 					Action: "action",
@@ -266,7 +266,7 @@ func TestWorkerHandler_HandleAddProxyResource(t *testing.T) {
 				Path: "/path/",
 				Resource: api.ResourceEntity{
 					Host:   "Host",
-					Url:    "/url",
+					Path:   "/path",
 					Method: "GET",
 					Urn:    "urn",
 					Action: "action",
@@ -290,7 +290,7 @@ func TestWorkerHandler_HandleAddProxyResource(t *testing.T) {
 				Path: "/path/",
 				Resource: api.ResourceEntity{
 					Host:   "Host",
-					Url:    "/url",
+					Path:   "/path",
 					Method: "GET",
 					Urn:    "urn",
 					Action: "action",
@@ -311,7 +311,7 @@ func TestWorkerHandler_HandleAddProxyResource(t *testing.T) {
 				Path: "/path/",
 				Resource: api.ResourceEntity{
 					Host:   "Host",
-					Url:    "/url",
+					Path:   "/path",
 					Method: "GET",
 					Urn:    "urn",
 					Action: "action",
@@ -332,7 +332,7 @@ func TestWorkerHandler_HandleAddProxyResource(t *testing.T) {
 				Path: "/path/",
 				Resource: api.ResourceEntity{
 					Host:   "Host",
-					Url:    "/url",
+					Path:   "/path",
 					Method: "GET",
 					Urn:    "urn",
 					Action: "action",
@@ -353,7 +353,7 @@ func TestWorkerHandler_HandleAddProxyResource(t *testing.T) {
 				Path: "/path/",
 				Resource: api.ResourceEntity{
 					Host:   "Host",
-					Url:    "/url",
+					Path:   "/path",
 					Method: "GET",
 					Urn:    "urn",
 					Action: "action",
@@ -385,8 +385,8 @@ func TestWorkerHandler_HandleAddProxyResource(t *testing.T) {
 			body = bytes.NewBuffer([]byte{})
 		}
 
-		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/proxy/resources", test.org)
-		req, err := http.NewRequest(http.MethodPost, url, body)
+		path := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/proxy-resources", test.org)
+		req, err := http.NewRequest(http.MethodPost, path, body)
 		assert.Nil(t, err, "Error in test case %v", n)
 
 		res, err := client.Do(req)
@@ -445,7 +445,7 @@ func TestWorkerHandler_HandleUpdateProxyResource(t *testing.T) {
 				Path: "/new/",
 				Resource: api.ResourceEntity{
 					Host:   "http://new.com",
-					Url:    "/new",
+					Path:   "/new",
 					Method: "POST",
 					Action: "new:get",
 					Urn:    "urn:ews:example:new:resource/get",
@@ -459,7 +459,7 @@ func TestWorkerHandler_HandleUpdateProxyResource(t *testing.T) {
 				Path: "/new/",
 				Resource: api.ResourceEntity{
 					Host:   "http://new.com",
-					Url:    "/new",
+					Path:   "/new",
 					Method: "POST",
 					Action: "new:get",
 					Urn:    "urn:ews:example:new:resource/get",
@@ -475,7 +475,7 @@ func TestWorkerHandler_HandleUpdateProxyResource(t *testing.T) {
 				Path: "/new/",
 				Resource: api.ResourceEntity{
 					Host:   "http://new.com",
-					Url:    "/new",
+					Path:   "/new",
 					Method: "POST",
 					Action: "new:get",
 					Urn:    "urn:ews:example:new:resource/get",
@@ -498,7 +498,7 @@ func TestWorkerHandler_HandleUpdateProxyResource(t *testing.T) {
 				Path: "/NewPath/",
 				Resource: api.ResourceEntity{
 					Host:   "http://new.com",
-					Url:    "/new",
+					Path:   "/new",
 					Method: "POST",
 					Action: "new:get",
 					Urn:    "urn:ews:example:new:resource/get",
@@ -520,7 +520,7 @@ func TestWorkerHandler_HandleUpdateProxyResource(t *testing.T) {
 				Path: "InvalidPath",
 				Resource: api.ResourceEntity{
 					Host:   "http://new.com",
-					Url:    "/new",
+					Path:   "/new",
 					Method: "POST",
 					Action: "new:get",
 					Urn:    "urn:ews:example:new:resource/get",
@@ -542,7 +542,7 @@ func TestWorkerHandler_HandleUpdateProxyResource(t *testing.T) {
 				Path: "newPath",
 				Resource: api.ResourceEntity{
 					Host:   "http://new.com",
-					Url:    "/new",
+					Path:   "/new",
 					Method: "POST",
 					Action: "new:get",
 					Urn:    "urn:ews:example:new:resource/get",
@@ -564,7 +564,7 @@ func TestWorkerHandler_HandleUpdateProxyResource(t *testing.T) {
 				Path: "/NewPath/",
 				Resource: api.ResourceEntity{
 					Host:   "http://new.com",
-					Url:    "/new",
+					Path:   "/new",
 					Method: "POST",
 					Action: "new:get",
 					Urn:    "urn:ews:example:new:resource/get",
@@ -586,7 +586,7 @@ func TestWorkerHandler_HandleUpdateProxyResource(t *testing.T) {
 				Path: "/NewPath/",
 				Resource: api.ResourceEntity{
 					Host:   "http://new.com",
-					Url:    "/new",
+					Path:   "/new",
 					Method: "POST",
 					Action: "new:get",
 					Urn:    "urn:ews:example:new:resource/get",
@@ -617,8 +617,8 @@ func TestWorkerHandler_HandleUpdateProxyResource(t *testing.T) {
 			body = bytes.NewBuffer([]byte{})
 		}
 
-		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/proxy/resources/pr", test.org)
-		req, err := http.NewRequest(http.MethodPut, url, body)
+		path := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/proxy-resources/pr", test.org)
+		req, err := http.NewRequest(http.MethodPut, path, body)
 		assert.Nil(t, err, "Error in test case %v", n)
 
 		res, err := client.Do(req)
@@ -683,7 +683,7 @@ func TestWorkerHandler_HandleGetProxyResourceByName(t *testing.T) {
 				Urn:  "urn",
 				Resource: api.ResourceEntity{
 					Host:   "http://example.com",
-					Url:    "/url",
+					Path:   "/path",
 					Method: "GET",
 					Action: "example:get",
 					Urn:    "urn2",
@@ -699,7 +699,7 @@ func TestWorkerHandler_HandleGetProxyResourceByName(t *testing.T) {
 				Urn:  "urn",
 				Resource: api.ResourceEntity{
 					Host:   "http://example.com",
-					Url:    "/url",
+					Path:   "/path",
 					Method: "GET",
 					Action: "example:get",
 					Urn:    "urn2",
@@ -780,8 +780,8 @@ func TestWorkerHandler_HandleGetProxyResourceByName(t *testing.T) {
 		testApi.ArgsOut[GetProxyResourceByNameMethod][0] = test.getProxyResourceByNameResult
 		testApi.ArgsOut[GetProxyResourceByNameMethod][1] = test.getProxyResourceByNameErr
 
-		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/proxy/resources/%v", test.org, test.name)
-		req, err := http.NewRequest(http.MethodGet, url, nil)
+		path := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/proxy-resources/%v", test.org, test.name)
+		req, err := http.NewRequest(http.MethodGet, path, nil)
 		assert.Nil(t, err, "Error in test case %v", n)
 
 		q := req.URL.Query()
@@ -954,8 +954,8 @@ func TestWorkerHandler_HandleListProxyResource(t *testing.T) {
 		testApi.ArgsOut[ListProxyResourcesMethod][1] = test.totalProxyResourcesResult
 		testApi.ArgsOut[ListProxyResourcesMethod][2] = test.getProxyResourceListErr
 
-		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/proxy/resources", test.filter.Org)
-		req, err := http.NewRequest(http.MethodGet, url, nil)
+		path := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/proxy-resources", test.filter.Org)
+		req, err := http.NewRequest(http.MethodGet, path, nil)
 		assert.Nil(t, err, "Error in test case %v", n)
 
 		addQueryParams(test.filter, req)
@@ -1081,8 +1081,8 @@ func TestWorkerHandler_HandleRemoveProxyResource(t *testing.T) {
 	for n, test := range testcases {
 		testApi.ArgsOut[RemoveProxyResourceMethod][0] = test.removeProxyResource
 
-		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/proxy/resources/%v", test.org, test.name)
-		req, err := http.NewRequest(http.MethodDelete, url, nil)
+		path := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/proxy-resources/%v", test.org, test.name)
+		req, err := http.NewRequest(http.MethodDelete, path, nil)
 		assert.Nil(t, err, "Error in test case %v", n)
 
 		q := req.URL.Query()

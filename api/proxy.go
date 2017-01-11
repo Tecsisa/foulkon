@@ -30,7 +30,7 @@ type ProxyResourceIdentity struct {
 
 type ResourceEntity struct {
 	Host   string `json:"host, omitempty"`
-	Url    string `json:"url, omitempty"`
+	Path   string `json:"path, omitempty"`
 	Method string `json:"method, omitempty"`
 	Urn    string `json:"urn, omitempty"`
 	Action string `json:"action, omitempty"`

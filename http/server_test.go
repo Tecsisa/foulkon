@@ -63,7 +63,7 @@ func TestNewProxy(t *testing.T) {
 					ID: "ID2",
 					Resource: api.ResourceEntity{
 						Host:   "host2",
-						Url:    "/url2",
+						Path:   "/path2",
 						Method: "Method2",
 						Urn:    "urn2",
 						Action: "action2",
@@ -75,7 +75,7 @@ func TestNewProxy(t *testing.T) {
 					ID: "ID2",
 					Resource: api.ResourceEntity{
 						Host:   "host2",
-						Url:    "/url2",
+						Path:   "/path2",
 						Method: "Method2",
 						Urn:    "urn2",
 						Action: "action2",
@@ -97,7 +97,7 @@ func TestNewProxy(t *testing.T) {
 					ID: "ID2",
 					Resource: api.ResourceEntity{
 						Host:   "host2",
-						Url:    "",
+						Path:   "",
 						Method: "Method2",
 						Urn:    "urn2",
 						Action: "action2",
@@ -109,7 +109,7 @@ func TestNewProxy(t *testing.T) {
 					ID: "ID2",
 					Resource: api.ResourceEntity{
 						Host:   "host2",
-						Url:    "",
+						Path:   "",
 						Method: "Method2",
 						Urn:    "urn2",
 						Action: "action2",
@@ -299,7 +299,7 @@ func TestProxyServer_Run(t *testing.T) {
 					ID: "ID2",
 					Resource: api.ResourceEntity{
 						Host:   "host2",
-						Url:    "/url2",
+						Path:   "/path2",
 						Method: "Method2",
 						Urn:    "urn2",
 						Action: "action2",
@@ -333,7 +333,7 @@ func TestProxyServer_Run(t *testing.T) {
 					ID: "ID2",
 					Resource: api.ResourceEntity{
 						Host:   "host2",
-						Url:    "/url2",
+						Path:   "/path2",
 						Method: "Method2",
 						Urn:    "urn2",
 						Action: "action2",

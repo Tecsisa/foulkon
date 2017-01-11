@@ -107,8 +107,8 @@ func TestPostgresRepo_OrderByValidColumns(t *testing.T) {
 		},
 		"OkCaseAction-" + api.PROXY_ACTION_LIST_RESOURCES: {
 			action: api.PROXY_ACTION_LIST_RESOURCES,
-			expectedColumns: []string{"name", "path", "org", "host", "url", "method",
-				"urnResource", "urn", "action", "create_at", "update_at"},
+			expectedColumns: []string{"name", "path", "org", "host", "path_resource", "method",
+				"urn_resource", "urn", "action", "create_at", "update_at"},
 		},
 		"OkCaseOtherActions": {
 			action:          "other",
@@ -366,9 +366,9 @@ func cleanProxyResourcesTable(t *testing.T, testcase string) {
 }
 
 func insertProxyResource(t *testing.T, testcase string, pr ProxyResource) {
-	err := repoDB.Dbmap.Exec("INSERT INTO public.proxy_resources (id, name, org, path, host, url, method, urn_resource, "+
+	err := repoDB.Dbmap.Exec("INSERT INTO public.proxy_resources (id, name, org, path, host, path_resource, method, urn_resource, "+
 		"urn, action, create_at, update_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		pr.ID, pr.Name, pr.Org, pr.Path, pr.Host, pr.Url, pr.Method, pr.UrnResource, pr.Urn, pr.Action, pr.CreateAt, pr.UpdateAt).Error
+		pr.ID, pr.Name, pr.Org, pr.Path, pr.Host, pr.PathResource, pr.Method, pr.UrnResource, pr.Urn, pr.Action, pr.CreateAt, pr.UpdateAt).Error
 
 	// Error handling
 	assert.Nil(t, err, "Error in testcase %v", testcase)

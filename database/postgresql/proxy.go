@@ -71,18 +71,18 @@ func (p PostgresRepo) GetProxyResources(filter *api.Filter) ([]api.ProxyResource
 func (p PostgresRepo) AddProxyResource(proxyResource api.ProxyResource) (*api.ProxyResource, error) {
 	// Create proxyResource model
 	proxyResourceDB := &ProxyResource{
-		ID:          proxyResource.ID,
-		Name:        proxyResource.Name,
-		Org:         proxyResource.Org,
-		Path:        proxyResource.Path,
-		Host:        proxyResource.Resource.Host,
-		Url:         proxyResource.Resource.Url,
-		Method:      proxyResource.Resource.Method,
-		UrnResource: proxyResource.Resource.Urn,
-		Action:      proxyResource.Resource.Action,
-		Urn:         proxyResource.Urn,
-		CreateAt:    proxyResource.CreateAt.UnixNano(),
-		UpdateAt:    proxyResource.UpdateAt.UnixNano(),
+		ID:           proxyResource.ID,
+		Name:         proxyResource.Name,
+		Org:          proxyResource.Org,
+		Path:         proxyResource.Path,
+		Host:         proxyResource.Resource.Host,
+		PathResource: proxyResource.Resource.Path,
+		Method:       proxyResource.Resource.Method,
+		UrnResource:  proxyResource.Resource.Urn,
+		Action:       proxyResource.Resource.Action,
+		Urn:          proxyResource.Urn,
+		CreateAt:     proxyResource.CreateAt.UnixNano(),
+		UpdateAt:     proxyResource.UpdateAt.UnixNano(),
 	}
 
 	// Store proxyResource
@@ -101,18 +101,18 @@ func (p PostgresRepo) AddProxyResource(proxyResource api.ProxyResource) (*api.Pr
 
 func (p PostgresRepo) UpdateProxyResource(proxyResource api.ProxyResource) (*api.ProxyResource, error) {
 	proxyResourceDB := &ProxyResource{
-		ID:          proxyResource.ID,
-		Name:        proxyResource.Name,
-		Org:         proxyResource.Org,
-		Path:        proxyResource.Path,
-		Host:        proxyResource.Resource.Host,
-		Url:         proxyResource.Resource.Url,
-		Method:      proxyResource.Resource.Method,
-		UrnResource: proxyResource.Resource.Urn,
-		Action:      proxyResource.Resource.Action,
-		Urn:         proxyResource.Urn,
-		CreateAt:    proxyResource.CreateAt.UnixNano(),
-		UpdateAt:    proxyResource.UpdateAt.UnixNano(),
+		ID:           proxyResource.ID,
+		Name:         proxyResource.Name,
+		Org:          proxyResource.Org,
+		Path:         proxyResource.Path,
+		Host:         proxyResource.Resource.Host,
+		PathResource: proxyResource.Resource.Path,
+		Method:       proxyResource.Resource.Method,
+		UrnResource:  proxyResource.Resource.Urn,
+		Action:       proxyResource.Resource.Action,
+		Urn:          proxyResource.Urn,
+		CreateAt:     proxyResource.CreateAt.UnixNano(),
+		UpdateAt:     proxyResource.UpdateAt.UnixNano(),
 	}
 
 	// Store proxyResource
@@ -155,7 +155,7 @@ func dbResourceToApiResource(pr *ProxyResource) *api.ProxyResource {
 		Org:  pr.Org,
 		Resource: api.ResourceEntity{
 			Host:   pr.Host,
-			Url:    pr.Url,
+			Path:   pr.PathResource,
 			Method: pr.Method,
 			Urn:    pr.UrnResource,
 			Action: pr.Action,

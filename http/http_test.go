@@ -792,7 +792,7 @@ func proxyHandlerRouter(proxy *foulkon.Proxy) http.Handler {
 			ID: "resource1",
 			Resource: api.ResourceEntity{
 				Host:   server.URL,
-				Url:    USER_ID_URL,
+				Path:   USER_ID_URL,
 				Method: "GET",
 				Urn:    "urn:ews:example:instance1:resource/{userid}",
 				Action: "example:user",
@@ -802,7 +802,7 @@ func proxyHandlerRouter(proxy *foulkon.Proxy) http.Handler {
 			ID: "hostUnreachable",
 			Resource: api.ResourceEntity{
 				Host:   "fail",
-				Url:    "/fail",
+				Path:   "/fail",
 				Method: "GET",
 				Urn:    "urn:ews:example:instance1:resource/fail",
 				Action: "example:fail",
@@ -812,7 +812,7 @@ func proxyHandlerRouter(proxy *foulkon.Proxy) http.Handler {
 			ID: "invalidHost",
 			Resource: api.ResourceEntity{
 				Host:   "%&",
-				Url:    "/invalid",
+				Path:   "/invalid",
 				Method: "GET",
 				Urn:    "urn:ews:example:instance1:resource/invalid",
 				Action: "example:invalid",
@@ -822,7 +822,7 @@ func proxyHandlerRouter(proxy *foulkon.Proxy) http.Handler {
 			ID: "invalidUrn",
 			Resource: api.ResourceEntity{
 				Host:   server.URL,
-				Url:    "/invalidUrn",
+				Path:   "/invalidUrn",
 				Method: "GET",
 				Urn:    "%&",
 				Action: "example:invalid",
@@ -832,7 +832,7 @@ func proxyHandlerRouter(proxy *foulkon.Proxy) http.Handler {
 			ID: "urnPrefix",
 			Resource: api.ResourceEntity{
 				Host:   server.URL,
-				Url:    "/urnPrefix",
+				Path:   "/urnPrefix",
 				Method: "GET",
 				Urn:    "urn:*",
 				Action: "&%",
@@ -842,7 +842,7 @@ func proxyHandlerRouter(proxy *foulkon.Proxy) http.Handler {
 			ID: "invalidAction",
 			Resource: api.ResourceEntity{
 				Host:   server.URL,
-				Url:    "/invalidAction",
+				Path:   "/invalidAction",
 				Method: "GET",
 				Urn:    "urn:ews:example:instance1:resource/user",
 				Action: "&%",
@@ -851,7 +851,7 @@ func proxyHandlerRouter(proxy *foulkon.Proxy) http.Handler {
 	}
 
 	for _, res := range APIResources {
-		router.Handle(res.Resource.Method, res.Resource.Url, proxyHandler.HandleRequest(res))
+		router.Handle(res.Resource.Method, res.Resource.Path, proxyHandler.HandleRequest(res))
 	}
 
 	return router
