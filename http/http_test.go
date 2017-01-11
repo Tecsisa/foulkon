@@ -59,6 +59,7 @@ const (
 	AddProxyResourceMethod       = "AddProxyResource"
 	GetProxyResourceByNameMethod = "GetProxyResourceByName"
 	GetProxyResourcesMethod      = "GetProxyResources"
+	UpdateProxyResourceMethod    = "UpdateProxyResource"
 	RemoveProxyResourceMethod    = "RemoveProxyResource"
 	ListProxyResourcesMethod     = "ListProxyResources"
 )
@@ -230,6 +231,7 @@ func makeTestApi() *TestAPI {
 	testApi.ArgsIn[AddProxyResourceMethod] = make([]interface{}, 5)
 	testApi.ArgsIn[GetProxyResourceByNameMethod] = make([]interface{}, 3)
 	testApi.ArgsIn[GetProxyResourcesMethod] = make([]interface{}, 0)
+	testApi.ArgsIn[UpdateProxyResourceMethod] = make([]interface{}, 6)
 	testApi.ArgsIn[RemoveProxyResourceMethod] = make([]interface{}, 3)
 	testApi.ArgsIn[ListProxyResourcesMethod] = make([]interface{}, 3)
 
@@ -268,6 +270,7 @@ func makeTestApi() *TestAPI {
 	testApi.ArgsOut[AddProxyResourceMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetProxyResourceByNameMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetProxyResourcesMethod] = make([]interface{}, 2)
+	testApi.ArgsOut[UpdateProxyResourceMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[RemoveProxyResourceMethod] = make([]interface{}, 1)
 	testApi.ArgsOut[ListProxyResourcesMethod] = make([]interface{}, 3)
 
@@ -731,6 +734,26 @@ func (t TestAPI) ListProxyResources(authenticatedUser api.RequestInfo, filter *a
 		err = t.ArgsOut[ListProxyResourcesMethod][2].(error)
 	}
 	return proxyResources, total, err
+}
+
+func (t TestAPI) UpdateProxyResource(authenticatedUser api.RequestInfo, org string, name string, newName string, newPath string,
+	newResource api.ResourceEntity) (*api.ProxyResource, error) {
+	t.ArgsIn[UpdateProxyResourceMethod][0] = authenticatedUser
+	t.ArgsIn[UpdateProxyResourceMethod][1] = org
+	t.ArgsIn[UpdateProxyResourceMethod][2] = name
+	t.ArgsIn[UpdateProxyResourceMethod][3] = newName
+	t.ArgsIn[UpdateProxyResourceMethod][4] = newPath
+	t.ArgsIn[UpdateProxyResourceMethod][5] = newResource
+
+	var proxyResource *api.ProxyResource
+	if t.ArgsOut[UpdateProxyResourceMethod][0] != nil {
+		proxyResource = t.ArgsOut[UpdateProxyResourceMethod][0].(*api.ProxyResource)
+	}
+	var err error
+	if t.ArgsOut[UpdateProxyResourceMethod][1] != nil {
+		err = t.ArgsOut[UpdateProxyResourceMethod][1].(error)
+	}
+	return proxyResource, err
 }
 
 func (t TestAPI) RemoveProxyResource(authenticatedUser api.RequestInfo, org string, name string) error {

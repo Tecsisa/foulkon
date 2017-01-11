@@ -190,6 +190,106 @@ func (api WorkerAPI) GetProxyResourceByName(requestInfo RequestInfo, org string,
 	}
 }
 
+func (api WorkerAPI) UpdateProxyResource(requestInfo RequestInfo, org string, name string, newName string, newPath string, newResource ResourceEntity) (*ProxyResource, error) {
+	// Validate fields
+	if !IsValidName(newName) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: new name %v", newName),
+		}
+	}
+	if !IsValidPath(newPath) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: new path %v", newPath),
+		}
+	}
+	err := IsValidProxyResource(&newResource)
+	if err != nil {
+		return nil, err
+	}
+
+	// Call repo to retrieve the old proxy resource
+	oldProxyResource, err := api.GetProxyResourceByName(requestInfo, org, name)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check restrictions
+	proxyResourcesFiltered, err := api.GetAuthorizedProxyResources(requestInfo, oldProxyResource.Urn, PROXY_ACTION_UPDATE_RESOURCE, []ProxyResource{*oldProxyResource})
+	if err != nil {
+		return nil, err
+	}
+	if len(proxyResourcesFiltered) < 1 {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
+				requestInfo.Identifier, oldProxyResource.Urn),
+		}
+	}
+
+	// Check if a proxy resource with "newName" already exists
+	newProxyResource, err := api.GetProxyResourceByName(requestInfo, org, newName)
+
+	if err == nil && oldProxyResource.ID != newProxyResource.ID {
+		// Proxy resource already exists
+		return nil, &Error{
+			Code:    PROXY_RESOURCE_ALREADY_EXIST,
+			Message: fmt.Sprintf("Proxy resource name: %v already exists", newName),
+		}
+	}
+
+	if err != nil {
+		if apiError := err.(*Error); apiError.Code != PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND {
+			return nil, err
+		}
+	}
+
+	auxProxyResource := ProxyResource{
+		Urn: CreateUrn(org, RESOURCE_PROXY, newPath, newName),
+	}
+
+	// Check restrictions
+	proxyResourcesFiltered, err = api.GetAuthorizedProxyResources(requestInfo, auxProxyResource.Urn, PROXY_ACTION_UPDATE_RESOURCE, []ProxyResource{auxProxyResource})
+	if err != nil {
+		return nil, err
+	}
+	if len(proxyResourcesFiltered) < 1 {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
+				requestInfo.Identifier, auxProxyResource.Urn),
+		}
+	}
+
+	// Update proxy resource
+	proxyResource := ProxyResource{
+		ID:       oldProxyResource.ID,
+		Name:     newName,
+		Path:     newPath,
+		Org:      oldProxyResource.Org,
+		Urn:      auxProxyResource.Urn,
+		Resource: newResource,
+		CreateAt: oldProxyResource.CreateAt,
+		UpdateAt: time.Now().UTC(),
+	}
+
+	updatedProxyResource, err := api.ProxyRepo.UpdateProxyResource(proxyResource)
+
+	// Check unexpected DB error
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return nil, &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("Proxy resource updated from %+v to %+v", oldProxyResource, updatedProxyResource))
+	return updatedProxyResource, nil
+}
+
 func (api WorkerAPI) RemoveProxyResource(requestInfo RequestInfo, org string, name string) error {
 	// Call repo to retrieve the proxy resource
 	proxyResource, err := api.GetProxyResourceByName(requestInfo, org, name)

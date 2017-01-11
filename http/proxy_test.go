@@ -423,6 +423,237 @@ func TestWorkerHandler_HandleAddProxyResource(t *testing.T) {
 	}
 }
 
+func TestWorkerHandler_HandleUpdateProxyResource(t *testing.T) {
+	now := time.Now()
+	testcases := map[string]struct {
+		// API method args
+		org     string
+		request *UpdateProxyResourceRequest
+		// Expected result
+		expectedStatusCode int
+		expectedResponse   api.ProxyResource
+		expectedError      api.Error
+		// Manager Results
+		updateProxyResourceResult *api.ProxyResource
+		// Manager Errors
+		updateProxyResourceErr error
+	}{
+		"OKCase": {
+			org: "org",
+			request: &UpdateProxyResourceRequest{
+				Name: "newName",
+				Path: "/new/",
+				Resource: api.ResourceEntity{
+					Host:   "http://new.com",
+					Url:    "/new",
+					Method: "POST",
+					Action: "new:get",
+					Urn:    "urn:ews:example:new:resource/get",
+				},
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse: api.ProxyResource{
+				ID:   "ID1",
+				Name: "newName",
+				Org:  "org",
+				Path: "/new/",
+				Resource: api.ResourceEntity{
+					Host:   "http://new.com",
+					Url:    "/new",
+					Method: "POST",
+					Action: "new:get",
+					Urn:    "urn:ews:example:new:resource/get",
+				},
+				CreateAt: now,
+				UpdateAt: now,
+				Urn:      api.CreateUrn("org", api.RESOURCE_PROXY, "/new/", "newName"),
+			},
+			updateProxyResourceResult: &api.ProxyResource{
+				ID:   "ID1",
+				Name: "newName",
+				Org:  "org",
+				Path: "/new/",
+				Resource: api.ResourceEntity{
+					Host:   "http://new.com",
+					Url:    "/new",
+					Method: "POST",
+					Action: "new:get",
+					Urn:    "urn:ews:example:new:resource/get",
+				},
+				CreateAt: now,
+				UpdateAt: now,
+				Urn:      api.CreateUrn("org", api.RESOURCE_PROXY, "/new/", "newName"),
+			},
+		},
+		"ErrorCaseMalformedRequest": {
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "EOF",
+			},
+		},
+		"ErrorCaseProxyResourceNotFound": {
+			request: &UpdateProxyResourceRequest{
+				Name: "newName",
+				Path: "/NewPath/",
+				Resource: api.ResourceEntity{
+					Host:   "http://new.com",
+					Url:    "/new",
+					Method: "POST",
+					Action: "new:get",
+					Urn:    "urn:ews:example:new:resource/get",
+				},
+			},
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code:    api.PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "Group not found",
+			},
+			updateProxyResourceErr: &api.Error{
+				Code:    api.PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND,
+				Message: "Group not found",
+			},
+		},
+		"ErrorCaseInvalidParameterError": {
+			request: &UpdateProxyResourceRequest{
+				Name: "newName",
+				Path: "InvalidPath",
+				Resource: api.ResourceEntity{
+					Host:   "http://new.com",
+					Url:    "/new",
+					Method: "POST",
+					Action: "new:get",
+					Urn:    "urn:ews:example:new:resource/get",
+				},
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+			updateProxyResourceErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+		},
+		"ErrorCaseProxyResourceAlreadyExistError": {
+			request: &UpdateProxyResourceRequest{
+				Name: "newName",
+				Path: "newPath",
+				Resource: api.ResourceEntity{
+					Host:   "http://new.com",
+					Url:    "/new",
+					Method: "POST",
+					Action: "new:get",
+					Urn:    "urn:ews:example:new:resource/get",
+				},
+			},
+			expectedStatusCode: http.StatusConflict,
+			expectedError: api.Error{
+				Code:    api.PROXY_RESOURCE_ALREADY_EXIST,
+				Message: "Proxy resource already exist",
+			},
+			updateProxyResourceErr: &api.Error{
+				Code:    api.PROXY_RESOURCE_ALREADY_EXIST,
+				Message: "Proxy resource already exist",
+			},
+		},
+		"ErrorCaseUnauthorizedResourcesError": {
+			request: &UpdateProxyResourceRequest{
+				Name: "newName",
+				Path: "/NewPath/",
+				Resource: api.ResourceEntity{
+					Host:   "http://new.com",
+					Url:    "/new",
+					Method: "POST",
+					Action: "new:get",
+					Urn:    "urn:ews:example:new:resource/get",
+				},
+			},
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+			updateProxyResourceErr: &api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+		},
+		"ErrorCaseUnknownApiError": {
+			request: &UpdateProxyResourceRequest{
+				Name: "newName",
+				Path: "/NewPath/",
+				Resource: api.ResourceEntity{
+					Host:   "http://new.com",
+					Url:    "/new",
+					Method: "POST",
+					Action: "new:get",
+					Urn:    "urn:ews:example:new:resource/get",
+				},
+			},
+			expectedStatusCode: http.StatusInternalServerError,
+			updateProxyResourceErr: &api.Error{
+				Code:    api.UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[UpdateProxyResourceMethod][0] = test.updateProxyResourceResult
+		testApi.ArgsOut[UpdateProxyResourceMethod][1] = test.updateProxyResourceErr
+
+		var body *bytes.Buffer
+		if test.request != nil {
+			jsonObject, err := json.Marshal(test.request)
+			assert.Nil(t, err, "Error in test case %v", n)
+			body = bytes.NewBuffer(jsonObject)
+		}
+		if body == nil {
+			body = bytes.NewBuffer([]byte{})
+		}
+
+		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/proxy/resources/pr", test.org)
+		req, err := http.NewRequest(http.MethodPut, url, body)
+		assert.Nil(t, err, "Error in test case %v", n)
+
+		res, err := client.Do(req)
+		assert.Nil(t, err, "Error in test case %v", n)
+
+		if test.request != nil {
+			// Check received parameters
+			assert.Equal(t, test.org, testApi.ArgsIn[UpdateProxyResourceMethod][1], "Error in test case %v", n)
+			assert.Equal(t, "pr", testApi.ArgsIn[UpdateProxyResourceMethod][2], "Error in test case %v", n)
+			assert.Equal(t, test.request.Name, testApi.ArgsIn[UpdateProxyResourceMethod][3], "Error in test case %v", n)
+			assert.Equal(t, test.request.Path, testApi.ArgsIn[UpdateProxyResourceMethod][4], "Error in test case %v", n)
+		}
+
+		// check status code
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
+
+		switch res.StatusCode {
+		case http.StatusOK:
+			response := api.ProxyResource{}
+			err = json.NewDecoder(res.Body).Decode(&response)
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check result
+			assert.Equal(t, test.expectedResponse, response, "Error in test case %v", n)
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check error
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
+		}
+	}
+}
+
 func TestWorkerHandler_HandleGetProxyResourceByName(t *testing.T) {
 	now := time.Now()
 	testcases := map[string]struct {

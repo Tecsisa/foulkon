@@ -980,6 +980,7 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 
 func TestAuthAPI_UpdateGroup(t *testing.T) {
 	testcases := map[string]struct {
+		// API Method args
 		requestInfo  RequestInfo
 		org          string
 		groupName    string

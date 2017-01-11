@@ -32,6 +32,12 @@ type CreateProxyResourceRequest struct {
 	Resource api.ResourceEntity `json:"resource, omitempty"`
 }
 
+type UpdateProxyResourceRequest struct {
+	Name     string             `json:"name, omitempty"`
+	Path     string             `json:"path, omitempty"`
+	Resource api.ResourceEntity `json:"resource, omitempty"`
+}
+
 // RESPONSES
 
 type ProxyResources struct {
@@ -167,6 +173,19 @@ func (h *WorkerHandler) HandleListProxyResource(w http.ResponseWriter, r *http.R
 		Limit:     filterData.Limit,
 		Total:     total,
 	}
+	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
+}
+
+func (h *WorkerHandler) HandleUpdateProxyResource(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Process request
+	request := &UpdateProxyResourceRequest{}
+	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, request)
+	if apiErr != nil {
+		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		return
+	}
+	// Call proxy resource API to update proxy resource
+	response, err := h.worker.ProxyApi.UpdateProxyResource(requestInfo, filterData.Org, filterData.ProxyResourceName, request.Name, request.Path, request.Resource)
 	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 

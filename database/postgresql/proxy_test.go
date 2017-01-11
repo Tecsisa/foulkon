@@ -392,6 +392,97 @@ func TestPostgresRepo_AddProxyResource(t *testing.T) {
 	}
 }
 
+func TestPostgresRepo_UpdateProxyResource(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		// Previous data
+		previousProxyResources []ProxyResource
+		// Postgres Repo Args
+		proxyResourceToUpdate *api.ProxyResource
+		// Expected result
+		expectedResponse *api.ProxyResource
+		expectedError    *database.Error
+	}{
+		"OKCase": {
+			previousProxyResources: []ProxyResource{
+				{
+					ID:          "ID",
+					Name:        "name",
+					Path:        "/path/",
+					Org:         "org",
+					Host:        "http://host.com",
+					Url:         "/url",
+					Method:      "GET",
+					UrnResource: "urn2",
+					Action:      "example:get",
+					Urn:         "urn",
+					CreateAt:    now.UnixNano(),
+					UpdateAt:    now.UnixNano(),
+				},
+			},
+			proxyResourceToUpdate: &api.ProxyResource{
+				ID:   "ID",
+				Name: "newName",
+				Path: "/newPath/",
+				Org:  "org",
+				Resource: api.ResourceEntity{
+					Host:   "http://newhost.com",
+					Url:    "/newurl",
+					Method: "POST",
+					Urn:    "newurn",
+					Action: "newexample:get",
+				},
+				Urn:      "urn",
+				CreateAt: now,
+				UpdateAt: now,
+			},
+			expectedResponse: &api.ProxyResource{
+				ID:   "ID",
+				Name: "newName",
+				Path: "/newPath/",
+				Org:  "org",
+				Resource: api.ResourceEntity{
+					Host:   "http://newhost.com",
+					Url:    "/newurl",
+					Method: "POST",
+					Urn:    "newurn",
+					Action: "newexample:get",
+				},
+				Urn:      "urn",
+				CreateAt: now,
+				UpdateAt: now,
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean proxy resource database
+		cleanProxyResourcesTable(t, n)
+
+		// Insert previous data
+		if test.previousProxyResources != nil {
+			for _, previousProxyResource := range test.previousProxyResources {
+				insertProxyResource(t, n, previousProxyResource)
+			}
+		}
+
+		// Call to repository to update proxy resource
+		updateProxyResource, err := repoDB.UpdateProxyResource(*test.proxyResourceToUpdate)
+		if test.expectedError != nil {
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
+		} else {
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check response
+			assert.Equal(t, updateProxyResource, test.expectedResponse, "Error in test case %v", n)
+			// Check database
+			count := getProxyResourcesCountFiltered(t, n, test.expectedResponse.ID, test.expectedResponse.Name, test.expectedResponse.Org,
+				test.expectedResponse.Path, test.expectedResponse.Urn, test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.UpdateAt.UnixNano())
+			assert.Equal(t, 1, count, "Error in test case %v", n)
+		}
+	}
+}
+
 func TestPostgresRepo_RemoveProxyResource(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {

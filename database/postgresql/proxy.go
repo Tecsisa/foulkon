@@ -99,6 +99,36 @@ func (p PostgresRepo) AddProxyResource(proxyResource api.ProxyResource) (*api.Pr
 	return dbResourceToApiResource(proxyResourceDB), nil
 }
 
+func (p PostgresRepo) UpdateProxyResource(proxyResource api.ProxyResource) (*api.ProxyResource, error) {
+	proxyResourceDB := &ProxyResource{
+		ID:          proxyResource.ID,
+		Name:        proxyResource.Name,
+		Org:         proxyResource.Org,
+		Path:        proxyResource.Path,
+		Host:        proxyResource.Resource.Host,
+		Url:         proxyResource.Resource.Url,
+		Method:      proxyResource.Resource.Method,
+		UrnResource: proxyResource.Resource.Urn,
+		Action:      proxyResource.Resource.Action,
+		Urn:         proxyResource.Urn,
+		CreateAt:    proxyResource.CreateAt.UnixNano(),
+		UpdateAt:    proxyResource.UpdateAt.UnixNano(),
+	}
+
+	// Store proxyResource
+	query := p.Dbmap.Model(&ProxyResource{ID: proxyResource.ID}).Updates(proxyResourceDB)
+
+	// Error Handling
+	if err := query.Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	return &proxyResource, nil
+}
+
 func (p PostgresRepo) RemoveProxyResource(id string) error {
 	// Remove proxy resource
 	query := p.Dbmap.Where("id like ?", id).Delete(&ProxyResource{})

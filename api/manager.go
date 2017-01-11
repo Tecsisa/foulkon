@@ -202,6 +202,12 @@ type ProxyResourcesAPI interface {
 	// Retrieve list of proxy resources.
 	ListProxyResources(requestInfo RequestInfo, filter *Filter) ([]ProxyResourceIdentity, int, error)
 
+	// Update proxy resource stored in database with new name, new path and new resource.
+	// It overrides the older resource. Throw error if the input parameters are invalid,
+	// proxy resource to update doesn't exist, target proxy resource already exist or unexpected error happen.
+	UpdateProxyResource(requestInfo RequestInfo, org string, name string, newName string, newPath string,
+		newResource ResourceEntity) (*ProxyResource, error)
+
 	// Remove proxy resource stored in database.
 	// Throw error if the input parameters are invalid, the proxy resource doesn't exist or unexpected error happen.
 	RemoveProxyResource(requestInfo RequestInfo, org string, name string) error
@@ -328,6 +334,10 @@ type ProxyRepo interface {
 
 	// Store proxy resource in database if there aren't errors.
 	AddProxyResource(proxyResource ProxyResource) (*ProxyResource, error)
+
+	// Update proxy resource stored in database with new fields. Also it overrides statements if it has.
+	// Throw error if there are problems with database.
+	UpdateProxyResource(proxyResource ProxyResource) (*ProxyResource, error)
 
 	// Remove proxy resource stored in database.
 	// Throw error if there are problems during transaction.

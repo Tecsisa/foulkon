@@ -41,6 +41,7 @@ const (
 	GetProxyResourcesMethod      = "GetProxyResources"
 	RemoveProxyResourceMethod    = "RemoveProxyResource"
 	AddProxyResourceMethod       = "AddProxyResource"
+	UpdateProxyResourceMethod    = "UpdateProxyResource"
 	GetProxyResourceByNameMethod = "GetProxyResourceByName"
 )
 
@@ -82,7 +83,7 @@ func makeTestRepo() *TestRepo {
 	}
 	testRepo.ArgsIn[GetUserByExternalIDMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[AddUserMethod] = make([]interface{}, 1)
-	testRepo.ArgsIn[UpdateUserMethod] = make([]interface{}, 3)
+	testRepo.ArgsIn[UpdateUserMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetUsersFilteredMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetGroupsByUserIDMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[RemoveUserMethod] = make([]interface{}, 1)
@@ -96,12 +97,12 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[AddGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[AddMemberMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[RemoveMemberMethod] = make([]interface{}, 2)
-	testRepo.ArgsIn[UpdateGroupMethod] = make([]interface{}, 4)
+	testRepo.ArgsIn[UpdateGroupMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[AttachPolicyMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[DetachPolicyMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[GetPolicyByNameMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[AddPolicyMethod] = make([]interface{}, 1)
-	testRepo.ArgsIn[UpdatePolicyMethod] = make([]interface{}, 5)
+	testRepo.ArgsIn[UpdatePolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[RemovePolicyMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetPoliciesFilteredMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetAttachedGroupsMethod] = make([]interface{}, 2)
@@ -109,6 +110,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[GetProxyResourcesMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[RemoveProxyResourceMethod] = make([]interface{}, 2)
 	testRepo.ArgsIn[AddProxyResourceMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[UpdateProxyResourceMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetProxyResourceByNameMethod] = make([]interface{}, 2)
 
 	testRepo.ArgsOut[GetUserByExternalIDMethod] = make([]interface{}, 2)
@@ -140,6 +142,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[GetProxyResourcesMethod] = make([]interface{}, 3)
 	testRepo.ArgsOut[RemoveProxyResourceMethod] = make([]interface{}, 1)
 	testRepo.ArgsOut[AddProxyResourceMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[UpdateProxyResourceMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[GetProxyResourceByNameMethod] = make([]interface{}, 2)
 
 	return testRepo
@@ -603,6 +606,20 @@ func (t TestRepo) AddProxyResource(pr ProxyResource) (*ProxyResource, error) {
 		err = t.ArgsOut[AddProxyResourceMethod][1].(error)
 	}
 	return created, err
+}
+
+func (t TestRepo) UpdateProxyResource(proxyResource ProxyResource) (*ProxyResource, error) {
+	t.ArgsIn[UpdateProxyResourceMethod][0] = proxyResource
+
+	var updated *ProxyResource
+	if t.ArgsOut[UpdateProxyResourceMethod][0] != nil {
+		updated = t.ArgsOut[UpdateProxyResourceMethod][0].(*ProxyResource)
+	}
+	var err error
+	if t.ArgsOut[UpdateProxyResourceMethod][1] != nil {
+		err = t.ArgsOut[UpdateProxyResourceMethod][1].(error)
+	}
+	return updated, err
 }
 
 func (t TestRepo) GetProxyResourceByName(org string, name string) (*ProxyResource, error) {
