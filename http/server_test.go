@@ -60,22 +60,26 @@ func TestNewProxy(t *testing.T) {
 			},
 			getProxyResourcesMethod: []api.ProxyResource{
 				{
-					ID:     "ID2",
-					Host:   "host2",
-					Url:    "/url2",
-					Method: "Method2",
-					Urn:    "urn2",
-					Action: "action2",
+					ID: "ID2",
+					Resource: api.ResourceEntity{
+						Host:   "host2",
+						Path:   "/path2",
+						Method: "Method2",
+						Urn:    "urn2",
+						Action: "action2",
+					},
 				},
 			},
 			expectedResources: []api.ProxyResource{
 				{
-					ID:     "ID2",
-					Host:   "host2",
-					Url:    "/url2",
-					Method: "Method2",
-					Urn:    "urn2",
-					Action: "action2",
+					ID: "ID2",
+					Resource: api.ResourceEntity{
+						Host:   "host2",
+						Path:   "/path2",
+						Method: "Method2",
+						Urn:    "urn2",
+						Action: "action2",
+					},
 				},
 			},
 		},
@@ -90,22 +94,26 @@ func TestNewProxy(t *testing.T) {
 			},
 			getProxyResourcesMethod: []api.ProxyResource{
 				{
-					ID:     "ID2",
-					Host:   "host2",
-					Url:    "",
-					Method: "Method2",
-					Urn:    "urn2",
-					Action: "action2",
+					ID: "ID2",
+					Resource: api.ResourceEntity{
+						Host:   "host2",
+						Path:   "",
+						Method: "Method2",
+						Urn:    "urn2",
+						Action: "action2",
+					},
 				},
 			},
 			expectedResources: []api.ProxyResource{
 				{
-					ID:     "ID2",
-					Host:   "host2",
-					Url:    "",
-					Method: "Method2",
-					Urn:    "urn2",
-					Action: "action2",
+					ID: "ID2",
+					Resource: api.ResourceEntity{
+						Host:   "host2",
+						Path:   "",
+						Method: "Method2",
+						Urn:    "urn2",
+						Action: "action2",
+					},
 				},
 			},
 		},
@@ -288,12 +296,14 @@ func TestProxyServer_Run(t *testing.T) {
 			},
 			expectedResources: []api.ProxyResource{
 				{
-					ID:     "ID2",
-					Host:   "host2",
-					Url:    "/url2",
-					Method: "Method2",
-					Urn:    "urn2",
-					Action: "action2",
+					ID: "ID2",
+					Resource: api.ResourceEntity{
+						Host:   "host2",
+						Path:   "/path2",
+						Method: "Method2",
+						Urn:    "urn2",
+						Action: "action2",
+					},
 				},
 			},
 		},
@@ -320,12 +330,14 @@ func TestProxyServer_Run(t *testing.T) {
 		} else {
 			testApi.ArgsOut[GetProxyResourcesMethod][0] = []api.ProxyResource{
 				{
-					ID:     "ID2",
-					Host:   "host2",
-					Url:    "/url2",
-					Method: "Method2",
-					Urn:    "urn2",
-					Action: "action2",
+					ID: "ID2",
+					Resource: api.ResourceEntity{
+						Host:   "host2",
+						Path:   "/path2",
+						Method: "Method2",
+						Urn:    "urn2",
+						Action: "action2",
+					},
 				},
 			}
 

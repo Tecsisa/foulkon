@@ -105,6 +105,11 @@ func TestPostgresRepo_OrderByValidColumns(t *testing.T) {
 			action:          api.POLICY_ACTION_LIST_ATTACHED_GROUPS,
 			expectedColumns: []string{"create_at"},
 		},
+		"OkCaseAction-" + api.PROXY_ACTION_LIST_RESOURCES: {
+			action: api.PROXY_ACTION_LIST_RESOURCES,
+			expectedColumns: []string{"name", "path", "org", "host", "path_resource", "method",
+				"urn_resource", "urn", "action", "create_at", "update_at"},
+		},
 		"OkCaseOtherActions": {
 			action:          "other",
 			expectedColumns: nil,
@@ -361,9 +366,41 @@ func cleanProxyResourcesTable(t *testing.T, testcase string) {
 }
 
 func insertProxyResource(t *testing.T, testcase string, pr ProxyResource) {
-	err := repoDB.Dbmap.Exec("INSERT INTO public.proxy_resources (id, host, url, method, urn, action) VALUES (?, ?, ?, ?, ?, ?)",
-		pr.ID, pr.Host, pr.Url, pr.Method, pr.Urn, pr.Action).Error
+	err := repoDB.Dbmap.Exec("INSERT INTO public.proxy_resources (id, name, org, path, host, path_resource, method, urn_resource, "+
+		"urn, action, create_at, update_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		pr.ID, pr.Name, pr.Org, pr.Path, pr.Host, pr.PathResource, pr.Method, pr.UrnResource, pr.Urn, pr.Action, pr.CreateAt, pr.UpdateAt).Error
 
 	// Error handling
 	assert.Nil(t, err, "Error in testcase %v", testcase)
+}
+
+func getProxyResourcesCountFiltered(t *testing.T, testcase string, id string,
+	name string, org string, path string, urn string, createAt int64, updateAt int64) int {
+	query := repoDB.Dbmap.Table(ProxyResource{}.TableName())
+	if id != "" {
+		query = query.Where("id = ?", id)
+	}
+	if org != "" {
+		query = query.Where("org = ?", org)
+	}
+	if path != "" {
+		query = query.Where("path = ?", path)
+	}
+	if name != "" {
+		query = query.Where("name = ?", name)
+	}
+	if urn != "" {
+		query = query.Where("urn = ?", urn)
+	}
+	if createAt != 0 {
+		query = query.Where("create_at = ?", createAt)
+	}
+	if updateAt != 0 {
+		query = query.Where("update_at = ?", updateAt)
+	}
+	var number int
+	err := query.Count(&number).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
+
+	return number
 }

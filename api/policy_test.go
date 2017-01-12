@@ -702,7 +702,7 @@ func TestAuthAPI_ListPolicies(t *testing.T) {
 				Admin:      true,
 			},
 			filter: &Filter{
-				Org: "123",
+				Org: "example",
 			},
 			expectedPolicies: []PolicyIdentity{
 				{

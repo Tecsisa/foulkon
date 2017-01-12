@@ -11,6 +11,11 @@ const (
 	RESOURCE_GROUP  = "group"
 	RESOURCE_USER   = "user"
 	RESOURCE_POLICY = "policy"
+	RESOURCE_PROXY  = "proxy"
+
+	// Resource validation
+	RESOURCE_EXTERNAL = "external"
+	RESOURCE_IAM      = "iam"
 
 	// Constraints
 	MAX_EXTERNAL_ID_LENGTH = 128
@@ -51,6 +56,13 @@ const (
 	POLICY_ACTION_GET_POLICY           = "iam:GetPolicy"
 	POLICY_ACTION_LIST_ATTACHED_GROUPS = "iam:ListAttachedGroups"
 	POLICY_ACTION_LIST_POLICIES        = "iam:ListPolicies"
+
+	// Proxy resource actions
+	PROXY_ACTION_CREATE_RESOURCE    = "iam:CreateProxyResource"
+	PROXY_ACTION_DELETE_RESOURCE    = "iam:DeleteProxyResource"
+	PROXY_ACTION_UPDATE_RESOURCE    = "iam:UpdateProxyResource"
+	PROXY_ACTION_LIST_RESOURCES     = "iam:ListProxyResources"
+	PROXY_ACTION_GET_PROXY_RESOURCE = "iam:GetProxyResource"
 )
 
 var (
@@ -66,6 +78,9 @@ var (
 	rWordResourcePrefix, _ = regexp.Compile(`^[\w+\-_.@]+\*$`)
 	rUrn, _                = regexp.Compile(`^\*$|^[\w+\-@.]+\*?$|^[\w+\-@.]+\*?$|^[\w+\-@.]+(/?([\w+\-@.]+/)*([\w+\-@.]|[*])+)?$`)
 	rUrnExclude, _         = regexp.Compile(`[/]{2,}|[:]{2,}|[*]{2,}`)
+	rPathResource, _       = regexp.Compile(`^/$|^(/([\w_-]+|:[\w_-]+))+$`)
+	rHost, _               = regexp.Compile(`^https?:/{2}[\w+\/\-_.]+(:\d{1,5})?$`)
+	rUrnProxy, _           = regexp.Compile(`^\*$|^[\w+\-@.]+\*?$|^[\w+\-@.]+\*?$|^([\w+\-@.]|\{\w+\})+(/?(([\w+\-@.]|\{\w+\})+/)*([\w+\-@.]|\{\w+\})+)?$`)
 )
 
 func CreateUrn(org string, resource string, path string, name string) string {
@@ -118,6 +133,38 @@ func IsValidEffect(effect string) error {
 	return nil
 }
 
+func IsValidProxyResource(resource *ResourceEntity) error {
+	//err generator helper
+	errFunc := func(parameter string) error {
+		return &Error{
+			Code:    REGEX_NO_MATCH,
+			Message: fmt.Sprintf("No regex match in parameter: %v", parameter),
+		}
+	}
+	if !rHost.MatchString(resource.Host) {
+		return errFunc(resource.Host)
+	}
+
+	if !rPathResource.MatchString(resource.Path) {
+		return errFunc(resource.Path)
+	}
+
+	if resource.Method != "GET" && resource.Method != "POST" && resource.Method != "PUT" &&
+		resource.Method != "DELETE" && resource.Method != "PATCH" {
+		return errFunc(resource.Method)
+	}
+
+	if err := AreValidResources([]string{resource.Urn}, RESOURCE_EXTERNAL); err != nil {
+		return err
+	}
+
+	if err := AreValidActions([]string{resource.Action}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func AreValidActions(actions []string) error {
 
 	for _, action := range actions {
@@ -131,7 +178,7 @@ func AreValidActions(actions []string) error {
 	return nil
 }
 
-func AreValidResources(resources []string) error {
+func AreValidResources(resources []string, resourceType string) error {
 	//err generator helper
 	errFunc := func(resource string) error {
 		return &Error{
@@ -185,15 +232,21 @@ func AreValidResources(resources []string) error {
 					}
 				}
 			case 4:
-				if !rUrn.MatchString(block) || rUrnExclude.MatchString(block) {
-					return errFunc(resource)
+				switch resourceType {
+				case RESOURCE_EXTERNAL:
+					if !rUrnProxy.MatchString(block) || rUrnExclude.MatchString(block) {
+						return errFunc(resource)
+					}
+				default:
+					if !rUrn.MatchString(block) || rUrnExclude.MatchString(block) {
+						return errFunc(resource)
+					}
 				}
 			default:
 				return &Error{
 					Code:    INVALID_PARAMETER_ERROR,
 					Message: fmt.Sprintf("Invalid resource definition: %v", resource),
 				}
-
 			}
 		}
 	}
@@ -226,7 +279,7 @@ func AreValidStatements(statements *[]Statement) error {
 				Message: "Empty resources",
 			}
 		}
-		err = AreValidResources(statement.Resources)
+		err = AreValidResources(statement.Resources, RESOURCE_IAM)
 		if err != nil {
 			return err
 		}

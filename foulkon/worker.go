@@ -150,6 +150,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 			GroupRepo:  repoDB,
 			UserRepo:   repoDB,
 			PolicyRepo: repoDB,
+			ProxyRepo:  repoDB,
 		}
 		wc.IdleConns, _ = strconv.Atoi(dbIdleconns)
 		wc.MaxOpenConns, _ = strconv.Atoi(dbMaxopenconns)
@@ -249,6 +250,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		GroupApi:          authApi,
 		PolicyApi:         authApi,
 		AuthzApi:          authApi,
+		ProxyApi:          authApi,
 		Config:            wc,
 	}, nil
 }

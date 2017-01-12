@@ -177,12 +177,12 @@ func (ps *ProxyServer) RefreshResources(proxy *foulkon.Proxy) func(s *ProxyServe
 			ps.currentResources = newProxyResources
 
 			api.Log.Info("Updating resources ...")
-			for _, res := range newProxyResources {
-				// Check if Url is empty. Handle doesn't accept empty path
-				if res.Url == "" {
-					res.Url = "/"
+			for _, pr := range newProxyResources {
+				// Check if Path is empty. Handle doesn't accept empty path
+				if pr.Resource.Path == "" {
+					pr.Resource.Path = "/"
 				}
-				router.Handle(res.Method, res.Url, proxyHandler.HandleRequest(res))
+				router.Handle(pr.Resource.Method, pr.Resource.Path, proxyHandler.HandleRequest(pr))
 			}
 			// TODO: test when resources are empty
 			// If we had resources and those were deleted then handler must be

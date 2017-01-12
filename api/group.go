@@ -181,7 +181,7 @@ func (api WorkerAPI) GetGroupByName(requestInfo RequestInfo, org string, name st
 func (api WorkerAPI) ListGroups(requestInfo RequestInfo, filter *Filter) ([]GroupIdentity, int, error) {
 	// Validate fields
 	var total int
-	orderByValidColumns := api.UserRepo.OrderByValidColumns(GROUP_ACTION_LIST_GROUPS)
+	orderByValidColumns := api.GroupRepo.OrderByValidColumns(GROUP_ACTION_LIST_GROUPS)
 	err := validateFilter(filter, orderByValidColumns)
 	if err != nil {
 		return nil, total, err
@@ -321,7 +321,6 @@ func (api WorkerAPI) UpdateGroup(requestInfo RequestInfo, org string, name strin
 }
 
 func (api WorkerAPI) RemoveGroup(requestInfo RequestInfo, org string, name string) error {
-
 	// Call repo to retrieve the group
 	group, err := api.GetGroupByName(requestInfo, org, name)
 	if err != nil {
@@ -341,7 +340,6 @@ func (api WorkerAPI) RemoveGroup(requestInfo RequestInfo, org string, name strin
 		}
 	}
 
-	// Remove group with given org and name
 	err = api.GroupRepo.RemoveGroup(group.ID)
 
 	// Error handling
@@ -359,7 +357,6 @@ func (api WorkerAPI) RemoveGroup(requestInfo RequestInfo, org string, name strin
 }
 
 func (api WorkerAPI) AddMember(requestInfo RequestInfo, externalId string, name string, org string) error {
-
 	// Call repo to retrieve the group
 	groupDB, err := api.GetGroupByName(requestInfo, org, name)
 	if err != nil {
@@ -421,7 +418,6 @@ func (api WorkerAPI) AddMember(requestInfo RequestInfo, externalId string, name 
 }
 
 func (api WorkerAPI) RemoveMember(requestInfo RequestInfo, externalId string, name string, org string) error {
-
 	// Call repo to retrieve the group
 	groupDB, err := api.GetGroupByName(requestInfo, org, name)
 	if err != nil {

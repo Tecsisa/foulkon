@@ -20,6 +20,9 @@ const (
 
 	// Policy Codes
 	POLICY_NOT_FOUND = "PolicyNotFound"
+
+	// Proxy resource Codes
+	PROXY_RESOURCE_NOT_FOUND = "ProxyResourceNotFound"
 )
 
 type Error struct {

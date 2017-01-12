@@ -89,6 +89,23 @@ func (api WorkerAPI) GetAuthorizedPolicies(requestInfo RequestInfo, resourceUrn 
 	return policiesFiltered, nil
 }
 
+// GetAuthorizedProxyResources returns authorized proxy resources for specified user combined with resource+action
+func (api WorkerAPI) GetAuthorizedProxyResources(requestInfo RequestInfo, resourceUrn string, action string, proxyResources []ProxyResource) ([]ProxyResource, error) {
+	resourcesToAuthorize := []Resource{}
+	for _, proxyResource := range proxyResources {
+		resourcesToAuthorize = append(resourcesToAuthorize, proxyResource)
+	}
+	resources, err := api.getAuthorizedResources(requestInfo, resourceUrn, action, resourcesToAuthorize)
+	if err != nil {
+		return nil, err
+	}
+	proxyResourcesFiltered := []ProxyResource{}
+	for _, res := range resources {
+		proxyResourcesFiltered = append(proxyResourcesFiltered, res.(ProxyResource))
+	}
+	return proxyResourcesFiltered, nil
+}
+
 // GetAuthorizedExternalResources returns the resources where the specified user has the action granted
 func (api WorkerAPI) GetAuthorizedExternalResources(requestInfo RequestInfo, action string, resources []string) ([]string, error) {
 	// Validate parameters
@@ -114,7 +131,7 @@ func (api WorkerAPI) GetAuthorizedExternalResources(requestInfo RequestInfo, act
 				Message: fmt.Sprintf("Invalid parameter resource %v. Urn prefixes are not allowed here", res),
 			}
 		}
-		if err := AreValidResources([]string{res}); err != nil {
+		if err := AreValidResources([]string{res}, RESOURCE_EXTERNAL); err != nil {
 			// Transform to API error
 			apiError := err.(*Error)
 			return nil, &Error{

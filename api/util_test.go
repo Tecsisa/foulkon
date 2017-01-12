@@ -450,7 +450,8 @@ func TestAreValidStatements(t *testing.T) {
 func TestAreValidResources(t *testing.T) {
 	testcases := map[string]struct {
 		// Method args
-		Resources []string
+		Resources    []string
+		resourceType string
 		// Expected results
 		wantError error
 	}{
@@ -458,11 +459,13 @@ func TestAreValidResources(t *testing.T) {
 			Resources: []string{
 				"*",
 			},
+			resourceType: RESOURCE_IAM,
 		},
 		"ErrorCase1block": {
 			Resources: []string{
 				"fail",
 			},
+			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
 				Message: "No regex match in resource: fail",
@@ -472,11 +475,13 @@ func TestAreValidResources(t *testing.T) {
 			Resources: []string{
 				"urn:*",
 			},
+			resourceType: RESOURCE_IAM,
 		},
 		"ErrorCase2blockNotUrn": {
 			Resources: []string{
 				"fail:asd",
 			},
+			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
 				Message: "No regex match in resource: fail:asd",
@@ -486,6 +491,7 @@ func TestAreValidResources(t *testing.T) {
 			Resources: []string{
 				"urn:fail",
 			},
+			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
 				Message: "No regex match in resource: urn:fail",
@@ -495,11 +501,13 @@ func TestAreValidResources(t *testing.T) {
 			Resources: []string{
 				"urn:iws:*",
 			},
+			resourceType: RESOURCE_IAM,
 		},
 		"ErrorCase3blockBadString": {
 			Resources: []string{
 				"urn:iws***:something",
 			},
+			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
 				Message: "No regex match in resource: urn:iws***:something",
@@ -509,6 +517,7 @@ func TestAreValidResources(t *testing.T) {
 			Resources: []string{
 				"urn:iws:fail",
 			},
+			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
 				Message: "No regex match in resource: urn:iws:fail",
@@ -518,11 +527,13 @@ func TestAreValidResources(t *testing.T) {
 			Resources: []string{
 				"urn:iws:iam:*",
 			},
+			resourceType: RESOURCE_IAM,
 		},
 		"ErrorCase4blockBadString": {
 			Resources: []string{
 				"urn:iws:some***:fail",
 			},
+			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
 				Message: "No regex match in resource: urn:iws:some***:fail",
@@ -532,6 +543,7 @@ func TestAreValidResources(t *testing.T) {
 			Resources: []string{
 				"urn:iws:iam:fail",
 			},
+			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
 				Message: "No regex match in resource: urn:iws:iam:fail",
@@ -541,20 +553,39 @@ func TestAreValidResources(t *testing.T) {
 			Resources: []string{
 				"urn:iws:iam::sysadmins/user1",
 			},
+			resourceType: RESOURCE_IAM,
+		},
+		"OKCase5blockExternal": {
+			Resources: []string{
+				"urn:ews:exam:inst:sysadmins/{admin}",
+			},
+			resourceType: RESOURCE_EXTERNAL,
 		},
 		"ErrorCase5blockBadString": {
 			Resources: []string{
 				"urn:iws:iam:some***:fail",
 			},
+			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
 				Message: "No regex match in resource: urn:iws:iam:some***:fail",
+			},
+		},
+		"ErrorCase5blockExternal": {
+			Resources: []string{
+				"urn:ews:exam:inst:sysadmins/{admin",
+			},
+			resourceType: RESOURCE_EXTERNAL,
+			wantError: &Error{
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in resource: urn:ews:exam:inst:sysadmins/{admin",
 			},
 		},
 		"ErrorCase5block": {
 			Resources: []string{
 				"urn:iws:iam:org1:fail**!^_#",
 			},
+			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
 				Message: "No regex match in resource: urn:iws:iam:org1:fail**!^_#",
@@ -564,6 +595,7 @@ func TestAreValidResources(t *testing.T) {
 			Resources: []string{
 				"urn:iws:iam:org1:fail:fail:fail",
 			},
+			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
 				Message: "Invalid resource definition: urn:iws:iam:org1:fail:fail:fail",
@@ -572,7 +604,7 @@ func TestAreValidResources(t *testing.T) {
 	}
 
 	for x, testcase := range testcases {
-		err := AreValidResources(testcase.Resources)
+		err := AreValidResources(testcase.Resources, testcase.resourceType)
 		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }
@@ -651,7 +683,7 @@ func TestValidateFilter(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: fmt.Sprintf("Invalid parameter: group #@!^*"),
+				Message: "Invalid parameter: group #@!^*",
 			},
 		},
 		"ErrorCaseInvalidExtID": {
@@ -665,7 +697,7 @@ func TestValidateFilter(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: fmt.Sprintf("Invalid parameter: externalID #@!^*"),
+				Message: "Invalid parameter: externalID #@!^*",
 			},
 		},
 		"ErrorCaseInvalidPolicyName": {
@@ -679,7 +711,7 @@ func TestValidateFilter(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: fmt.Sprintf("Invalid parameter: policy #@!^*"),
+				Message: "Invalid parameter: policy #@!^*",
 			},
 		},
 		"ErrorCaseInvalidOrderBy": {
@@ -694,7 +726,7 @@ func TestValidateFilter(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: fmt.Sprintf("Invalid parameter: OrderBy fail-fail"),
+				Message: "Invalid parameter: OrderBy fail-fail",
 			},
 		},
 		"ErrorCaseInvalidOrderByColumn": {
@@ -710,13 +742,92 @@ func TestValidateFilter(t *testing.T) {
 			OrderByValidColumns: []string{"val1", "val2"},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: fmt.Sprintf("Invalid parameter: OrderBy column xxx"),
+				Message: "Invalid parameter: OrderBy column xxx",
 			},
 		},
 	}
 
 	for x, testcase := range testcases {
 		err := validateFilter(testcase.filter, testcase.OrderByValidColumns)
+		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
+	}
+}
+
+func TestIsValidProxyResource(t *testing.T) {
+	testcases := map[string]struct {
+		// Method args
+		resource *ResourceEntity
+		// Expected results
+		wantError error
+	}{
+		"OKCase": {
+			resource: &ResourceEntity{
+				Host:   "http://host.com",
+				Path:   "/path",
+				Method: "GET",
+				Urn:    "urn:ews:example:instance1:resource/get",
+				Action: "action",
+			},
+		},
+		"ErrorCaseInvalidHost": {
+			resource: &ResourceEntity{
+				Host: "~32&",
+			},
+			wantError: &Error{
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in parameter: ~32&",
+			},
+		},
+		"ErrorCaseInvalidPath": {
+			resource: &ResourceEntity{
+				Host: "http://host.com",
+				Path: "invalid",
+			},
+			wantError: &Error{
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in parameter: invalid",
+			},
+		},
+		"ErrorCaseInvalidMethod": {
+			resource: &ResourceEntity{
+				Host:   "http://host.com",
+				Path:   "/path",
+				Method: "INVALID",
+			},
+			wantError: &Error{
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in parameter: INVALID",
+			},
+		},
+		"ErrorCaseInvalidUrn": {
+			resource: &ResourceEntity{
+				Host:   "http://host.com",
+				Path:   "/path",
+				Method: "GET",
+				Urn:    "~~&",
+			},
+			wantError: &Error{
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in resource: ~~&",
+			},
+		},
+		"ErrorCaseInvalidAction": {
+			resource: &ResourceEntity{
+				Host:   "http://host.com",
+				Path:   "/path",
+				Method: "GET",
+				Urn:    "urn:ews:example:instance1:resource/get",
+				Action: "iam:",
+			},
+			wantError: &Error{
+				Code:    REGEX_NO_MATCH,
+				Message: "No regex match in action: iam:",
+			},
+		},
+	}
+
+	for x, testcase := range testcases {
+		err := IsValidProxyResource(testcase.resource)
 		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
 	}
 }

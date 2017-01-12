@@ -195,7 +195,7 @@ func (api WorkerAPI) GetPolicyByName(requestInfo RequestInfo, org string, policy
 func (api WorkerAPI) ListPolicies(requestInfo RequestInfo, filter *Filter) ([]PolicyIdentity, int, error) {
 	// Validate fields
 	var total int
-	orderByValidColumns := api.UserRepo.OrderByValidColumns(POLICY_ACTION_LIST_POLICIES)
+	orderByValidColumns := api.PolicyRepo.OrderByValidColumns(POLICY_ACTION_LIST_POLICIES)
 	err := validateFilter(filter, orderByValidColumns)
 	if err != nil {
 		return nil, total, err

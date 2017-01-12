@@ -31,6 +31,7 @@ type WorkerAPI struct {
 	UserRepo   UserRepo
 	GroupRepo  GroupRepo
 	PolicyRepo PolicyRepo
+	ProxyRepo  ProxyRepo
 }
 
 // ProxyAPI that implements API interfaces using repositories
@@ -40,11 +41,12 @@ type ProxyAPI struct {
 
 // Filter properties for database search
 type Filter struct {
-	PathPrefix string
-	Org        string
-	ExternalID string
-	PolicyName string
-	GroupName  string
+	PathPrefix        string
+	Org               string
+	ExternalID        string
+	PolicyName        string
+	GroupName         string
+	ProxyResourceName string
 	// Pagination
 	Offset int
 	Limit  int
@@ -172,15 +174,43 @@ type AuthzAPI interface {
 	// if requestInfo doesn't exist, requestInfo doesn't have access to any resources or unexpected error happen.
 	GetAuthorizedPolicies(requestInfo RequestInfo, resourceUrn string, action string, policies []Policy) ([]Policy, error)
 
+	// Retrieve list of authorized proxy resources filtered according to the input parameters. Throw error
+	// if requestInfo doesn't exist, requestInfo doesn't have access to any resources or unexpected error happen.
+	GetAuthorizedProxyResources(requestInfo RequestInfo, resourceUrn string, action string, proxyResources []ProxyResource) ([]ProxyResource, error)
+
 	// Retrieve list of authorized external resources filtered according to the input parameters. Throw error
 	// if requestInfo doesn't exist, requestInfo doesn't have access to any resources or unexpected error happen.
 	GetAuthorizedExternalResources(requestInfo RequestInfo, action string, resources []string) ([]string, error)
 }
 
-// ProxyResourcesAPI interface to manage proxy resources
-type ProxyResourcesAPI interface {
+// InternalProxyAPI interface to manage proxy resources
+type InternalProxyAPI interface {
 	// Retrieve list of proxy resources.
 	GetProxyResources() ([]ProxyResource, error)
+}
+
+// WorkerProxyResourcesAPI interface to manage proxy resources
+type ProxyResourcesAPI interface {
+	// Store proxy resource in database. Throw error when the input parameters are invalid,
+	// the proxy resource already exist or unexpected error happen.
+	AddProxyResource(requestInfo RequestInfo, name string, org string, path string, resource ResourceEntity) (*ProxyResource, error)
+
+	// Retrieve proxy resource from database. Throw error when the input parameters are invalid,
+	// Proxy resource doesn't exist or unexpected error happen.
+	GetProxyResourceByName(requestInfo RequestInfo, org string, name string) (*ProxyResource, error)
+
+	// Retrieve list of proxy resources.
+	ListProxyResources(requestInfo RequestInfo, filter *Filter) ([]ProxyResourceIdentity, int, error)
+
+	// Update proxy resource stored in database with new name, new path and new resource.
+	// It overrides the older resource. Throw error if the input parameters are invalid,
+	// proxy resource to update doesn't exist, target proxy resource already exist or unexpected error happen.
+	UpdateProxyResource(requestInfo RequestInfo, org string, name string, newName string, newPath string,
+		newResource ResourceEntity) (*ProxyResource, error)
+
+	// Remove proxy resource stored in database.
+	// Throw error if the input parameters are invalid, the proxy resource doesn't exist or unexpected error happen.
+	RemoveProxyResource(requestInfo RequestInfo, org string, name string) error
 }
 
 // REPOSITORY INTERFACES
@@ -297,5 +327,22 @@ type PolicyRepo interface {
 // ProxyRepo contains all database operations
 type ProxyRepo interface {
 	// Retrieve proxy resources from database. Otherwise it throws an error.
-	GetProxyResources() ([]ProxyResource, error)
+	GetProxyResources(filter *Filter) ([]ProxyResource, int, error)
+
+	// Retrieve proxy resource from database if it exists. Otherwise it throws an error.
+	GetProxyResourceByName(org string, name string) (*ProxyResource, error)
+
+	// Store proxy resource in database if there aren't errors.
+	AddProxyResource(proxyResource ProxyResource) (*ProxyResource, error)
+
+	// Update proxy resource stored in database with new fields. Also it overrides statements if it has.
+	// Throw error if there are problems with database.
+	UpdateProxyResource(proxyResource ProxyResource) (*ProxyResource, error)
+
+	// Remove proxy resource stored in database.
+	// Throw error if there are problems during transaction.
+	RemoveProxyResource(proxyResourceID string) error
+
+	// OrderByValidColumns returns valid columns that you can use in OrderBy
+	OrderByValidColumns(action string) []string
 }

@@ -154,6 +154,9 @@ func (u PostgresRepo) OrderByValidColumns(action string) []string {
 		return []string{"name", "path", "org", "create_at", "update_at", "urn"}
 	case api.POLICY_ACTION_LIST_ATTACHED_GROUPS:
 		return []string{"create_at"}
+	case api.PROXY_ACTION_LIST_RESOURCES:
+		return []string{"name", "path", "org", "host", "path_resource", "method",
+			"urn_resource", "urn", "action", "create_at", "update_at"}
 	default:
 		return nil
 	}
@@ -161,12 +164,18 @@ func (u PostgresRepo) OrderByValidColumns(action string) []string {
 
 // ProxyResource table
 type ProxyResource struct {
-	ID     string `gorm:"primary_key"`
-	Host   string `gorm:"not null;unique_index:idx_resource"`
-	Url    string `gorm:"not null;unique_index:idx_resource"`
-	Method string `gorm:"not null;unique_index:idx_resource"`
-	Urn    string `gorm:"not null;unique_index:idx_resource"`
-	Action string `gorm:"not null;unique_index:idx_resource"`
+	ID           string `gorm:"primary_key"`
+	Name         string `gorm:"not null"`
+	Org          string `gorm:"not null"`
+	Path         string `gorm:"not null"`
+	Host         string `gorm:"not null;unique_index:idx_resource"`
+	PathResource string `gorm:"not null;unique_index:idx_resource"`
+	Method       string `gorm:"not null;unique_index:idx_resource"`
+	UrnResource  string `gorm:"not null;unique_index:idx_resource"`
+	Urn          string `gorm:"not null"`
+	Action       string `gorm:"not null;unique_index:idx_resource"`
+	CreateAt     int64  `gorm:"not null"`
+	UpdateAt     int64  `gorm:"not null"`
 }
 
 // ProxyResource's table name

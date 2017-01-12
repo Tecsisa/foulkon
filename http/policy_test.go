@@ -430,7 +430,7 @@ func TestWorkerHandler_HandleListPolicies(t *testing.T) {
 		expectedError      api.Error
 		// Manager Results
 		getPolicyListResult []api.PolicyIdentity
-		totalGroupsResult   int
+		totalPoliciesResult int
 		// Manager Errors
 		getPolicyListErr error
 	}{
@@ -454,7 +454,7 @@ func TestWorkerHandler_HandleListPolicies(t *testing.T) {
 					Name: "policy1",
 				},
 			},
-			totalGroupsResult: 1,
+			totalPoliciesResult: 1,
 		},
 		"ErrorCaseInvalidFilterParams": {
 			filter: &api.Filter{
@@ -491,7 +491,7 @@ func TestWorkerHandler_HandleListPolicies(t *testing.T) {
 					Name: "policy2",
 				},
 			},
-			totalGroupsResult: 2,
+			totalPoliciesResult: 2,
 		},
 		"ErrorCaseInvalidParameterError": {
 			filter: &api.Filter{
@@ -538,7 +538,7 @@ func TestWorkerHandler_HandleListPolicies(t *testing.T) {
 	for n, test := range testcases {
 
 		testApi.ArgsOut[ListPoliciesMethod][0] = test.getPolicyListResult
-		testApi.ArgsOut[ListPoliciesMethod][1] = test.totalGroupsResult
+		testApi.ArgsOut[ListPoliciesMethod][1] = test.totalPoliciesResult
 		testApi.ArgsOut[ListPoliciesMethod][2] = test.getPolicyListErr
 
 		url := fmt.Sprintf(server.URL+API_VERSION_1+"/organizations/%v/policies", test.filter.Org)

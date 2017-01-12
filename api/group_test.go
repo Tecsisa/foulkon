@@ -22,7 +22,6 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 		getGroupsByUserIDResult   []TestUserGroupRelation
 		getAttachedPoliciesResult []TestPolicyGroupRelation
 		getGroupByName            *Group
-		addMemberMethodResult     *Group
 		// Manager Errors
 		getGroupByNameMethodErr      error
 		getUserByExternalIDMethodErr error
@@ -144,12 +143,6 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 				ID:         "543210",
 				ExternalID: "1234",
 				Path:       "/path/",
-			},
-			addMemberMethodResult: &Group{
-				ID:   "543210",
-				Name: "group1",
-				Org:  "org1",
-				Path: "/example/",
 			},
 		},
 		"ErrorCaseNotAuthenticatedUser": {
@@ -332,7 +325,6 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 		requestInfo RequestInfo
 		name        string
 		org         string
-		path        string
 		// Expected result
 		expectedGroup *Group
 		wantError     error
@@ -352,7 +344,6 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 			},
 			name: "group1",
 			org:  "org1",
-			path: "/example/",
 			expectedGroup: &Group{
 				ID:   "543210",
 				Name: "group1",
@@ -373,7 +364,6 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 			},
 			name: "group1",
 			org:  "org1",
-			path: "/example/",
 			expectedGroup: &Group{
 				ID:   "543210",
 				Name: "group1",
@@ -429,7 +419,6 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 		"ErrorCaseInvalidName": {
 			name: "*%~#@|",
 			org:  "org1",
-			path: "/example/",
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
 				Message: "Invalid parameter: name *%~#@|",
@@ -438,7 +427,6 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 		"ErrorCaseInvalidOrg": {
 			name: "n1",
 			org:  "*%~#@|",
-			path: "/example/",
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
 				Message: "Invalid parameter: org *%~#@|",
@@ -447,7 +435,6 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 		"ErrorCaseGroupNotFound": {
 			name: "group1",
 			org:  "org1",
-			path: "/example/",
 			wantError: &Error{
 				Code: GROUP_BY_ORG_AND_NAME_NOT_FOUND,
 			},
@@ -458,7 +445,6 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 		"ErrorCaseGetGroupDBErr": {
 			name: "group1",
 			org:  "org1",
-			path: "/example/",
 			wantError: &Error{
 				Code: UNKNOWN_API_ERROR,
 			},
@@ -473,7 +459,6 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 			},
 			name: "group1",
 			org:  "org1",
-			path: "/example/",
 			wantError: &Error{
 				Code:    UNAUTHORIZED_RESOURCES_ERROR,
 				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
@@ -495,7 +480,6 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 			},
 			name: "group1",
 			org:  "org1",
-			path: "/test/asd/",
 			expectedGroup: &Group{
 				ID:   "543210",
 				Name: "group1",
@@ -568,7 +552,6 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 			},
 			name: "group1",
 			org:  "org1",
-			path: "/test/asd/",
 			expectedGroup: &Group{
 				ID:   "543210",
 				Name: "group1",
@@ -997,6 +980,7 @@ func TestAuthAPI_ListGroups(t *testing.T) {
 
 func TestAuthAPI_UpdateGroup(t *testing.T) {
 	testcases := map[string]struct {
+		// API Method args
 		requestInfo  RequestInfo
 		org          string
 		groupName    string
