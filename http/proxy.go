@@ -207,7 +207,7 @@ func (h *ProxyHandler) checkAuthorization(r *http.Request, urn string, action st
 		return workerRequestID,
 			getErrorMessage(api.INVALID_PARAMETER_ERROR, fmt.Sprintf("Urn %v is a prefix, it would be a full urn resource", urn))
 	}
-	if err := api.AreValidResources([]string{urn}); err != nil {
+	if err := api.AreValidResources([]string{urn}, api.RESOURCE_EXTERNAL); err != nil {
 		return workerRequestID, err
 	}
 	if err := api.AreValidActions([]string{action}); err != nil {

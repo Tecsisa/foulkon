@@ -13,6 +13,10 @@ const (
 	RESOURCE_POLICY = "policy"
 	RESOURCE_PROXY  = "proxy"
 
+	// Resource validation
+	RESOURCE_EXTERNAL = "external"
+	RESOURCE_IAM      = "iam"
+
 	// Constraints
 	MAX_EXTERNAL_ID_LENGTH = 128
 	MAX_NAME_LENGTH        = 128
@@ -74,8 +78,9 @@ var (
 	rWordResourcePrefix, _ = regexp.Compile(`^[\w+\-_.@]+\*$`)
 	rUrn, _                = regexp.Compile(`^\*$|^[\w+\-@.]+\*?$|^[\w+\-@.]+\*?$|^[\w+\-@.]+(/?([\w+\-@.]+/)*([\w+\-@.]|[*])+)?$`)
 	rUrnExclude, _         = regexp.Compile(`[/]{2,}|[:]{2,}|[*]{2,}`)
-	rPathResource, _       = regexp.Compile(`^/$|^/[\w+/\-_]+\w$`)
+	rPathResource, _       = regexp.Compile(`^/$|^(/([\w_-]+|:[\w_-]+))+$`)
 	rHost, _               = regexp.Compile(`^https?:/{2}[\w+\/\-_.]+(:\d{1,5})?$`)
+	rUrnProxy, _           = regexp.Compile(`^\*$|^[\w+\-@.]+\*?$|^[\w+\-@.]+\*?$|^([\w+\-@.]|\{\w+\})+(/?(([\w+\-@.]|\{\w+\})+/)*([\w+\-@.]|\{\w+\})+)?$`)
 )
 
 func CreateUrn(org string, resource string, path string, name string) string {
@@ -149,7 +154,7 @@ func IsValidProxyResource(resource *ResourceEntity) error {
 		return errFunc(resource.Method)
 	}
 
-	if err := AreValidResources([]string{resource.Urn}); err != nil {
+	if err := AreValidResources([]string{resource.Urn}, RESOURCE_EXTERNAL); err != nil {
 		return err
 	}
 
@@ -173,7 +178,7 @@ func AreValidActions(actions []string) error {
 	return nil
 }
 
-func AreValidResources(resources []string) error {
+func AreValidResources(resources []string, resourceType string) error {
 	//err generator helper
 	errFunc := func(resource string) error {
 		return &Error{
@@ -227,15 +232,21 @@ func AreValidResources(resources []string) error {
 					}
 				}
 			case 4:
-				if !rUrn.MatchString(block) || rUrnExclude.MatchString(block) {
-					return errFunc(resource)
+				switch resourceType {
+				case RESOURCE_EXTERNAL:
+					if !rUrnProxy.MatchString(block) || rUrnExclude.MatchString(block) {
+						return errFunc(resource)
+					}
+				default:
+					if !rUrn.MatchString(block) || rUrnExclude.MatchString(block) {
+						return errFunc(resource)
+					}
 				}
 			default:
 				return &Error{
 					Code:    INVALID_PARAMETER_ERROR,
 					Message: fmt.Sprintf("Invalid resource definition: %v", resource),
 				}
-
 			}
 		}
 	}
@@ -268,7 +279,7 @@ func AreValidStatements(statements *[]Statement) error {
 				Message: "Empty resources",
 			}
 		}
-		err = AreValidResources(statement.Resources)
+		err = AreValidResources(statement.Resources, RESOURCE_IAM)
 		if err != nil {
 			return err
 		}

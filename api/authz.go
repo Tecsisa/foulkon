@@ -131,7 +131,7 @@ func (api WorkerAPI) GetAuthorizedExternalResources(requestInfo RequestInfo, act
 				Message: fmt.Sprintf("Invalid parameter resource %v. Urn prefixes are not allowed here", res),
 			}
 		}
-		if err := AreValidResources([]string{res}); err != nil {
+		if err := AreValidResources([]string{res}, RESOURCE_EXTERNAL); err != nil {
 			// Transform to API error
 			apiError := err.(*Error)
 			return nil, &Error{
