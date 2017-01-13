@@ -134,24 +134,17 @@ func IsValidEffect(effect string) error {
 }
 
 func IsValidProxyResource(resource *ResourceEntity) error {
-	//err generator helper
-	errFunc := func(parameter string) error {
-		return &Error{
-			Code:    REGEX_NO_MATCH,
-			Message: fmt.Sprintf("No regex match in parameter: %v", parameter),
-		}
-	}
 	if !rHost.MatchString(resource.Host) {
-		return errFunc(resource.Host)
+		return errFunc("host", resource.Host)
 	}
 
 	if !rPathResource.MatchString(resource.Path) {
-		return errFunc(resource.Path)
+		return errFunc("path_resource", resource.Path)
 	}
 
 	if resource.Method != "GET" && resource.Method != "POST" && resource.Method != "PUT" &&
 		resource.Method != "DELETE" && resource.Method != "PATCH" {
-		return errFunc(resource.Method)
+		return errFunc("method", resource.Method)
 	}
 
 	if err := AreValidResources([]string{resource.Urn}, RESOURCE_EXTERNAL); err != nil {
@@ -169,77 +162,67 @@ func AreValidActions(actions []string) error {
 
 	for _, action := range actions {
 		if !rAction.MatchString(action) || rActionExclude.MatchString(action) || len(action) > MAX_ACTION_LENGTH {
-			return &Error{
-				Code:    REGEX_NO_MATCH,
-				Message: fmt.Sprintf("No regex match in action: %v", action),
-			}
+			return errFunc("action", action)
 		}
 	}
 	return nil
 }
 
 func AreValidResources(resources []string, resourceType string) error {
-	//err generator helper
-	errFunc := func(resource string) error {
-		return &Error{
-			Code:    REGEX_NO_MATCH,
-			Message: fmt.Sprintf("No regex match in resource: %v", resource),
-		}
-	}
-
 	for _, resource := range resources {
+		err := errFunc("urn", resource)
 		blocks := strings.Split(resource, ":")
 		for n, block := range blocks {
 			switch n {
 			case 0:
 				if len(blocks) < 2 { // This is the last block
 					if block != "*" {
-						return errFunc(resource)
+						return err
 					}
 				} else {
 					if block != "urn" {
-						return errFunc(resource)
+						return err
 					}
 				}
 			case 1:
 				if len(blocks) < 3 { // This is the last block
 					if block != "*" && !rWordResourcePrefix.MatchString(block) {
-						return errFunc(resource)
+						return err
 					}
 				} else {
 					if !rWordResource.MatchString(block) {
-						return errFunc(resource)
+						return err
 					}
 				}
 			case 2:
 				if len(blocks) < 4 { // This is the last block
 					if block != "*" && !rWordResourcePrefix.MatchString(block) {
-						return errFunc(resource)
+						return err
 					}
 				} else {
 					if !rWordResource.MatchString(block) {
-						return errFunc(resource)
+						return err
 					}
 				}
 			case 3:
 				if len(blocks) < 5 { // This is the last block
 					if block != "*" && !rWordResourcePrefix.MatchString(block) {
-						return errFunc(resource)
+						return err
 					}
 				} else {
 					if block != "" && !rWordResource.MatchString(block) {
-						return errFunc(resource)
+						return err
 					}
 				}
 			case 4:
 				switch resourceType {
 				case RESOURCE_EXTERNAL:
 					if !rUrnProxy.MatchString(block) || rUrnExclude.MatchString(block) {
-						return errFunc(resource)
+						return err
 					}
 				default:
 					if !rUrn.MatchString(block) || rUrnExclude.MatchString(block) {
-						return errFunc(resource)
+						return err
 					}
 				}
 			default:
@@ -359,4 +342,13 @@ func validateFilter(filter *Filter, validColumns []string) error {
 	}
 
 	return nil
+}
+
+// Private Methods
+
+func errFunc(parameter string, value string) error {
+	return &Error{
+		Code:    REGEX_NO_MATCH,
+		Message: fmt.Sprintf("Invalid parameter %v, value: %v", parameter, value),
+	}
 }

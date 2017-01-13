@@ -290,7 +290,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 			action: "valid::Action",
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: "No regex match in action: valid::Action",
+				Message: "Invalid parameter action, value: valid::Action",
 			},
 		},
 		"ErrortestCaseInvalidResource": {
@@ -303,7 +303,7 @@ func TestGetAuthorizedExternalResources(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    INVALID_PARAMETER_ERROR,
-				Message: "No regex match in resource: urn:invalid/resource:resource",
+				Message: "Invalid parameter urn, value: urn:invalid/resource:resource",
 			},
 		},
 		"ErrortestCaseInvalidResourceWithPrefix": {
