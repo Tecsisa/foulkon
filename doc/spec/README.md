@@ -161,5 +161,5 @@ An example of how Google could manage its application resources with a policy co
 This policy allows to do whatever action in user123456 account of product gmail for web services of google in instance v123456.
 
 ## Admin user
-Admin user uses Basic Authentication scheme and it could be set at server start. This user doesn’t follow [Authorization Flow](authorization.md) and can’t be added to a group.
+Admin user uses Basic Authentication scheme and it could be set at server start. This user doesn’t follow authorization flow and can’t be added to a group.
 

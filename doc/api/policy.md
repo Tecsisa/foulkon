@@ -261,7 +261,7 @@ HTTP/1.1 200 OK
 | **limit** | *integer* | The maximum number of items in the response (as set in the query or by default) | `20` |
 | **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
 | **policies** | *array* | List of policies | `["policyName1, policyName2"]` |
-| **total** | *integer* | The total number of items available to return | `50` |
+| **total** | *integer* | The total number of items available to return | `2` |
 
 ### Organization's policies List
 
@@ -293,7 +293,7 @@ HTTP/1.1 200 OK
   ],
   "offset": 0,
   "limit": 20,
-  "total": 50
+  "total": 2
 }
 ```
 
@@ -311,7 +311,7 @@ HTTP/1.1 200 OK
 | **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
 | **[policies/name](#resource-order2_policy)** | *string* | Policy name | `"policy1"` |
 | **[policies/org](#resource-order2_policy)** | *string* | Policy organization | `"tecsisa"` |
-| **total** | *integer* | The total number of items available to return | `50` |
+| **total** | *integer* | The total number of items available to return | `1` |
 
 ### All policies List
 
@@ -346,7 +346,7 @@ HTTP/1.1 200 OK
   ],
   "offset": 0,
   "limit": 20,
-  "total": 50
+  "total": 1
 }
 ```
 
@@ -364,7 +364,7 @@ List attached groups
 | **groups/group** | *string* | Group name | `"groupName1"` |
 | **limit** | *integer* | The maximum number of items in the response (as set in the query or by default) | `20` |
 | **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
-| **total** | *integer* | The total number of items available to return | `50` |
+| **total** | *integer* | The total number of items available to return | `1` |
 
 ### Attached group List
 
@@ -399,7 +399,7 @@ HTTP/1.1 200 OK
   ],
   "offset": 0,
   "limit": 20,
-  "total": 50
+  "total": 1
 }
 ```
 

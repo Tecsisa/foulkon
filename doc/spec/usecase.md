@@ -101,22 +101,36 @@ To avoid implementing permissions logic in the APIs, we created a Foulkon Proxy 
 
 You can configure this using the proxy toml config file.
 Add as many resources as you need:
-```
-[[resources]]
-    id = "resource1"
-    host = "https://app1.company1.com/"
-    url = "/resource"
-    method = "GET"
-    urn = "urn:examplews:app1:v1:resource/company1/Resource"
-    action = "app1:read"
+```bash
+$ curl -n -X POST /api/v1/organizations/example/proxy-resource \
+  -d '{
+  "name": "resource1",
+  "path": "/app1/",
+  "resource": {
+    "host": "https://app1.company1.com/",
+    "path": "/resource",
+    "method": "GET",
+    "urn": "urn:examplews:app1:v1:resource/company1/resource",
+    "action": "app1:read"
+  }
+}' \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Basic or Bearer XXX"
 ```
 You can also use placeholders in URNs to match with URL values:
-```
-[[resources]]
-    id = "resource2"
-    host = "https://httpbin.org/"
-    url = "/status/:code"
-    method = "GET"
-    urn = "urn:ews:example:instance1:resource/status/{code}"
-    action = "example:getCode"
+```bash
+$ curl -n -X POST /api/v1/organizations/example/proxy-resource \
+  -d '{
+  "name": "resource2",
+  "path": "/example/",
+  "resource": {
+    "host": "https://httpbin.org",
+    "path": "/status/:code",
+    "method": "GET",
+    "urn": "urn:ews:example:instance1:resource/status/{code}",
+    "action": "example:getCode"
+  }
+}' \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Basic or Bearer XXX"
 ```

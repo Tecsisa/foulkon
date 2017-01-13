@@ -184,7 +184,7 @@ HTTP/1.1 200 OK
 | **groups** | *array* | List of groups | `["groupName1, groupName2"]` |
 | **limit** | *integer* | The maximum number of items in the response (as set in the query or by default) | `20` |
 | **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
-| **total** | *integer* | The total number of items available to return | `50` |
+| **total** | *integer* | The total number of items available to return | `2` |
 
 ### Organization's groups List
 
@@ -216,7 +216,7 @@ HTTP/1.1 200 OK
   ],
   "offset": 0,
   "limit": 20,
-  "total": 50
+  "total": 2
 }
 ```
 
@@ -234,7 +234,7 @@ HTTP/1.1 200 OK
 | **[groups/org](#resource-order1_group)** | *string* | Group organization | `"tecsisa"` |
 | **limit** | *integer* | The maximum number of items in the response (as set in the query or by default) | `20` |
 | **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
-| **total** | *integer* | The total number of items available to return | `50` |
+| **total** | *integer* | The total number of items available to return | `1` |
 
 ### All groups List
 
@@ -269,7 +269,7 @@ HTTP/1.1 200 OK
   ],
   "offset": 0,
   "limit": 20,
-  "total": 50
+  "total": 1
 }
 ```
 
@@ -287,7 +287,7 @@ Group members
 | **members/joined** | *date-time* | When relationship was created | `"2015-01-01T12:00:00Z"` |
 | **members/user** | *string* | External ID | `"member1"` |
 | **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
-| **total** | *integer* | The total number of items available to return | `50` |
+| **total** | *integer* | The total number of items available to return | `1` |
 
 ### Member Add
 
@@ -372,7 +372,7 @@ HTTP/1.1 200 OK
   ],
   "offset": 0,
   "limit": 20,
-  "total": 50
+  "total": 1
 }
 ```
 
@@ -390,7 +390,7 @@ Attached Policies
 | **offset** | *integer* | The offset of the items returned (as set in the query or by default) | `0` |
 | **policies/attached** | *date-time* | When relationship was created | `"2015-01-01T12:00:00Z"` |
 | **policies/policy** | *string* | Policy name | `"policyName1"` |
-| **total** | *integer* | The total number of items available to return | `50` |
+| **total** | *integer* | The total number of items available to return | `1` |
 
 ### Group Policies Attach
 
@@ -475,7 +475,7 @@ HTTP/1.1 200 OK
   ],
   "offset": 0,
   "limit": 20,
-  "total": 50
+  "total": 1
 }
 ```
 
