@@ -81,7 +81,7 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 						ID:   "POLICY-USER-ID",
 						Name: "policyUser",
 						Path: "/path/",
-						Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
+						Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 						Statements: &[]Statement{
 							{
 								Effect: "allow",
@@ -195,7 +195,7 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 						ID:   "POLICY-USER-ID",
 						Name: "policyUser",
 						Path: "/path/",
-						Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
+						Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 						Statements: &[]Statement{
 							{
 								Effect: "allow",
@@ -257,7 +257,7 @@ func TestAuthAPI_AddGroup(t *testing.T) {
 						ID:         "POLICY-USER-ID",
 						Name:       "policyUser",
 						Path:       "/path/",
-						Urn:        CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
+						Urn:        CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 						Statements: &[]Statement{},
 					},
 				},
@@ -393,7 +393,7 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 						ID:   "POLICY-USER-ID",
 						Name: "policyUser",
 						Path: "/path/",
-						Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
+						Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 						Statements: &[]Statement{
 							{
 								Effect: "allow",
@@ -513,7 +513,7 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 						ID:   "POLICY-USER-ID",
 						Name: "policyUser",
 						Path: "/path/",
-						Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
+						Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 						Statements: &[]Statement{
 							{
 								Effect: "allow",
@@ -585,7 +585,7 @@ func TestAuthAPI_GetGroupByName(t *testing.T) {
 						ID:         "POLICY-USER-ID",
 						Name:       "policyUser",
 						Path:       "/path/",
-						Urn:        CreateUrn("example", RESOURCE_GROUP, "/path/", "policyUser"),
+						Urn:        CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
 						Statements: &[]Statement{},
 					},
 				},
