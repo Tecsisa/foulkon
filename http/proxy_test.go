@@ -842,15 +842,10 @@ func TestWorkerHandler_HandleListProxyResource(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: ListProxyResourcesResponse{
-				Resources: []api.ProxyResourceIdentity{
-					{
-						Name: "name",
-						Org:  "org1",
-					},
-				},
-				Offset: 0,
-				Limit:  0,
-				Total:  1,
+				Resources: []string{"name"},
+				Offset:    0,
+				Limit:     0,
+				Total:     1,
 			},
 			getProxyResourceListResult: []api.ProxyResourceIdentity{
 				{
@@ -880,19 +875,10 @@ func TestWorkerHandler_HandleListProxyResource(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: ListProxyResourcesResponse{
-				Resources: []api.ProxyResourceIdentity{
-					{
-						Name: "name1",
-						Org:  "org1",
-					},
-					{
-						Name: "name2",
-						Org:  "org2",
-					},
-				},
-				Offset: 0,
-				Limit:  0,
-				Total:  2,
+				Resources: []string{"name1", "name2"},
+				Offset:    0,
+				Limit:     0,
+				Total:     2,
 			},
 			getProxyResourceListResult: []api.ProxyResourceIdentity{
 				{
