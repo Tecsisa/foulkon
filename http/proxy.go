@@ -45,10 +45,10 @@ type ProxyResources struct {
 }
 
 type ListProxyResourcesResponse struct {
-	Resources []api.ProxyResourceIdentity `json:"resources, omitempty"`
-	Limit     int                         `json:"limit, omitempty"`
-	Offset    int                         `json:"offset, omitempty"`
-	Total     int                         `json:"total, omitempty"`
+	Resources []string `json:"resources, omitempty"`
+	Limit     int      `json:"limit, omitempty"`
+	Offset    int      `json:"offset, omitempty"`
+	Total     int      `json:"total, omitempty"`
 }
 
 var rUrnParam, _ = regexp.Compile(`\{(\w+)\}`)
@@ -166,9 +166,13 @@ func (h *WorkerHandler) HandleListProxyResource(w http.ResponseWriter, r *http.R
 	}
 	// Call proxy Resource API to create proxyResource
 	result, total, err := h.worker.ProxyApi.ListProxyResources(requestInfo, filterData)
+	proxyResources := []string{}
+	for _, proxyResource := range result {
+		proxyResources = append(proxyResources, proxyResource.Name)
+	}
 	// Create response
 	response := &ListProxyResourcesResponse{
-		Resources: result,
+		Resources: proxyResources,
 		Offset:    filterData.Offset,
 		Limit:     filterData.Limit,
 		Total:     total,

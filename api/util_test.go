@@ -321,7 +321,7 @@ func TestAreValidActions(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in action: iam:",
+				Message: "Invalid parameter action, value: iam:",
 			},
 		},
 		"ErrorCaseMalformedAction2": {
@@ -330,7 +330,7 @@ func TestAreValidActions(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in action: *",
+				Message: "Invalid parameter action, value: *",
 			},
 		},
 		"ErrorCaseInvalidCharacters": {
@@ -339,7 +339,7 @@ func TestAreValidActions(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in action: iam:**",
+				Message: "Invalid parameter action, value: iam:**",
 			},
 		},
 		"ErrorCaseInvalidCharacters2": {
@@ -348,7 +348,7 @@ func TestAreValidActions(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in action: iam::",
+				Message: "Invalid parameter action, value: iam::",
 			},
 		},
 		"ErrorCaseMaxLengthExceeded": {
@@ -357,7 +357,7 @@ func TestAreValidActions(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: fmt.Sprintf("No regex match in action: %v", randomString),
+				Message: fmt.Sprintf("Invalid parameter action, value: %v", randomString),
 			},
 		},
 	}
@@ -419,7 +419,7 @@ func TestAreValidStatements(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in action: fail***",
+				Message: "Invalid parameter action, value: fail***",
 			},
 		},
 		"ErrorCaseInvalidResource": {
@@ -436,7 +436,7 @@ func TestAreValidStatements(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in resource: urn:iws:iam::user/path/****",
+				Message: "Invalid parameter urn, value: urn:iws:iam::user/path/****",
 			},
 		},
 	}
@@ -468,7 +468,7 @@ func TestAreValidResources(t *testing.T) {
 			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in resource: fail",
+				Message: "Invalid parameter urn, value: fail",
 			},
 		},
 		"OKCase2block": {
@@ -484,7 +484,7 @@ func TestAreValidResources(t *testing.T) {
 			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in resource: fail:asd",
+				Message: "Invalid parameter urn, value: fail:asd",
 			},
 		},
 		"ErrorCase2block": {
@@ -494,7 +494,7 @@ func TestAreValidResources(t *testing.T) {
 			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in resource: urn:fail",
+				Message: "Invalid parameter urn, value: urn:fail",
 			},
 		},
 		"OKCase3block": {
@@ -510,7 +510,7 @@ func TestAreValidResources(t *testing.T) {
 			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in resource: urn:iws***:something",
+				Message: "Invalid parameter urn, value: urn:iws***:something",
 			},
 		},
 		"ErrorCase3block": {
@@ -520,7 +520,7 @@ func TestAreValidResources(t *testing.T) {
 			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in resource: urn:iws:fail",
+				Message: "Invalid parameter urn, value: urn:iws:fail",
 			},
 		},
 		"OKCase4block": {
@@ -536,7 +536,7 @@ func TestAreValidResources(t *testing.T) {
 			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in resource: urn:iws:some***:fail",
+				Message: "Invalid parameter urn, value: urn:iws:some***:fail",
 			},
 		},
 		"ErrorCase4block": {
@@ -546,7 +546,7 @@ func TestAreValidResources(t *testing.T) {
 			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in resource: urn:iws:iam:fail",
+				Message: "Invalid parameter urn, value: urn:iws:iam:fail",
 			},
 		},
 		"OKCase5block": {
@@ -568,7 +568,7 @@ func TestAreValidResources(t *testing.T) {
 			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in resource: urn:iws:iam:some***:fail",
+				Message: "Invalid parameter urn, value: urn:iws:iam:some***:fail",
 			},
 		},
 		"ErrorCase5blockExternal": {
@@ -578,7 +578,7 @@ func TestAreValidResources(t *testing.T) {
 			resourceType: RESOURCE_EXTERNAL,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in resource: urn:ews:exam:inst:sysadmins/{admin",
+				Message: "Invalid parameter urn, value: urn:ews:exam:inst:sysadmins/{admin",
 			},
 		},
 		"ErrorCase5block": {
@@ -588,7 +588,7 @@ func TestAreValidResources(t *testing.T) {
 			resourceType: RESOURCE_IAM,
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in resource: urn:iws:iam:org1:fail**!^_#",
+				Message: "Invalid parameter urn, value: urn:iws:iam:org1:fail**!^_#",
 			},
 		},
 		"ErrorCaseBadResource": {
@@ -775,7 +775,7 @@ func TestIsValidProxyResource(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in parameter: ~32&",
+				Message: "Invalid parameter host, value: ~32&",
 			},
 		},
 		"ErrorCaseInvalidPath": {
@@ -785,7 +785,7 @@ func TestIsValidProxyResource(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in parameter: invalid",
+				Message: "Invalid parameter path_resource, value: invalid",
 			},
 		},
 		"ErrorCaseInvalidMethod": {
@@ -796,7 +796,7 @@ func TestIsValidProxyResource(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in parameter: INVALID",
+				Message: "Invalid parameter method, value: INVALID",
 			},
 		},
 		"ErrorCaseInvalidUrn": {
@@ -808,7 +808,7 @@ func TestIsValidProxyResource(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in resource: ~~&",
+				Message: "Invalid parameter urn, value: ~~&",
 			},
 		},
 		"ErrorCaseInvalidAction": {
@@ -821,7 +821,7 @@ func TestIsValidProxyResource(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in action: iam:",
+				Message: "Invalid parameter action, value: iam:",
 			},
 		},
 	}

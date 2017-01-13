@@ -1011,7 +1011,7 @@ func TestWorkerAPI_UpdateProxyResource(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in parameter: invalid",
+				Message: "Invalid parameter host, value: invalid",
 			},
 		},
 		"ErrorCaseInvalidOrg": {
@@ -2143,7 +2143,7 @@ func TestWorkerAPI_AddProxyResource(t *testing.T) {
 			},
 			wantError: &Error{
 				Code:    REGEX_NO_MATCH,
-				Message: "No regex match in parameter: invalid",
+				Message: "Invalid parameter path_resource, value: invalid",
 			},
 		},
 		"ErrorProxyResourceAlreadyExists": {
