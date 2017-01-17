@@ -769,6 +769,15 @@ func TestIsValidProxyResource(t *testing.T) {
 				Action: "action",
 			},
 		},
+		"OKCaseWithAsterisk": {
+			resource: &ResourceEntity{
+				Host:   "http://host.com",
+				Path:   "/path/*whatever",
+				Method: "GET",
+				Urn:    "urn:ews:example:instance1:resource/get-whatever",
+				Action: "action",
+			},
+		},
 		"ErrorCaseInvalidHost": {
 			resource: &ResourceEntity{
 				Host: "~32&",

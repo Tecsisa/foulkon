@@ -78,7 +78,7 @@ var (
 	rWordResourcePrefix, _ = regexp.Compile(`^[\w+\-_.@]+\*$`)
 	rUrn, _                = regexp.Compile(`^\*$|^[\w+\-@.]+\*?$|^[\w+\-@.]+\*?$|^[\w+\-@.]+(/?([\w+\-@.]+/)*([\w+\-@.]|[*])+)?$`)
 	rUrnExclude, _         = regexp.Compile(`[/]{2,}|[:]{2,}|[*]{2,}`)
-	rPathResource, _       = regexp.Compile(`^/$|^(/([\w_-]+|:[\w_-]+))+$`)
+	rPathResource, _       = regexp.Compile(`^/$|^(/([\w*_-]+|:[\w_-]+))+$`)
 	rHost, _               = regexp.Compile(`^https?:/{2}[\w+\/\-_.]+(:\d{1,5})?$`)
 	rUrnProxy, _           = regexp.Compile(`^\*$|^[\w+\-@.]+\*?$|^[\w+\-@.]+\*?$|^([\w+\-@.]|\{\w+\})+(/?(([\w+\-@.]|\{\w+\})+/)*([\w+\-@.]|\{\w+\})+)?$`)
 )

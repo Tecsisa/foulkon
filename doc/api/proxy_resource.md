@@ -41,7 +41,7 @@ Proxy Resource API
 Create a new proxy resource.
 
 ```
-POST /api/v1/organizations/{organization_id}/proxy-resource
+POST /api/v1/organizations/{organization_id}/proxy-resources
 ```
 
 #### Required Parameters
@@ -61,7 +61,7 @@ POST /api/v1/organizations/{organization_id}/proxy-resource
 #### Curl Example
 
 ```bash
-$ curl -n -X POST /api/v1/organizations/$ORGANIZATION_ID/proxy-resource \
+$ curl -n -X POST /api/v1/organizations/$ORGANIZATION_ID/proxy-resources \
   -d '{
   "name": "Example",
   "path": "/example/admin/",
@@ -108,7 +108,7 @@ HTTP/1.1 201 Created
 Update an existing proxy resource.
 
 ```
-PUT /api/v1/organizations/{organization_id}/proxy-resource/{proxy_resource_name}
+PUT /api/v1/organizations/{organization_id}/proxy-resources/{proxy_resource_name}
 ```
 
 #### Required Parameters
@@ -128,7 +128,7 @@ PUT /api/v1/organizations/{organization_id}/proxy-resource/{proxy_resource_name}
 #### Curl Example
 
 ```bash
-$ curl -n -X PUT /api/v1/organizations/$ORGANIZATION_ID/proxy-resource/$PROXY_RESOURCE_NAME \
+$ curl -n -X PUT /api/v1/organizations/$ORGANIZATION_ID/proxy-resources/$PROXY_RESOURCE_NAME \
   -d '{
   "name": "Example",
   "path": "/example/admin/",
@@ -175,14 +175,14 @@ HTTP/1.1 200 OK
 Delete an existing proxy resource.
 
 ```
-DELETE /api/v1/organizations/{organization_id}/proxy-resource/{proxy_resource_name}
+DELETE /api/v1/organizations/{organization_id}/proxy-resources/{proxy_resource_name}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n -X DELETE /api/v1/organizations/$ORGANIZATION_ID/proxy-resource/$PROXY_RESOURCE_NAME \
+$ curl -n -X DELETE /api/v1/organizations/$ORGANIZATION_ID/proxy-resources/$PROXY_RESOURCE_NAME \
   -H "Content-Type: application/json" \
   -H "Authorization: Basic or Bearer XXX"
 ```
@@ -200,14 +200,14 @@ HTTP/1.1 202 Accepted
 Get an existing proxy resource.
 
 ```
-GET /api/v1/organizations/{organization_id}/proxy-resource/{proxy_resource_name}
+GET /api/v1/organizations/{organization_id}/proxy-resources/{proxy_resource_name}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/organizations/$ORGANIZATION_ID/proxy-resource/$PROXY_RESOURCE_NAME \
+$ curl -n /api/v1/organizations/$ORGANIZATION_ID/proxy-resources/$PROXY_RESOURCE_NAME \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
@@ -257,14 +257,14 @@ HTTP/1.1 200 OK
 List all proxy resources by organization.
 
 ```
-GET /api/v1/organizations/{organization_id}/proxy-resource?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}
+GET /api/v1/organizations/{organization_id}/proxy-resources?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}
 ```
 
 
 #### Curl Example
 
 ```bash
-$ curl -n /api/v1/organizations/$ORGANIZATION_ID/proxy-resource?PathPrefix=$OPTIONAL_PATH_PREFIX&Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT&OrderBy=$COLUMNNAME-DESC \
+$ curl -n /api/v1/organizations/$ORGANIZATION_ID/proxy-resources?PathPrefix=$OPTIONAL_PATH_PREFIX&Offset=$OPTIONAL_OFFSET&Limit=$OPTIONAL_LIMIT&OrderBy=$COLUMNNAME-DESC \
   -H "Authorization: Basic or Bearer XXX"
 ```
 
