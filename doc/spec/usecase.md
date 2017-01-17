@@ -102,7 +102,7 @@ To avoid implementing permissions logic in the APIs, we created a Foulkon Proxy 
 You can configure this using the proxy toml config file.
 Add as many resources as you need:
 ```bash
-$ curl -n -X POST /api/v1/organizations/example/proxy-resource \
+$ curl -n -X POST /api/v1/organizations/example/proxy-resources \
   -d '{
   "name": "resource1",
   "path": "/app1/",
@@ -119,7 +119,7 @@ $ curl -n -X POST /api/v1/organizations/example/proxy-resource \
 ```
 You can also use placeholders in URNs to match with URL values:
 ```bash
-$ curl -n -X POST /api/v1/organizations/example/proxy-resource \
+$ curl -n -X POST /api/v1/organizations/example/proxy-resources \
   -d '{
   "name": "resource2",
   "path": "/example/",

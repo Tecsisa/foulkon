@@ -104,7 +104,7 @@
       "links": [
         {
           "description": "Create a new proxy resource.",
-          "href": "/api/v1/organizations/{organization_id}/proxy-resource",
+          "href": "/api/v1/organizations/{organization_id}/proxy-resources",
           "method": "POST",
           "rel": "create",
           "http_header": {
@@ -133,7 +133,7 @@
         },
         {
           "description": "Update an existing proxy resource.",
-          "href": "/api/v1/organizations/{organization_id}/proxy-resource/{proxy_resource_name}",
+          "href": "/api/v1/organizations/{organization_id}/proxy-resources/{proxy_resource_name}",
           "method": "PUT",
           "rel": "update",
           "http_header": {
@@ -162,7 +162,7 @@
         },
         {
           "description": "Delete an existing proxy resource.",
-          "href": "/api/v1/organizations/{organization_id}/proxy-resource/{proxy_resource_name}",
+          "href": "/api/v1/organizations/{organization_id}/proxy-resources/{proxy_resource_name}",
           "method": "DELETE",
           "rel": "empty",
           "http_header": {
@@ -172,7 +172,7 @@
         },
         {
           "description": "Get an existing proxy resource.",
-          "href": "/api/v1/organizations/{organization_id}/proxy-resource/{proxy_resource_name}",
+          "href": "/api/v1/organizations/{organization_id}/proxy-resources/{proxy_resource_name}",
           "method": "GET",
           "rel": "self",
           "http_header": {
@@ -217,7 +217,7 @@
       "links": [
         {
           "description": "List all proxy resources by organization.",
-          "href": "/api/v1/organizations/{organization_id}/proxy-resource?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}",
+          "href": "/api/v1/organizations/{organization_id}/proxy-resources?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}",
           "method": "GET",
           "rel": "self",
           "http_header": {
