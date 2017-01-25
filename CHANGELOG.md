@@ -1,5 +1,21 @@
 # Change Log
 
+## [v0.3.0](https://github.com/Tecsisa/foulkon/tree/v0.3.0) ("2017-01-25")
+[Full Changelog](https://github.com/Tecsisa/foulkon/compare/v0.2.0...v0.3.0)
+
+**Implemented enhancements:**
+
+- allow OrderBy in list actions [\#55](https://github.com/Tecsisa/foulkon/issues/55)
+
+**Fixed bugs:**
+
+- Proxy 500 response when authorization header is missing [\#61](https://github.com/Tecsisa/foulkon/issues/61)
+
+**Closed issues:**
+
+- Implement proxy resources endpoints [\#83](https://github.com/Tecsisa/foulkon/issues/83)
+- Use a MD reference instead a HTML with Foulkon logo [\#66](https://github.com/Tecsisa/foulkon/issues/66)
+
 ## [v0.2.0](https://github.com/Tecsisa/foulkon/tree/v0.2.0) ("2016-10-06")
 [Full Changelog](https://github.com/Tecsisa/foulkon/compare/v0.1.0...v0.2.0)
 
@@ -12,6 +28,7 @@
 - Autogenerate vendor and remove folder from repo [\#33](https://github.com/Tecsisa/foulkon/issues/33)
 - Include all parameters into the filter struct [\#31](https://github.com/Tecsisa/foulkon/issues/31)
 - Add UpdateAt field [\#27](https://github.com/Tecsisa/foulkon/issues/27)
+- Ability to read Proxy resources from DB [\#4](https://github.com/Tecsisa/foulkon/issues/4)
 - goimports in makefile [\#2](https://github.com/Tecsisa/foulkon/issues/2)
 
 **Fixed bugs:**
