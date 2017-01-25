@@ -15,8 +15,8 @@ This config file is a TOML file that has several parts:
 ### [server] 
 | Server      | Server config properties              | Values                     | Default | Optional |
 |-------------|---------------------------------------|----------------------------|---------|----------|
-| host        | Worker's hostname.                    | `localhost`                |         | No       |
-| port        | Worker's port.                        | `8001`                     |         | No       |
+| host        | Proxy's hostname.                    | `localhost`                |         | No       |
+| port        | Proxy's port.                        | `8001`                     |         | No       |
 | certfile    | Absolute path for public certificate. | `/etc/secrets/public.pem`  |         | Yes      |
 | keyfile     | Absolute path for private key.        | `/etc/secrets/private.pem` |         | Yes      |
 | worker-host | Full host where worker is.            | `http://localhost:8000`    |         | No       |
@@ -43,10 +43,10 @@ __Note:__ Don't use Foulkon proxy without certificate in production.
 | maxopenconns   | Max open connection number.                                  | `20`                                                                   | 20      | Yes      |
 | connttl        | Timeout for conenctions                                      | `200`                                                                  | 300     | Yes      |
 
-### [Resource]
+### [resources]
 | Resource       | Resource configuration                | Values                     | Default | Optional |
 |----------------|---------------------------------------|----------------------------|---------|----------|
-| refresh_time   | Resources refresh time.               | `1s`,`1m`,`1h`,`1ms`       |  `10s`  | Yes      |
+| refresh        | Resources refresh time.               | `1s`,`1m`,`1h`,`1ms`       |  `10s`  | Yes      |
 
 
 __Note:__ All parameters except refresh time are mandatory.
@@ -54,7 +54,7 @@ __Note:__ All parameters except refresh time are mandatory.
 ## Resources
 The proxy reads resources from database according to refresh time assigned.
 
-If you want to add resources you have to use the [Proxy Resource API](doc/api/proxy_resource.md)
+If you want to add resources you have to use the [Proxy Resource API](../api/proxy_resource.md)
 
 | Resources | Resources managed by proxy                           | Values                                   |
 |-----------|------------------------------------------------------|------------------------------------------|
