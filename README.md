@@ -1,11 +1,11 @@
-<img align="right" src="https://github.com/Tecsisa/foulkon/blob/master/dist/foulkon.png" width="150">
 # Foulkon
 [![Build Status](https://travis-ci.org/Tecsisa/foulkon.svg?branch=master)](https://travis-ci.org/Tecsisa/foulkon)
 [![Join the chat at https://gitter.im/Tecsisa/foulkon](https://badges.gitter.im/Tecsisa/foulkon.svg)](https://gitter.im/Tecsisa/foulkon?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tecsisa/foulkon)](https://goreportcard.com/report/github.com/tecsisa/foulkon)
 [![codecov](https://codecov.io/gh/Tecsisa/foulkon/branch/master/graph/badge.svg)](https://codecov.io/gh/Tecsisa/foulkon)
 [![Release](https://img.shields.io/badge/release-v0.2.0-blue.svg)](https://github.com/Tecsisa/foulkon/blob/master/CHANGELOG.md#v020-2016-10-06)
- 
+<img align="right" src="https://github.com/Tecsisa/foulkon/blob/master/dist/foulkon.png" width="150">
+
 __Foulkon__ is an authorization server that allows or denies access to web resources.
 
 This system depends on an identity provider that authenticates users.
