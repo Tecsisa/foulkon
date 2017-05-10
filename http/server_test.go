@@ -48,6 +48,7 @@ func TestNewProxy(t *testing.T) {
 
 		expectedResources []api.ProxyResource
 		expectedError     string
+		panicError        string
 	}{
 		"OKCase": {
 			proxy: &foulkon.Proxy{
@@ -143,8 +144,121 @@ func TestNewProxy(t *testing.T) {
 			},
 			expectedError: "Unexpected error reading proxy resources from database Code: InternalServerError, Message: Unknow error",
 		},
+		"ErrorCaseDeployingRepeatedResourcePaths": {
+			proxy: &foulkon.Proxy{
+				Host:        "host",
+				Port:        "port",
+				CertFile:    "cert",
+				KeyFile:     "key",
+				RefreshTime: 10,
+				ProxyApi:    testApi,
+			},
+			getProxyResourcesMethod: []api.ProxyResource{
+				{
+					ID:   "ID1",
+					Name: "name1",
+					Org:  "org1",
+					Resource: api.ResourceEntity{
+						Host:   "host2",
+						Path:   "/path/:mypath/",
+						Method: "Method2",
+						Urn:    "urn2",
+						Action: "action2",
+					},
+				},
+				{
+					ID:   "ID2",
+					Name: "name2",
+					Org:  "org1",
+					Resource: api.ResourceEntity{
+						Host:   "host2",
+						Path:   "/path/:mypath/",
+						Method: "Method2",
+						Urn:    "urn2",
+						Action: "action2",
+					},
+				},
+				{
+					ID:   "ID3",
+					Name: "name3",
+					Org:  "org1",
+					Resource: api.ResourceEntity{
+						Host:   "host2",
+						Path:   "/path/*mypath",
+						Method: "Method2",
+						Urn:    "urn2",
+						Action: "action2",
+					},
+				},
+				{
+					ID:   "ID3",
+					Name: "name3",
+					Org:  "org1",
+					Resource: api.ResourceEntity{
+						Host:   "host2",
+						Path:   "/path2/*mypath",
+						Method: "Method2",
+						Urn:    "urn2",
+						Action: "action2",
+					},
+				},
+			},
+			expectedResources: []api.ProxyResource{
+				{
+					ID:   "ID1",
+					Name: "name1",
+					Org:  "org1",
+					Resource: api.ResourceEntity{
+						Host:   "host2",
+						Path:   "/path/:mypath/",
+						Method: "Method2",
+						Urn:    "urn2",
+						Action: "action2",
+					},
+				},
+				{
+					ID:   "ID2",
+					Name: "name2",
+					Org:  "org1",
+					Resource: api.ResourceEntity{
+						Host:   "host2",
+						Path:   "/path/:mypath/",
+						Method: "Method2",
+						Urn:    "urn2",
+						Action: "action2",
+					},
+				},
+				{
+					ID:   "ID3",
+					Name: "name3",
+					Org:  "org1",
+					Resource: api.ResourceEntity{
+						Host:   "host2",
+						Path:   "/path/*mypath",
+						Method: "Method2",
+						Urn:    "urn2",
+						Action: "action2",
+					},
+				},
+				{
+					ID:   "ID3",
+					Name: "name3",
+					Org:  "org1",
+					Resource: api.ResourceEntity{
+						Host:   "host2",
+						Path:   "/path2/*mypath",
+						Method: "Method2",
+						Urn:    "urn2",
+						Action: "action2",
+					},
+				},
+			},
+			panicError: "There was a problem adding proxy resource with name name3 and org org1: " +
+				"path segment '*mypath' conflicts with existing wildcard ':mypath' in path '/path/*mypath'",
+		},
 	}
 	for n, test := range testcases {
+
 		testApi.ArgsOut[GetProxyResourcesMethod][0] = test.getProxyResourcesMethod
 		testApi.ArgsOut[GetProxyResourcesMethod][1] = test.getProxyResourcesError
 
@@ -165,6 +279,10 @@ func TestNewProxy(t *testing.T) {
 			assert.Equal(t, test.proxy.KeyFile, ps.keyFile, "Error in test case %v", n)
 			assert.Equal(t, test.proxy.RefreshTime, ps.refreshTime, "Error in test case %v", n)
 			assert.Equal(t, test.expectedResources, ps.currentResources, "Error in test case %v", n)
+			// Check if panic errors where caught
+			if test.panicError != "" {
+				assert.Equal(t, test.panicError, hook.LastEntry().Message, "Error in test case %v", n)
+			}
 		}
 	}
 }

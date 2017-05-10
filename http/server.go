@@ -173,16 +173,17 @@ func (ps *ProxyServer) RefreshResources(proxy *foulkon.Proxy) func(s *ProxyServe
 
 			defer srv.resourceLock.Unlock()
 			srv.resourceLock.Lock()
+
 			// writer lock
 			ps.currentResources = newProxyResources
 
 			api.Log.Info("Updating resources ...")
 			for _, pr := range newProxyResources {
-				// Check if Path is empty. Handle doesn't accept empty path
-				if pr.Resource.Path == "" {
-					pr.Resource.Path = "/"
-				}
-				router.Handle(pr.Resource.Method, pr.Resource.Path, proxyHandler.HandleRequest(pr))
+				// Clean path
+				pr.Resource.Path = httprouter.CleanPath(pr.Resource.Path)
+
+				// Attach resource
+				safeRouterAdderHandler(router, pr, &proxyHandler)
 			}
 			// TODO: test when resources are empty
 			// If we had resources and those were deleted then handler must be
@@ -192,6 +193,16 @@ func (ps *ProxyServer) RefreshResources(proxy *foulkon.Proxy) func(s *ProxyServe
 		}
 		return false
 	}
+}
+
+// Method to control when router has a resource already defined that collides with another
+func safeRouterAdderHandler(router *httprouter.Router, pr api.ProxyResource, ph *ProxyHandler) {
+	defer func() {
+		if r := recover(); r != nil {
+			api.Log.Errorf("There was a problem adding proxy resource with name %v and org %v: %v", pr.Name, pr.Org, r)
+		}
+	}()
+	router.Handle(pr.Resource.Method, pr.Resource.Path, ph.HandleRequest(pr))
 }
 
 func strSliceContains(ss []string, s string) bool {
