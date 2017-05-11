@@ -833,6 +833,19 @@ func TestIsValidProxyResource(t *testing.T) {
 				Message: "Invalid parameter action, value: iam:",
 			},
 		},
+		"ErrorCaseUrnPrefix": {
+			resource: &ResourceEntity{
+				Host:   "http://host.com",
+				Path:   "/path",
+				Method: "GET",
+				Urn:    "urn:ews:example:*",
+				Action: "iam:action",
+			},
+			wantError: &Error{
+				Code:    REGEX_NO_MATCH,
+				Message: "Invalid parameter urn, value: urn:ews:example:*",
+			},
+		},
 	}
 
 	for x, testcase := range testcases {

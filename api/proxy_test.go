@@ -818,6 +818,8 @@ func TestWorkerAPI_UpdateProxyResource(t *testing.T) {
 		wantError             error
 		// Manager Results
 		getProxyResourceByNameResult            *ProxyResource
+		getProxyResourcesMethodResult           []ProxyResource
+		getProxyResourcesMethodTotal            int
 		getGroupsByUserIDResult                 []TestUserGroupRelation
 		getAttachedPoliciesResult               []TestPolicyGroupRelation
 		getUserByExternalIDResult               *User
@@ -827,6 +829,7 @@ func TestWorkerAPI_UpdateProxyResource(t *testing.T) {
 		getProxyResourceByNameMethodErr error
 		getUserByExternalIDMethodErr    error
 		updateProxyResourceMethodErr    error
+		getProxyResourcesMethodErr      error
 	}{
 		"OKCaseAdmin": {
 			requestInfo: RequestInfo{
@@ -839,8 +842,8 @@ func TestWorkerAPI_UpdateProxyResource(t *testing.T) {
 			newPath: "/new/",
 			newResource: ResourceEntity{
 				Host:   "http://new.com",
-				Path:   "/new",
-				Method: "POST",
+				Path:   "/path",
+				Method: "GET",
 				Action: "new:get",
 				Urn:    "urn:ews:example:instance1:resource/get",
 			},
@@ -852,8 +855,8 @@ func TestWorkerAPI_UpdateProxyResource(t *testing.T) {
 				Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
 				Resource: ResourceEntity{
 					Host:   "http://new.com",
-					Path:   "/new",
-					Method: "POST",
+					Path:   "/path",
+					Method: "GET",
 					Action: "new:get",
 					Urn:    "urn:ews:example:new:resource/get",
 				},
@@ -872,6 +875,51 @@ func TestWorkerAPI_UpdateProxyResource(t *testing.T) {
 					Urn:    "urn:ews:example:instance1:resource/get",
 				},
 			},
+			getProxyResourcesMethodResult: []ProxyResource{
+				{
+					ID:   "ID1",
+					Name: "name1",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
+					Resource: ResourceEntity{
+						Host:   "http://new.com",
+						Path:   "/path1/*mypath",
+						Method: "POST",
+						Action: "example:get",
+						Urn:    "urn:ews:example:new:resource/get",
+					},
+				},
+				{
+					ID:   "ID2",
+					Name: "name2",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
+					Resource: ResourceEntity{
+						Host:   "http://new.com",
+						Path:   "/path2",
+						Method: "POST",
+						Action: "example:get",
+						Urn:    "urn:ews:example:new:resource/get",
+					},
+				},
+				{
+					ID:   "12345",
+					Name: "pr",
+					Org:  "org",
+					Path: "/path/",
+					Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
+					Resource: ResourceEntity{
+						Host:   "http://example.com",
+						Path:   "/path",
+						Method: "GET",
+						Action: "example:get",
+						Urn:    "urn:ews:example:instance1:resource/get",
+					},
+				},
+			},
+			getProxyResourcesMethodTotal: 2,
 			updateProxyResourceResult: &ProxyResource{
 				ID:   "12345",
 				Name: "newPr",
@@ -880,8 +928,8 @@ func TestWorkerAPI_UpdateProxyResource(t *testing.T) {
 				Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
 				Resource: ResourceEntity{
 					Host:   "http://new.com",
-					Path:   "/new",
-					Method: "POST",
+					Path:   "/path",
+					Method: "GET",
 					Action: "new:get",
 					Urn:    "urn:ews:example:new:resource/get",
 				},
@@ -1692,6 +1740,113 @@ func TestWorkerAPI_UpdateProxyResource(t *testing.T) {
 				Code: database.INTERNAL_ERROR,
 			},
 		},
+		"ErrorCaseProxyResourceRouteConflictGettingProxyResourcesFromDB": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:     "org",
+			name:    "pr",
+			newName: "newName",
+			newPath: "/new/",
+			newResource: ResourceEntity{
+				Host:   "http://new.com",
+				Path:   "/path",
+				Method: "POST",
+				Action: "example:get",
+				Urn:    "urn:ews:example:new:resource/get",
+			},
+			wantError: &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: "Error test",
+			},
+			getProxyResourceByNameResult: &ProxyResource{
+				ID:   "12345",
+				Name: "pr",
+				Org:  "org",
+				Path: "/path/",
+				Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
+				Resource: ResourceEntity{
+					Host:   "http://example.com",
+					Path:   "/path",
+					Method: "GET",
+					Action: "example:get",
+					Urn:    "urn:ews:example:instance1:resource/get",
+				},
+			},
+			getProxyResourcesMethodErr: &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: "Error test",
+			},
+		},
+		"ErrorCaseProxyResourceRouteConflictPaths": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			org:     "org",
+			name:    "pr",
+			newName: "newName",
+			newPath: "/new/",
+			newResource: ResourceEntity{
+				Host:   "http://new.com",
+				Path:   "/path/*mypath",
+				Method: "POST",
+				Action: "example:get",
+				Urn:    "urn:ews:example:new:resource/get",
+			},
+			wantError: &Error{
+				Code: PROXY_RESOURCES_ROUTES_CONFLICT,
+				Message: "Proxy resource with org org and name newName, " +
+					"collides with other existent resource path: " +
+					"Error in route handler: a handle is already registered for path ''/path/*mypath'",
+			},
+			getProxyResourceByNameResult: &ProxyResource{
+				ID:   "12345",
+				Name: "pr",
+				Org:  "org",
+				Path: "/path/",
+				Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
+				Resource: ResourceEntity{
+					Host:   "http://example.com",
+					Path:   "/path",
+					Method: "GET",
+					Action: "example:get",
+					Urn:    "urn:ews:example:instance1:resource/get",
+				},
+			},
+			getProxyResourcesMethodResult: []ProxyResource{
+				{
+					ID:   "ID1",
+					Name: "name1",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
+					Resource: ResourceEntity{
+						Host:   "http://new.com",
+						Path:   "/path/*mypath",
+						Method: "POST",
+						Action: "example:get",
+						Urn:    "urn:ews:example:new:resource/get",
+					},
+				},
+				{
+					ID:   "ID2",
+					Name: "name2",
+					Org:  "org1",
+					Path: "/path/",
+					Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
+					Resource: ResourceEntity{
+						Host:   "http://new.com",
+						Path:   "/",
+						Method: "POST",
+						Action: "example:get",
+						Urn:    "urn:ews:example:new:resource/get",
+					},
+				},
+			},
+			getProxyResourcesMethodTotal: 2,
+		},
 	}
 
 	for n, testcase := range testcases {
@@ -1700,6 +1855,9 @@ func TestWorkerAPI_UpdateProxyResource(t *testing.T) {
 
 		testRepo.ArgsOut[UpdateProxyResourceMethod][0] = testcase.updateProxyResourceResult
 		testRepo.ArgsOut[UpdateProxyResourceMethod][1] = testcase.updateProxyResourceMethodErr
+		testRepo.ArgsOut[GetProxyResourcesMethod][0] = testcase.getProxyResourcesMethodResult
+		testRepo.ArgsOut[GetProxyResourcesMethod][1] = testcase.getProxyResourcesMethodTotal
+		testRepo.ArgsOut[GetProxyResourcesMethod][2] = testcase.getProxyResourcesMethodErr
 		testRepo.ArgsOut[GetProxyResourceByNameMethod][0] = testcase.getProxyResourceByNameResult
 		testRepo.ArgsOut[GetProxyResourceByNameMethod][1] = testcase.getProxyResourceByNameMethodErr
 		testRepo.SpecialFuncs[GetProxyResourceByNameMethod] = testcase.getProxyResourceByNameMethodSpecialFunc
@@ -1990,15 +2148,18 @@ func TestWorkerAPI_AddProxyResource(t *testing.T) {
 		expectedProxyResource *ProxyResource
 		wantError             error
 		// Manager Results
-		getUserByExternalIDResult *User
-		getGroupsByUserIDResult   []TestUserGroupRelation
-		getAttachedPoliciesResult []TestPolicyGroupRelation
-		getProxyResource          *ProxyResource
-		addMemberMethodResult     *Group
+		getUserByExternalIDResult          *User
+		getGroupsByUserIDResult            []TestUserGroupRelation
+		getAttachedPoliciesResult          []TestPolicyGroupRelation
+		getProxyResourcesMethodResult      []ProxyResource
+		getProxyResourcesMethodTotal       int
+		getProxyResourceByNameMethodResult *ProxyResource
+		addMemberMethodResult              *Group
 		// Manager Errors
-		getProxyResourceMethodErr    error
-		getUserByExternalIDMethodErr error
-		addProxyResourceMethodErr    error
+		getProxyResourceByNameMethodErr error
+		getProxyResourcesMethodErr      error
+		getUserByExternalIDMethodErr    error
+		addProxyResourceMethodErr       error
 	}{
 		"OKCaseAdmin": {
 			requestInfo: RequestInfo{
@@ -2029,7 +2190,7 @@ func TestWorkerAPI_AddProxyResource(t *testing.T) {
 				},
 				Urn: "urn",
 			},
-			getProxyResourceMethodErr: &database.Error{
+			getProxyResourceByNameMethodErr: &database.Error{
 				Code: database.PROXY_RESOURCE_NOT_FOUND,
 			},
 		},
@@ -2062,6 +2223,23 @@ func TestWorkerAPI_AddProxyResource(t *testing.T) {
 				},
 				Urn: "urn",
 			},
+			getProxyResourcesMethodResult: []ProxyResource{
+				{
+					ID:   "ID",
+					Name: "name",
+					Path: "/example/",
+					Org:  "org",
+					Resource: ResourceEntity{
+						Host:   "http://host.com",
+						Path:   "/path2",
+						Method: "GET",
+						Urn:    "urn:ews:example:instance1:resource/get",
+						Action: "action",
+					},
+					Urn: "urn",
+				},
+			},
+			getProxyResourcesMethodTotal: 1,
 			getUserByExternalIDResult: &User{
 				ID:         "123456",
 				ExternalID: "123456",
@@ -2099,7 +2277,7 @@ func TestWorkerAPI_AddProxyResource(t *testing.T) {
 					},
 				},
 			},
-			getProxyResourceMethodErr: &database.Error{
+			getProxyResourceByNameMethodErr: &database.Error{
 				Code: database.PROXY_RESOURCE_NOT_FOUND,
 			},
 		},
@@ -2259,7 +2437,7 @@ func TestWorkerAPI_AddProxyResource(t *testing.T) {
 					},
 				},
 			},
-			getProxyResourceMethodErr: &database.Error{
+			getProxyResourceByNameMethodErr: &database.Error{
 				Code: database.PROXY_RESOURCE_NOT_FOUND,
 			},
 		},
@@ -2309,7 +2487,7 @@ func TestWorkerAPI_AddProxyResource(t *testing.T) {
 					},
 				},
 			},
-			getProxyResourceMethodErr: &database.Error{
+			getProxyResourceByNameMethodErr: &database.Error{
 				Code: database.PROXY_RESOURCE_NOT_FOUND,
 			},
 		},
@@ -2331,7 +2509,7 @@ func TestWorkerAPI_AddProxyResource(t *testing.T) {
 			wantError: &Error{
 				Code: UNKNOWN_API_ERROR,
 			},
-			getProxyResourceMethodErr: &database.Error{
+			getProxyResourceByNameMethodErr: &database.Error{
 				Code: database.PROXY_RESOURCE_NOT_FOUND,
 			},
 			addProxyResourceMethodErr: &database.Error{
@@ -2356,8 +2534,116 @@ func TestWorkerAPI_AddProxyResource(t *testing.T) {
 			wantError: &Error{
 				Code: UNKNOWN_API_ERROR,
 			},
-			getProxyResourceMethodErr: &database.Error{
+			getProxyResourceByNameMethodErr: &database.Error{
 				Code: database.INTERNAL_ERROR,
+			},
+		},
+		"ErrorCaseProxyResourceRouteConflictGettingProxyResourcesFromDB": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			name: "name",
+			org:  "org",
+			path: "/example/",
+			resource: ResourceEntity{
+				Host:   "http://host.com",
+				Path:   "/path",
+				Method: "GET",
+				Urn:    "urn:ews:example:instance1:resource/get",
+				Action: "action",
+			},
+			expectedProxyResource: &ProxyResource{
+				ID:   "ID",
+				Name: "name",
+				Path: "/example/",
+				Org:  "org",
+				Resource: ResourceEntity{
+					Host:   "http://host.com",
+					Path:   "/path",
+					Method: "GET",
+					Urn:    "urn:ews:example:instance1:resource/get",
+					Action: "action",
+				},
+				Urn: "urn",
+			},
+			getProxyResourceByNameMethodErr: &database.Error{
+				Code: database.PROXY_RESOURCE_NOT_FOUND,
+			},
+			getProxyResourcesMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+		},
+		"ErrorCaseProxyResourceRouteConflictPaths": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			name: "name",
+			org:  "org",
+			path: "/example/",
+			resource: ResourceEntity{
+				Host:   "http://host.com",
+				Path:   "/path",
+				Method: "GET",
+				Urn:    "urn:ews:example:instance1:resource/get",
+				Action: "action",
+			},
+			expectedProxyResource: &ProxyResource{
+				ID:   "ID",
+				Name: "name",
+				Path: "/example/",
+				Org:  "org",
+				Resource: ResourceEntity{
+					Host:   "http://host.com",
+					Path:   "/path",
+					Method: "GET",
+					Urn:    "urn:ews:example:instance1:resource/get",
+					Action: "action",
+				},
+				Urn: "urn",
+			},
+			getProxyResourceByNameMethodErr: &database.Error{
+				Code: database.PROXY_RESOURCE_NOT_FOUND,
+			},
+			getProxyResourcesMethodResult: []ProxyResource{
+				{
+					ID:   "ID",
+					Name: "name",
+					Path: "/example/",
+					Org:  "org",
+					Resource: ResourceEntity{
+						Host:   "http://host.com",
+						Path:   "/path",
+						Method: "GET",
+						Urn:    "urn:ews:example:instance1:resource/get",
+						Action: "action",
+					},
+					Urn: "urn",
+				},
+				{
+					ID:   "ID2",
+					Name: "name2",
+					Path: "/example/",
+					Org:  "org",
+					Resource: ResourceEntity{
+						Host:   "http://host.com",
+						Path:   "/path2",
+						Method: "GET",
+						Urn:    "urn:ews:example:instance1:resource/get",
+						Action: "action",
+					},
+					Urn: "urn",
+				},
+			},
+			getProxyResourcesMethodTotal: 2,
+			wantError: &Error{
+				Code: PROXY_RESOURCES_ROUTES_CONFLICT,
+				Message: "Proxy resource with org org and name name, collides with other existent " +
+					"resource path: Error in route handler: a handle is already registered for path ''/path'",
 			},
 		},
 	}
@@ -2366,8 +2652,11 @@ func TestWorkerAPI_AddProxyResource(t *testing.T) {
 		testRepo := makeTestRepo()
 		testAPI := makeTestAPI(testRepo)
 
-		testRepo.ArgsOut[GetProxyResourceByNameMethod][0] = testcase.getProxyResource
-		testRepo.ArgsOut[GetProxyResourceByNameMethod][1] = testcase.getProxyResourceMethodErr
+		testRepo.ArgsOut[GetProxyResourceByNameMethod][0] = testcase.getProxyResourceByNameMethodResult
+		testRepo.ArgsOut[GetProxyResourceByNameMethod][1] = testcase.getProxyResourceByNameMethodErr
+		testRepo.ArgsOut[GetProxyResourcesMethod][0] = testcase.getProxyResourcesMethodResult
+		testRepo.ArgsOut[GetProxyResourcesMethod][1] = testcase.getProxyResourcesMethodTotal
+		testRepo.ArgsOut[GetProxyResourcesMethod][2] = testcase.getProxyResourcesMethodErr
 		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
 		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
 		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult

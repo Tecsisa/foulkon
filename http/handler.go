@@ -105,7 +105,7 @@ func (wh *WorkerHandler) processHttpResponse(r *http.Request, w http.ResponseWri
 		case api.USER_ALREADY_EXIST, api.GROUP_ALREADY_EXIST,
 			api.USER_IS_ALREADY_A_MEMBER_OF_GROUP,
 			api.PROXY_RESOURCE_ALREADY_EXIST,
-			api.POLICY_IS_ALREADY_ATTACHED_TO_GROUP, api.POLICY_ALREADY_EXIST:
+			api.POLICY_IS_ALREADY_ATTACHED_TO_GROUP, api.POLICY_ALREADY_EXIST, api.PROXY_RESOURCES_ROUTES_CONFLICT:
 			// A conflict occurs
 			statusCode = http.StatusConflict
 		case api.UNAUTHORIZED_RESOURCES_ERROR:

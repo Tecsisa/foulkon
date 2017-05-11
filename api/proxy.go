@@ -2,9 +2,11 @@ package api
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/Tecsisa/foulkon/database"
+	"github.com/julienschmidt/httprouter"
 	"github.com/satori/go.uuid"
 )
 
@@ -107,6 +109,34 @@ func (api WorkerAPI) AddProxyResource(requestInfo RequestInfo, name string, org 
 		// Proxy resource doesn't exist in DB
 		switch dbError.Code {
 		case database.PROXY_RESOURCE_NOT_FOUND:
+			// Retrieve all routes to check if new proxy resource is consistent
+			storedProxyResources, total, err := api.ProxyRepo.GetProxyResources(&Filter{})
+
+			// Check unexpected DB error
+			if err != nil {
+				//Transform to DB error
+				dbError := err.(*database.Error)
+				return nil, &Error{
+					Code:    UNKNOWN_API_ERROR,
+					Message: dbError.Message,
+				}
+			}
+
+			// Validate routes
+			if total > 0 {
+				storedProxyResources := append(storedProxyResources, proxyResource)
+				err = validateProxyRoutes(storedProxyResources)
+				if err != nil {
+					convertedError := err.(*Error)
+					return nil, &Error{
+						Code: PROXY_RESOURCES_ROUTES_CONFLICT,
+						Message: fmt.Sprintf("Proxy resource with org %v and name %v, "+
+							"collides with other existent resource path: %v",
+							proxyResource.Org, proxyResource.Name, convertedError.Message),
+					}
+				}
+			}
+
 			// Create proxy resource
 			created, err := api.ProxyRepo.AddProxyResource(proxyResource)
 
@@ -240,7 +270,7 @@ func (api WorkerAPI) UpdateProxyResource(requestInfo RequestInfo, org string, na
 	}
 
 	if err != nil {
-		if apiError := err.(*Error); apiError.Code != PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND {
+		if convertedError := err.(*Error); convertedError.Code != PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND {
 			return nil, err
 		}
 	}
@@ -272,6 +302,41 @@ func (api WorkerAPI) UpdateProxyResource(requestInfo RequestInfo, org string, na
 		Resource: newResource,
 		CreateAt: oldProxyResource.CreateAt,
 		UpdateAt: time.Now().UTC(),
+	}
+
+	// Retrieve all routes to check if new proxy resource is consistent
+	storedProxyResources, total, err := api.ProxyRepo.GetProxyResources(&Filter{})
+
+	// Check unexpected DB error
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return nil, &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	// Validate routes
+	if total > 0 {
+		proxyResourcesToValidate := []ProxyResource{}
+		// Add all items except itself
+		for _, pr := range storedProxyResources {
+			if pr.ID != proxyResource.ID {
+				proxyResourcesToValidate = append(proxyResourcesToValidate, pr)
+			}
+		}
+		proxyResourcesToValidate = append(proxyResourcesToValidate, proxyResource)
+		err = validateProxyRoutes(proxyResourcesToValidate)
+		if err != nil {
+			convertedError := err.(*Error)
+			return nil, &Error{
+				Code: PROXY_RESOURCES_ROUTES_CONFLICT,
+				Message: fmt.Sprintf("Proxy resource with org %v and name %v, "+
+					"collides with other existent resource path: %v",
+					proxyResource.Org, proxyResource.Name, convertedError.Message),
+			}
+		}
 	}
 
 	updatedProxyResource, err := api.ProxyRepo.UpdateProxyResource(proxyResource)
@@ -372,6 +437,35 @@ func (api WorkerAPI) ListProxyResources(requestInfo RequestInfo, filter *Filter)
 }
 
 // PRIVATE HELPER METHODS
+
+// This method validates proxy routes to avoid panics when they will be instantiated
+func validateProxyRoutes(proxyResources []ProxyResource) error {
+	router := httprouter.New()
+	for _, pr := range proxyResources {
+		errorMessage := ""
+		safeRouterAdderHandler(router, pr, &errorMessage)
+		// If there was an error, exit with its info
+		if errorMessage != "" {
+			return &Error{
+				Code:    PROXY_RESOURCES_ROUTES_CONFLICT,
+				Message: errorMessage,
+			}
+		}
+	}
+	return nil
+}
+
+// This method adds routes to a handler using Proxy Resources avoiding panics, returning and error in third param if exist.
+func safeRouterAdderHandler(router *httprouter.Router, pr ProxyResource, err *string) {
+	defer func() {
+		if r := recover(); r != nil {
+			*err = fmt.Sprintf("Error in route handler: %v", r)
+		}
+	}()
+	// Use an empty handler to avoid errors in router
+	handleFunc := func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {}
+	router.Handle(pr.Resource.Method, pr.Resource.Path, handleFunc)
+}
 
 func createProxyResource(name string, org string, path string, resource ResourceEntity) ProxyResource {
 	pr := ProxyResource{

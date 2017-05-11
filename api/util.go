@@ -147,6 +147,10 @@ func IsValidProxyResource(resource *ResourceEntity) error {
 		return errFunc("method", resource.Method)
 	}
 
+	if !isFullUrn(resource.Urn) {
+		return errFunc("urn", resource.Urn)
+	}
+
 	if err := AreValidResources([]string{resource.Urn}, RESOURCE_EXTERNAL); err != nil {
 		return err
 	}

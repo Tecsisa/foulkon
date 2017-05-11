@@ -34,6 +34,7 @@ const (
 	// Proxy resources API error codes
 	PROXY_RESOURCE_ALREADY_EXIST             = "ProxyResourceAlreadyExist"
 	PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND = "ProxyResourceWithOrgAndNameNotFound"
+	PROXY_RESOURCES_ROUTES_CONFLICT          = "ProxyResourcesRoutesConflict"
 
 	// Regex error
 	REGEX_NO_MATCH = "RegexNoMatch"

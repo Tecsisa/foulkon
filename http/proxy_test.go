@@ -367,6 +367,27 @@ func TestWorkerHandler_HandleAddProxyResource(t *testing.T) {
 				Code: api.UNKNOWN_API_ERROR,
 			},
 		},
+		"ErrorCaseProxyResourceRouteConflcit": {
+			org: "org1",
+			request: &CreateProxyResourceRequest{
+				Name: "name1",
+				Path: "/path/",
+				Resource: api.ResourceEntity{
+					Host:   "Host",
+					Path:   "/path",
+					Method: "GET",
+					Urn:    "urn",
+					Action: "action",
+				},
+			},
+			createProxyResourceErr: &api.Error{
+				Code: api.PROXY_RESOURCES_ROUTES_CONFLICT,
+			},
+			expectedStatusCode: http.StatusConflict,
+			expectedError: api.Error{
+				Code: api.PROXY_RESOURCES_ROUTES_CONFLICT,
+			},
+		},
 	}
 
 	client := http.DefaultClient
@@ -595,6 +616,28 @@ func TestWorkerHandler_HandleUpdateProxyResource(t *testing.T) {
 			expectedStatusCode: http.StatusInternalServerError,
 			updateProxyResourceErr: &api.Error{
 				Code:    api.UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+		},
+		"ErrorCaseProxyResourceRouteConflict": {
+			request: &UpdateProxyResourceRequest{
+				Name: "newName",
+				Path: "/NewPath/",
+				Resource: api.ResourceEntity{
+					Host:   "http://new.com",
+					Path:   "/new",
+					Method: "POST",
+					Action: "new:get",
+					Urn:    "urn:ews:example:new:resource/get",
+				},
+			},
+			expectedStatusCode: http.StatusConflict,
+			updateProxyResourceErr: &api.Error{
+				Code:    api.PROXY_RESOURCES_ROUTES_CONFLICT,
+				Message: "Error",
+			},
+			expectedError: api.Error{
+				Code:    api.PROXY_RESOURCES_ROUTES_CONFLICT,
 				Message: "Error",
 			},
 		},
