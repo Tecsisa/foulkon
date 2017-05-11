@@ -842,8 +842,8 @@ func TestWorkerAPI_UpdateProxyResource(t *testing.T) {
 			newPath: "/new/",
 			newResource: ResourceEntity{
 				Host:   "http://new.com",
-				Path:   "/new",
-				Method: "POST",
+				Path:   "/path",
+				Method: "GET",
 				Action: "new:get",
 				Urn:    "urn:ews:example:instance1:resource/get",
 			},
@@ -855,8 +855,8 @@ func TestWorkerAPI_UpdateProxyResource(t *testing.T) {
 				Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
 				Resource: ResourceEntity{
 					Host:   "http://new.com",
-					Path:   "/new",
-					Method: "POST",
+					Path:   "/path",
+					Method: "GET",
 					Action: "new:get",
 					Urn:    "urn:ews:example:new:resource/get",
 				},
@@ -904,6 +904,20 @@ func TestWorkerAPI_UpdateProxyResource(t *testing.T) {
 						Urn:    "urn:ews:example:new:resource/get",
 					},
 				},
+				{
+					ID:   "12345",
+					Name: "pr",
+					Org:  "org",
+					Path: "/path/",
+					Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
+					Resource: ResourceEntity{
+						Host:   "http://example.com",
+						Path:   "/path",
+						Method: "GET",
+						Action: "example:get",
+						Urn:    "urn:ews:example:instance1:resource/get",
+					},
+				},
 			},
 			getProxyResourcesMethodTotal: 2,
 			updateProxyResourceResult: &ProxyResource{
@@ -914,8 +928,8 @@ func TestWorkerAPI_UpdateProxyResource(t *testing.T) {
 				Urn:  CreateUrn("org", RESOURCE_PROXY, "/path/", "pr"),
 				Resource: ResourceEntity{
 					Host:   "http://new.com",
-					Path:   "/new",
-					Method: "POST",
+					Path:   "/path",
+					Method: "GET",
 					Action: "new:get",
 					Urn:    "urn:ews:example:new:resource/get",
 				},

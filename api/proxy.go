@@ -319,8 +319,15 @@ func (api WorkerAPI) UpdateProxyResource(requestInfo RequestInfo, org string, na
 
 	// Validate routes
 	if total > 0 {
-		storedProxyResources = append(storedProxyResources, proxyResource)
-		err = validateProxyRoutes(storedProxyResources)
+		proxyResourcesToValidate := []ProxyResource{}
+		// Add all items except itself
+		for _, pr := range storedProxyResources {
+			if pr.ID != proxyResource.ID {
+				proxyResourcesToValidate = append(proxyResourcesToValidate, pr)
+			}
+		}
+		proxyResourcesToValidate = append(proxyResourcesToValidate, proxyResource)
+		err = validateProxyRoutes(proxyResourcesToValidate)
 		if err != nil {
 			convertedError := err.(*Error)
 			return nil, &Error{
