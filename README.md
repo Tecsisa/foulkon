@@ -31,7 +31,7 @@ that you can use to do the authorization.
 This project generates 2 apps:
 
 - Worker: This is the authorization server itself.
-- Proxy: This proxies the requests to the authorization server (worker).
+- Proxy: This transfers the requests to the authorization server (worker).
 
 Installation/deployment docs using Go binaries or Docker:<br />
 - [Worker](doc/deploy/worker.md)
