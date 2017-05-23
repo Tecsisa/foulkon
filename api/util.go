@@ -63,6 +63,13 @@ const (
 	PROXY_ACTION_UPDATE_RESOURCE    = "iam:UpdateProxyResource"
 	PROXY_ACTION_LIST_RESOURCES     = "iam:ListProxyResources"
 	PROXY_ACTION_GET_PROXY_RESOURCE = "iam:GetProxyResource"
+
+	// Auth OIDC provider actions
+	AUTH_OIDC_ACTION_CREATE_PROVIDER = "auth:CreateOidcProvider"
+	AUTH_OIDC_ACTION_DELETE_PROVIDER = "auth:DeleteOidcProvider"
+	AUTH_OIDC_ACTION_UPDATE_PROVIDER = "auth:UpdateOidcProvider"
+	AUTH_OIDC_ACTION_LIST_PROVIDERS  = "auth:ListOidcProviders"
+	AUTH_OIDC_ACTION_GET_PROVIDER    = "auth:GetOidcProvider"
 )
 
 var (

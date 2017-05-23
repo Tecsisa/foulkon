@@ -12,7 +12,7 @@ import (
 
 // POLICY REPOSITORY IMPLEMENTATION
 
-func (p PostgresRepo) AddPolicy(policy api.Policy) (*api.Policy, error) {
+func (pr PostgresRepo) AddPolicy(policy api.Policy) (*api.Policy, error) {
 	// Create policy model
 	policyDB := &Policy{
 		ID:       policy.ID,
@@ -24,7 +24,7 @@ func (p PostgresRepo) AddPolicy(policy api.Policy) (*api.Policy, error) {
 		Org:      policy.Org,
 	}
 
-	transaction := p.Dbmap.Begin()
+	transaction := pr.Dbmap.Begin()
 
 	// Create policy
 	if err := transaction.Create(policyDB).Error; err != nil {
@@ -63,9 +63,9 @@ func (p PostgresRepo) AddPolicy(policy api.Policy) (*api.Policy, error) {
 	return policyApi, nil
 }
 
-func (p PostgresRepo) GetPolicyByName(org string, name string) (*api.Policy, error) {
+func (pr PostgresRepo) GetPolicyByName(org string, name string) (*api.Policy, error) {
 	policy := &Policy{}
-	query := p.Dbmap.Where("org like ? AND name like ?", org, name).First(policy)
+	query := pr.Dbmap.Where("org like ? AND name like ?", org, name).First(policy)
 
 	// Check if policy exists
 	if query.RecordNotFound() {
@@ -85,7 +85,7 @@ func (p PostgresRepo) GetPolicyByName(org string, name string) (*api.Policy, err
 
 	// Retrieve associated statements
 	statements := []Statement{}
-	query = p.Dbmap.Where("policy_id like ?", policy.ID).Find(&statements)
+	query = pr.Dbmap.Where("policy_id like ?", policy.ID).Find(&statements)
 	// Error Handling
 	if err := query.Error; err != nil {
 		return nil, &database.Error{
@@ -101,9 +101,9 @@ func (p PostgresRepo) GetPolicyByName(org string, name string) (*api.Policy, err
 	return policyApi, nil
 }
 
-func (p PostgresRepo) GetPolicyById(id string) (*api.Policy, error) {
+func (pr PostgresRepo) GetPolicyById(id string) (*api.Policy, error) {
 	policy := &Policy{}
-	query := p.Dbmap.Where("id like ?", id).First(&policy)
+	query := pr.Dbmap.Where("id like ?", id).First(&policy)
 
 	// Check if policy exists
 	if query.RecordNotFound() {
@@ -123,7 +123,7 @@ func (p PostgresRepo) GetPolicyById(id string) (*api.Policy, error) {
 
 	// Retrieve associated statements
 	statements := []Statement{}
-	query = p.Dbmap.Where("policy_id like ?", policy.ID).Find(&statements)
+	query = pr.Dbmap.Where("policy_id like ?", policy.ID).Find(&statements)
 	// Error Handling
 	if err := query.Error; err != nil {
 		return nil, &database.Error{
@@ -139,10 +139,10 @@ func (p PostgresRepo) GetPolicyById(id string) (*api.Policy, error) {
 	return policyApi, nil
 }
 
-func (p PostgresRepo) GetPoliciesFiltered(filter *api.Filter) ([]api.Policy, int, error) {
+func (pr PostgresRepo) GetPoliciesFiltered(filter *api.Filter) ([]api.Policy, int, error) {
 	var total int
 	policies := []Policy{}
-	query := p.Dbmap
+	query := pr.Dbmap
 
 	if len(filter.Org) > 0 {
 		query = query.Where("org like ?", filter.Org)
@@ -172,7 +172,7 @@ func (p PostgresRepo) GetPoliciesFiltered(filter *api.Filter) ([]api.Policy, int
 
 			// Retrieve associated statements
 			statements := []Statement{}
-			query = p.Dbmap.Where("policy_id like ?", policy.ID).Find(&statements)
+			query = pr.Dbmap.Where("policy_id like ?", policy.ID).Find(&statements)
 			// Error Handling
 			if err := query.Error; err != nil {
 				return nil, total, &database.Error{
@@ -192,7 +192,7 @@ func (p PostgresRepo) GetPoliciesFiltered(filter *api.Filter) ([]api.Policy, int
 	return apiPolicies, total, nil
 }
 
-func (p PostgresRepo) UpdatePolicy(policy api.Policy) (*api.Policy, error) {
+func (pr PostgresRepo) UpdatePolicy(policy api.Policy) (*api.Policy, error) {
 
 	policyDB := Policy{
 		ID:       policy.ID,
@@ -204,7 +204,7 @@ func (p PostgresRepo) UpdatePolicy(policy api.Policy) (*api.Policy, error) {
 		Org:      policy.Org,
 	}
 
-	transaction := p.Dbmap.Begin()
+	transaction := pr.Dbmap.Begin()
 
 	// Update policy
 	if err := transaction.Model(&Policy{ID: policy.ID}).Update(policyDB).Error; err != nil {
@@ -247,9 +247,9 @@ func (p PostgresRepo) UpdatePolicy(policy api.Policy) (*api.Policy, error) {
 	return &policy, nil
 }
 
-func (p PostgresRepo) RemovePolicy(id string) error {
+func (pr PostgresRepo) RemovePolicy(id string) error {
 
-	transaction := p.Dbmap.Begin()
+	transaction := pr.Dbmap.Begin()
 
 	// Delete policy relations (group)
 	transaction.Where("policy_id like ?", id).Delete(&GroupPolicyRelation{})
@@ -283,10 +283,10 @@ func (p PostgresRepo) RemovePolicy(id string) error {
 	return nil
 }
 
-func (p PostgresRepo) GetAttachedGroups(policyID string, filter *api.Filter) ([]api.PolicyGroupRelation, int, error) {
+func (pr PostgresRepo) GetAttachedGroups(policyID string, filter *api.Filter) ([]api.PolicyGroupRelation, int, error) {
 	var total int
 	relations := []GroupPolicyRelation{}
-	query := p.Dbmap
+	query := pr.Dbmap
 
 	if len(filter.OrderBy) > 0 {
 		query = query.Order(filter.OrderBy)
@@ -307,7 +307,7 @@ func (p PostgresRepo) GetAttachedGroups(policyID string, filter *api.Filter) ([]
 	if relations != nil {
 		groups = make([]api.PolicyGroupRelation, len(relations), cap(relations))
 		for i, r := range relations {
-			group, err := p.GetGroupById(r.GroupID)
+			group, err := pr.GetGroupById(r.GroupID)
 			// Error handling
 			if err != nil {
 				return nil, total, &database.Error{

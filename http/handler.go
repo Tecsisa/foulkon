@@ -18,6 +18,7 @@ const (
 	GROUP_NAME          = "groupname"
 	POLICY_NAME         = "policyname"
 	PROXY_RESOURCE_NAME = "proxyresourcename"
+	AUTH_PROVIDER_NAME  = "authprovidername"
 	ORG_NAME            = "orgname"
 
 	// URI Path param prefix
@@ -54,6 +55,13 @@ const (
 
 	// Authorization URLs
 	RESOURCE_URL = API_VERSION_1 + "/resource"
+
+	// Admin URLs
+	ADMIN_ROOT = "/admin"
+
+	// Admin OIDC Authentication API URLs
+	OIDC_AUTH_ROOT_URL = API_VERSION_1 + ADMIN_ROOT + "/auth/oidc/providers"
+	OIDC_AUTH_ID_URL   = OIDC_AUTH_ROOT_URL + URI_PATH_PREFIX + AUTH_PROVIDER_NAME
 
 	// Foulkon configuration URL
 	ABOUT = "/about"
@@ -204,6 +212,15 @@ func WorkerHandlerRouter(worker *foulkon.Worker) http.Handler {
 	// Resources authorized endpoint
 	router.POST(RESOURCE_URL, workerHandler.HandleGetAuthorizedExternalResources)
 
+	// OIDC authentication api
+	router.GET(OIDC_AUTH_ROOT_URL, workerHandler.HandleListOidcProviders)
+	router.POST(OIDC_AUTH_ROOT_URL, workerHandler.HandleAddOidcProvider)
+
+	router.DELETE(OIDC_AUTH_ID_URL, workerHandler.HandleRemoveOidcProvider)
+
+	router.GET(OIDC_AUTH_ID_URL, workerHandler.HandleGetOidcProviderByName)
+	router.PUT(OIDC_AUTH_ID_URL, workerHandler.HandleUpdateOidcProvider)
+
 	// Current Foulkon configuration
 	router.GET(ABOUT, workerHandler.HandleGetCurrentConfig)
 
@@ -276,6 +293,7 @@ func getFilterData(r *http.Request, ps httprouter.Params) (*api.Filter, error) {
 		PolicyName:        ps.ByName(POLICY_NAME),
 		GroupName:         ps.ByName(GROUP_NAME),
 		ProxyResourceName: ps.ByName(PROXY_RESOURCE_NAME),
+		AuthProviderName:  ps.ByName(AUTH_PROVIDER_NAME),
 		Offset:            offset,
 		Limit:             limit,
 		OrderBy:           r.URL.Query().Get("OrderBy"),

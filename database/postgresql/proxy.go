@@ -11,9 +11,9 @@ import (
 
 // PROXY REPOSITORY IMPLEMENTATION
 
-func (p PostgresRepo) GetProxyResourceByName(org string, name string) (*api.ProxyResource, error) {
+func (pr PostgresRepo) GetProxyResourceByName(org string, name string) (*api.ProxyResource, error) {
 	proxyResource := &ProxyResource{}
-	query := p.Dbmap.Where("org like ? AND name like ?", org, name).First(proxyResource)
+	query := pr.Dbmap.Where("org like ? AND name like ?", org, name).First(proxyResource)
 
 	// Check if proxyResource exists
 	if query.RecordNotFound() {
@@ -33,10 +33,10 @@ func (p PostgresRepo) GetProxyResourceByName(org string, name string) (*api.Prox
 	return dbResourceToApiResource(proxyResource), nil
 }
 
-func (p PostgresRepo) GetProxyResources(filter *api.Filter) ([]api.ProxyResource, int, error) {
+func (pr PostgresRepo) GetProxyResources(filter *api.Filter) ([]api.ProxyResource, int, error) {
 	var total int
 	resources := []ProxyResource{}
-	query := p.Dbmap
+	query := pr.Dbmap
 
 	if len(filter.Org) > 0 {
 		query = query.Where("org like ? ", filter.Org)
@@ -68,7 +68,7 @@ func (p PostgresRepo) GetProxyResources(filter *api.Filter) ([]api.ProxyResource
 	return proxyResources, total, nil
 }
 
-func (p PostgresRepo) AddProxyResource(proxyResource api.ProxyResource) (*api.ProxyResource, error) {
+func (pr PostgresRepo) AddProxyResource(proxyResource api.ProxyResource) (*api.ProxyResource, error) {
 	// Create proxyResource model
 	proxyResourceDB := &ProxyResource{
 		ID:           proxyResource.ID,
@@ -86,7 +86,7 @@ func (p PostgresRepo) AddProxyResource(proxyResource api.ProxyResource) (*api.Pr
 	}
 
 	// Store proxyResource
-	err := p.Dbmap.Create(proxyResourceDB).Error
+	err := pr.Dbmap.Create(proxyResourceDB).Error
 
 	// Error handling
 	if err != nil {
@@ -99,7 +99,7 @@ func (p PostgresRepo) AddProxyResource(proxyResource api.ProxyResource) (*api.Pr
 	return dbResourceToApiResource(proxyResourceDB), nil
 }
 
-func (p PostgresRepo) UpdateProxyResource(proxyResource api.ProxyResource) (*api.ProxyResource, error) {
+func (pr PostgresRepo) UpdateProxyResource(proxyResource api.ProxyResource) (*api.ProxyResource, error) {
 	proxyResourceDB := &ProxyResource{
 		ID:           proxyResource.ID,
 		Name:         proxyResource.Name,
@@ -116,7 +116,7 @@ func (p PostgresRepo) UpdateProxyResource(proxyResource api.ProxyResource) (*api
 	}
 
 	// Store proxyResource
-	query := p.Dbmap.Model(&ProxyResource{ID: proxyResource.ID}).Updates(proxyResourceDB)
+	query := pr.Dbmap.Model(&ProxyResource{ID: proxyResource.ID}).Updates(proxyResourceDB)
 
 	// Error Handling
 	if err := query.Error; err != nil {
@@ -129,9 +129,9 @@ func (p PostgresRepo) UpdateProxyResource(proxyResource api.ProxyResource) (*api
 	return &proxyResource, nil
 }
 
-func (p PostgresRepo) RemoveProxyResource(id string) error {
+func (pr PostgresRepo) RemoveProxyResource(id string) error {
 	// Remove proxy resource
-	query := p.Dbmap.Where("id like ?", id).Delete(&ProxyResource{})
+	query := pr.Dbmap.Where("id like ?", id).Delete(&ProxyResource{})
 
 	// Error handling
 	if err := query.Error; err != nil {

@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	FOULKON_VERSION = "v0.3.0"
+	FOULKON_VERSION = "v0.4.0-SNAPSHOT"
 )
 
 // aux var for ${OS_ENV_VAR} regex
@@ -45,11 +45,12 @@ type Worker struct {
 	KeyFile  string
 
 	// APIs
-	UserApi   api.UserAPI
-	GroupApi  api.GroupAPI
-	PolicyApi api.PolicyAPI
-	AuthzApi  api.AuthzAPI
-	ProxyApi  api.ProxyResourcesAPI
+	UserApi     api.UserAPI
+	GroupApi    api.GroupAPI
+	PolicyApi   api.PolicyAPI
+	AuthzApi    api.AuthzAPI
+	ProxyApi    api.ProxyResourcesAPI
+	AuthOidcAPI api.AuthOidcAPI
 
 	//  Middleware handler
 	MiddlewareHandler *middleware.MiddlewareHandler
@@ -147,10 +148,11 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 			Dbmap: gormDB,
 		}
 		authApi = api.WorkerAPI{
-			GroupRepo:  repoDB,
-			UserRepo:   repoDB,
-			PolicyRepo: repoDB,
-			ProxyRepo:  repoDB,
+			GroupRepo:    repoDB,
+			UserRepo:     repoDB,
+			PolicyRepo:   repoDB,
+			ProxyRepo:    repoDB,
+			AuthOidcRepo: repoDB,
 		}
 		wc.IdleConns, _ = strconv.Atoi(dbIdleconns)
 		wc.MaxOpenConns, _ = strconv.Atoi(dbMaxopenconns)
@@ -251,6 +253,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		PolicyApi:         authApi,
 		AuthzApi:          authApi,
 		ProxyApi:          authApi,
+		AuthOidcAPI:       authApi,
 		Config:            wc,
 	}, nil
 }

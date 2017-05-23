@@ -10,7 +10,7 @@ import (
 
 // GROUP REPOSITORY IMPLEMENTATION
 
-func (g PostgresRepo) AddGroup(group api.Group) (*api.Group, error) {
+func (pr PostgresRepo) AddGroup(group api.Group) (*api.Group, error) {
 	// Create group model
 	groupDB := &Group{
 		ID:       group.ID,
@@ -23,7 +23,7 @@ func (g PostgresRepo) AddGroup(group api.Group) (*api.Group, error) {
 	}
 
 	// Store group
-	err := g.Dbmap.Create(groupDB).Error
+	err := pr.Dbmap.Create(groupDB).Error
 
 	// Error handling
 	if err != nil {
@@ -36,9 +36,9 @@ func (g PostgresRepo) AddGroup(group api.Group) (*api.Group, error) {
 	return dbGroupToAPIGroup(groupDB), nil
 }
 
-func (g PostgresRepo) GetGroupByName(org string, name string) (*api.Group, error) {
+func (pr PostgresRepo) GetGroupByName(org string, name string) (*api.Group, error) {
 	group := &Group{}
-	query := g.Dbmap.Where("org like ? AND name like ?", org, name).First(group)
+	query := pr.Dbmap.Where("org like ? AND name like ?", org, name).First(group)
 
 	// Check if group exists
 	if query.RecordNotFound() {
@@ -59,9 +59,9 @@ func (g PostgresRepo) GetGroupByName(org string, name string) (*api.Group, error
 	return dbGroupToAPIGroup(group), nil
 }
 
-func (g PostgresRepo) GetGroupById(id string) (*api.Group, error) {
+func (pr PostgresRepo) GetGroupById(id string) (*api.Group, error) {
 	group := &Group{}
-	query := g.Dbmap.Where("id like ?", id).First(group)
+	query := pr.Dbmap.Where("id like ?", id).First(group)
 
 	// Check if group exists
 	if query.RecordNotFound() {
@@ -82,10 +82,10 @@ func (g PostgresRepo) GetGroupById(id string) (*api.Group, error) {
 	return dbGroupToAPIGroup(group), nil
 }
 
-func (g PostgresRepo) GetGroupsFiltered(filter *api.Filter) ([]api.Group, int, error) {
+func (pr PostgresRepo) GetGroupsFiltered(filter *api.Filter) ([]api.Group, int, error) {
 	var total int
 	groups := []Group{}
-	query := g.Dbmap
+	query := pr.Dbmap
 
 	if len(filter.Org) > 0 {
 		query = query.Where("org like ? ", filter.Org)
@@ -118,7 +118,7 @@ func (g PostgresRepo) GetGroupsFiltered(filter *api.Filter) ([]api.Group, int, e
 	return apiGroups, total, nil
 }
 
-func (g PostgresRepo) UpdateGroup(group api.Group) (*api.Group, error) {
+func (pr PostgresRepo) UpdateGroup(group api.Group) (*api.Group, error) {
 	groupDB := Group{
 		ID:       group.ID,
 		Name:     group.Name,
@@ -130,7 +130,7 @@ func (g PostgresRepo) UpdateGroup(group api.Group) (*api.Group, error) {
 	}
 
 	// Update group
-	query := g.Dbmap.Model(&Group{ID: group.ID}).Updates(groupDB)
+	query := pr.Dbmap.Model(&Group{ID: group.ID}).Updates(groupDB)
 
 	// Check if group exist
 	if query.RecordNotFound() {
@@ -151,8 +151,8 @@ func (g PostgresRepo) UpdateGroup(group api.Group) (*api.Group, error) {
 	return &group, nil
 }
 
-func (g PostgresRepo) RemoveGroup(id string) error {
-	transaction := g.Dbmap.Begin()
+func (pr PostgresRepo) RemoveGroup(id string) error {
+	transaction := pr.Dbmap.Begin()
 
 	// Delete group
 	transaction.Where("id like ?", id).Delete(&Group{})
@@ -188,7 +188,7 @@ func (g PostgresRepo) RemoveGroup(id string) error {
 	return nil
 }
 
-func (g PostgresRepo) AddMember(userID string, groupID string) error {
+func (pr PostgresRepo) AddMember(userID string, groupID string) error {
 	// Create relation
 	relation := &GroupUserRelation{
 		UserID:   userID,
@@ -197,7 +197,7 @@ func (g PostgresRepo) AddMember(userID string, groupID string) error {
 	}
 
 	// Store relation
-	err := g.Dbmap.Create(relation).Error
+	err := pr.Dbmap.Create(relation).Error
 
 	// Error handling
 	if err != nil {
@@ -210,8 +210,8 @@ func (g PostgresRepo) AddMember(userID string, groupID string) error {
 	return nil
 }
 
-func (g PostgresRepo) RemoveMember(userID string, groupID string) error {
-	err := g.Dbmap.Where("user_id like ? AND group_id like ?", userID, groupID).Delete(&GroupUserRelation{}).Error
+func (pr PostgresRepo) RemoveMember(userID string, groupID string) error {
+	err := pr.Dbmap.Where("user_id like ? AND group_id like ?", userID, groupID).Delete(&GroupUserRelation{}).Error
 
 	// Error handling
 	if err != nil {
@@ -223,9 +223,9 @@ func (g PostgresRepo) RemoveMember(userID string, groupID string) error {
 	return nil
 }
 
-func (g PostgresRepo) IsMemberOfGroup(userID string, groupID string) (bool, error) {
+func (pr PostgresRepo) IsMemberOfGroup(userID string, groupID string) (bool, error) {
 	relation := GroupUserRelation{}
-	query := g.Dbmap.Where("user_id like ? AND group_id like ?", userID, groupID).First(&relation)
+	query := pr.Dbmap.Where("user_id like ? AND group_id like ?", userID, groupID).First(&relation)
 
 	// Check if relation exists
 	if query.RecordNotFound() {
@@ -243,10 +243,10 @@ func (g PostgresRepo) IsMemberOfGroup(userID string, groupID string) (bool, erro
 	return true, nil
 }
 
-func (g PostgresRepo) GetGroupMembers(groupID string, filter *api.Filter) ([]api.UserGroupRelation, int, error) {
+func (pr PostgresRepo) GetGroupMembers(groupID string, filter *api.Filter) ([]api.UserGroupRelation, int, error) {
 	var total int
 	members := []GroupUserRelation{}
-	query := g.Dbmap.Where("group_id like ?", groupID)
+	query := pr.Dbmap.Where("group_id like ?", groupID)
 
 	if len(filter.OrderBy) > 0 {
 		query = query.Order(filter.OrderBy)
@@ -265,7 +265,7 @@ func (g PostgresRepo) GetGroupMembers(groupID string, filter *api.Filter) ([]api
 	if members != nil {
 		membersList = make([]api.UserGroupRelation, len(members), cap(members))
 		for i, m := range members {
-			user, err := g.GetUserByID(m.UserID)
+			user, err := pr.GetUserByID(m.UserID)
 
 			// Error handling
 			if err != nil {
@@ -285,7 +285,7 @@ func (g PostgresRepo) GetGroupMembers(groupID string, filter *api.Filter) ([]api
 	return membersList, total, nil
 }
 
-func (g PostgresRepo) AttachPolicy(groupID string, policyID string) error {
+func (pr PostgresRepo) AttachPolicy(groupID string, policyID string) error {
 	// Create relation
 	relation := &GroupPolicyRelation{
 		GroupID:  groupID,
@@ -294,7 +294,7 @@ func (g PostgresRepo) AttachPolicy(groupID string, policyID string) error {
 	}
 
 	// Store relation
-	err := g.Dbmap.Create(relation).Error
+	err := pr.Dbmap.Create(relation).Error
 
 	// Error handling
 	if err != nil {
@@ -307,9 +307,9 @@ func (g PostgresRepo) AttachPolicy(groupID string, policyID string) error {
 	return nil
 }
 
-func (g PostgresRepo) DetachPolicy(groupID string, policyID string) error {
+func (pr PostgresRepo) DetachPolicy(groupID string, policyID string) error {
 	// Remove relation
-	err := g.Dbmap.Where("group_id like ? AND policy_id like ?", groupID, policyID).Delete(&GroupPolicyRelation{}).Error
+	err := pr.Dbmap.Where("group_id like ? AND policy_id like ?", groupID, policyID).Delete(&GroupPolicyRelation{}).Error
 
 	// Error handling
 	if err != nil {
@@ -322,9 +322,9 @@ func (g PostgresRepo) DetachPolicy(groupID string, policyID string) error {
 	return nil
 }
 
-func (g PostgresRepo) IsAttachedToGroup(groupID string, policyID string) (bool, error) {
+func (pr PostgresRepo) IsAttachedToGroup(groupID string, policyID string) (bool, error) {
 	relation := GroupPolicyRelation{}
-	query := g.Dbmap.Where("group_id like ? AND policy_id like ?", groupID, policyID).First(&relation)
+	query := pr.Dbmap.Where("group_id like ? AND policy_id like ?", groupID, policyID).First(&relation)
 
 	// Check if relation exists
 	if query.RecordNotFound() {
@@ -342,10 +342,10 @@ func (g PostgresRepo) IsAttachedToGroup(groupID string, policyID string) (bool, 
 	return true, nil
 }
 
-func (g PostgresRepo) GetAttachedPolicies(groupID string, filter *api.Filter) ([]api.PolicyGroupRelation, int, error) {
+func (pr PostgresRepo) GetAttachedPolicies(groupID string, filter *api.Filter) ([]api.PolicyGroupRelation, int, error) {
 	var total int
 	relations := []GroupPolicyRelation{}
-	query := g.Dbmap.Where("group_id like ?", groupID)
+	query := pr.Dbmap.Where("group_id like ?", groupID)
 
 	if len(filter.OrderBy) > 0 {
 		query = query.Order(filter.OrderBy)
@@ -363,7 +363,7 @@ func (g PostgresRepo) GetAttachedPolicies(groupID string, filter *api.Filter) ([
 	if relations != nil {
 		policies = make([]api.PolicyGroupRelation, len(relations), cap(relations))
 		for i, r := range relations {
-			policy, err := g.GetPolicyById(r.PolicyID)
+			policy, err := pr.GetPolicyById(r.PolicyID)
 			// Error handling
 			if err != nil {
 				return nil, total, &database.Error{

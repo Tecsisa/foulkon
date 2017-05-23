@@ -36,11 +36,11 @@ type Config struct {
 
 // HANDLER
 
-func (h *WorkerHandler) HandleGetCurrentConfig(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleGetCurrentConfig(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
-	requestInfo, _, err := h.processHttpRequest(r, w, ps, nil)
+	requestInfo, _, err := wh.processHttpRequest(r, w, ps, nil)
 	if err != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, err, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, err, http.StatusBadRequest)
 		return
 	}
 
@@ -50,11 +50,11 @@ func (h *WorkerHandler) HandleGetCurrentConfig(w http.ResponseWriter, r *http.Re
 			Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
 			Message: "Unauthorized, user is not admin",
 		}
-		h.processHttpResponse(r, w, requestInfo, nil, err, http.StatusForbidden)
+		wh.processHttpResponse(r, w, requestInfo, nil, err, http.StatusForbidden)
 		return
 	}
 
-	wc := h.worker.Config
+	wc := wh.worker.Config
 	// Get Logger config
 	logger := LoggerConfig{
 		Type:          wc.LoggerType,
@@ -84,5 +84,5 @@ func (h *WorkerHandler) HandleGetCurrentConfig(w http.ResponseWriter, r *http.Re
 		Version:       wc.Version,
 	}
 
-	h.processHttpResponse(r, w, requestInfo, response, nil, http.StatusOK)
+	wh.processHttpResponse(r, w, requestInfo, response, nil, http.StatusOK)
 }
