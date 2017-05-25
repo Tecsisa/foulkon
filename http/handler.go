@@ -123,7 +123,8 @@ func (wh *WorkerHandler) processHttpResponse(r *http.Request, w http.ResponseWri
 			statusCode = http.StatusForbidden
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND, api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
 			api.USER_IS_NOT_A_MEMBER_OF_GROUP, api.POLICY_IS_NOT_ATTACHED_TO_GROUP,
-			api.POLICY_BY_ORG_AND_NAME_NOT_FOUND, api.PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND:
+			api.POLICY_BY_ORG_AND_NAME_NOT_FOUND, api.PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND,
+			api.AUTH_OIDC_PROVIDER_BY_NAME_NOT_FOUND:
 			// Resource or relation not found
 			statusCode = http.StatusNotFound
 		case api.INVALID_PARAMETER_ERROR, api.REGEX_NO_MATCH:

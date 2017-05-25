@@ -805,7 +805,17 @@ func (t TestAPI) AddOidcProvider(requestInfo api.RequestInfo, name string, path 
 }
 
 func (t TestAPI) GetOidcProviderByName(requestInfo api.RequestInfo, name string) (*api.OidcProvider, error) {
-	return nil, nil
+	t.ArgsIn[GetOidcProviderByNameMethod][0] = requestInfo
+	t.ArgsIn[GetOidcProviderByNameMethod][1] = name
+	var op *api.OidcProvider
+	if t.ArgsOut[GetOidcProviderByNameMethod][0] != nil {
+		op = t.ArgsOut[GetOidcProviderByNameMethod][0].(*api.OidcProvider)
+	}
+	var err error
+	if t.ArgsOut[GetOidcProviderByNameMethod][1] != nil {
+		err = t.ArgsOut[GetOidcProviderByNameMethod][1].(error)
+	}
+	return op, err
 }
 
 func (t TestAPI) ListOidcProviders(requestInfo api.RequestInfo, filter *api.Filter) ([]api.OidcProvider, int, error) {

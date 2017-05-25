@@ -128,9 +128,50 @@ func (api WorkerAPI) AddOidcProvider(requestInfo RequestInfo, name string, path 
 	}
 }
 
-//TODO @rsoleto: implement it!!
 func (api WorkerAPI) GetOidcProviderByName(requestInfo RequestInfo, name string) (*OidcProvider, error) {
-	return nil, nil
+	// Validate fields
+	if !IsValidName(name) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: name %v", name),
+		}
+	}
+
+	// Call repo to retrieve the OIDC Provider
+	oidcProvider, err := api.AuthOidcRepo.GetOidcProviderByName(name)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		// OIDC Provider doesn't exist in DB
+		if dbError.Code == database.AUTH_OIDC_PROVIDER_NOT_FOUND {
+			return nil, &Error{
+				Code:    AUTH_OIDC_PROVIDER_BY_NAME_NOT_FOUND,
+				Message: dbError.Message,
+			}
+		}
+		return nil, &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	// Check restrictions
+	oidcProvidersFiltered, err := api.GetAuthorizedOidcProviders(requestInfo, oidcProvider.Urn, AUTH_OIDC_ACTION_GET_PROVIDER, []OidcProvider{*oidcProvider})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(oidcProvidersFiltered) > 0 {
+		oidcProviderFiltered := oidcProvidersFiltered[0]
+		return &oidcProviderFiltered, nil
+	}
+	return nil, &Error{
+		Code: UNAUTHORIZED_RESOURCES_ERROR,
+		Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
+			requestInfo.Identifier, oidcProvider.Urn),
+	}
 }
 
 func (api WorkerAPI) ListOidcProviders(requestInfo RequestInfo, filter *Filter) ([]OidcProvider, int, error) {

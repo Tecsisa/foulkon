@@ -37,7 +37,8 @@ const (
 	PROXY_RESOURCES_ROUTES_CONFLICT          = "ProxyResourcesRoutesConflict"
 
 	// Auth OIDC Provider API error codes
-	AUTH_OIDC_PROVIDER_ALREADY_EXIST = "AuthOidcProviderAlreadyExist"
+	AUTH_OIDC_PROVIDER_ALREADY_EXIST     = "AuthOidcProviderAlreadyExist"
+	AUTH_OIDC_PROVIDER_BY_NAME_NOT_FOUND = "AuthOidcProviderWithNameNotFound"
 
 	// Regex error
 	REGEX_NO_MATCH = "RegexNoMatch"

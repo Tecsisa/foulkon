@@ -3,6 +3,8 @@ package postgresql
 import (
 	"time"
 
+	"fmt"
+
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/database"
 	"github.com/satori/go.uuid"
@@ -60,7 +62,41 @@ func (pr PostgresRepo) AddOidcProvider(oidcProvider api.OidcProvider) (*api.Oidc
 }
 
 func (pr PostgresRepo) GetOidcProviderByName(name string) (*api.OidcProvider, error) {
-	return nil, nil
+	oidcProvider := &OidcProvider{}
+	query := pr.Dbmap.Where("name like ?", name).First(oidcProvider)
+
+	// Check if OIDC Provider exists
+	if query.RecordNotFound() {
+		return nil, &database.Error{
+			Code:    database.AUTH_OIDC_PROVIDER_NOT_FOUND,
+			Message: fmt.Sprintf("OIDC Provider with name %v not found", name),
+		}
+	}
+
+	// Error Handling
+	if err := query.Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	// Retrieve associated OIDC Clients
+	oidcClients := []OidcClient{}
+	query = pr.Dbmap.Where("oidc_provider_id like ?", oidcProvider.ID).Find(&oidcClients)
+	// Error Handling
+	if err := query.Error; err != nil {
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	// Create API OidcProvider
+	oidcProviderApi := dbOidcProviderToAPIOidcProvider(oidcProvider)
+	oidcProviderApi.OidcClients = dbOidcClientsToAPIOidcClients(oidcClients)
+
+	return oidcProviderApi, nil
 }
 
 func (pr PostgresRepo) GetOidcProvidersFiltered(filter *api.Filter) ([]api.OidcProvider, int, error) {

@@ -152,6 +152,81 @@ func TestPostgresRepo_AddOidcProvider(t *testing.T) {
 	}
 }
 
+func TestPostgresRepo_GetOidcProviderByName(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		oidcProvider *OidcProvider
+		oidcClients  []OidcClient
+		// Postgres Repo Args
+		name string
+		// Expected result
+		expectedResponse *api.OidcProvider
+		expectedError    *database.Error
+	}{
+		"OkCase": {
+			name: "test",
+			oidcProvider: &OidcProvider{
+				ID:        "1234",
+				Name:      "test",
+				Path:      "/path/",
+				CreateAt:  now.UnixNano(),
+				UpdateAt:  now.UnixNano(),
+				Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "test"),
+				IssuerURL: "https://test.com",
+			},
+			oidcClients: []OidcClient{
+				{
+					ID:             "0123",
+					OidcProviderID: "1234",
+					Name:           "client1",
+				},
+			},
+			expectedResponse: &api.OidcProvider{
+				ID:        "1234",
+				Name:      "test",
+				Path:      "/path/",
+				CreateAt:  now,
+				UpdateAt:  now,
+				Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "test"),
+				IssuerURL: "https://test.com",
+				OidcClients: []api.OidcClient{
+					{
+						Name: "client1",
+					},
+				},
+			},
+		},
+		"ErrorCaseNotFound": {
+			name: "test",
+			expectedError: &database.Error{
+				Code:    database.AUTH_OIDC_PROVIDER_NOT_FOUND,
+				Message: "OIDC Provider with name test not found",
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean policy database
+		cleanOidcProvidersTable(t, n)
+		cleanOidcClientsTable(t, n)
+
+		// Insert previous data
+		if test.oidcProvider != nil {
+			insertOidcProvider(t, n, *test.oidcProvider, test.oidcClients)
+		}
+		// Call to repository to get a OIDC Provider
+		receivedOidcProvider, err := repoDB.GetOidcProviderByName(test.name)
+		if test.expectedError != nil {
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
+		} else {
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check response
+			assert.Equal(t, test.expectedResponse, receivedOidcProvider, "Error in test case %v", n)
+		}
+	}
+}
+
 func Test_dbOidcProviderToAPIOidcProvider(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {
