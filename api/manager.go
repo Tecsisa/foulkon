@@ -227,7 +227,7 @@ type AuthOidcAPI interface {
 
 	// Retrieve OIDC provider names from database filtered by pathPrefix (optional parameter). Throw error
 	// if pathPrefix is invalid or unexpected error happen.
-	ListOidcProviders(requestInfo RequestInfo, filter *Filter) ([]OidcProvider, int, error)
+	ListOidcProviders(requestInfo RequestInfo, filter *Filter) ([]string, int, error)
 
 	// Update OIDC provider stored in database with new parameters. Throw error if the input parameters
 	// are invalid, the OIDC provider doesn't exist or unexpected error happen.

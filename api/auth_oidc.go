@@ -174,8 +174,46 @@ func (api WorkerAPI) GetOidcProviderByName(requestInfo RequestInfo, name string)
 	}
 }
 
-func (api WorkerAPI) ListOidcProviders(requestInfo RequestInfo, filter *Filter) ([]OidcProvider, int, error) {
-	return nil, 0, nil
+func (api WorkerAPI) ListOidcProviders(requestInfo RequestInfo, filter *Filter) ([]string, int, error) {
+	// Validate fields
+	var total int
+	orderByValidColumns := api.AuthOidcRepo.OrderByValidColumns(AUTH_OIDC_ACTION_LIST_PROVIDERS)
+	err := validateFilter(filter, orderByValidColumns)
+	if err != nil {
+		return nil, total, err
+	}
+
+	// Call repo to retrieve the OIDC Providers
+	oidcProviders, total, err := api.AuthOidcRepo.GetOidcProvidersFiltered(filter)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return nil, total, &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	// Check restrictions to list
+	var urnPrefix string
+	if len(filter.Org) == 0 {
+		urnPrefix = "*"
+	} else {
+		urnPrefix = GetUrnPrefix("", RESOURCE_AUTH_OIDC_PROVIDER, filter.PathPrefix)
+	}
+	oidcProvidersFiltered, err := api.GetAuthorizedOidcProviders(requestInfo, urnPrefix, AUTH_OIDC_ACTION_LIST_PROVIDERS, oidcProviders)
+	if err != nil {
+		return nil, total, err
+	}
+
+	oidcProviderNames := []string{}
+	for _, op := range oidcProvidersFiltered {
+		oidcProviderNames = append(oidcProviderNames, op.Name)
+	}
+
+	return oidcProviderNames, total, nil
 }
 
 func (api WorkerAPI) UpdateOidcProvider(requestInfo RequestInfo, oidcProviderName string, newName string, newPath string,

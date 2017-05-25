@@ -227,6 +227,119 @@ func TestPostgresRepo_GetOidcProviderByName(t *testing.T) {
 	}
 }
 
+func TestPostgresRepo_GetOidcProvidersFiltered(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		oidcProviders []OidcProvider
+		oidcClients   []OidcClient
+		// Postgres Repo Args
+		filter *api.Filter
+		// Expected result
+		expectedResponse []api.OidcProvider
+	}{
+		"OkCase": {
+			filter: &api.Filter{
+				PathPrefix: "/",
+				Offset:     0,
+				Limit:      20,
+				OrderBy:    "name desc",
+			},
+			oidcProviders: []OidcProvider{
+				{
+					ID:        "111",
+					Name:      "test1",
+					Path:      "/path1/",
+					CreateAt:  now.UnixNano(),
+					UpdateAt:  now.UnixNano(),
+					Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path1/", "test1"),
+					IssuerURL: "http://test1.com",
+				},
+				{
+					ID:        "222",
+					Name:      "test2",
+					Path:      "/path2/",
+					CreateAt:  now.UnixNano(),
+					UpdateAt:  now.UnixNano(),
+					Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path2/", "test2"),
+					IssuerURL: "http://test2.com",
+				},
+			},
+			oidcClients: []OidcClient{
+				{
+					ID:             "1",
+					Name:           "client1",
+					OidcProviderID: "111",
+				},
+				{
+					ID:             "2",
+					Name:           "client2",
+					OidcProviderID: "222",
+				},
+			},
+			expectedResponse: []api.OidcProvider{
+				{
+					ID:        "222",
+					Name:      "test2",
+					Path:      "/path2/",
+					CreateAt:  now,
+					UpdateAt:  now,
+					Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path2/", "test2"),
+					IssuerURL: "http://test2.com",
+					OidcClients: []api.OidcClient{
+						{
+							Name: "client2",
+						},
+					},
+				},
+				{
+					ID:        "111",
+					Name:      "test1",
+					Path:      "/path1/",
+					CreateAt:  now,
+					UpdateAt:  now,
+					Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path1/", "test1"),
+					IssuerURL: "http://test1.com",
+					OidcClients: []api.OidcClient{
+						{
+							Name: "client1",
+						},
+					},
+				},
+			},
+		},
+		"OKCaseNotFound": {
+			filter: &api.Filter{
+				PathPrefix: "test",
+				Org:        "org1",
+				Offset:     0,
+				Limit:      20,
+			},
+			expectedResponse: []api.OidcProvider{},
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean OIDC Provider database
+		cleanOidcProvidersTable(t, n)
+		cleanOidcClientsTable(t, n)
+
+		// Insert previous data
+		for i, oidcProvider := range test.oidcProviders {
+			var oidcClient []OidcClient = []OidcClient{test.oidcClients[i]}
+			insertOidcProvider(t, n, oidcProvider, oidcClient)
+		}
+		// Call to repository to get OIDC Providers
+		receivedOidcProviders, total, err := repoDB.GetOidcProvidersFiltered(test.filter)
+		assert.Nil(t, err, "Error in test case %v", n)
+
+		// Check total
+		assert.Equal(t, len(test.expectedResponse), total, "Error in test case %v", n)
+
+		// Check response
+		assert.Equal(t, test.expectedResponse, receivedOidcProviders, "Error in test case %v", n)
+	}
+}
+
 func Test_dbOidcProviderToAPIOidcProvider(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {

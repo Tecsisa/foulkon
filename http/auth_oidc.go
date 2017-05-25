@@ -69,13 +69,9 @@ func (wh *WorkerHandler) HandleListOidcProviders(w http.ResponseWriter, r *http.
 
 	// Call Auth Provider API to list the OIDC Providers
 	result, total, err := wh.worker.AuthOidcAPI.ListOidcProviders(requestInfo, filterData)
-	oidcProviders := []string{}
-	for _, oidcProvider := range result {
-		oidcProviders = append(oidcProviders, oidcProvider.Name)
-	}
 	// Create response
 	response := &ListOidcProvidersResponse{
-		Providers: oidcProviders,
+		Providers: result,
 		Offset:    filterData.Offset,
 		Limit:     filterData.Limit,
 		Total:     total,

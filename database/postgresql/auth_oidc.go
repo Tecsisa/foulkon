@@ -100,7 +100,53 @@ func (pr PostgresRepo) GetOidcProviderByName(name string) (*api.OidcProvider, er
 }
 
 func (pr PostgresRepo) GetOidcProvidersFiltered(filter *api.Filter) ([]api.OidcProvider, int, error) {
-	return nil, 0, nil
+	var total int
+	oidcProviders := []OidcProvider{}
+	query := pr.Dbmap
+
+	if len(filter.PathPrefix) > 0 {
+		query = query.Where("path like ?", filter.PathPrefix+"%")
+	}
+	if len(filter.OrderBy) > 0 {
+		query = query.Order(filter.OrderBy)
+	}
+
+	// Error handling
+	if err := query.Find(&oidcProviders).Count(&total).Offset(filter.Offset).Limit(filter.Limit).Find(&oidcProviders).Error; err != nil {
+		return nil, total, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	// Transform OIDC Providers for API
+	var apiOidcProviders []api.OidcProvider
+	if oidcProviders != nil {
+		apiOidcProviders = make([]api.OidcProvider, len(oidcProviders), cap(oidcProviders))
+
+		for i, op := range oidcProviders {
+			oidcProvider := dbOidcProviderToAPIOidcProvider(&op)
+
+			// Retrieve associated OIDC clients
+			oidcClients := []OidcClient{}
+			query = pr.Dbmap.Where("oidc_provider_id like ?", oidcProvider.ID).Find(&oidcClients)
+			// Error Handling
+			if err := query.Error; err != nil {
+				return nil, total, &database.Error{
+					Code:    database.INTERNAL_ERROR,
+					Message: err.Error(),
+				}
+			}
+
+			oidcProvider.OidcClients = dbOidcClientsToAPIOidcClients(oidcClients)
+
+			// Assign OIDC Provider
+			apiOidcProviders[i] = *oidcProvider
+		}
+
+	}
+
+	return apiOidcProviders, total, nil
 }
 
 func (pr PostgresRepo) UpdateOidcProvider(oidcProvider api.OidcProvider) (*api.OidcProvider, error) {

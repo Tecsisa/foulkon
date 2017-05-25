@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Tecsisa/foulkon/database"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWorkerAPI_AddOidcProvider(t *testing.T) {
@@ -498,5 +499,244 @@ func TestWorkerAPI_GetOidcProviderByName(t *testing.T) {
 		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
 		oidcProvider, err := testAPI.GetOidcProviderByName(testcase.requestInfo, testcase.oidcProviderName)
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.getOidcProviderByNameMethodResult, oidcProvider)
+	}
+}
+
+func TestWorkerAPI_ListOidcProviders(t *testing.T) {
+	testcases := map[string]struct {
+		// API Method args
+		requestInfo RequestInfo
+		filter      *Filter
+		// Expected result
+		expectedOidcProviders []string
+		totalResult           int
+		wantError             error
+		// Manager Results
+		getGroupsByUserIDResult              []TestUserGroupRelation
+		getAttachedPoliciesResult            []TestPolicyGroupRelation
+		getUserByExternalIDResult            *User
+		getOidcProvidersFilteredMethodResult []OidcProvider
+		// Manager Errors
+		getUserByExternalIDErr            error
+		getOidcProvidersFilteredMethodErr error
+	}{
+		"OkCaseAdmin": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			filter: &Filter{
+				Org: "example",
+			},
+			expectedOidcProviders: []string{
+				"oidcProviderAllowed",
+				"oidcProviderDenied",
+			},
+			totalResult: 2,
+			getOidcProvidersFilteredMethodResult: []OidcProvider{
+				{
+					ID:        "oidcProviderAllowed",
+					Name:      "oidcProviderAllowed",
+					Path:      "/path/",
+					Urn:       CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "oidcProviderAllowed"),
+					IssuerURL: "https://oidcProviderAllowed.com",
+					OidcClients: []OidcClient{
+						{
+							Name: "client",
+						},
+					},
+				},
+				{
+					ID:        "oidcProviderDenied",
+					Name:      "oidcProviderDenied",
+					Path:      "/path/",
+					Urn:       CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "oidcProviderDenied"),
+					IssuerURL: "https://oidcProviderDenied.com",
+					OidcClients: []OidcClient{
+						{
+							Name: "client",
+						},
+					},
+				},
+			},
+		},
+		"OkCaseUser": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			filter: &Filter{
+				PathPrefix: "/path/",
+			},
+			expectedOidcProviders: []string{
+				"oidcProviderAllowed",
+			},
+			totalResult: 1,
+			getOidcProvidersFilteredMethodResult: []OidcProvider{
+				{
+					ID:        "oidcProviderAllowed",
+					Name:      "oidcProviderAllowed",
+					Path:      "/path/",
+					Urn:       CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "oidcProviderAllowed"),
+					IssuerURL: "https://oidcProviderAllowed.com",
+					OidcClients: []OidcClient{
+						{
+							Name: "client",
+						},
+					},
+				},
+				{
+					ID:        "oidcProviderDenied",
+					Name:      "oidcProviderDenied",
+					Path:      "/path/",
+					Urn:       CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "oidcProviderDenied"),
+					IssuerURL: "https://oidcProviderDenied.com",
+					OidcClients: []OidcClient{
+						{
+							Name: "client",
+						},
+					},
+				},
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "543210",
+				ExternalID: "1234",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "1234"),
+			},
+			getGroupsByUserIDResult: []TestUserGroupRelation{
+				{
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/path/1/",
+						Urn:  CreateUrn("example", RESOURCE_GROUP, "/path/", "groupUser"),
+					},
+				},
+			},
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
+				{
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "example",
+						Path: "/path/",
+						Urn:  CreateUrn("example", RESOURCE_POLICY, "/path/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									AUTH_OIDC_ACTION_LIST_PROVIDERS,
+								},
+								Resources: []string{
+									GetUrnPrefix("", RESOURCE_AUTH_OIDC_PROVIDER, "/path/"),
+								},
+							},
+							{
+								Effect: "deny",
+								Actions: []string{
+									AUTH_OIDC_ACTION_LIST_PROVIDERS,
+								},
+								Resources: []string{
+									CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "oidcProviderDenied"),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"ErrorCaseMaxLimitSize": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			filter: &Filter{
+				PathPrefix: "/path/",
+				Limit:      10000,
+			},
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: limit 10000, max limit allowed: 1000",
+			},
+		},
+		"ErrorCaseInvalidPath": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			filter: &Filter{
+				PathPrefix: "/path*/ /*",
+				Org:        "123",
+				Limit:      0,
+			},
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: pathPrefix /path*/ /*",
+			},
+		},
+		"ErrorCaseInternalErrorOidcProvidersFiltered": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			filter: &Filter{
+				PathPrefix: "/path/",
+			},
+			getOidcProvidersFilteredMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+		},
+		"ErrorCaseNoPermissions": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			filter: &Filter{
+				PathPrefix: "/path/",
+				Org:        "123",
+			},
+			getOidcProvidersFilteredMethodResult: []OidcProvider{
+				{
+					ID:        "oidcProviderDenied",
+					Name:      "oidcProviderDenied",
+					Path:      "/path/",
+					Urn:       CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "oidcProviderDenied"),
+					IssuerURL: "https://oidcProviderDenied.com",
+					OidcClients: []OidcClient{
+						{
+							Name: "client",
+						},
+					},
+				},
+			},
+			getUserByExternalIDErr: &database.Error{
+				Code: database.USER_NOT_FOUND,
+			},
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
+			},
+		},
+	}
+
+	for x, testcase := range testcases {
+
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
+
+		testRepo.ArgsOut[GetOidcProvidersFilteredMethod][0] = testcase.getOidcProvidersFilteredMethodResult
+		testRepo.ArgsOut[GetOidcProvidersFilteredMethod][1] = testcase.totalResult
+		testRepo.ArgsOut[GetOidcProvidersFilteredMethod][2] = testcase.getOidcProvidersFilteredMethodErr
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDErr
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
+		oidcProviders, total, err := testAPI.ListOidcProviders(testcase.requestInfo, testcase.filter)
+		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedOidcProviders, oidcProviders)
+		assert.Equal(t, testcase.totalResult, total, "Error in test case %v", x)
 	}
 }

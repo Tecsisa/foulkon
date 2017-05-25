@@ -344,3 +344,133 @@ func TestWorkerHandler_HandleGetOidcProviderByName(t *testing.T) {
 		}
 	}
 }
+
+func TestWorkerHandler_HandleListOidcProviders(t *testing.T) {
+	testcases := map[string]struct {
+		// API method args
+		filter       *api.Filter
+		ignoreArgsIn bool
+		// Expected result
+		expectedStatusCode int
+		expectedResponse   ListOidcProvidersResponse
+		expectedError      api.Error
+		// Manager Results
+		listOidcProvidersResult []string
+		listOidcProvidersTotal  int
+		// Manager Errors
+		listOidcProvidersErr error
+	}{
+		"OkCase": {
+			filter: &api.Filter{
+				PathPrefix: "/path/",
+				Offset:     0,
+				Limit:      0,
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse: ListOidcProvidersResponse{
+				Providers: []string{"oidcProvider1"},
+				Offset:    0,
+				Limit:     0,
+				Total:     1,
+			},
+			listOidcProvidersResult: []string{
+				"oidcProvider1",
+			},
+			listOidcProvidersTotal: 1,
+		},
+		"ErrorCaseInvalidFilterParams": {
+			filter: &api.Filter{
+				PathPrefix: "",
+				Limit:      -1,
+			},
+			ignoreArgsIn:       true,
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Limit -1",
+			},
+		},
+		"ErrorCaseInvalidParameterError": {
+			filter: &api.Filter{
+				PathPrefix: "/path/",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+			listOidcProvidersErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+		},
+		"ErrorCaseUnauthorizedError": {
+			filter: &api.Filter{
+				PathPrefix: "/path/",
+			},
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+			listOidcProvidersErr: &api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+		},
+		"ErrorCaseUnknownApiError": {
+			filter:             testFilter,
+			expectedStatusCode: http.StatusInternalServerError,
+			listOidcProvidersErr: &api.Error{
+				Code:    api.UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[ListOidcProvidersMethod][0] = test.listOidcProvidersResult
+		testApi.ArgsOut[ListOidcProvidersMethod][1] = test.listOidcProvidersTotal
+		testApi.ArgsOut[ListOidcProvidersMethod][2] = test.listOidcProvidersErr
+
+		url := fmt.Sprintf(server.URL + OIDC_AUTH_ROOT_URL)
+		req, err := http.NewRequest(http.MethodGet, url, nil)
+		assert.Nil(t, err, "Error in test case %v", n)
+
+		addQueryParams(test.filter, req)
+
+		res, err := client.Do(req)
+		assert.Nil(t, err, "Error in test case %v", n)
+
+		if !test.ignoreArgsIn {
+			// Check received parameters
+			filterData, ok := testApi.ArgsIn[ListOidcProvidersMethod][1].(*api.Filter)
+			if ok {
+				// Check result
+				assert.Equal(t, test.filter, filterData, "Error in test case %v", n)
+			}
+		}
+
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
+
+		switch res.StatusCode {
+		case http.StatusOK:
+			listOidcProvidersResponse := ListOidcProvidersResponse{}
+			err = json.NewDecoder(res.Body).Decode(&listOidcProvidersResponse)
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check result
+			assert.Equal(t, test.expectedResponse, listOidcProvidersResponse, "Error in test case %v", n)
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check error
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
+		}
+	}
+}

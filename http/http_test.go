@@ -818,8 +818,23 @@ func (t TestAPI) GetOidcProviderByName(requestInfo api.RequestInfo, name string)
 	return op, err
 }
 
-func (t TestAPI) ListOidcProviders(requestInfo api.RequestInfo, filter *api.Filter) ([]api.OidcProvider, int, error) {
-	return nil, 0, nil
+func (t TestAPI) ListOidcProviders(requestInfo api.RequestInfo, filter *api.Filter) ([]string, int, error) {
+	t.ArgsIn[ListOidcProvidersMethod][0] = requestInfo
+	t.ArgsIn[ListOidcProvidersMethod][1] = filter
+
+	var oidcProviders []string
+	var total int
+	if t.ArgsOut[ListOidcProvidersMethod][1] != nil {
+		total = t.ArgsOut[ListOidcProvidersMethod][1].(int)
+	}
+	if t.ArgsOut[ListOidcProvidersMethod][0] != nil {
+		oidcProviders = t.ArgsOut[ListOidcProvidersMethod][0].([]string)
+	}
+	var err error
+	if t.ArgsOut[ListOidcProvidersMethod][2] != nil {
+		err = t.ArgsOut[ListOidcProvidersMethod][2].(error)
+	}
+	return oidcProviders, total, err
 }
 
 func (t TestAPI) UpdateOidcProvider(requestInfo api.RequestInfo, oidcProviderName string, newName string, newPath string,
