@@ -8,10 +8,11 @@ import (
 
 const (
 	// Resource types
-	RESOURCE_GROUP  = "group"
-	RESOURCE_USER   = "user"
-	RESOURCE_POLICY = "policy"
-	RESOURCE_PROXY  = "proxy"
+	RESOURCE_GROUP              = "group"
+	RESOURCE_USER               = "user"
+	RESOURCE_POLICY             = "policy"
+	RESOURCE_PROXY              = "proxy"
+	RESOURCE_AUTH_OIDC_PROVIDER = "oidc"
 
 	// Resource validation
 	RESOURCE_EXTERNAL = "external"
@@ -94,6 +95,8 @@ func CreateUrn(org string, resource string, path string, name string) string {
 	switch resource {
 	case RESOURCE_USER:
 		return fmt.Sprintf("urn:iws:iam::user%v%v", path, name)
+	case RESOURCE_AUTH_OIDC_PROVIDER:
+		return fmt.Sprintf("urn:iws:auth::%v%v%v", resource, path, name)
 	default:
 		return fmt.Sprintf("urn:iws:iam:%v:%v%v%v", org, resource, path, name)
 	}
@@ -103,6 +106,8 @@ func GetUrnPrefix(org string, resource string, path string) string {
 	switch resource {
 	case RESOURCE_USER:
 		return fmt.Sprintf("urn:iws:iam::user%v*", path)
+	case RESOURCE_AUTH_OIDC_PROVIDER:
+		return fmt.Sprintf("urn:iws:auth::%v%v*", resource, path)
 	default:
 		return fmt.Sprintf("urn:iws:iam:%v:%v%v*", org, resource, path)
 	}
@@ -276,6 +281,18 @@ func AreValidStatements(statements *[]Statement) error {
 		err = AreValidResources(statement.Resources, RESOURCE_IAM)
 		if err != nil {
 			return err
+		}
+	}
+	return nil
+}
+
+func AreValidOidcClientNames(oidcClients []string) error {
+	for _, oidcClient := range oidcClients {
+		if len(oidcClient) > 0 && !IsValidUserExternalID(oidcClient) {
+			return &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: fmt.Sprintf("Invalid parameter: client name %v", oidcClient),
+			}
 		}
 	}
 	return nil

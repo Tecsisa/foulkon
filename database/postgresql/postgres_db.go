@@ -211,5 +211,5 @@ type OidcClient struct {
 
 // OidcClient's table name
 func (OidcClient) TableName() string {
-	return "oidc_client"
+	return "oidc_clients"
 }

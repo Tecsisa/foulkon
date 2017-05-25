@@ -219,7 +219,7 @@ type ProxyResourcesAPI interface {
 type AuthOidcAPI interface {
 	// Store a new OIDC provider in database. Throw error when parameters are invalid,
 	// the OIDC provider already exists or unexpected error happen.
-	AddOidcProvider(requestInfo RequestInfo, name string, path string, oidcClients []string) (*OidcProvider, error)
+	AddOidcProvider(requestInfo RequestInfo, name string, path string, issuerURL string, oidcClients []string) (*OidcProvider, error)
 
 	// Retrieve OIDC provider from database. Throw error when parameter is invalid,
 	// the OIDC provider doesn't exist or unexpected error happen.

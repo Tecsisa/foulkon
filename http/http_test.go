@@ -62,6 +62,13 @@ const (
 	UpdateProxyResourceMethod    = "UpdateProxyResource"
 	RemoveProxyResourceMethod    = "RemoveProxyResource"
 	ListProxyResourcesMethod     = "ListProxyResources"
+
+	// AUTH OIDC PROVIDER API
+	AddOidcProviderMethod       = "AddOidcProvider"
+	GetOidcProviderByNameMethod = "GetOidcProviderByName"
+	ListOidcProvidersMethod     = "ListOidcProviders"
+	UpdateOidcProviderMethod    = "UpdateOidcProvider"
+	RemoveOidcProviderMethod    = "RemoveOidcProvider"
 )
 
 // Test server used to test handlers
@@ -169,6 +176,7 @@ func TestMain(m *testing.M) {
 		PolicyApi:         testApi,
 		AuthzApi:          testApi,
 		ProxyApi:          testApi,
+		AuthOidcAPI:       testApi,
 		Config:            config,
 	}
 
@@ -235,6 +243,12 @@ func makeTestApi() *TestAPI {
 	testApi.ArgsIn[RemoveProxyResourceMethod] = make([]interface{}, 3)
 	testApi.ArgsIn[ListProxyResourcesMethod] = make([]interface{}, 3)
 
+	testApi.ArgsIn[AddOidcProviderMethod] = make([]interface{}, 5)
+	testApi.ArgsIn[GetOidcProviderByNameMethod] = make([]interface{}, 2)
+	testApi.ArgsIn[ListOidcProvidersMethod] = make([]interface{}, 2)
+	testApi.ArgsIn[UpdateOidcProviderMethod] = make([]interface{}, 5)
+	testApi.ArgsIn[RemoveOidcProviderMethod] = make([]interface{}, 2)
+
 	testApi.ArgsOut[AddUserMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[GetUserByExternalIdMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[ListUsersMethod] = make([]interface{}, 3)
@@ -273,6 +287,12 @@ func makeTestApi() *TestAPI {
 	testApi.ArgsOut[UpdateProxyResourceMethod] = make([]interface{}, 2)
 	testApi.ArgsOut[RemoveProxyResourceMethod] = make([]interface{}, 1)
 	testApi.ArgsOut[ListProxyResourcesMethod] = make([]interface{}, 3)
+
+	testApi.ArgsOut[AddOidcProviderMethod] = make([]interface{}, 2)
+	testApi.ArgsOut[GetOidcProviderByNameMethod] = make([]interface{}, 2)
+	testApi.ArgsOut[ListOidcProvidersMethod] = make([]interface{}, 3)
+	testApi.ArgsOut[UpdateOidcProviderMethod] = make([]interface{}, 2)
+	testApi.ArgsOut[RemoveOidcProviderMethod] = make([]interface{}, 1)
 
 	return testApi
 }
@@ -765,6 +785,40 @@ func (t TestAPI) RemoveProxyResource(authenticatedUser api.RequestInfo, org stri
 		err = t.ArgsOut[RemoveProxyResourceMethod][0].(error)
 	}
 	return err
+}
+
+func (t TestAPI) AddOidcProvider(requestInfo api.RequestInfo, name string, path string, issuerURL string, oidcClients []string) (*api.OidcProvider, error) {
+	t.ArgsIn[AddOidcProviderMethod][0] = requestInfo
+	t.ArgsIn[AddOidcProviderMethod][1] = name
+	t.ArgsIn[AddOidcProviderMethod][2] = path
+	t.ArgsIn[AddOidcProviderMethod][3] = issuerURL
+	t.ArgsIn[AddOidcProviderMethod][4] = oidcClients
+	var oidcProvider *api.OidcProvider
+	if t.ArgsOut[AddOidcProviderMethod][0] != nil {
+		oidcProvider = t.ArgsOut[AddOidcProviderMethod][0].(*api.OidcProvider)
+	}
+	var err error
+	if t.ArgsOut[AddOidcProviderMethod][1] != nil {
+		err = t.ArgsOut[AddOidcProviderMethod][1].(error)
+	}
+	return oidcProvider, err
+}
+
+func (t TestAPI) GetOidcProviderByName(requestInfo api.RequestInfo, name string) (*api.OidcProvider, error) {
+	return nil, nil
+}
+
+func (t TestAPI) ListOidcProviders(requestInfo api.RequestInfo, filter *api.Filter) ([]api.OidcProvider, int, error) {
+	return nil, 0, nil
+}
+
+func (t TestAPI) UpdateOidcProvider(requestInfo api.RequestInfo, oidcProviderName string, newName string, newPath string,
+	newClients []string) (*api.OidcProvider, error) {
+	return nil, nil
+}
+
+func (t TestAPI) RemoveOidcProvider(requestInfo api.RequestInfo, name string) error {
+	return nil
 }
 
 // Private helper methods

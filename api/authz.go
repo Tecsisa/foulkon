@@ -106,6 +106,23 @@ func (api WorkerAPI) GetAuthorizedProxyResources(requestInfo RequestInfo, resour
 	return proxyResourcesFiltered, nil
 }
 
+// GetAuthorizedOidcProviders returns authorized OIDC providers for specified user combined with resource+action
+func (api WorkerAPI) GetAuthorizedOidcProviders(requestInfo RequestInfo, resourceUrn string, action string, oidcProviders []OidcProvider) ([]OidcProvider, error) {
+	resourcesToAuthorize := []Resource{}
+	for _, oidcProvider := range oidcProviders {
+		resourcesToAuthorize = append(resourcesToAuthorize, oidcProvider)
+	}
+	resources, err := api.getAuthorizedResources(requestInfo, resourceUrn, action, resourcesToAuthorize)
+	if err != nil {
+		return nil, err
+	}
+	oidcProvidersFiltered := []OidcProvider{}
+	for _, res := range resources {
+		oidcProvidersFiltered = append(oidcProvidersFiltered, res.(OidcProvider))
+	}
+	return oidcProvidersFiltered, nil
+}
+
 // GetAuthorizedExternalResources returns the resources where the specified user has the action granted
 func (api WorkerAPI) GetAuthorizedExternalResources(requestInfo RequestInfo, action string, resources []string) ([]string, error) {
 	// Validate parameters

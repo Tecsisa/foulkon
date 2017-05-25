@@ -261,6 +261,90 @@ func TestGetAuthorizedPolicies(t *testing.T) {
 	}
 }
 
+func TestWorkerAPI_GetAuthorizedOidcProviders(t *testing.T) {
+	testcases := map[string]struct {
+		// Authenticated user
+		requestInfo RequestInfo
+		// Resource urn that user wants to access
+		resourceUrn string
+		// Action to do
+		action string
+		// Resources received from db that system has to authorize
+		oidcProvidersToAuthorize []OidcProvider
+		// Resources authorized by method
+		oidcProvidersAuthorized []OidcProvider
+		// Error to compare when we expect an error
+		wantError error
+		// GetUserByExternalID Method Out Arguments
+		getUserByExternalIDResult *User
+		getUserByExternalIDError  error
+	}{
+		"OKtestCaseAdmin": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			resourceUrn: CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "keycloak"),
+			action:      AUTH_OIDC_ACTION_GET_PROVIDER,
+			oidcProvidersToAuthorize: []OidcProvider{
+				{
+					ID:  "654321",
+					Urn: CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "keycloak"),
+				},
+			},
+			oidcProvidersAuthorized: []OidcProvider{
+				{
+					ID:  "654321",
+					Urn: CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "keycloak"),
+				},
+			},
+		},
+		"OKtestCaseAdminWithEmptyResources": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			resourceUrn: CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "keycloak"),
+			action:      AUTH_OIDC_ACTION_GET_PROVIDER,
+			oidcProvidersToAuthorize: []OidcProvider{},
+			oidcProvidersAuthorized:  []OidcProvider{},
+		},
+		"ErrortestCaseDatabaseError": {
+			requestInfo: RequestInfo{
+				Identifier: "USER-AUTHENTICATED",
+				Admin:      false,
+			},
+			resourceUrn: CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "keycloak"),
+			action:      AUTH_OIDC_ACTION_GET_PROVIDER,
+			wantError: &Error{
+				Code:    UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+			getUserByExternalIDResult: nil,
+			getUserByExternalIDError: &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: "Error",
+			},
+		},
+	}
+
+	for n, test := range testcases {
+
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
+
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = test.getUserByExternalIDResult
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = test.getUserByExternalIDError
+
+		authorizedOidcProviders, err := testAPI.GetAuthorizedOidcProviders(test.requestInfo, test.resourceUrn, test.action, test.oidcProvidersToAuthorize)
+		checkMethodResponse(t, n, test.wantError, err, test.oidcProvidersAuthorized, authorizedOidcProviders)
+		if !test.requestInfo.Admin {
+			// Check received authenticated user in method GetUserByExternalID
+			assert.Equal(t, test.requestInfo.Identifier, testRepo.ArgsIn[GetUserByExternalIDMethod][0], "Error in test case %v", n)
+		}
+	}
+}
+
 func TestGetAuthorizedExternalResources(t *testing.T) {
 	testcases := map[string]struct {
 		// Authenticated user

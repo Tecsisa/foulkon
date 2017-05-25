@@ -43,6 +43,8 @@ const (
 	AddProxyResourceMethod       = "AddProxyResource"
 	UpdateProxyResourceMethod    = "UpdateProxyResource"
 	GetProxyResourceByNameMethod = "GetProxyResourceByName"
+	AddOidcProviderMethod        = "AddOidcProviderMethod"
+	GetOidcProviderByNameMethod  = "GetOidcProviderByNameMethod"
 )
 
 // TestRepo that implements all repo manager interfaces
@@ -112,6 +114,8 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[AddProxyResourceMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[UpdateProxyResourceMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetProxyResourceByNameMethod] = make([]interface{}, 2)
+	testRepo.ArgsIn[AddOidcProviderMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[GetOidcProviderByNameMethod] = make([]interface{}, 1)
 
 	testRepo.ArgsOut[GetUserByExternalIDMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AddUserMethod] = make([]interface{}, 2)
@@ -144,16 +148,19 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[AddProxyResourceMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[UpdateProxyResourceMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[GetProxyResourceByNameMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[AddOidcProviderMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[GetOidcProviderByNameMethod] = make([]interface{}, 2)
 
 	return testRepo
 }
 
 func makeTestAPI(testRepo *TestRepo) *WorkerAPI {
 	api := &WorkerAPI{
-		UserRepo:   testRepo,
-		GroupRepo:  testRepo,
-		PolicyRepo: testRepo,
-		ProxyRepo:  testRepo,
+		UserRepo:     testRepo,
+		GroupRepo:    testRepo,
+		PolicyRepo:   testRepo,
+		ProxyRepo:    testRepo,
+		AuthOidcRepo: testRepo,
 	}
 	Log = &log.Logger{
 		Out:       bytes.NewBuffer([]byte{}),
@@ -664,6 +671,51 @@ func (t TestRepo) RemoveProxyResource(id string) error {
 		err = t.ArgsOut[RemoveProxyResourceMethod][0].(error)
 	}
 	return err
+}
+
+///////////////////////////
+// Auth OIDC provider repo
+//////////////////////////
+
+func (t TestRepo) AddOidcProvider(oidcProvider OidcProvider) (*OidcProvider, error) {
+	t.ArgsIn[AddOidcProviderMethod][0] = oidcProvider
+	var created *OidcProvider
+	if t.ArgsOut[AddOidcProviderMethod][0] != nil {
+		created = t.ArgsOut[AddOidcProviderMethod][0].(*OidcProvider)
+	}
+	var err error
+	if t.ArgsOut[AddOidcProviderMethod][1] != nil {
+		err = t.ArgsOut[AddOidcProviderMethod][1].(error)
+	}
+	return created, err
+}
+
+func (t TestRepo) GetOidcProviderByName(name string) (*OidcProvider, error) {
+	t.ArgsIn[GetOidcProviderByNameMethod][0] = name
+	if specialFunc, ok := t.SpecialFuncs[GetOidcProviderByNameMethod].(func(name string) (*OidcProvider, error)); ok && specialFunc != nil {
+		return specialFunc(name)
+	}
+	var oidcProvider *OidcProvider
+	if t.ArgsOut[GetOidcProviderByNameMethod][0] != nil {
+		oidcProvider = t.ArgsOut[GetOidcProviderByNameMethod][0].(*OidcProvider)
+	}
+	var err error
+	if t.ArgsOut[GetOidcProviderByNameMethod][1] != nil {
+		err = t.ArgsOut[GetOidcProviderByNameMethod][1].(error)
+	}
+	return oidcProvider, err
+}
+
+func (t TestRepo) GetOidcProvidersFiltered(filter *Filter) ([]OidcProvider, int, error) {
+	return nil, 0, nil
+}
+
+func (t TestRepo) UpdateOidcProvider(oidcProvider OidcProvider) (*OidcProvider, error) {
+	return nil, nil
+}
+
+func (t TestRepo) RemoveOidcProvider(name string) error {
+	return nil
 }
 
 // Private helper methods

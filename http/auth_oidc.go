@@ -11,6 +11,7 @@ import (
 type CreateOidcProviderRequest struct {
 	Name        string   `json:"name, omitempty"`
 	Path        string   `json:"path, omitempty"`
+	IssuerURL   string   `json:"issuerUrl, omitempty"`
 	OidcClients []string `json:"clients, omitempty"`
 }
 
@@ -41,7 +42,7 @@ func (wh *WorkerHandler) HandleAddOidcProvider(w http.ResponseWriter, r *http.Re
 	}
 
 	// Call Auth Provider API to create the new OIDC provider
-	response, err := wh.worker.AuthOidcAPI.AddOidcProvider(requestInfo, request.Name, request.Path, request.OidcClients)
+	response, err := wh.worker.AuthOidcAPI.AddOidcProvider(requestInfo, request.Name, request.Path, request.IssuerURL, request.OidcClients)
 	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusCreated)
 }
 
