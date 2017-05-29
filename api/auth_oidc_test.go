@@ -1395,3 +1395,342 @@ func TestWorkerAPI_UpdateOidcProvider(t *testing.T) {
 		checkMethodResponse(t, x, testcase.wantError, err, testcase.expectedOidcProvider, oidcProvider)
 	}
 }
+
+func TestWorkerAPI_RemoveOidcProvider(t *testing.T) {
+	testcases := map[string]struct {
+		//API method args
+		requestInfo RequestInfo
+		name        string
+		// Expected result
+		wantError error
+		// Manager Results
+		getUserByExternalIDResult         *User
+		getGroupsByUserIDResult           []TestUserGroupRelation
+		getAttachedPoliciesResult         []TestPolicyGroupRelation
+		getOidcProviderByNameMethodResult *OidcProvider
+		// API Errors
+		getUserByExternalIDMethodErr   error
+		getOidcProviderByNameMethodErr error
+		removeOidcProviderMethodErr    error
+		getGroupsByUserIDError         error
+	}{
+		"OKCaseAdminUser": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			name: "oidcProvider1",
+			getOidcProviderByNameMethodResult: &OidcProvider{
+				ID:   "543210",
+				Name: "oidcProvider1",
+				Path: "/example/",
+				Urn:  CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/example/", "oidcProvider1"),
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
+			},
+		},
+		"OkCase": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "oidcProvider1",
+			getOidcProviderByNameMethodResult: &OidcProvider{
+				ID:   "543210",
+				Name: "oidcProvider1",
+				Path: "/example/",
+				Urn:  CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/example/", "oidcProvider1"),
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
+			},
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
+				{
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/example/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									AUTH_OIDC_ACTION_GET_PROVIDER,
+									AUTH_OIDC_ACTION_DELETE_PROVIDER,
+								},
+								Resources: []string{
+									GetUrnPrefix("", RESOURCE_AUTH_OIDC_PROVIDER, ""),
+								},
+							},
+						},
+					},
+				},
+			},
+			getGroupsByUserIDResult: []TestUserGroupRelation{
+				{
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org1",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+					},
+				},
+			},
+		},
+		"ErrorCaseInvalidName": {
+			name: "invalid*",
+			wantError: &Error{
+				Code:    INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: name invalid*",
+			},
+		},
+		"ErrorCaseOidcProviderNotFound": {
+			name: "oidcProvider1",
+			wantError: &Error{
+				Code: AUTH_OIDC_PROVIDER_BY_NAME_NOT_FOUND,
+			},
+			getOidcProviderByNameMethodErr: &database.Error{
+				Code: database.AUTH_OIDC_PROVIDER_NOT_FOUND,
+			},
+		},
+		"ErrorCaseUnauthorizedUser": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "oidcProvider1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Authenticated user with externalId 123456 not found. Unable to retrieve permissions.",
+			},
+			getOidcProviderByNameMethodResult: &OidcProvider{
+				ID:   "543210",
+				Name: "oidcProvider1",
+				Path: "/example/",
+				Urn:  CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/example/", "oidcProvider1"),
+			},
+			getUserByExternalIDMethodErr: &database.Error{
+				Code: database.USER_NOT_FOUND,
+			},
+		},
+		"ErrorCaseImplicitUnauthorizedDeleteOidcProvider": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "oidcProvider1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:auth::oidc/example/oidcProvider1",
+			},
+			getOidcProviderByNameMethodResult: &OidcProvider{
+				ID:   "543210",
+				Name: "oidcProvider1",
+				Path: "/example/",
+				Urn:  CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/example/", "oidcProvider1"),
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
+			},
+			getGroupsByUserIDResult: []TestUserGroupRelation{
+				{
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org1",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+					},
+				},
+			},
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
+				{
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/example/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									AUTH_OIDC_ACTION_GET_PROVIDER,
+								},
+								Resources: []string{
+									GetUrnPrefix("", RESOURCE_AUTH_OIDC_PROVIDER, ""),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"ErrorCaseExplicitUnauthorizedDeleteOidcProvider": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "oidcProvider1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:auth::oidc/example/oidcProvider1",
+			},
+			getOidcProviderByNameMethodResult: &OidcProvider{
+				ID:   "543210",
+				Name: "oidcProvider1",
+				Path: "/example/",
+				Urn:  CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/example/", "oidcProvider1"),
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
+			},
+			getGroupsByUserIDResult: []TestUserGroupRelation{
+				{
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org1",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+					},
+				},
+			},
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
+				{
+					Policy: &Policy{
+						ID:   "POLICY-USER-ID",
+						Name: "policyUser",
+						Org:  "org1",
+						Path: "/example/",
+						Urn:  CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+						Statements: &[]Statement{
+							{
+								Effect: "allow",
+								Actions: []string{
+									AUTH_OIDC_ACTION_GET_PROVIDER,
+									AUTH_OIDC_ACTION_DELETE_PROVIDER,
+								},
+								Resources: []string{
+									GetUrnPrefix("", RESOURCE_AUTH_OIDC_PROVIDER, ""),
+								},
+							},
+							{
+								Effect: "deny",
+								Actions: []string{
+									AUTH_OIDC_ACTION_DELETE_PROVIDER,
+								},
+								Resources: []string{
+									GetUrnPrefix("", RESOURCE_AUTH_OIDC_PROVIDER, "/example/oidcProvider1"),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"ErrorCaseNoPermissions": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      false,
+			},
+			name: "oidcProvider1",
+			wantError: &Error{
+				Code:    UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "User with externalId 123456 is not allowed to access to resource urn:iws:auth::oidc/example/oidcProvider1",
+			},
+			getOidcProviderByNameMethodResult: &OidcProvider{
+				ID:   "543210",
+				Name: "oidcProvider1",
+				Path: "/example/",
+				Urn:  CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/example/", "oidcProvider1"),
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("org1", RESOURCE_USER, "/example/", "123456"),
+			},
+			getGroupsByUserIDResult: []TestUserGroupRelation{
+				{
+					Group: &Group{
+						ID:   "GROUP-USER-ID",
+						Name: "groupUser",
+						Path: "/example/",
+						Org:  "org1",
+						Urn:  CreateUrn("org1", RESOURCE_GROUP, "/example/", "group1"),
+					},
+				},
+			},
+			getAttachedPoliciesResult: []TestPolicyGroupRelation{
+				{
+					Policy: &Policy{
+						ID:         "POLICY-USER-ID",
+						Name:       "policyUser",
+						Org:        "org1",
+						Path:       "/example/",
+						Urn:        CreateUrn("org1", RESOURCE_POLICY, "/example/", "policyUser"),
+						Statements: &[]Statement{},
+					},
+				},
+			},
+		},
+		"ErrorCaseDeleteOidcProviderDBErr": {
+			requestInfo: RequestInfo{
+				Identifier: "123456",
+				Admin:      true,
+			},
+			name: "oidcProvider1",
+			wantError: &Error{
+				Code: UNKNOWN_API_ERROR,
+			},
+			getOidcProviderByNameMethodResult: &OidcProvider{
+				ID:   "543210",
+				Name: "oidcProvider1",
+				Path: "/example/",
+				Urn:  CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, "/example/", "oidcProvider1"),
+			},
+			getUserByExternalIDResult: &User{
+				ID:         "123456",
+				ExternalID: "123456",
+				Path:       "/path/",
+				Urn:        CreateUrn("", RESOURCE_USER, "/path/", "123456"),
+			},
+			removeOidcProviderMethodErr: &database.Error{
+				Code: database.INTERNAL_ERROR,
+			},
+		},
+	}
+
+	for x, testcase := range testcases {
+		testRepo := makeTestRepo()
+		testAPI := makeTestAPI(testRepo)
+
+		testRepo.ArgsOut[GetOidcProviderByNameMethod][0] = testcase.getOidcProviderByNameMethodResult
+		testRepo.ArgsOut[GetOidcProviderByNameMethod][1] = testcase.getOidcProviderByNameMethodErr
+		testRepo.ArgsOut[GetUserByExternalIDMethod][0] = testcase.getUserByExternalIDResult
+		testRepo.ArgsOut[GetUserByExternalIDMethod][1] = testcase.getUserByExternalIDMethodErr
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][0] = testcase.getGroupsByUserIDResult
+		testRepo.ArgsOut[GetGroupsByUserIDMethod][1] = testcase.getGroupsByUserIDError
+		testRepo.ArgsOut[GetAttachedPoliciesMethod][0] = testcase.getAttachedPoliciesResult
+		testRepo.ArgsOut[RemoveOidcProviderMethod][0] = testcase.removeOidcProviderMethodErr
+
+		err := testAPI.RemoveOidcProvider(testcase.requestInfo, testcase.name)
+		checkMethodResponse(t, x, testcase.wantError, err, nil, nil)
+	}
+}

@@ -859,7 +859,13 @@ func (t TestAPI) UpdateOidcProvider(requestInfo api.RequestInfo, oidcProviderNam
 }
 
 func (t TestAPI) RemoveOidcProvider(requestInfo api.RequestInfo, name string) error {
-	return nil
+	t.ArgsIn[RemoveOidcProviderMethod][0] = requestInfo
+	t.ArgsIn[RemoveOidcProviderMethod][1] = name
+	var err error
+	if t.ArgsOut[RemoveOidcProviderMethod][0] != nil {
+		err = t.ArgsOut[RemoveOidcProviderMethod][0].(error)
+	}
+	return err
 }
 
 // Private helper methods

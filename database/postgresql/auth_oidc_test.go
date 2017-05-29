@@ -479,6 +479,94 @@ func TestPostgresRepo_UpdateOidcProvider(t *testing.T) {
 	}
 }
 
+func TestPostgresRepo_RemoveOidcProvider(t *testing.T) {
+
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		// Previous data
+		previousOidcProviders []OidcProvider
+		previousOidcClients   []OidcClient
+		oidcProviderToDelete  string
+		// Expected result
+		expectedError *database.Error
+	}{
+		"OkCase": {
+			previousOidcProviders: []OidcProvider{
+				{
+					ID:        "111",
+					Name:      "test1",
+					Path:      "/path1/",
+					CreateAt:  now.UnixNano(),
+					UpdateAt:  now.UnixNano(),
+					Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path1/", "test1"),
+					IssuerURL: "http://test1.com",
+				},
+				{
+					ID:        "222",
+					Name:      "test2",
+					Path:      "/path2/",
+					CreateAt:  now.UnixNano(),
+					UpdateAt:  now.UnixNano(),
+					Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path2/", "test2"),
+					IssuerURL: "http://test2.com",
+				},
+			},
+			previousOidcClients: []OidcClient{
+				{
+					ID:             "1",
+					Name:           "client1",
+					OidcProviderID: "111",
+				},
+				{
+					ID:             "2",
+					Name:           "client2",
+					OidcProviderID: "222",
+				},
+			},
+			oidcProviderToDelete: "111",
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean OIDC Provider database
+		cleanOidcProvidersTable(t, n)
+		cleanOidcClientsTable(t, n)
+
+		// Insert previous data
+		if test.previousOidcProviders != nil {
+			for _, op := range test.previousOidcProviders {
+				insertOidcProvider(t, n, op, nil)
+			}
+		}
+
+		if test.previousOidcClients != nil {
+			for _, oc := range test.previousOidcClients {
+				insertOidcClient(t, n, oc)
+			}
+		}
+
+		// Call to repository to remove OIDC Provider
+		err := repoDB.RemoveOidcProvider(test.oidcProviderToDelete)
+		assert.Nil(t, err, "Error in test case %v", n)
+
+		// Check database
+		oidcProviderNumber := getOidcProvidersCountFiltered(t, n, test.oidcProviderToDelete, "", "", 0, 0, "", "")
+		assert.Equal(t, 0, oidcProviderNumber, "Error in test case %v", n)
+
+		// Check total OIDC Providers
+		totalOidcProviderNumber := getOidcProvidersCountFiltered(t, n, "", "", "", 0, 0, "", "")
+		assert.Equal(t, 1, totalOidcProviderNumber, "Error in test case %v", n)
+
+		// Check OIDC Clients
+		relations := getOidcClientsCountFiltered(t, n, "", test.oidcProviderToDelete, "")
+		assert.Equal(t, 0, relations, "Error in test case %v", n)
+
+		// Check total OIDC Clients
+		totalRelations := getOidcClientsCountFiltered(t, n, "", "", "")
+		assert.Equal(t, 1, totalRelations, "Error in test case %v", n)
+	}
+}
+
 func Test_dbOidcProviderToAPIOidcProvider(t *testing.T) {
 	now := time.Now().UTC()
 	testcases := map[string]struct {

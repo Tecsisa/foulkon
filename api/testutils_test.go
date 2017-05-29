@@ -47,6 +47,7 @@ const (
 	GetOidcProviderByNameMethod    = "GetOidcProviderByName"
 	GetOidcProvidersFilteredMethod = "GetOidcProvidersFiltered"
 	UpdateOidcProviderMethod       = "UpdateOidcProvider"
+	RemoveOidcProviderMethod       = "RemoveOidcProviderMethod"
 )
 
 // TestRepo that implements all repo manager interfaces
@@ -120,6 +121,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[GetOidcProviderByNameMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetOidcProvidersFilteredMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[UpdateOidcProviderMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[RemoveOidcProviderMethod] = make([]interface{}, 1)
 
 	testRepo.ArgsOut[GetUserByExternalIDMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AddUserMethod] = make([]interface{}, 2)
@@ -156,6 +158,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[GetOidcProviderByNameMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[GetOidcProvidersFilteredMethod] = make([]interface{}, 3)
 	testRepo.ArgsOut[UpdateOidcProviderMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[RemoveOidcProviderMethod] = make([]interface{}, 1)
 
 	return testRepo
 }
@@ -744,8 +747,13 @@ func (t TestRepo) UpdateOidcProvider(oidcProvider OidcProvider) (*OidcProvider, 
 	return updated, err
 }
 
-func (t TestRepo) RemoveOidcProvider(name string) error {
-	return nil
+func (t TestRepo) RemoveOidcProvider(id string) error {
+	t.ArgsIn[RemoveOidcProviderMethod][0] = id
+	var err error
+	if t.ArgsOut[RemoveOidcProviderMethod][0] != nil {
+		err = t.ArgsOut[RemoveOidcProviderMethod][0].(error)
+	}
+	return err
 }
 
 // Private helper methods

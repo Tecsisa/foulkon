@@ -352,7 +352,7 @@ func (api WorkerAPI) RemoveGroup(requestInfo RequestInfo, org string, name strin
 		}
 	}
 
-	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("Group deleted %+v", group))
+	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("Group deleted %v", group))
 	return nil
 }
 

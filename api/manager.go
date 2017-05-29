@@ -389,9 +389,9 @@ type AuthOidcRepo interface {
 	// Throw error if there are problems with database.
 	UpdateOidcProvider(oidcProvider OidcProvider) (*OidcProvider, error)
 
-	// Remove the OIDC provider stored in database with its user and policy relationships.
+	// Remove the OIDC provider stored in database with its OIDC Clients.
 	// Throw error if there are problems during transactions.
-	RemoveOidcProvider(name string) error
+	RemoveOidcProvider(id string) error
 
 	// OrderByValidColumns returns valid columns that you can use in OrderBy
 	OrderByValidColumns(action string) []string

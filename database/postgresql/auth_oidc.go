@@ -171,7 +171,7 @@ func (pr PostgresRepo) UpdateOidcProvider(oidcProvider api.OidcProvider) (*api.O
 		}
 	}
 
-	// Clear old OIDC Clients
+	// Clean old OIDC Clients
 	if err := transaction.Where("oidc_provider_id like ?", oidcProvider.ID).Delete(OidcClient{}).Error; err != nil {
 		transaction.Rollback()
 		return nil, &database.Error{
@@ -201,7 +201,31 @@ func (pr PostgresRepo) UpdateOidcProvider(oidcProvider api.OidcProvider) (*api.O
 	return &oidcProvider, nil
 }
 
-func (pr PostgresRepo) RemoveOidcProvider(name string) error {
+func (pr PostgresRepo) RemoveOidcProvider(id string) error {
+	transaction := pr.Dbmap.Begin()
+
+	// Delete OIDC Provider
+	transaction.Where("id like ?", id).Delete(&OidcProvider{})
+	if err := transaction.Error; err != nil {
+		transaction.Rollback()
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	// Delete all OIDC Clients
+	transaction.Where("oidc_provider_id like ?", id).Delete(&OidcClient{})
+	if err := transaction.Error; err != nil {
+		transaction.Rollback()
+		return &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+
+	}
+
+	transaction.Commit()
 	return nil
 }
 

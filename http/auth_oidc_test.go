@@ -674,3 +674,120 @@ func TestWorkerHandler_HandleUpdateOidcProvider(t *testing.T) {
 		}
 	}
 }
+
+func TestWorkerHandler_HandleRemoveOidcProvider(t *testing.T) {
+	testcases := map[string]struct {
+		// API method args
+		name         string
+		offset       string
+		ignoreArgsIn bool
+		// Expected result
+		expectedStatusCode int
+		expectedError      api.Error
+		// Manager Errors
+		removeOidcProviderErr error
+	}{
+		"OkCase": {
+			name:               "oidcProvider1",
+			expectedStatusCode: http.StatusNoContent,
+		},
+		"ErrorCaseInvalidRequest": {
+			name:               "oidcProvider1",
+			offset:             "-1",
+			ignoreArgsIn:       true,
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
+			removeOidcProviderErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter: Offset -1",
+			},
+		},
+		"ErrorCaseOidcProviderNotFound": {
+			name:               "oidcProvider1",
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code:    api.AUTH_OIDC_PROVIDER_BY_NAME_NOT_FOUND,
+				Message: "OIDC Provider not found",
+			},
+			removeOidcProviderErr: &api.Error{
+				Code:    api.AUTH_OIDC_PROVIDER_BY_NAME_NOT_FOUND,
+				Message: "OIDC Provider not found",
+			},
+		},
+		"ErrorCaseInvalidParameterError": {
+			name:               "InvalidID",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+			removeOidcProviderErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+		},
+		"ErrorCaseUnauthorizedResourcesError": {
+			name:               "UnauthorizedID",
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+			removeOidcProviderErr: &api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+		},
+		"ErrorCaseUnknownApiError": {
+			name:               "ExceptionID",
+			expectedStatusCode: http.StatusInternalServerError,
+			removeOidcProviderErr: &api.Error{
+				Code:    api.UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[RemoveOidcProviderMethod][0] = test.removeOidcProviderErr
+
+		url := fmt.Sprintf(server.URL+OIDC_AUTH_ROOT_URL+"/%v", test.name)
+		req, err := http.NewRequest(http.MethodDelete, url, nil)
+		assert.Nil(t, err, "Error in test case %v", n)
+
+		q := req.URL.Query()
+		q.Add("Offset", test.offset)
+		req.URL.RawQuery = q.Encode()
+
+		res, err := client.Do(req)
+		assert.Nil(t, err, "Error in test case %v", n)
+
+		if !test.ignoreArgsIn {
+			// Check received parameters
+			assert.Equal(t, test.name, testApi.ArgsIn[RemoveOidcProviderMethod][1], "Error in test case %v", n)
+		}
+
+		// check status code
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
+
+		switch res.StatusCode {
+		case http.StatusNoContent:
+			// No message expected
+			continue
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check error
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
+		}
+	}
+}

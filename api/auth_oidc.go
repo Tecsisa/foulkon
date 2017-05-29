@@ -339,6 +339,38 @@ func (api WorkerAPI) UpdateOidcProvider(requestInfo RequestInfo, oidcProviderNam
 }
 
 func (api WorkerAPI) RemoveOidcProvider(requestInfo RequestInfo, name string) error {
+	// Call repo to retrieve the OIDC rovider
+	oidcProvider, err := api.GetOidcProviderByName(requestInfo, name)
+	if err != nil {
+		return err
+	}
+
+	// Check restrictions
+	oidcProvidersFiltered, err := api.GetAuthorizedOidcProviders(requestInfo, oidcProvider.Urn, AUTH_OIDC_ACTION_DELETE_PROVIDER, []OidcProvider{*oidcProvider})
+	if err != nil {
+		return err
+	}
+	if len(oidcProvidersFiltered) < 1 {
+		return &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
+				requestInfo.Identifier, oidcProvider.Urn),
+		}
+	}
+
+	err = api.AuthOidcRepo.RemoveOidcProvider(oidcProvider.ID)
+
+	// Error handling
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("OIDC Provider deleted %v", oidcProvider))
 	return nil
 }
 
