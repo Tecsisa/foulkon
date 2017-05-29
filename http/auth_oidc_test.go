@@ -221,7 +221,7 @@ func TestWorkerHandler_HandleGetOidcProviderByName(t *testing.T) {
 				Path:      "/path/",
 				CreateAt:  now,
 				UpdateAt:  now,
-				Urn:       api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
+				Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "test"),
 				IssuerURL: "https://test.com",
 				OidcClients: []api.OidcClient{
 					{
@@ -235,7 +235,7 @@ func TestWorkerHandler_HandleGetOidcProviderByName(t *testing.T) {
 				Path:      "/path/",
 				CreateAt:  now,
 				UpdateAt:  now,
-				Urn:       api.CreateUrn("org1", api.RESOURCE_POLICY, "/path/", "test"),
+				Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "test"),
 				IssuerURL: "https://test.com",
 				OidcClients: []api.OidcClient{
 					{
@@ -463,6 +463,206 @@ func TestWorkerHandler_HandleListOidcProviders(t *testing.T) {
 			assert.Nil(t, err, "Error in test case %v", n)
 			// Check result
 			assert.Equal(t, test.expectedResponse, listOidcProvidersResponse, "Error in test case %v", n)
+		case http.StatusInternalServerError: // Empty message so continue
+			continue
+		default:
+			apiError := api.Error{}
+			err = json.NewDecoder(res.Body).Decode(&apiError)
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check error
+			assert.Equal(t, test.expectedError, apiError, "Error in test case %v", n)
+		}
+	}
+}
+
+func TestWorkerHandler_HandleUpdateOidcProvider(t *testing.T) {
+	now := time.Now()
+	testcases := map[string]struct {
+		// API method args
+		oidcProviderName string
+		request          *UpdateOidcProviderRequest
+		// Expected result
+		expectedStatusCode int
+		expectedResponse   api.OidcProvider
+		expectedError      api.Error
+		// Manager Results
+		updateOidcProviderResult *api.OidcProvider
+		// Manager Errors
+		updateOidcProviderErr error
+	}{
+		"OkCase": {
+			request: &UpdateOidcProviderRequest{
+				Name:        "newName",
+				Path:        "NewPath",
+				IssuerURL:   "http://test.com",
+				OidcClients: []string{"client1", "client2"},
+			},
+			oidcProviderName:   "oidcProviderName",
+			expectedStatusCode: http.StatusOK,
+			expectedResponse: api.OidcProvider{
+				ID:        "ID",
+				Name:      "newName",
+				Path:      "NewPath",
+				Urn:       "urn",
+				CreateAt:  now,
+				UpdateAt:  now,
+				IssuerURL: "http://test.com",
+				OidcClients: []api.OidcClient{
+					{
+						Name: "client1",
+					},
+					{
+						Name: "client2",
+					},
+				},
+			},
+			updateOidcProviderResult: &api.OidcProvider{
+				ID:        "ID",
+				Name:      "newName",
+				Path:      "NewPath",
+				Urn:       "urn",
+				IssuerURL: "http://test.com",
+				CreateAt:  now,
+				UpdateAt:  now,
+				OidcClients: []api.OidcClient{
+					{
+						Name: "client1",
+					},
+					{
+						Name: "client2",
+					},
+				},
+			},
+		},
+		"ErrorCaseMalformedRequest": {
+			oidcProviderName:   "oidcProviderName",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "EOF",
+			},
+		},
+		"ErrorCaseOidcProviderNotFound": {
+			oidcProviderName: "oidcProviderName",
+			request: &UpdateOidcProviderRequest{
+				Name: "newName",
+				Path: "NewPath",
+			},
+			expectedStatusCode: http.StatusNotFound,
+			expectedError: api.Error{
+				Code:    api.AUTH_OIDC_PROVIDER_BY_NAME_NOT_FOUND,
+				Message: "OidcProvider not found",
+			},
+			updateOidcProviderErr: &api.Error{
+				Code:    api.AUTH_OIDC_PROVIDER_BY_NAME_NOT_FOUND,
+				Message: "OidcProvider not found",
+			},
+		},
+		"ErrorCaseInvalidParameterError": {
+			oidcProviderName: "oidcProviderName",
+			request: &UpdateOidcProviderRequest{
+				Name: "newName",
+				Path: "InvalidPath",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedError: api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+			updateOidcProviderErr: &api.Error{
+				Code:    api.INVALID_PARAMETER_ERROR,
+				Message: "Invalid parameter",
+			},
+		},
+		"ErrorCaseOidcProviderAlreadyExistError": {
+			oidcProviderName: "oidcProviderName",
+			request: &UpdateOidcProviderRequest{
+				Name: "newName",
+				Path: "newPath",
+			},
+			expectedStatusCode: http.StatusConflict,
+			expectedError: api.Error{
+				Code:    api.AUTH_OIDC_PROVIDER_ALREADY_EXIST,
+				Message: "OidcProvider already exist",
+			},
+			updateOidcProviderErr: &api.Error{
+				Code:    api.AUTH_OIDC_PROVIDER_ALREADY_EXIST,
+				Message: "OidcProvider already exist",
+			},
+		},
+		"ErrorCaseUnauthorizedResourcesError": {
+			oidcProviderName: "oidcProviderName",
+			request: &UpdateOidcProviderRequest{
+				Name: "newName",
+				Path: "NewPath",
+			},
+			expectedStatusCode: http.StatusForbidden,
+			expectedError: api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+			updateOidcProviderErr: &api.Error{
+				Code:    api.UNAUTHORIZED_RESOURCES_ERROR,
+				Message: "Unauthorized",
+			},
+		},
+		"ErrorCaseUnknownApiError": {
+			oidcProviderName: "oidcProviderName",
+			request: &UpdateOidcProviderRequest{
+				Name: "newName",
+				Path: "NewPath",
+			},
+			expectedStatusCode: http.StatusInternalServerError,
+			updateOidcProviderErr: &api.Error{
+				Code:    api.UNKNOWN_API_ERROR,
+				Message: "Error",
+			},
+		},
+	}
+
+	client := http.DefaultClient
+
+	for n, test := range testcases {
+
+		testApi.ArgsOut[UpdateOidcProviderMethod][0] = test.updateOidcProviderResult
+		testApi.ArgsOut[UpdateOidcProviderMethod][1] = test.updateOidcProviderErr
+
+		var body *bytes.Buffer
+		if test.request != nil {
+			jsonObject, err := json.Marshal(test.request)
+			assert.Nil(t, err, "Error in test case %v", n)
+			body = bytes.NewBuffer(jsonObject)
+		}
+		if body == nil {
+			body = bytes.NewBuffer([]byte{})
+		}
+
+		url := fmt.Sprintf(server.URL+OIDC_AUTH_ROOT_URL+"/%v", test.oidcProviderName)
+		req, err := http.NewRequest(http.MethodPut, url, body)
+		assert.Nil(t, err, "Error in test case %v", n)
+
+		res, err := client.Do(req)
+		assert.Nil(t, err, "Error in test case %v", n)
+
+		if test.request != nil {
+			// Check received parameters
+			assert.Equal(t, test.oidcProviderName, testApi.ArgsIn[UpdateOidcProviderMethod][1], "Error in test case %v", n)
+			assert.Equal(t, test.request.Name, testApi.ArgsIn[UpdateOidcProviderMethod][2], "Error in test case %v", n)
+			assert.Equal(t, test.request.Path, testApi.ArgsIn[UpdateOidcProviderMethod][3], "Error in test case %v", n)
+			assert.Equal(t, test.request.IssuerURL, testApi.ArgsIn[UpdateOidcProviderMethod][4], "Error in test case %v", n)
+			assert.Equal(t, test.request.OidcClients, testApi.ArgsIn[UpdateOidcProviderMethod][5], "Error in test case %v", n)
+		}
+
+		// check status code
+		assert.Equal(t, test.expectedStatusCode, res.StatusCode, "Error in test case %v", n)
+
+		switch res.StatusCode {
+		case http.StatusOK:
+			response := api.OidcProvider{}
+			err = json.NewDecoder(res.Body).Decode(&response)
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check result
+			assert.Equal(t, test.expectedResponse, response, "Error in test case %v", n)
 		case http.StatusInternalServerError: // Empty message so continue
 			continue
 		default:

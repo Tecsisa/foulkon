@@ -216,9 +216,126 @@ func (api WorkerAPI) ListOidcProviders(requestInfo RequestInfo, filter *Filter) 
 	return oidcProviderNames, total, nil
 }
 
-func (api WorkerAPI) UpdateOidcProvider(requestInfo RequestInfo, oidcProviderName string, newName string, newPath string,
+func (api WorkerAPI) UpdateOidcProvider(requestInfo RequestInfo, oidcProviderName string, newName string, newPath string, newIssuerUrl string,
 	newClients []string) (*OidcProvider, error) {
-	return nil, nil
+	// Validate fields
+	if !IsValidName(newName) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: new name %v", newName),
+		}
+	}
+	if !IsValidPath(newPath) {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: new path %v", newPath),
+		}
+
+	}
+	if _, err := url.ParseRequestURI(newIssuerUrl); err != nil {
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: fmt.Sprintf("Invalid parameter: issuerUrl %v", newIssuerUrl),
+		}
+	}
+	err := AreValidOidcClientNames(newClients)
+	if err != nil {
+		apiError := err.(*Error)
+		return nil, &Error{
+			Code:    INVALID_PARAMETER_ERROR,
+			Message: apiError.Message,
+		}
+
+	}
+
+	// Call repo to retrieve the old OIDC Provider
+	oldOidcProvider, err := api.GetOidcProviderByName(requestInfo, oidcProviderName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check restrictions
+	oidcProvidersFiltered, err := api.GetAuthorizedOidcProviders(requestInfo, oldOidcProvider.Urn,
+		AUTH_OIDC_ACTION_UPDATE_PROVIDER, []OidcProvider{*oldOidcProvider})
+	if err != nil {
+		return nil, err
+	}
+	if len(oidcProvidersFiltered) < 1 {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
+				requestInfo.Identifier, oldOidcProvider.Urn),
+		}
+	}
+
+	// Check if OIDC Provider with "newName" exists
+	targetOidcProvider, err := api.GetOidcProviderByName(requestInfo, newName)
+
+	if err == nil && targetOidcProvider.ID != oldOidcProvider.ID {
+		// OIDC Provider already exists
+		return nil, &Error{
+			Code:    AUTH_OIDC_PROVIDER_ALREADY_EXIST,
+			Message: fmt.Sprintf("OIDC Provider name: %v already exists", newName),
+		}
+	}
+
+	if err != nil {
+		if apiError := err.(*Error); apiError.Code != AUTH_OIDC_PROVIDER_BY_NAME_NOT_FOUND {
+			return nil, err
+		}
+	}
+
+	auxOidcProvider := OidcProvider{
+		Urn: CreateUrn("", RESOURCE_AUTH_OIDC_PROVIDER, newPath, newName),
+	}
+
+	// Check restrictions
+	oidcProvidersFiltered, err = api.GetAuthorizedOidcProviders(requestInfo, auxOidcProvider.Urn,
+		AUTH_OIDC_ACTION_UPDATE_PROVIDER, []OidcProvider{auxOidcProvider})
+	if err != nil {
+		return nil, err
+	}
+	if len(oidcProvidersFiltered) < 1 {
+		return nil, &Error{
+			Code: UNAUTHORIZED_RESOURCES_ERROR,
+			Message: fmt.Sprintf("User with externalId %v is not allowed to access to resource %v",
+				requestInfo.Identifier, auxOidcProvider.Urn),
+		}
+	}
+
+	// Create OIDC Clients
+	oidcClients := []OidcClient{}
+	for _, oc := range newClients {
+		oidcClients = append(oidcClients, OidcClient{Name: oc})
+	}
+
+	oidcProvider := OidcProvider{
+		ID:          oldOidcProvider.ID,
+		Name:        newName,
+		Path:        newPath,
+		Urn:         auxOidcProvider.Urn,
+		CreateAt:    oldOidcProvider.CreateAt,
+		UpdateAt:    time.Now().UTC(),
+		IssuerURL:   newIssuerUrl,
+		OidcClients: oidcClients,
+	}
+
+	// Update OIDC Provider
+	updatedOidcProvider, err := api.AuthOidcRepo.UpdateOidcProvider(oidcProvider)
+
+	// Check unexpected DB error
+	if err != nil {
+		//Transform to DB error
+		dbError := err.(*database.Error)
+		return nil, &Error{
+			Code:    UNKNOWN_API_ERROR,
+			Message: dbError.Message,
+		}
+	}
+
+	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("OIDC Provider updated from %+v to %+v",
+		oldOidcProvider, updatedOidcProvider))
+	return updatedOidcProvider, nil
 }
 
 func (api WorkerAPI) RemoveOidcProvider(requestInfo RequestInfo, name string) error {

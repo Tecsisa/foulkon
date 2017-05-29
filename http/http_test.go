@@ -246,7 +246,7 @@ func makeTestApi() *TestAPI {
 	testApi.ArgsIn[AddOidcProviderMethod] = make([]interface{}, 5)
 	testApi.ArgsIn[GetOidcProviderByNameMethod] = make([]interface{}, 2)
 	testApi.ArgsIn[ListOidcProvidersMethod] = make([]interface{}, 2)
-	testApi.ArgsIn[UpdateOidcProviderMethod] = make([]interface{}, 5)
+	testApi.ArgsIn[UpdateOidcProviderMethod] = make([]interface{}, 6)
 	testApi.ArgsIn[RemoveOidcProviderMethod] = make([]interface{}, 2)
 
 	testApi.ArgsOut[AddUserMethod] = make([]interface{}, 2)
@@ -837,9 +837,25 @@ func (t TestAPI) ListOidcProviders(requestInfo api.RequestInfo, filter *api.Filt
 	return oidcProviders, total, err
 }
 
-func (t TestAPI) UpdateOidcProvider(requestInfo api.RequestInfo, oidcProviderName string, newName string, newPath string,
+func (t TestAPI) UpdateOidcProvider(requestInfo api.RequestInfo, oidcProviderName string, newName string, newPath string, newIssuerUrl string,
 	newClients []string) (*api.OidcProvider, error) {
-	return nil, nil
+
+	t.ArgsIn[UpdateOidcProviderMethod][0] = requestInfo
+	t.ArgsIn[UpdateOidcProviderMethod][1] = oidcProviderName
+	t.ArgsIn[UpdateOidcProviderMethod][2] = newName
+	t.ArgsIn[UpdateOidcProviderMethod][3] = newPath
+	t.ArgsIn[UpdateOidcProviderMethod][4] = newIssuerUrl
+	t.ArgsIn[UpdateOidcProviderMethod][5] = newClients
+
+	var oidcProvider *api.OidcProvider
+	if t.ArgsOut[UpdateOidcProviderMethod][0] != nil {
+		oidcProvider = t.ArgsOut[UpdateOidcProviderMethod][0].(*api.OidcProvider)
+	}
+	var err error
+	if t.ArgsOut[UpdateOidcProviderMethod][1] != nil {
+		err = t.ArgsOut[UpdateOidcProviderMethod][1].(error)
+	}
+	return oidcProvider, err
 }
 
 func (t TestAPI) RemoveOidcProvider(requestInfo api.RequestInfo, name string) error {

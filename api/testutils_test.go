@@ -43,9 +43,10 @@ const (
 	AddProxyResourceMethod         = "AddProxyResource"
 	UpdateProxyResourceMethod      = "UpdateProxyResource"
 	GetProxyResourceByNameMethod   = "GetProxyResourceByName"
-	AddOidcProviderMethod          = "AddOidcProviderMethod"
-	GetOidcProviderByNameMethod    = "GetOidcProviderByNameMethod"
-	GetOidcProvidersFilteredMethod = "GetOidcProvidersFilteredMethod"
+	AddOidcProviderMethod          = "AddOidcProvider"
+	GetOidcProviderByNameMethod    = "GetOidcProviderByName"
+	GetOidcProvidersFilteredMethod = "GetOidcProvidersFiltered"
+	UpdateOidcProviderMethod       = "UpdateOidcProvider"
 )
 
 // TestRepo that implements all repo manager interfaces
@@ -118,6 +119,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[AddOidcProviderMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetOidcProviderByNameMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetOidcProvidersFilteredMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[UpdateOidcProviderMethod] = make([]interface{}, 1)
 
 	testRepo.ArgsOut[GetUserByExternalIDMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AddUserMethod] = make([]interface{}, 2)
@@ -153,6 +155,7 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[AddOidcProviderMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[GetOidcProviderByNameMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[GetOidcProvidersFilteredMethod] = make([]interface{}, 3)
+	testRepo.ArgsOut[UpdateOidcProviderMethod] = make([]interface{}, 2)
 
 	return testRepo
 }
@@ -728,7 +731,17 @@ func (t TestRepo) GetOidcProvidersFiltered(filter *Filter) ([]OidcProvider, int,
 }
 
 func (t TestRepo) UpdateOidcProvider(oidcProvider OidcProvider) (*OidcProvider, error) {
-	return nil, nil
+	t.ArgsIn[UpdateOidcProviderMethod][0] = oidcProvider
+
+	var updated *OidcProvider
+	if t.ArgsOut[UpdateOidcProviderMethod][0] != nil {
+		updated = t.ArgsOut[UpdateOidcProviderMethod][0].(*OidcProvider)
+	}
+	var err error
+	if t.ArgsOut[UpdateOidcProviderMethod][1] != nil {
+		err = t.ArgsOut[UpdateOidcProviderMethod][1].(error)
+	}
+	return updated, err
 }
 
 func (t TestRepo) RemoveOidcProvider(name string) error {

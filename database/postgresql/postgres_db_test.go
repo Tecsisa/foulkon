@@ -462,7 +462,7 @@ func getOidcProvidersCountFiltered(t *testing.T, testcase string,
 		query = query.Where("urn = ?", urn)
 	}
 	if issuer != "" {
-		query = query.Where("issuer = ?", issuer)
+		query = query.Where("issuer_url = ?", issuer)
 	}
 	var number int
 	err := query.Count(&number).Error

@@ -206,7 +206,7 @@ func TestPostgresRepo_GetOidcProviderByName(t *testing.T) {
 	}
 
 	for n, test := range testcases {
-		// Clean policy database
+		// Clean OIDC Provider database
 		cleanOidcProvidersTable(t, n)
 		cleanOidcClientsTable(t, n)
 
@@ -328,7 +328,7 @@ func TestPostgresRepo_GetOidcProvidersFiltered(t *testing.T) {
 			var oidcClient []OidcClient = []OidcClient{test.oidcClients[i]}
 			insertOidcProvider(t, n, oidcProvider, oidcClient)
 		}
-		// Call to repository to get OIDC Providers
+		// Call repository to get OIDC Providers
 		receivedOidcProviders, total, err := repoDB.GetOidcProvidersFiltered(test.filter)
 		assert.Nil(t, err, "Error in test case %v", n)
 
@@ -337,6 +337,145 @@ func TestPostgresRepo_GetOidcProvidersFiltered(t *testing.T) {
 
 		// Check response
 		assert.Equal(t, test.expectedResponse, receivedOidcProviders, "Error in test case %v", n)
+	}
+}
+
+func TestPostgresRepo_UpdateOidcProvider(t *testing.T) {
+	now := time.Now().UTC()
+	testcases := map[string]struct {
+		previousOidcProviders []OidcProvider
+		previousOidcClients   []OidcClient
+		oidcProvider          api.OidcProvider
+		// Expected result
+		expectedResponse *api.OidcProvider
+		expectedError    *database.Error
+	}{
+		"OkCase": {
+			previousOidcProviders: []OidcProvider{
+				{
+					ID:        "111",
+					Name:      "test1",
+					Path:      "/path1/",
+					CreateAt:  now.UnixNano(),
+					UpdateAt:  now.UnixNano(),
+					Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path1/", "test1"),
+					IssuerURL: "http://test1.com",
+				},
+			},
+			previousOidcClients: []OidcClient{
+				{
+					ID:             "1",
+					Name:           "client1",
+					OidcProviderID: "111",
+				},
+			},
+			oidcProvider: api.OidcProvider{
+				ID:        "111",
+				Name:      "newName",
+				Path:      "/newPath/",
+				CreateAt:  now,
+				UpdateAt:  now,
+				Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/newPath/", "newName"),
+				IssuerURL: "http://testNew.com",
+				OidcClients: []api.OidcClient{
+					{
+						Name: "clientNew",
+					},
+					{
+						Name: "clientNew2",
+					},
+				},
+			},
+			expectedResponse: &api.OidcProvider{
+				ID:        "111",
+				Name:      "newName",
+				Path:      "/newPath/",
+				CreateAt:  now,
+				UpdateAt:  now,
+				Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/newPath/", "newName"),
+				IssuerURL: "http://testNew.com",
+				OidcClients: []api.OidcClient{
+					{
+						Name: "clientNew",
+					},
+					{
+						Name: "clientNew2",
+					},
+				},
+			},
+		},
+		"ErrorCaseDuplicateUrn": {
+			previousOidcProviders: []OidcProvider{
+				{
+					ID:        "222",
+					Name:      "test2",
+					Path:      "/path2/",
+					CreateAt:  now.UnixNano(),
+					UpdateAt:  now.UnixNano(),
+					Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path2/", "test2"),
+					IssuerURL: "http://test2.com",
+				},
+				{
+					ID:        "111",
+					Name:      "test1",
+					Path:      "/path1/",
+					CreateAt:  now.UnixNano(),
+					UpdateAt:  now.UnixNano(),
+					Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path1/", "test1"),
+					IssuerURL: "http://test1.com",
+				},
+			},
+			oidcProvider: api.OidcProvider{
+				ID:        "222",
+				Name:      "test1",
+				Path:      "/path1/",
+				CreateAt:  now,
+				UpdateAt:  now,
+				Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path1/", "test1"),
+				IssuerURL: "http://test1.com",
+				OidcClients: []api.OidcClient{
+					{
+						Name: "clientNew",
+					},
+					{
+						Name: "clientNew2",
+					},
+				},
+			},
+			expectedError: &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: "pq: duplicate key value violates unique constraint \"oidc_providers_urn_key\"",
+			},
+		},
+	}
+
+	for n, test := range testcases {
+		// Clean OIDC Provider database
+		cleanOidcProvidersTable(t, n)
+		cleanOidcClientsTable(t, n)
+
+		// Call to repository to add the OIDC Providers
+		if test.previousOidcProviders != nil {
+			for _, op := range test.previousOidcProviders {
+				insertOidcProvider(t, n, op, test.previousOidcClients)
+			}
+		}
+		receivedOidcProvider, err := repoDB.UpdateOidcProvider(test.oidcProvider)
+		if test.expectedError != nil {
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
+		} else {
+			assert.Nil(t, err, "Error in test case %v", n)
+			// Check response
+			assert.Equal(t, receivedOidcProvider, test.expectedResponse, "Error in test case %v", n)
+			// Check database
+			oidcProviderNumber := getOidcProvidersCountFiltered(t, n, test.expectedResponse.ID, test.expectedResponse.Name, test.expectedResponse.Path,
+				test.expectedResponse.CreateAt.UnixNano(), test.expectedResponse.UpdateAt.UnixNano(), test.expectedResponse.Urn,
+				test.expectedResponse.IssuerURL)
+			assert.Equal(t, 1, oidcProviderNumber, "Error in test case %v", n)
+			oidcClientNumber := getOidcClientsCountFiltered(t, n, "", test.expectedResponse.ID, "")
+			assert.Equal(t, 2, oidcClientNumber, "Error in test case %v", n)
+		}
 	}
 }
 
@@ -353,7 +492,7 @@ func Test_dbOidcProviderToAPIOidcProvider(t *testing.T) {
 				Path:      "/path/",
 				CreateAt:  now.UnixNano(),
 				UpdateAt:  now.UnixNano(),
-				Urn:       api.CreateUrn("123", api.RESOURCE_POLICY, "/path/", "test"),
+				Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "test"),
 				IssuerURL: "http://example.com",
 			},
 			apiOidcProvider: &api.OidcProvider{
@@ -362,7 +501,7 @@ func Test_dbOidcProviderToAPIOidcProvider(t *testing.T) {
 				Path:      "/path/",
 				CreateAt:  now,
 				UpdateAt:  now,
-				Urn:       api.CreateUrn("123", api.RESOURCE_POLICY, "/path/", "test"),
+				Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "test"),
 				IssuerURL: "http://example.com",
 			},
 		},

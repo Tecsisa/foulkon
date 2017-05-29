@@ -119,7 +119,7 @@ func (pr PostgresRepo) GetOidcProvidersFiltered(filter *api.Filter) ([]api.OidcP
 		}
 	}
 
-	// Transform OIDC Providers for API
+	// Transform OIDC Providers to API
 	var apiOidcProviders []api.OidcProvider
 	if oidcProviders != nil {
 		apiOidcProviders = make([]api.OidcProvider, len(oidcProviders), cap(oidcProviders))
@@ -150,7 +150,55 @@ func (pr PostgresRepo) GetOidcProvidersFiltered(filter *api.Filter) ([]api.OidcP
 }
 
 func (pr PostgresRepo) UpdateOidcProvider(oidcProvider api.OidcProvider) (*api.OidcProvider, error) {
-	return nil, nil
+	oidcProviderDB := OidcProvider{
+		ID:        oidcProvider.ID,
+		Name:      oidcProvider.Name,
+		Path:      oidcProvider.Path,
+		CreateAt:  oidcProvider.CreateAt.UTC().UnixNano(),
+		UpdateAt:  oidcProvider.UpdateAt.UTC().UnixNano(),
+		Urn:       oidcProvider.Urn,
+		IssuerURL: oidcProvider.IssuerURL,
+	}
+
+	transaction := pr.Dbmap.Begin()
+
+	// Update OIDC Provider
+	if err := transaction.Model(&OidcProvider{ID: oidcProvider.ID}).Update(oidcProviderDB).Error; err != nil {
+		transaction.Rollback()
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	// Clear old OIDC Clients
+	if err := transaction.Where("oidc_provider_id like ?", oidcProvider.ID).Delete(OidcClient{}).Error; err != nil {
+		transaction.Rollback()
+		return nil, &database.Error{
+			Code:    database.INTERNAL_ERROR,
+			Message: err.Error(),
+		}
+	}
+
+	// Create new OIDC Clients
+	for _, oc := range oidcProvider.OidcClients {
+		oidcClientDB := &OidcClient{
+			ID:             uuid.NewV4().String(),
+			OidcProviderID: oidcProvider.ID,
+			Name:           oc.Name,
+		}
+		if err := transaction.Create(oidcClientDB).Error; err != nil {
+			transaction.Rollback()
+			return nil, &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: err.Error(),
+			}
+		}
+	}
+
+	transaction.Commit()
+
+	return &oidcProvider, nil
 }
 
 func (pr PostgresRepo) RemoveOidcProvider(name string) error {

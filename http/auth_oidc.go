@@ -18,6 +18,7 @@ type CreateOidcProviderRequest struct {
 type UpdateOidcProviderRequest struct {
 	Name        string   `json:"name, omitempty"`
 	Path        string   `json:"path, omitempty"`
+	IssuerURL   string   `json:"issuerUrl, omitempty"`
 	OidcClients []string `json:"clients, omitempty"`
 }
 
@@ -90,7 +91,7 @@ func (wh *WorkerHandler) HandleUpdateOidcProvider(w http.ResponseWriter, r *http
 
 	// Call Auth Provider API to update the OIDC Provider
 	response, err := wh.worker.AuthOidcAPI.UpdateOidcProvider(requestInfo, filterData.AuthProviderName,
-		request.Name, request.Path, request.OidcClients)
+		request.Name, request.Path, request.IssuerURL, request.OidcClients)
 	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 

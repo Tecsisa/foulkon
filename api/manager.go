@@ -231,7 +231,7 @@ type AuthOidcAPI interface {
 
 	// Update OIDC provider stored in database with new parameters. Throw error if the input parameters
 	// are invalid, the OIDC provider doesn't exist or unexpected error happen.
-	UpdateOidcProvider(requestInfo RequestInfo, oidcProviderName string, newName string, newPath string,
+	UpdateOidcProvider(requestInfo RequestInfo, oidcProviderName string, newName string, newPath string, newIssuerUrl string,
 		newClients []string) (*OidcProvider, error)
 
 	// Remove OIDC provider stored in database with its client relationships.
