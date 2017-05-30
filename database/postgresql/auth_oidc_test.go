@@ -10,14 +10,11 @@ import (
 )
 
 func TestPostgresRepo_AddOidcProvider(t *testing.T) {
-	type OidcPoviderDbWithClients struct {
-		provider *OidcProvider
-		clients  []OidcClient
-	}
 	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// Previous data
-		previousOidcProvider *OidcPoviderDbWithClients
+		previousOidcProviders []OidcProvider
+		previousOidcClients   []OidcClient
 		// Postgres Repo Args
 		oidcProviderToCreate *api.OidcProvider
 		// Expected result
@@ -67,8 +64,8 @@ func TestPostgresRepo_AddOidcProvider(t *testing.T) {
 			},
 		},
 		"ErrorCaseAlreadyExists": {
-			previousOidcProvider: &OidcPoviderDbWithClients{
-				provider: &OidcProvider{
+			previousOidcProviders: []OidcProvider{
+				{
 					ID:        "OIDCProviderID",
 					Name:      "Name",
 					Path:      "Path",
@@ -77,22 +74,22 @@ func TestPostgresRepo_AddOidcProvider(t *testing.T) {
 					UpdateAt:  now.UnixNano(),
 					IssuerURL: "",
 				},
-				clients: []OidcClient{
-					{
-						ID:             "ID1",
-						OidcProviderID: "OIDCProviderID",
-						Name:           "client1",
-					},
-					{
-						ID:             "ID2",
-						OidcProviderID: "OIDCProviderID",
-						Name:           "client2",
-					},
-					{
-						ID:             "ID3",
-						OidcProviderID: "OIDCProviderID",
-						Name:           "client3",
-					},
+			},
+			previousOidcClients: []OidcClient{
+				{
+					ID:             "ID1",
+					OidcProviderID: "OIDCProviderID",
+					Name:           "client1",
+				},
+				{
+					ID:             "ID2",
+					OidcProviderID: "OIDCProviderID",
+					Name:           "client2",
+				},
+				{
+					ID:             "ID3",
+					OidcProviderID: "OIDCProviderID",
+					Name:           "client3",
 				},
 			},
 			oidcProviderToCreate: &api.OidcProvider{
@@ -120,6 +117,60 @@ func TestPostgresRepo_AddOidcProvider(t *testing.T) {
 				Message: "pq: duplicate key value violates unique constraint \"oidc_providers_pkey\"",
 			},
 		},
+		"ErrorCaseOIDCClientAlreadyExists": {
+			previousOidcProviders: []OidcProvider{
+				{
+					ID:        "OIDCProviderID2",
+					Name:      "Name2",
+					Path:      "Path2",
+					Urn:       "urn2",
+					CreateAt:  now.UnixNano(),
+					UpdateAt:  now.UnixNano(),
+					IssuerURL: "",
+				},
+			},
+			previousOidcClients: []OidcClient{
+				{
+					ID:             "ID1",
+					OidcProviderID: "OIDCProviderID2",
+					Name:           "client1",
+				},
+				{
+					ID:             "ID2",
+					OidcProviderID: "OIDCProviderID",
+					Name:           "client1",
+				},
+				{
+					ID:             "ID3",
+					OidcProviderID: "OIDCProviderID2",
+					Name:           "client3",
+				},
+			},
+			oidcProviderToCreate: &api.OidcProvider{
+				ID:        "OIDCProviderID",
+				Name:      "Name",
+				Path:      "Path",
+				Urn:       "urn",
+				CreateAt:  now,
+				UpdateAt:  now,
+				IssuerURL: "",
+				OidcClients: []api.OidcClient{
+					{
+						Name: "client1",
+					},
+					{
+						Name: "client2",
+					},
+					{
+						Name: "client3",
+					},
+				},
+			},
+			expectedError: &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: "pq: duplicate key value violates unique constraint \"idx_oidc_client\"",
+			},
+		},
 	}
 	for n, test := range testcases {
 		// Clean OIDC Provider databases
@@ -127,8 +178,11 @@ func TestPostgresRepo_AddOidcProvider(t *testing.T) {
 		cleanOidcProvidersTable(t, n)
 
 		// Insert previous data
-		if test.previousOidcProvider != nil {
-			insertOidcProvider(t, n, *test.previousOidcProvider.provider, test.previousOidcProvider.clients)
+		for _, op := range test.previousOidcProviders {
+			insertOidcProvider(t, n, op, nil)
+		}
+		for _, oc := range test.previousOidcClients {
+			insertOidcClient(t, n, oc)
 		}
 		// Call to repository to store the OIDC Provider
 		storedOidcProvider, err := repoDB.AddOidcProvider(*test.oidcProviderToCreate)
@@ -236,6 +290,7 @@ func TestPostgresRepo_GetOidcProvidersFiltered(t *testing.T) {
 		filter *api.Filter
 		// Expected result
 		expectedResponse []api.OidcProvider
+		expectedError    *database.Error
 	}{
 		"OkCase": {
 			filter: &api.Filter{
@@ -310,11 +365,54 @@ func TestPostgresRepo_GetOidcProvidersFiltered(t *testing.T) {
 		"OKCaseNotFound": {
 			filter: &api.Filter{
 				PathPrefix: "test",
-				Org:        "org1",
 				Offset:     0,
 				Limit:      20,
 			},
 			expectedResponse: []api.OidcProvider{},
+		},
+		"ErrorCaseInvalidColumnToOrder": {
+			filter: &api.Filter{
+				PathPrefix: "/",
+				Offset:     0,
+				Limit:      20,
+				OrderBy:    "nocolumn desc",
+			},
+			oidcProviders: []OidcProvider{
+				{
+					ID:        "111",
+					Name:      "test1",
+					Path:      "/path1/",
+					CreateAt:  now.UnixNano(),
+					UpdateAt:  now.UnixNano(),
+					Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path1/", "test1"),
+					IssuerURL: "http://test1.com",
+				},
+				{
+					ID:        "222",
+					Name:      "test2",
+					Path:      "/path2/",
+					CreateAt:  now.UnixNano(),
+					UpdateAt:  now.UnixNano(),
+					Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path2/", "test2"),
+					IssuerURL: "http://test2.com",
+				},
+			},
+			oidcClients: []OidcClient{
+				{
+					ID:             "1",
+					Name:           "client1",
+					OidcProviderID: "111",
+				},
+				{
+					ID:             "2",
+					Name:           "client2",
+					OidcProviderID: "222",
+				},
+			},
+			expectedError: &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: "pq: column \"nocolumn\" does not exist",
+			},
 		},
 	}
 
@@ -330,13 +428,21 @@ func TestPostgresRepo_GetOidcProvidersFiltered(t *testing.T) {
 		}
 		// Call repository to get OIDC Providers
 		receivedOidcProviders, total, err := repoDB.GetOidcProvidersFiltered(test.filter)
-		assert.Nil(t, err, "Error in test case %v", n)
 
-		// Check total
-		assert.Equal(t, len(test.expectedResponse), total, "Error in test case %v", n)
+		if test.expectedError != nil {
+			dbError, _ := err.(*database.Error)
+			assert.Equal(t, test.expectedError, dbError, "Error in test case %v", n)
+		} else {
+			// Check error
+			assert.Nil(t, err, "Error in test case %v", n)
 
-		// Check response
-		assert.Equal(t, test.expectedResponse, receivedOidcProviders, "Error in test case %v", n)
+			// Check total
+			assert.Equal(t, len(test.expectedResponse), total, "Error in test case %v", n)
+
+			// Check response
+			assert.Equal(t, test.expectedResponse, receivedOidcProviders, "Error in test case %v", n)
+		}
+
 	}
 }
 
@@ -445,6 +551,49 @@ func TestPostgresRepo_UpdateOidcProvider(t *testing.T) {
 			expectedError: &database.Error{
 				Code:    database.INTERNAL_ERROR,
 				Message: "pq: duplicate key value violates unique constraint \"oidc_providers_urn_key\"",
+			},
+		},
+		"ErrorCaseClientDuplicated": {
+			previousOidcProviders: []OidcProvider{
+				{
+					ID:        "222",
+					Name:      "test2",
+					Path:      "/path2/",
+					CreateAt:  now.UnixNano(),
+					UpdateAt:  now.UnixNano(),
+					Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path2/", "test2"),
+					IssuerURL: "http://test2.com",
+				},
+				{
+					ID:        "111",
+					Name:      "test1",
+					Path:      "/path1/",
+					CreateAt:  now.UnixNano(),
+					UpdateAt:  now.UnixNano(),
+					Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path1/", "test1"),
+					IssuerURL: "http://test1.com",
+				},
+			},
+			oidcProvider: api.OidcProvider{
+				ID:        "333",
+				Name:      "test3",
+				Path:      "/path3/",
+				CreateAt:  now,
+				UpdateAt:  now,
+				Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path3/", "test3"),
+				IssuerURL: "http://test3.com",
+				OidcClients: []api.OidcClient{
+					{
+						Name: "clientNew",
+					},
+					{
+						Name: "clientNew",
+					},
+				},
+			},
+			expectedError: &database.Error{
+				Code:    database.INTERNAL_ERROR,
+				Message: "pq: duplicate key value violates unique constraint \"idx_oidc_client\"",
 			},
 		},
 	}

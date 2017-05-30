@@ -339,7 +339,7 @@ func (api WorkerAPI) UpdateOidcProvider(requestInfo RequestInfo, oidcProviderNam
 }
 
 func (api WorkerAPI) RemoveOidcProvider(requestInfo RequestInfo, name string) error {
-	// Call repo to retrieve the OIDC rovider
+	// Call repo to retrieve the OIDC provider
 	oidcProvider, err := api.GetOidcProviderByName(requestInfo, name)
 	if err != nil {
 		return err
