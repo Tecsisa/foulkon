@@ -10,38 +10,38 @@ import (
 // REQUESTS
 
 type CreatePolicyRequest struct {
-	Name       string          `json:"name, omitempty"`
-	Path       string          `json:"path, omitempty"`
-	Statements []api.Statement `json:"statements, omitempty"`
+	Name       string          `json:"name,omitempty"`
+	Path       string          `json:"path,omitempty"`
+	Statements []api.Statement `json:"statements,omitempty"`
 }
 
 type UpdatePolicyRequest struct {
-	Name       string          `json:"name, omitempty"`
-	Path       string          `json:"path, omitempty"`
-	Statements []api.Statement `json:"statements, omitempty"`
+	Name       string          `json:"name,omitempty"`
+	Path       string          `json:"path,omitempty"`
+	Statements []api.Statement `json:"statements,omitempty"`
 }
 
 // RESPONSES
 
 type ListPoliciesResponse struct {
-	Policies []string `json:"policies, omitempty"`
-	Limit    int      `json:"limit, omitempty"`
-	Offset   int      `json:"offset, omitempty"`
-	Total    int      `json:"total, omitempty"`
+	Policies []string `json:"policies,omitempty"`
+	Limit    int      `json:"limit"`
+	Offset   int      `json:"offset"`
+	Total    int      `json:"total"`
 }
 
 type ListAllPoliciesResponse struct {
-	Policies []api.PolicyIdentity `json:"policies, omitempty"`
-	Limit    int                  `json:"limit, omitempty"`
-	Offset   int                  `json:"offset, omitempty"`
-	Total    int                  `json:"total, omitempty"`
+	Policies []api.PolicyIdentity `json:"policies,omitempty"`
+	Limit    int                  `json:"limit"`
+	Offset   int                  `json:"offset"`
+	Total    int                  `json:"total"`
 }
 
 type ListAttachedGroupsResponse struct {
-	Groups []api.PolicyGroups `json:"groups, omitempty"`
-	Limit  int                `json:"limit, omitempty"`
-	Offset int                `json:"offset, omitempty"`
-	Total  int                `json:"total, omitempty"`
+	Groups []api.PolicyGroups `json:"groups,omitempty"`
+	Limit  int                `json:"limit"`
+	Offset int                `json:"offset"`
+	Total  int                `json:"total"`
 }
 
 // HANDLERS

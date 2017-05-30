@@ -17,19 +17,19 @@ type RequestInfo struct {
 }
 
 type EffectRestriction struct {
-	Effect       string        `json:"effect, omitempty"`
-	Restrictions *Restrictions `json:"restrictions, omitempty"`
+	Effect       string        `json:"effect,omitempty"`
+	Restrictions *Restrictions `json:"restrictions,omitempty"`
 }
 
 type Restrictions struct {
-	AllowedUrnPrefixes []string `json:"allowedUrnPrefixes, omitempty"`
-	AllowedFullUrns    []string `json:"allowedFullUrns, omitempty"`
-	DeniedUrnPrefixes  []string `json:"deniedUrnPrefixes, omitempty"`
-	DeniedFullUrns     []string `json:"deniedFullUrns, omitempty"`
+	AllowedUrnPrefixes []string `json:"allowedUrnPrefixes,omitempty"`
+	AllowedFullUrns    []string `json:"allowedFullUrns,omitempty"`
+	DeniedUrnPrefixes  []string `json:"deniedUrnPrefixes,omitempty"`
+	DeniedFullUrns     []string `json:"deniedFullUrns,omitempty"`
 }
 
 type ExternalResource struct {
-	Urn string `json:"urn, omitempty"`
+	Urn string `json:"urn,omitempty"`
 }
 
 func (e ExternalResource) GetUrn() string {

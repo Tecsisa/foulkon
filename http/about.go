@@ -10,28 +10,28 @@ import (
 // RESPONSE
 
 type LoggerConfig struct {
-	Type          string `json:"type, omitempty"`
-	Level         string `json:"level, omitempty"`
-	FileDirectory string `json:"directory, omitempty"`
+	Type          string `json:"type,omitempty"`
+	Level         string `json:"level,omitempty"`
+	FileDirectory string `json:"directory,omitempty"`
 }
 
 type DatabaseConfig struct {
-	Type         string `json:"type, omitempty"`
-	IdleConns    int    `json:"idleconns, omitempty"`
-	MaxOpenConns int    `json:"maxopenconns, omitempty"`
-	ConnTtl      int    `json:"connttl, omitempty"`
+	Type         string `json:"type,omitempty"`
+	IdleConns    int    `json:"idleconns,omitempty"`
+	MaxOpenConns int    `json:"maxopenconns,omitempty"`
+	ConnTtl      int    `json:"connttl,omitempty"`
 }
 
 type AuthConnectorConfig struct {
-	Type   string `json:"type, omitempty"`
-	Issuer string `json:"issuer, omitempty"`
+	Type          string             `json:"type,omitempty"`
+	OidcProviders []api.OidcProvider `json:"oidcProviders,omitempty"`
 }
 
 type Config struct {
-	Logger        LoggerConfig        `json:"logger, omitempty"`
-	Database      DatabaseConfig      `json:"database, omitempty"`
-	AuthConnector AuthConnectorConfig `json:"authenticator, omitempty"`
-	Version       string              `json:"version, omitempty"`
+	Logger        LoggerConfig        `json:"logger,omitempty"`
+	Database      DatabaseConfig      `json:"database,omitempty"`
+	AuthConnector AuthConnectorConfig `json:"authenticator,omitempty"`
+	Version       string              `json:"version,omitempty"`
 }
 
 // HANDLER
@@ -72,8 +72,8 @@ func (wh *WorkerHandler) HandleGetCurrentConfig(w http.ResponseWriter, r *http.R
 
 	// Get Authenticator config
 	auth := AuthConnectorConfig{
-		Type:   wc.AuthType,
-		Issuer: wc.Issuer,
+		Type:          wc.AuthType,
+		OidcProviders: wc.OidcProviders,
 	}
 
 	// Config Response

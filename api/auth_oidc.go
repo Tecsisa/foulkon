@@ -13,18 +13,18 @@ import (
 
 // Authenticator OIDC domain
 type OidcProvider struct {
-	ID          string       `json:"id, omitempty"`
-	Name        string       `json:"name, omitempty"`
-	Path        string       `json:"path, omitempty"`
-	Urn         string       `json:"urn, omitempty"`
-	CreateAt    time.Time    `json:"createAt, omitempty"`
-	UpdateAt    time.Time    `json:"updateAt, omitempty"`
-	IssuerURL   string       `json:"issuerURL, omitempty"`
-	OidcClients []OidcClient `json:"oidcClients, omitempty"`
+	ID          string       `json:"id,omitempty"`
+	Name        string       `json:"name,omitempty"`
+	Path        string       `json:"path,omitempty"`
+	Urn         string       `json:"urn,omitempty"`
+	CreateAt    time.Time    `json:"createAt,omitempty"`
+	UpdateAt    time.Time    `json:"updateAt,omitempty"`
+	IssuerURL   string       `json:"issuerURL,omitempty"`
+	OidcClients []OidcClient `json:"oidcClients,omitempty"`
 }
 
 type OidcClient struct {
-	Name string `json:"name, omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 func (op OidcProvider) String() string {

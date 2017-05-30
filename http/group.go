@@ -10,43 +10,43 @@ import (
 // REQUESTS
 
 type CreateGroupRequest struct {
-	Name string `json:"name, omitempty"`
-	Path string `json:"path, omitempty"`
+	Name string `json:"name,omitempty"`
+	Path string `json:"path,omitempty"`
 }
 
 type UpdateGroupRequest struct {
-	Name string `json:"name, omitempty"`
-	Path string `json:"path, omitempty"`
+	Name string `json:"name,omitempty"`
+	Path string `json:"path,omitempty"`
 }
 
 // RESPONSES
 
 type ListGroupsResponse struct {
-	Groups []string `json:"groups, omitempty"`
-	Limit  int      `json:"limit, omitempty"`
-	Offset int      `json:"offset, omitempty"`
-	Total  int      `json:"total, omitempty"`
+	Groups []string `json:"groups,omitempty"`
+	Limit  int      `json:"limit"`
+	Offset int      `json:"offset"`
+	Total  int      `json:"total"`
 }
 
 type ListAllGroupsResponse struct {
-	Groups []api.GroupIdentity `json:"groups, omitempty"`
-	Limit  int                 `json:"limit, omitempty"`
-	Offset int                 `json:"offset, omitempty"`
-	Total  int                 `json:"total, omitempty"`
+	Groups []api.GroupIdentity `json:"groups,omitempty"`
+	Limit  int                 `json:"limit"`
+	Offset int                 `json:"offset"`
+	Total  int                 `json:"total"`
 }
 
 type ListMembersResponse struct {
-	Members []api.GroupMembers `json:"members, omitempty"`
-	Limit   int                `json:"limit, omitempty"`
-	Offset  int                `json:"offset, omitempty"`
-	Total   int                `json:"total, omitempty"`
+	Members []api.GroupMembers `json:"members,omitempty"`
+	Limit   int                `json:"limit"`
+	Offset  int                `json:"offset"`
+	Total   int                `json:"total"`
 }
 
 type ListAttachedGroupPoliciesResponse struct {
-	AttachedPolicies []api.GroupPolicies `json:"policies, omitempty"`
-	Limit            int                 `json:"limit, omitempty"`
-	Offset           int                 `json:"offset, omitempty"`
-	Total            int                 `json:"total, omitempty"`
+	AttachedPolicies []api.GroupPolicies `json:"policies,omitempty"`
+	Limit            int                 `json:"limit"`
+	Offset           int                 `json:"offset"`
+	Total            int                 `json:"total"`
 }
 
 // HANDLERS

@@ -12,18 +12,18 @@ import (
 
 // User domain
 type User struct {
-	ID         string    `json:"id, omitempty"`
-	ExternalID string    `json:"externalId, omitempty"`
-	Path       string    `json:"path, omitempty"`
-	Urn        string    `json:"urn, omitempty"`
-	CreateAt   time.Time `json:"createAt, omitempty"`
-	UpdateAt   time.Time `json:"updateAt, omitempty"`
+	ID         string    `json:"id,omitempty"`
+	ExternalID string    `json:"externalId,omitempty"`
+	Path       string    `json:"path,omitempty"`
+	Urn        string    `json:"urn,omitempty"`
+	CreateAt   time.Time `json:"createAt,omitempty"`
+	UpdateAt   time.Time `json:"updateAt,omitempty"`
 }
 
 type UserGroups struct {
-	Org      string    `json:"org, omitempty"`
-	Name     string    `json:"name, omitempty"`
-	CreateAt time.Time `json:"joined, omitempty"`
+	Org      string    `json:"org,omitempty"`
+	Name     string    `json:"name,omitempty"`
+	CreateAt time.Time `json:"joined,omitempty"`
 }
 
 func (u User) String() string {

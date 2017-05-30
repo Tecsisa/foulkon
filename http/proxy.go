@@ -27,28 +27,28 @@ const (
 // REQUESTS
 
 type CreateProxyResourceRequest struct {
-	Name     string             `json:"name, omitempty"`
-	Path     string             `json:"path, omitempty"`
-	Resource api.ResourceEntity `json:"resource, omitempty"`
+	Name     string             `json:"name,omitempty"`
+	Path     string             `json:"path,omitempty"`
+	Resource api.ResourceEntity `json:"resource,omitempty"`
 }
 
 type UpdateProxyResourceRequest struct {
-	Name     string             `json:"name, omitempty"`
-	Path     string             `json:"path, omitempty"`
-	Resource api.ResourceEntity `json:"resource, omitempty"`
+	Name     string             `json:"name,omitempty"`
+	Path     string             `json:"path,omitempty"`
+	Resource api.ResourceEntity `json:"resource,omitempty"`
 }
 
 // RESPONSES
 
 type ProxyResources struct {
-	Resources []api.ProxyResource `json:"resources, omitempty"`
+	Resources []api.ProxyResource `json:"resources,omitempty"`
 }
 
 type ListProxyResourcesResponse struct {
-	Resources []string `json:"resources, omitempty"`
-	Limit     int      `json:"limit, omitempty"`
-	Offset    int      `json:"offset, omitempty"`
-	Total     int      `json:"total, omitempty"`
+	Resources []string `json:"resources,omitempty"`
+	Limit     int      `json:"limit"`
+	Offset    int      `json:"offset"`
+	Total     int      `json:"total"`
 }
 
 var rUrnParam, _ = regexp.Compile(`\{(\w+)\}`)

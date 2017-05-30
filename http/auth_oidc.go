@@ -9,26 +9,26 @@ import (
 // REQUESTS
 
 type CreateOidcProviderRequest struct {
-	Name        string   `json:"name, omitempty"`
-	Path        string   `json:"path, omitempty"`
-	IssuerURL   string   `json:"issuerUrl, omitempty"`
-	OidcClients []string `json:"clients, omitempty"`
+	Name        string   `json:"name,omitempty"`
+	Path        string   `json:"path,omitempty"`
+	IssuerURL   string   `json:"issuerUrl,omitempty"`
+	OidcClients []string `json:"clients,omitempty"`
 }
 
 type UpdateOidcProviderRequest struct {
-	Name        string   `json:"name, omitempty"`
-	Path        string   `json:"path, omitempty"`
-	IssuerURL   string   `json:"issuerUrl, omitempty"`
-	OidcClients []string `json:"clients, omitempty"`
+	Name        string   `json:"name,omitempty"`
+	Path        string   `json:"path,omitempty"`
+	IssuerURL   string   `json:"issuerUrl,omitempty"`
+	OidcClients []string `json:"clients,omitempty"`
 }
 
 // RESPONSES
 
 type ListOidcProvidersResponse struct {
-	Providers []string `json:"providers, omitempty"`
-	Limit     int      `json:"limit, omitempty"`
-	Offset    int      `json:"offset, omitempty"`
-	Total     int      `json:"total, omitempty"`
+	Providers []string `json:"providers,omitempty"`
+	Limit     int      `json:"limit"`
+	Offset    int      `json:"offset"`
+	Total     int      `json:"total"`
 }
 
 // HANDLERS

@@ -32,13 +32,25 @@ type AuthConnector interface {
 func (a *AuthenticatorMiddleware) Action(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var handler http.Handler
+		requestID := r.Header.Get(middleware.REQUEST_ID_HEADER)
 		if isAdmin(r, a.adminUser, a.adminPassword) {
 			// Admin check
 			r.Header.Add(middleware.USER_ID_HEADER, a.adminUser)
 			handler = next
 		} else {
-			// Connector
-			handler = a.connector.Authenticate(next)
+			if a.connector != nil {
+				// Connector
+				handler = a.connector.Authenticate(next)
+			} else {
+				// Error response when there isn't any authentication connector
+				apiError := &api.Error{
+					Code:    api.AUTHENTICATION_API_ERROR,
+					Message: "No Authenticator Provider configured",
+				}
+				api.LogOperationError(requestID, "", apiError)
+				http.Error(w, "Authentication failed", http.StatusUnauthorized)
+				return
+			}
 		}
 
 		handler.ServeHTTP(w, r)

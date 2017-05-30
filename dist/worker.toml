@@ -31,9 +31,4 @@ type = "postgres"
 # Authenticator config
 [authenticator]
 type = "oidc"
-
-	# OIDC connector config
-	[authenticator.oidc]
-	issuer = "https://accounts.google.com"
-	clientids = "google-client-identity"
 	

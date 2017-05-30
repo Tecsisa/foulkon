@@ -9,14 +9,14 @@ import (
 // REQUESTS
 
 type AuthorizeResourcesRequest struct {
-	Action    string   `json:"action, omitempty"`
-	Resources []string `json:"resources, omitempty"`
+	Action    string   `json:"action,omitempty"`
+	Resources []string `json:"resources,omitempty"`
 }
 
 // RESPONSES
 
 type AuthorizeResourcesResponse struct {
-	ResourcesAllowed []string `json:"resourcesAllowed, omitempty"`
+	ResourcesAllowed []string `json:"resourcesAllowed,omitempty"`
 }
 
 // HANDLERS

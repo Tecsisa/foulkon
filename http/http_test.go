@@ -8,6 +8,8 @@ import (
 
 	"fmt"
 
+	"time"
+
 	logrusTest "github.com/Sirupsen/logrus/hooks/test"
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/foulkon"
@@ -163,9 +165,24 @@ func TestMain(m *testing.M) {
 		IdleConns:     0,
 		MaxOpenConns:  0,
 		ConnTtl:       0,
-		AuthType:      "test",
-		Issuer:        "test",
-		Version:       "test",
+		AuthType:      "oidc",
+		OidcProviders: []api.OidcProvider{
+			{
+				ID:        "test1",
+				Name:      "test",
+				Path:      "/path/",
+				Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "test"),
+				IssuerURL: "https://test.com",
+				CreateAt:  time.Now().Truncate(time.Hour),
+				UpdateAt:  time.Now().Truncate(time.Hour),
+				OidcClients: []api.OidcClient{
+					{
+						Name: "client1",
+					},
+				},
+			},
+		},
+		Version: "test",
 	}
 
 	// Return created core

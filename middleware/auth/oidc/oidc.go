@@ -17,15 +17,22 @@ type OIDCAuthConnector struct {
 }
 
 // InitOIDCConnector initializes OIDC connector configuration
-func InitOIDCConnector(provider string, clientids []string) (auth.AuthConnector, error) {
+func InitOIDCConnector(oidcProviders []api.OidcProvider) (auth.AuthConnector, error) {
 	getProviders := func() ([]openid.Provider, error) {
-		provider, err := openid.NewProvider(provider, clientids)
-
-		if err != nil {
-			return nil, err
+		providers := []openid.Provider{}
+		for _, oc := range oidcProviders {
+			clientIds := []string{}
+			for _, clientId := range oc.OidcClients {
+				clientIds = append(clientIds, clientId.Name)
+			}
+			provider, err := openid.NewProvider(oc.IssuerURL, clientIds)
+			if err != nil {
+				return nil, err
+			}
+			providers = append(providers, provider)
 		}
 
-		return []openid.Provider{provider}, nil
+		return providers, nil
 	}
 	errorHandler := func(e error, rw http.ResponseWriter, r *http.Request) bool {
 		requestID := r.Header.Get(middleware.REQUEST_ID_HEADER)

@@ -10,28 +10,28 @@ import (
 // REQUESTS
 
 type CreateUserRequest struct {
-	ExternalID string `json:"externalId, omitempty"`
-	Path       string `json:"path, omitempty"`
+	ExternalID string `json:"externalId,omitempty"`
+	Path       string `json:"path,omitempty"`
 }
 
 type UpdateUserRequest struct {
-	Path string `json:"path, omitempty"`
+	Path string `json:"path,omitempty"`
 }
 
 // RESPONSES
 
 type GetUserExternalIDsResponse struct {
-	ExternalIDs []string `json:"users, omitempty"`
-	Limit       int      `json:"limit, omitempty"`
-	Offset      int      `json:"offset, omitempty"`
-	Total       int      `json:"total, omitempty"`
+	ExternalIDs []string `json:"users,omitempty"`
+	Limit       int      `json:"limit"`
+	Offset      int      `json:"offset"`
+	Total       int      `json:"total"`
 }
 
 type GetGroupsByUserIdResponse struct {
-	Groups []api.UserGroups `json:"groups, omitempty"`
-	Limit  int              `json:"limit, omitempty"`
-	Offset int              `json:"offset, omitempty"`
-	Total  int              `json:"total, omitempty"`
+	Groups []api.UserGroups `json:"groups,omitempty"`
+	Limit  int              `json:"limit"`
+	Offset int              `json:"offset"`
+	Total  int              `json:"total"`
 }
 
 // HANDLERS

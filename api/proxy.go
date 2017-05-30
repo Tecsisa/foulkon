@@ -14,28 +14,28 @@ import (
 
 // ProxyResource domain
 type ProxyResource struct {
-	ID       string         `json:"id, omitempty"`
-	Name     string         `json:"name, omitempty"`
-	Org      string         `json:"org, omitempty"`
-	Path     string         `json:"path, omitempty"`
-	Urn      string         `json:"urn, omitempty"`
-	Resource ResourceEntity `json:"resource, omitempty"`
-	CreateAt time.Time      `json:"createAt, omitempty"`
-	UpdateAt time.Time      `json:"updateAt, omitempty"`
+	ID       string         `json:"id,omitempty"`
+	Name     string         `json:"name,omitempty"`
+	Org      string         `json:"org,omitempty"`
+	Path     string         `json:"path,omitempty"`
+	Urn      string         `json:"urn,omitempty"`
+	Resource ResourceEntity `json:"resource,omitempty"`
+	CreateAt time.Time      `json:"createAt,omitempty"`
+	UpdateAt time.Time      `json:"updateAt,omitempty"`
 }
 
 // Proxy resource identifier to retrieve them from DB
 type ProxyResourceIdentity struct {
-	Org  string `json:"org, omitempty"`
-	Name string `json:"name, omitempty"`
+	Org  string `json:"org,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 type ResourceEntity struct {
-	Host   string `json:"host, omitempty"`
-	Path   string `json:"path, omitempty"`
-	Method string `json:"method, omitempty"`
-	Urn    string `json:"urn, omitempty"`
-	Action string `json:"action, omitempty"`
+	Host   string `json:"host,omitempty"`
+	Path   string `json:"path,omitempty"`
+	Method string `json:"method,omitempty"`
+	Urn    string `json:"urn,omitempty"`
+	Action string `json:"action,omitempty"`
 }
 
 func (p ProxyResource) GetUrn() string {
