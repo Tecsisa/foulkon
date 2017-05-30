@@ -3,7 +3,7 @@
 You have to specify configuration file using flag `-proxy-file`. Using binary file command is `proxy -proxy-file=/path/proxy_config.toml`
  
 ## Deploy with docker
-Then, you can run the docker image, mounting (-v) a proxy_config.toml inside the container (you could also make a custom Dockerfile with "ADD my-custom-proxy-config.toml /my-custom-proxy-config.toml").
+Then, you can run the docker image, mounting (-v) a proxy_config.toml inside the container (you could also make a custom Dockerfile with "ADD my-custom-proxy-config.toml /proxy.toml").
 E.g. 
  ```
  docker run -v /home/myuser/foulkon/proxy_config.toml:/proxy.toml tecsisa/foulkon proxy
@@ -15,8 +15,8 @@ This config file is a TOML file that has several parts:
 ### [server] 
 | Server      | Server config properties              | Values                     | Default | Optional |
 |-------------|---------------------------------------|----------------------------|---------|----------|
-| host        | Proxy's hostname.                    | `localhost`                |         | No       |
-| port        | Proxy's port.                        | `8001`                     |         | No       |
+| host        | Proxy's hostname.                     | `localhost`                |         | No       |
+| port        | Proxy's port.                         | `8001`                     |         | No       |
 | certfile    | Absolute path for public certificate. | `/etc/secrets/public.pem`  |         | Yes      |
 | keyfile     | Absolute path for private key.        | `/etc/secrets/private.pem` |         | Yes      |
 | worker-host | Full host where worker is.            | `http://localhost:8000`    |         | No       |

@@ -39,6 +39,27 @@
 | **List policies**        | iam:ListPolicies       | None          |
 | **List attached groups** | iam:ListAttachedGroups | iam:GetPolicy |
 
+## Proxy Resources
+
+|          Method          |         Action             | Dependencies         |
+|--------------------------|----------------------------|----------------------|
+| **Create Proxy Resource**| iam:CreateProxyResource    | None                 |
+| **Delete Proxy Resource**| iam:DeleteProxyResource    | iam:GetProxyResource |
+| **Get Proxy Resource**   | iam:GetProxyResource       | None                 |
+| **Update Proxy Resource**| iam:UpdateProxyResource    | iam:GetProxyResource |
+| **List Proxy Resources** | iam:iam:ListProxyResources | None                 |
+
+## OIDC Provider
+
+|          Method          |         Action         | Dependencies         |
+|--------------------------|------------------------|----------------------|
+| **Create OIDC Provider** | auth:CreateOidcProvider| None                 |
+| **Delete OIDC Provider** | auth:DeleteOidcProvider| auth:GetOidcProvider |
+| **Get OIDC Provider**    | auth:GetOidcProvider   | None                 |
+| **Update OIDC Providers**| auth:UpdateOidcProvider| auth:GetOidcProvider |
+| **List OIDC Provider**   | auth:ListOidcProviders | None                 |
+
+
 ### Additional info
 
 The dependencies are directly related to the action, for example in AddMember we need permissions to get the group (iam:GetGroup) and the user (iam:GetUser). 
