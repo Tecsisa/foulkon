@@ -1,0 +1,246 @@
+{
+  "$schema": "",
+  "type": "object",
+  "definitions": {
+    "order1_oidc_client": {
+      "$schema": "",
+      "title": "OIDC Client",
+      "description": "Entity with the OIDC Client configuration to use in Authentication Middleware",
+      "strictProperties": true,
+      "type": "object",
+      "definitions": {
+        "name": {
+          "description": "Identifier associated to this OIDC Client for the OIDC Provider",
+          "example": "client-api-identifier",
+          "type": "string"
+        }
+      },
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/order1_oidc_client/definitions/name"
+        }
+      }
+    },
+    "order2_oidc_provider": {
+      "$schema": "",
+      "title": "OIDC Provider",
+      "description": "Entity with the OIDC Provider configuration to use in Authentication Middleware",
+      "strictProperties": true,
+      "type": "object",
+      "definitions": {
+        "id": {
+          "description": "Unique OIDC Provider identifier",
+          "readOnly": true,
+          "format": "uuid",
+          "type": "string"
+        },
+        "name": {
+          "description": "OIDC Provider name",
+          "example": "Example",
+          "type": "string"
+        },
+        "path": {
+          "description": "OIDC Provider location",
+          "example": "/example/admin/",
+          "type": "string"
+        },
+        "createdAt": {
+          "description": "OIDC Provider creation date",
+          "format": "date-time",
+          "type": "string"
+        },
+        "updateAt": {
+          "description": "The date timestamp of the last update",
+          "format": "date-time",
+          "type": "string"
+        },
+        "issuerUrl": {
+          "description": "The issuer URL which issues the tokens",
+          "example": "https://accounts.google.com",
+          "type": "string"
+        },
+        "urn": {
+          "description": "Uniform Resource Name",
+          "example": "urn:iws:auth::oidc/example/admin/Example",
+          "type": "string"
+        },
+        "clients": {
+          "description": "OIDC Clients associated",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/order1_oidc_client"
+          }
+        }
+      },
+      "links": [
+        {
+          "description": "Create a new OIDC Provider.",
+          "href": "/api/v1/admin/auth/oidc/providers",
+          "method": "POST",
+          "rel": "create",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "schema": {
+            "properties": {
+              "name": {
+                "$ref": "#/definitions/order2_oidc_provider/definitions/name"
+              },
+              "path": {
+                "$ref": "#/definitions/order2_oidc_provider/definitions/path"
+              },
+              "issuerUrl": {
+                "$ref": "#/definitions/order2_oidc_provider/definitions/issuerUrl"
+              },
+              "clients": {
+                "$ref": "#/definitions/order2_oidc_provider/definitions/clients"
+              }
+            },
+            "required": [
+              "name",
+              "path",
+              "issuerUrl",
+              "clients"
+            ],
+            "type": "object"
+          },
+          "title": "Create"
+        },
+        {
+          "description": "Update an existing OIDC Provider.",
+          "href": "/api/v1/admin/auth/oidc/providers/{oidc_provider_name}",
+          "method": "PUT",
+          "rel": "update",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "schema": {
+            "properties": {
+              "name": {
+                "$ref": "#/definitions/order2_oidc_provider/definitions/name"
+              },
+              "path": {
+                "$ref": "#/definitions/order2_oidc_provider/definitions/path"
+              },
+              "issuerUrl": {
+                "$ref": "#/definitions/order2_oidc_provider/definitions/issuerUrl"
+              },
+              "clients": {
+                "$ref": "#/definitions/order2_oidc_provider/definitions/clients"
+              }
+            },
+            "required": [
+              "name",
+              "path",
+              "issuerUrl",
+              "clients"
+            ],
+            "type": "object"
+          },
+          "title": "Update"
+        },
+        {
+          "description": "Delete an existing OIDC Provider.",
+          "href": "/api/v1/admin/auth/oidc/providers/{oidc_provider_name}",
+          "method": "DELETE",
+          "rel": "empty",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Delete"
+        },
+        {
+          "description": "Get an existing OIDC Provider.",
+          "href": "/api/v1/admin/auth/oidc/providers/{oidc_provider_name}",
+          "method": "GET",
+          "rel": "self",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "Get"
+        }
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/order2_oidc_provider/definitions/id"
+        },
+        "name": {
+          "$ref": "#/definitions/order2_oidc_provider/definitions/name"
+        },
+        "path": {
+          "$ref": "#/definitions/order2_oidc_provider/definitions/path"
+        },
+        "createdAt": {
+          "$ref": "#/definitions/order2_oidc_provider/definitions/createdAt"
+        },
+        "updateAt": {
+          "$ref": "#/definitions/order2_oidc_provider/definitions/updateAt"
+        },
+        "issuerUrl": {
+          "$ref": "#/definitions/order2_oidc_provider/definitions/issuerUrl"
+        },
+        "urn": {
+          "$ref": "#/definitions/order2_oidc_provider/definitions/urn"
+        },
+        "clients": {
+          "$ref": "#/definitions/order2_oidc_provider/definitions/clients"
+        }
+      }
+    },
+    "order3_OidcProviderReference": {
+      "$schema": "",
+      "title": "",
+      "description": "",
+      "strictProperties": true,
+      "type": "object",
+      "links": [
+        {
+          "description": "List all OIDC Providers, using optional query parameters.",
+          "href": "/api/v1/admin/auth/oidc/providers?PathPrefix={optional_path_prefix}&Offset={optional_offset}&Limit={optional_limit}&OrderBy={columnName-desc}",
+          "method": "GET",
+          "rel": "self",
+          "http_header": {
+            "Authorization": "Basic or Bearer XXX"
+          },
+          "title": "OIDC Provider List All"
+        }
+      ],
+      "properties": {
+        "providers": {
+          "description": "OIDC Provider identifiers",
+          "example": ["google", "keycloak"],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "offset": {
+          "description": "The offset of the items returned (as set in the query or by default)",
+          "example": 0,
+          "type": "integer"
+        },
+        "limit": {
+          "description": "The maximum number of items in the response (as set in the query or by default)",
+          "example": 20,
+          "type": "integer"
+        },
+        "total": {
+          "description": "The total number of items available to return",
+          "example": 2,
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "properties": {
+    "order1_resource_entity": {
+      "$ref": "#/definitions/order1_oidc_client"
+    },
+    "order2_oidc_provider": {
+      "$ref": "#/definitions/order2_oidc_provider"
+    },
+    "order3_OidcProviderReference": {
+      "$ref": "#/definitions/order3_OidcProviderReference"
+    }
+  }
+}

@@ -19,8 +19,8 @@ type OidcProvider struct {
 	Urn         string       `json:"urn,omitempty"`
 	CreateAt    time.Time    `json:"createAt,omitempty"`
 	UpdateAt    time.Time    `json:"updateAt,omitempty"`
-	IssuerURL   string       `json:"issuerURL,omitempty"`
-	OidcClients []OidcClient `json:"oidcClients,omitempty"`
+	IssuerURL   string       `json:"issuerUrl,omitempty"`
+	OidcClients []OidcClient `json:"clients,omitempty"`
 }
 
 type OidcClient struct {
@@ -28,7 +28,7 @@ type OidcClient struct {
 }
 
 func (op OidcProvider) String() string {
-	return fmt.Sprintf("[id: %v, name: %v, path: %v, urn: %v, createAt: %v, updateAt: %v, issuerURL: %v, clients: %v]",
+	return fmt.Sprintf("[id: %v, name: %v, path: %v, urn: %v, createAt: %v, updateAt: %v, issuerUrl: %v, clients: %v]",
 		op.ID, op.Name, op.Path, op.Urn, op.CreateAt.Format("2006-01-02 15:04:05 MST"),
 		op.UpdateAt.Format("2006-01-02 15:04:05 MST"), op.IssuerURL, op.OidcClients)
 }
