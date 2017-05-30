@@ -61,7 +61,7 @@ If you want to add, update o delete OIDC Providers you have to use the [OIDC Pro
 If you change OIDC Providers you will need to restart the worker servers to take effect the changes.
 
 ## Current configuration
-The worker server has and endpoint to see what configuration is active in that moment, only for admin access. 
+The worker server has an endpoint to see what configuration is active at this time, only for admin access. 
 
 #### Curl Example
 
