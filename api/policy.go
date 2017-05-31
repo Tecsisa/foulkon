@@ -12,14 +12,14 @@ import (
 
 // Policy domain
 type Policy struct {
-	ID         string       `json:"id, omitempty"`
-	Name       string       `json:"name, omitempty"`
-	Path       string       `json:"path, omitempty"`
-	Org        string       `json:"org, omitempty"`
-	Urn        string       `json:"urn, omitempty"`
-	CreateAt   time.Time    `json:"createAt, omitempty"`
-	UpdateAt   time.Time    `json:"updateAt, omitempty"`
-	Statements *[]Statement `json:"statements, omitempty"`
+	ID         string       `json:"id,omitempty"`
+	Name       string       `json:"name,omitempty"`
+	Path       string       `json:"path,omitempty"`
+	Org        string       `json:"org,omitempty"`
+	Urn        string       `json:"urn,omitempty"`
+	CreateAt   time.Time    `json:"createAt,omitempty"`
+	UpdateAt   time.Time    `json:"updateAt,omitempty"`
+	Statements *[]Statement `json:"statements,omitempty"`
 }
 
 func (p Policy) String() string {
@@ -33,19 +33,19 @@ func (p Policy) GetUrn() string {
 
 // Policy identifier to retrieve them from DB
 type PolicyIdentity struct {
-	Org  string `json:"org, omitempty"`
-	Name string `json:"name, omitempty"`
+	Org  string `json:"org,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 type Statement struct {
-	Effect    string   `json:"effect, omitempty"`
-	Actions   []string `json:"actions, omitempty"`
-	Resources []string `json:"resources, omitempty"`
+	Effect    string   `json:"effect,omitempty"`
+	Actions   []string `json:"actions,omitempty"`
+	Resources []string `json:"resources,omitempty"`
 }
 
 type PolicyGroups struct {
-	Group    string    `json:"group, omitempty"`
-	CreateAt time.Time `json:"attached, omitempty"`
+	Group    string    `json:"group,omitempty"`
+	CreateAt time.Time `json:"attached,omitempty"`
 }
 
 func (s Statement) String() string {

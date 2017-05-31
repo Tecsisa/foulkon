@@ -23,6 +23,9 @@ const (
 
 	// Proxy resource Codes
 	PROXY_RESOURCE_NOT_FOUND = "ProxyResourceNotFound"
+
+	// Auth Provider Codes
+	AUTH_OIDC_PROVIDER_NOT_FOUND = "AuthOidcProviderNotFound"
 )
 
 type Error struct {

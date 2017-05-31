@@ -404,3 +404,88 @@ func getProxyResourcesCountFiltered(t *testing.T, testcase string, id string,
 
 	return number
 }
+
+// AUTH OIDC
+
+func cleanOidcProvidersTable(t *testing.T, testcase string) {
+	err := repoDB.Dbmap.Delete(&OidcProvider{}).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
+}
+
+func cleanOidcClientsTable(t *testing.T, testcase string) {
+	err := repoDB.Dbmap.Delete(&OidcClient{}).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
+}
+
+func insertOidcProvider(t *testing.T, testcase string, oidcProvider OidcProvider, oidcClients []OidcClient) {
+	err := repoDB.Dbmap.Exec("INSERT INTO public.oidc_providers (id, name, path, create_at, update_at, urn, issuer_url) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		oidcProvider.ID, oidcProvider.Name, oidcProvider.Path, oidcProvider.CreateAt, oidcProvider.UpdateAt, oidcProvider.Urn, oidcProvider.IssuerURL).Error
+
+	// Error handling
+	assert.Nil(t, err, "Error in test case %v", testcase)
+
+	for _, v := range oidcClients {
+		v.OidcProviderID = oidcProvider.ID
+		insertOidcClient(t, testcase, v)
+		// Error handling
+		assert.Nil(t, err, "Error in test case %v", testcase)
+	}
+}
+
+func insertOidcClient(t *testing.T, testcase string, oidcClient OidcClient) {
+	err := repoDB.Dbmap.Exec("INSERT INTO public.oidc_clients (id, oidc_provider_id, name) VALUES (?, ?, ?)",
+		oidcClient.ID, oidcClient.OidcProviderID, oidcClient.Name).Error
+
+	// Error handling
+	assert.Nil(t, err, "Error in test case %v", testcase)
+}
+
+func getOidcProvidersCountFiltered(t *testing.T, testcase string,
+	id string, name string, path string, createAt int64, updateAt int64, urn string, issuer string) int {
+	query := repoDB.Dbmap.Table(OidcProvider{}.TableName())
+	if id != "" {
+		query = query.Where("id = ?", id)
+	}
+	if path != "" {
+		query = query.Where("path = ?", path)
+	}
+	if name != "" {
+		query = query.Where("name = ?", name)
+	}
+	if createAt != 0 {
+		query = query.Where("create_at = ?", createAt)
+	}
+	if updateAt != 0 {
+		query = query.Where("update_at = ?", updateAt)
+	}
+	if urn != "" {
+		query = query.Where("urn = ?", urn)
+	}
+	if issuer != "" {
+		query = query.Where("issuer_url = ?", issuer)
+	}
+	var number int
+	err := query.Count(&number).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
+
+	return number
+}
+
+func getOidcClientsCountFiltered(t *testing.T, testcase string,
+	id string, oidcProviderId string, name string) int {
+	query := repoDB.Dbmap.Table(OidcClient{}.TableName())
+	if id != "" {
+		query = query.Where("id = ?", id)
+	}
+	if oidcProviderId != "" {
+		query = query.Where("oidc_provider_id = ?", oidcProviderId)
+	}
+	if name != "" {
+		query = query.Where("name = ?", name)
+	}
+	var number int
+	err := query.Count(&number).Error
+	assert.Nil(t, err, "Error in test case %v", testcase)
+
+	return number
+}

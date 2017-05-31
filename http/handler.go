@@ -18,6 +18,7 @@ const (
 	GROUP_NAME          = "groupname"
 	POLICY_NAME         = "policyname"
 	PROXY_RESOURCE_NAME = "proxyresourcename"
+	AUTH_PROVIDER_NAME  = "authprovidername"
 	ORG_NAME            = "orgname"
 
 	// URI Path param prefix
@@ -54,6 +55,13 @@ const (
 
 	// Authorization URLs
 	RESOURCE_URL = API_VERSION_1 + "/resource"
+
+	// Admin URLs
+	ADMIN_ROOT = "/admin"
+
+	// Admin OIDC Authentication API URLs
+	OIDC_AUTH_ROOT_URL = API_VERSION_1 + ADMIN_ROOT + "/auth/oidc/providers"
+	OIDC_AUTH_ID_URL   = OIDC_AUTH_ROOT_URL + URI_PATH_PREFIX + AUTH_PROVIDER_NAME
 
 	// Foulkon configuration URL
 	ABOUT = "/about"
@@ -105,7 +113,9 @@ func (wh *WorkerHandler) processHttpResponse(r *http.Request, w http.ResponseWri
 		case api.USER_ALREADY_EXIST, api.GROUP_ALREADY_EXIST,
 			api.USER_IS_ALREADY_A_MEMBER_OF_GROUP,
 			api.PROXY_RESOURCE_ALREADY_EXIST,
-			api.POLICY_IS_ALREADY_ATTACHED_TO_GROUP, api.POLICY_ALREADY_EXIST, api.PROXY_RESOURCES_ROUTES_CONFLICT:
+			api.POLICY_IS_ALREADY_ATTACHED_TO_GROUP, api.POLICY_ALREADY_EXIST,
+			api.PROXY_RESOURCES_ROUTES_CONFLICT,
+			api.AUTH_OIDC_PROVIDER_ALREADY_EXIST:
 			// A conflict occurs
 			statusCode = http.StatusConflict
 		case api.UNAUTHORIZED_RESOURCES_ERROR:
@@ -113,7 +123,8 @@ func (wh *WorkerHandler) processHttpResponse(r *http.Request, w http.ResponseWri
 			statusCode = http.StatusForbidden
 		case api.USER_BY_EXTERNAL_ID_NOT_FOUND, api.GROUP_BY_ORG_AND_NAME_NOT_FOUND,
 			api.USER_IS_NOT_A_MEMBER_OF_GROUP, api.POLICY_IS_NOT_ATTACHED_TO_GROUP,
-			api.POLICY_BY_ORG_AND_NAME_NOT_FOUND, api.PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND:
+			api.POLICY_BY_ORG_AND_NAME_NOT_FOUND, api.PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND,
+			api.AUTH_OIDC_PROVIDER_BY_NAME_NOT_FOUND:
 			// Resource or relation not found
 			statusCode = http.StatusNotFound
 		case api.INVALID_PARAMETER_ERROR, api.REGEX_NO_MATCH:
@@ -204,6 +215,15 @@ func WorkerHandlerRouter(worker *foulkon.Worker) http.Handler {
 	// Resources authorized endpoint
 	router.POST(RESOURCE_URL, workerHandler.HandleGetAuthorizedExternalResources)
 
+	// OIDC authentication api
+	router.GET(OIDC_AUTH_ROOT_URL, workerHandler.HandleListOidcProviders)
+	router.POST(OIDC_AUTH_ROOT_URL, workerHandler.HandleAddOidcProvider)
+
+	router.DELETE(OIDC_AUTH_ID_URL, workerHandler.HandleRemoveOidcProvider)
+
+	router.GET(OIDC_AUTH_ID_URL, workerHandler.HandleGetOidcProviderByName)
+	router.PUT(OIDC_AUTH_ID_URL, workerHandler.HandleUpdateOidcProvider)
+
 	// Current Foulkon configuration
 	router.GET(ABOUT, workerHandler.HandleGetCurrentConfig)
 
@@ -276,6 +296,7 @@ func getFilterData(r *http.Request, ps httprouter.Params) (*api.Filter, error) {
 		PolicyName:        ps.ByName(POLICY_NAME),
 		GroupName:         ps.ByName(GROUP_NAME),
 		ProxyResourceName: ps.ByName(PROXY_RESOURCE_NAME),
+		AuthProviderName:  ps.ByName(AUTH_PROVIDER_NAME),
 		Offset:            offset,
 		Limit:             limit,
 		OrderBy:           r.URL.Query().Get("OrderBy"),

@@ -12,37 +12,42 @@ import (
 )
 
 const (
-	GetUserByExternalIDMethod    = "GetUserByExternalID"
-	AddUserMethod                = "AddUser"
-	UpdateUserMethod             = "UpdateUser"
-	GetUsersFilteredMethod       = "GetUsersFiltered"
-	GetGroupsByUserIDMethod      = "GetGroupsByUserID"
-	RemoveUserMethod             = "RemoveUser"
-	GetGroupByNameMethod         = "GetGroupByName"
-	IsMemberOfGroupMethod        = "IsMemberOfGroup"
-	GetGroupMembersMethod        = "GetGroupMembers"
-	IsAttachedToGroupMethod      = "IsAttachedToGroup"
-	GetAttachedPoliciesMethod    = "GetAttachedPolicies"
-	GetGroupsFilteredMethod      = "GetGroupsFiltered"
-	RemoveGroupMethod            = "RemoveGroup"
-	AddGroupMethod               = "AddGroup"
-	AddMemberMethod              = "AddMember"
-	RemoveMemberMethod           = "RemoveMember"
-	UpdateGroupMethod            = "UpdateGroup"
-	AttachPolicyMethod           = "AttachPolicy"
-	DetachPolicyMethod           = "DetachPolicy"
-	GetPolicyByNameMethod        = "GetPolicyByName"
-	AddPolicyMethod              = "AddPolicy"
-	UpdatePolicyMethod           = "UpdatePolicy"
-	RemovePolicyMethod           = "RemovePolicy"
-	GetPoliciesFilteredMethod    = "GetPoliciesFiltered"
-	GetAttachedGroupsMethod      = "GetAttachedGroups"
-	OrderByValidColumnsMethod    = "OrderByValidColumns"
-	GetProxyResourcesMethod      = "GetProxyResources"
-	RemoveProxyResourceMethod    = "RemoveProxyResource"
-	AddProxyResourceMethod       = "AddProxyResource"
-	UpdateProxyResourceMethod    = "UpdateProxyResource"
-	GetProxyResourceByNameMethod = "GetProxyResourceByName"
+	GetUserByExternalIDMethod      = "GetUserByExternalID"
+	AddUserMethod                  = "AddUser"
+	UpdateUserMethod               = "UpdateUser"
+	GetUsersFilteredMethod         = "GetUsersFiltered"
+	GetGroupsByUserIDMethod        = "GetGroupsByUserID"
+	RemoveUserMethod               = "RemoveUser"
+	GetGroupByNameMethod           = "GetGroupByName"
+	IsMemberOfGroupMethod          = "IsMemberOfGroup"
+	GetGroupMembersMethod          = "GetGroupMembers"
+	IsAttachedToGroupMethod        = "IsAttachedToGroup"
+	GetAttachedPoliciesMethod      = "GetAttachedPolicies"
+	GetGroupsFilteredMethod        = "GetGroupsFiltered"
+	RemoveGroupMethod              = "RemoveGroup"
+	AddGroupMethod                 = "AddGroup"
+	AddMemberMethod                = "AddMember"
+	RemoveMemberMethod             = "RemoveMember"
+	UpdateGroupMethod              = "UpdateGroup"
+	AttachPolicyMethod             = "AttachPolicy"
+	DetachPolicyMethod             = "DetachPolicy"
+	GetPolicyByNameMethod          = "GetPolicyByName"
+	AddPolicyMethod                = "AddPolicy"
+	UpdatePolicyMethod             = "UpdatePolicy"
+	RemovePolicyMethod             = "RemovePolicy"
+	GetPoliciesFilteredMethod      = "GetPoliciesFiltered"
+	GetAttachedGroupsMethod        = "GetAttachedGroups"
+	OrderByValidColumnsMethod      = "OrderByValidColumns"
+	GetProxyResourcesMethod        = "GetProxyResources"
+	RemoveProxyResourceMethod      = "RemoveProxyResource"
+	AddProxyResourceMethod         = "AddProxyResource"
+	UpdateProxyResourceMethod      = "UpdateProxyResource"
+	GetProxyResourceByNameMethod   = "GetProxyResourceByName"
+	AddOidcProviderMethod          = "AddOidcProvider"
+	GetOidcProviderByNameMethod    = "GetOidcProviderByName"
+	GetOidcProvidersFilteredMethod = "GetOidcProvidersFiltered"
+	UpdateOidcProviderMethod       = "UpdateOidcProvider"
+	RemoveOidcProviderMethod       = "RemoveOidcProviderMethod"
 )
 
 // TestRepo that implements all repo manager interfaces
@@ -112,6 +117,11 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsIn[AddProxyResourceMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[UpdateProxyResourceMethod] = make([]interface{}, 1)
 	testRepo.ArgsIn[GetProxyResourceByNameMethod] = make([]interface{}, 2)
+	testRepo.ArgsIn[AddOidcProviderMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[GetOidcProviderByNameMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[GetOidcProvidersFilteredMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[UpdateOidcProviderMethod] = make([]interface{}, 1)
+	testRepo.ArgsIn[RemoveOidcProviderMethod] = make([]interface{}, 1)
 
 	testRepo.ArgsOut[GetUserByExternalIDMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[AddUserMethod] = make([]interface{}, 2)
@@ -144,16 +154,22 @@ func makeTestRepo() *TestRepo {
 	testRepo.ArgsOut[AddProxyResourceMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[UpdateProxyResourceMethod] = make([]interface{}, 2)
 	testRepo.ArgsOut[GetProxyResourceByNameMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[AddOidcProviderMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[GetOidcProviderByNameMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[GetOidcProvidersFilteredMethod] = make([]interface{}, 3)
+	testRepo.ArgsOut[UpdateOidcProviderMethod] = make([]interface{}, 2)
+	testRepo.ArgsOut[RemoveOidcProviderMethod] = make([]interface{}, 1)
 
 	return testRepo
 }
 
 func makeTestAPI(testRepo *TestRepo) *WorkerAPI {
 	api := &WorkerAPI{
-		UserRepo:   testRepo,
-		GroupRepo:  testRepo,
-		PolicyRepo: testRepo,
-		ProxyRepo:  testRepo,
+		UserRepo:     testRepo,
+		GroupRepo:    testRepo,
+		PolicyRepo:   testRepo,
+		ProxyRepo:    testRepo,
+		AuthOidcRepo: testRepo,
 	}
 	Log = &log.Logger{
 		Out:       bytes.NewBuffer([]byte{}),
@@ -662,6 +678,80 @@ func (t TestRepo) RemoveProxyResource(id string) error {
 	var err error
 	if t.ArgsOut[RemoveProxyResourceMethod][0] != nil {
 		err = t.ArgsOut[RemoveProxyResourceMethod][0].(error)
+	}
+	return err
+}
+
+///////////////////////////
+// Auth OIDC provider repo
+//////////////////////////
+
+func (t TestRepo) AddOidcProvider(oidcProvider OidcProvider) (*OidcProvider, error) {
+	t.ArgsIn[AddOidcProviderMethod][0] = oidcProvider
+	var created *OidcProvider
+	if t.ArgsOut[AddOidcProviderMethod][0] != nil {
+		created = t.ArgsOut[AddOidcProviderMethod][0].(*OidcProvider)
+	}
+	var err error
+	if t.ArgsOut[AddOidcProviderMethod][1] != nil {
+		err = t.ArgsOut[AddOidcProviderMethod][1].(error)
+	}
+	return created, err
+}
+
+func (t TestRepo) GetOidcProviderByName(name string) (*OidcProvider, error) {
+	t.ArgsIn[GetOidcProviderByNameMethod][0] = name
+	if specialFunc, ok := t.SpecialFuncs[GetOidcProviderByNameMethod].(func(name string) (*OidcProvider, error)); ok && specialFunc != nil {
+		return specialFunc(name)
+	}
+	var oidcProvider *OidcProvider
+	if t.ArgsOut[GetOidcProviderByNameMethod][0] != nil {
+		oidcProvider = t.ArgsOut[GetOidcProviderByNameMethod][0].(*OidcProvider)
+	}
+	var err error
+	if t.ArgsOut[GetOidcProviderByNameMethod][1] != nil {
+		err = t.ArgsOut[GetOidcProviderByNameMethod][1].(error)
+	}
+	return oidcProvider, err
+}
+
+func (t TestRepo) GetOidcProvidersFiltered(filter *Filter) ([]OidcProvider, int, error) {
+	t.ArgsIn[GetOidcProvidersFilteredMethod][0] = filter
+
+	var resources []OidcProvider
+	if t.ArgsOut[GetOidcProvidersFilteredMethod][0] != nil {
+		resources = t.ArgsOut[GetOidcProvidersFilteredMethod][0].([]OidcProvider)
+	}
+	var total int
+	if t.ArgsOut[GetOidcProvidersFilteredMethod][1] != nil {
+		total = t.ArgsOut[GetOidcProvidersFilteredMethod][1].(int)
+	}
+	var err error
+	if t.ArgsOut[GetOidcProvidersFilteredMethod][2] != nil {
+		err = t.ArgsOut[GetOidcProvidersFilteredMethod][2].(error)
+	}
+	return resources, total, err
+}
+
+func (t TestRepo) UpdateOidcProvider(oidcProvider OidcProvider) (*OidcProvider, error) {
+	t.ArgsIn[UpdateOidcProviderMethod][0] = oidcProvider
+
+	var updated *OidcProvider
+	if t.ArgsOut[UpdateOidcProviderMethod][0] != nil {
+		updated = t.ArgsOut[UpdateOidcProviderMethod][0].(*OidcProvider)
+	}
+	var err error
+	if t.ArgsOut[UpdateOidcProviderMethod][1] != nil {
+		err = t.ArgsOut[UpdateOidcProviderMethod][1].(error)
+	}
+	return updated, err
+}
+
+func (t TestRepo) RemoveOidcProvider(id string) error {
+	t.ArgsIn[RemoveOidcProviderMethod][0] = id
+	var err error
+	if t.ArgsOut[RemoveOidcProviderMethod][0] != nil {
+		err = t.ArgsOut[RemoveOidcProviderMethod][0].(error)
 	}
 	return err
 }

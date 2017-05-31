@@ -28,10 +28,11 @@ type PolicyGroupRelation interface {
 
 // WorkerAPI that implements API interfaces using repositories
 type WorkerAPI struct {
-	UserRepo   UserRepo
-	GroupRepo  GroupRepo
-	PolicyRepo PolicyRepo
-	ProxyRepo  ProxyRepo
+	UserRepo     UserRepo
+	GroupRepo    GroupRepo
+	PolicyRepo   PolicyRepo
+	ProxyRepo    ProxyRepo
+	AuthOidcRepo AuthOidcRepo
 }
 
 // ProxyAPI that implements API interfaces using repositories
@@ -47,6 +48,7 @@ type Filter struct {
 	PolicyName        string
 	GroupName         string
 	ProxyResourceName string
+	AuthProviderName  string
 	// Pagination
 	Offset int
 	Limit  int
@@ -213,6 +215,30 @@ type ProxyResourcesAPI interface {
 	RemoveProxyResource(requestInfo RequestInfo, org string, name string) error
 }
 
+// AuthOidcAPI interface
+type AuthOidcAPI interface {
+	// Store a new OIDC provider in database. Throw error when parameters are invalid,
+	// the OIDC provider already exists or unexpected error happen.
+	AddOidcProvider(requestInfo RequestInfo, name string, path string, issuerURL string, oidcClients []string) (*OidcProvider, error)
+
+	// Retrieve OIDC provider from database. Throw error when parameter is invalid,
+	// the OIDC provider doesn't exist or unexpected error happen.
+	GetOidcProviderByName(requestInfo RequestInfo, name string) (*OidcProvider, error)
+
+	// Retrieve OIDC provider names from database filtered by pathPrefix (optional parameter). Throw error
+	// if pathPrefix is invalid or unexpected error happen.
+	ListOidcProviders(requestInfo RequestInfo, filter *Filter) ([]string, int, error)
+
+	// Update OIDC provider stored in database with new parameters. Throw error if the input parameters
+	// are invalid, the OIDC provider doesn't exist or unexpected error happen.
+	UpdateOidcProvider(requestInfo RequestInfo, oidcProviderName string, newName string, newPath string, newIssuerUrl string,
+		newClients []string) (*OidcProvider, error)
+
+	// Remove OIDC provider stored in database with its client relationships.
+	// Throw error if name parameter is invalid, OIDC provider doesn't exist or unexpected error happen.
+	RemoveOidcProvider(requestInfo RequestInfo, name string) error
+}
+
 // REPOSITORY INTERFACES
 
 // UserRepo contains all database operations
@@ -342,6 +368,30 @@ type ProxyRepo interface {
 	// Remove proxy resource stored in database.
 	// Throw error if there are problems during transaction.
 	RemoveProxyResource(proxyResourceID string) error
+
+	// OrderByValidColumns returns valid columns that you can use in OrderBy
+	OrderByValidColumns(action string) []string
+}
+
+// AuthOidcRepo contains all database operations
+type AuthOidcRepo interface {
+	// Store a OIDC provider in database if there aren't errors.
+	AddOidcProvider(oidcProvider OidcProvider) (*OidcProvider, error)
+
+	// Retrieve the OIDC provider from database if it exists. Otherwise it throws an error.
+	GetOidcProviderByName(name string) (*OidcProvider, error)
+
+	// Retrieve OIDC providers from database filtered by pathPrefix optional parameter. Throw error
+	// if there are problems with database.
+	GetOidcProvidersFiltered(filter *Filter) ([]OidcProvider, int, error)
+
+	// Update the OIDC provider stored in database with new fields.
+	// Throw error if there are problems with database.
+	UpdateOidcProvider(oidcProvider OidcProvider) (*OidcProvider, error)
+
+	// Remove the OIDC provider stored in database with its OIDC Clients.
+	// Throw error if there are problems during transactions.
+	RemoveOidcProvider(id string) error
 
 	// OrderByValidColumns returns valid columns that you can use in OrderBy
 	OrderByValidColumns(action string) []string

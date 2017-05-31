@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"testing"
 
+	"time"
+
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/stretchr/testify/assert"
 )
@@ -36,8 +38,23 @@ func TestWorkerHandler_HandleGetCurrentConfig(t *testing.T) {
 					ConnTtl:      0,
 				},
 				AuthConnector: AuthConnectorConfig{
-					Type:   "test",
-					Issuer: "test",
+					Type: "oidc",
+					OidcProviders: []api.OidcProvider{
+						{
+							ID:        "test1",
+							Name:      "test",
+							Path:      "/path/",
+							Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "test"),
+							IssuerURL: "https://test.com",
+							CreateAt:  time.Now().Truncate(time.Hour),
+							UpdateAt:  time.Now().Truncate(time.Hour),
+							OidcClients: []api.OidcClient{
+								{
+									Name: "client1",
+								},
+							},
+						},
+					},
 				},
 				Version: "test",
 			},

@@ -10,69 +10,69 @@ import (
 // REQUESTS
 
 type CreateUserRequest struct {
-	ExternalID string `json:"externalId, omitempty"`
-	Path       string `json:"path, omitempty"`
+	ExternalID string `json:"externalId,omitempty"`
+	Path       string `json:"path,omitempty"`
 }
 
 type UpdateUserRequest struct {
-	Path string `json:"path, omitempty"`
+	Path string `json:"path,omitempty"`
 }
 
 // RESPONSES
 
 type GetUserExternalIDsResponse struct {
-	ExternalIDs []string `json:"users, omitempty"`
-	Limit       int      `json:"limit, omitempty"`
-	Offset      int      `json:"offset, omitempty"`
-	Total       int      `json:"total, omitempty"`
+	ExternalIDs []string `json:"users,omitempty"`
+	Limit       int      `json:"limit"`
+	Offset      int      `json:"offset"`
+	Total       int      `json:"total"`
 }
 
 type GetGroupsByUserIdResponse struct {
-	Groups []api.UserGroups `json:"groups, omitempty"`
-	Limit  int              `json:"limit, omitempty"`
-	Offset int              `json:"offset, omitempty"`
-	Total  int              `json:"total, omitempty"`
+	Groups []api.UserGroups `json:"groups,omitempty"`
+	Limit  int              `json:"limit"`
+	Offset int              `json:"offset"`
+	Total  int              `json:"total"`
 }
 
 // HANDLERS
 
-func (h *WorkerHandler) HandleAddUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (wh *WorkerHandler) HandleAddUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Process request
 	request := &CreateUserRequest{}
-	requestInfo, _, apiErr := h.processHttpRequest(r, w, nil, request)
+	requestInfo, _, apiErr := wh.processHttpRequest(r, w, nil, request)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
 	// Call user API to create user
-	response, err := h.worker.UserApi.AddUser(requestInfo, request.ExternalID, request.Path)
-	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusCreated)
+	response, err := wh.worker.UserApi.AddUser(requestInfo, request.ExternalID, request.Path)
+	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusCreated)
 }
 
-func (h *WorkerHandler) HandleGetUserByExternalID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleGetUserByExternalID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
 	// Call user API to get user
-	response, err := h.worker.UserApi.GetUserByExternalID(requestInfo, filterData.ExternalID)
-	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
+	response, err := wh.worker.UserApi.GetUserByExternalID(requestInfo, filterData.ExternalID)
+	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 
-func (h *WorkerHandler) HandleListUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleListUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
 	// Call user API to list users
-	result, total, err := h.worker.UserApi.ListUsers(requestInfo, filterData)
+	result, total, err := wh.worker.UserApi.ListUsers(requestInfo, filterData)
 	// Create response
 	response := &GetUserExternalIDsResponse{
 		ExternalIDs: result,
@@ -80,51 +80,51 @@ func (h *WorkerHandler) HandleListUsers(w http.ResponseWriter, r *http.Request, 
 		Limit:       filterData.Limit,
 		Total:       total,
 	}
-	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
+	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 
-func (h *WorkerHandler) HandleUpdateUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleUpdateUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
 	request := &UpdateUserRequest{}
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, request)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, request)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
 	// Call user API to update user
-	response, err := h.worker.UserApi.UpdateUser(requestInfo, filterData.ExternalID, request.Path)
-	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
+	response, err := wh.worker.UserApi.UpdateUser(requestInfo, filterData.ExternalID, request.Path)
+	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 
-func (h *WorkerHandler) HandleRemoveUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleRemoveUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
 	// Call user API to delete user
-	err := h.worker.UserApi.RemoveUser(requestInfo, filterData.ExternalID)
-	h.processHttpResponse(r, w, requestInfo, nil, err, http.StatusNoContent)
+	err := wh.worker.UserApi.RemoveUser(requestInfo, filterData.ExternalID)
+	wh.processHttpResponse(r, w, requestInfo, nil, err, http.StatusNoContent)
 }
 
-func (h *WorkerHandler) HandleListGroupsByUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleListGroupsByUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
 	// Call user API to retrieve user's groups
-	result, total, err := h.worker.UserApi.ListGroupsByUser(requestInfo, filterData)
+	result, total, err := wh.worker.UserApi.ListGroupsByUser(requestInfo, filterData)
 	response := GetGroupsByUserIdResponse{
 		Groups: result,
 		Offset: filterData.Offset,
 		Limit:  filterData.Limit,
 		Total:  total,
 	}
-	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
+	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }

@@ -36,13 +36,17 @@ const (
 	PROXY_RESOURCE_BY_ORG_AND_NAME_NOT_FOUND = "ProxyResourceWithOrgAndNameNotFound"
 	PROXY_RESOURCES_ROUTES_CONFLICT          = "ProxyResourcesRoutesConflict"
 
+	// Auth OIDC Provider API error codes
+	AUTH_OIDC_PROVIDER_ALREADY_EXIST     = "AuthOidcProviderAlreadyExist"
+	AUTH_OIDC_PROVIDER_BY_NAME_NOT_FOUND = "AuthOidcProviderWithNameNotFound"
+
 	// Regex error
 	REGEX_NO_MATCH = "RegexNoMatch"
 )
 
 type Error struct {
-	Code    string `json:"code, omitempty"`
-	Message string `json:"message, omitempty"`
+	Code    string `json:"code,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 func (e Error) Error() string {

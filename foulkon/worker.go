@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	FOULKON_VERSION = "v0.3.0"
+	FOULKON_VERSION = "v0.4.0-SNAPSHOT"
 )
 
 // aux var for ${OS_ENV_VAR} regex
@@ -45,11 +45,12 @@ type Worker struct {
 	KeyFile  string
 
 	// APIs
-	UserApi   api.UserAPI
-	GroupApi  api.GroupAPI
-	PolicyApi api.PolicyAPI
-	AuthzApi  api.AuthzAPI
-	ProxyApi  api.ProxyResourcesAPI
+	UserApi     api.UserAPI
+	GroupApi    api.GroupAPI
+	PolicyApi   api.PolicyAPI
+	AuthzApi    api.AuthzAPI
+	ProxyApi    api.ProxyResourcesAPI
+	AuthOidcAPI api.AuthOidcAPI
 
 	//  Middleware handler
 	MiddlewareHandler *middleware.MiddlewareHandler
@@ -72,8 +73,8 @@ type WorkerConfig struct {
 	ConnTtl      int
 
 	// Authenticator Config
-	AuthType string
-	Issuer   string
+	AuthType      string
+	OidcProviders []api.OidcProvider
 
 	Version string
 }
@@ -147,10 +148,11 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 			Dbmap: gormDB,
 		}
 		authApi = api.WorkerAPI{
-			GroupRepo:  repoDB,
-			UserRepo:   repoDB,
-			PolicyRepo: repoDB,
-			ProxyRepo:  repoDB,
+			GroupRepo:    repoDB,
+			UserRepo:     repoDB,
+			PolicyRepo:   repoDB,
+			ProxyRepo:    repoDB,
+			AuthOidcRepo: repoDB,
 		}
 		wc.IdleConns, _ = strconv.Atoi(dbIdleconns)
 		wc.MaxOpenConns, _ = strconv.Atoi(dbMaxopenconns)
@@ -172,23 +174,25 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 
 	switch authType {
 	case "oidc":
-		issuer, err := getMandatoryValue(config, "authenticator.oidc.issuer")
+		oidcProviders, total, err := authApi.AuthOidcRepo.GetOidcProvidersFiltered(&api.Filter{})
 		if err != nil {
 			return nil, err
 		}
-		wc.Issuer = issuer
 
-		clientsids, err := getMandatoryValue(config, "authenticator.oidc.clientids")
-		if err != nil {
-			return nil, err
+		if total > 0 {
+			wc.OidcProviders = oidcProviders
+			api.Log.Infof("OIDC connectors retrieved %v", total)
+
+			authOidcConnector, err := oidc.InitOIDCConnector(oidcProviders)
+			if err != nil {
+				api.Log.Error(err)
+				return nil, err
+			}
+			authConnector = authOidcConnector
+			api.Log.Infof("OIDC connector configured with %v OIDC Providers: %v", total, oidcProviders)
+		} else {
+			api.Log.Warn("No OIDC connectors retrieved, only admin access allowed")
 		}
-		authOidcConnector, err := oidc.InitOIDCConnector(issuer, strings.Split(clientsids, ";"))
-		if err != nil {
-			api.Log.Error(err)
-			return nil, err
-		}
-		authConnector = authOidcConnector
-		api.Log.Infof("OIDC connector configured for issuer %v", issuer)
 	default:
 		err := errors.New("Unexpected auth_connector_type value in configuration file (Maybe it is empty)")
 		api.Log.Error(err)
@@ -251,6 +255,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 		PolicyApi:         authApi,
 		AuthzApi:          authApi,
 		ProxyApi:          authApi,
+		AuthOidcAPI:       authApi,
 		Config:            wc,
 	}, nil
 }

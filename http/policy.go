@@ -10,78 +10,78 @@ import (
 // REQUESTS
 
 type CreatePolicyRequest struct {
-	Name       string          `json:"name, omitempty"`
-	Path       string          `json:"path, omitempty"`
-	Statements []api.Statement `json:"statements, omitempty"`
+	Name       string          `json:"name,omitempty"`
+	Path       string          `json:"path,omitempty"`
+	Statements []api.Statement `json:"statements,omitempty"`
 }
 
 type UpdatePolicyRequest struct {
-	Name       string          `json:"name, omitempty"`
-	Path       string          `json:"path, omitempty"`
-	Statements []api.Statement `json:"statements, omitempty"`
+	Name       string          `json:"name,omitempty"`
+	Path       string          `json:"path,omitempty"`
+	Statements []api.Statement `json:"statements,omitempty"`
 }
 
 // RESPONSES
 
 type ListPoliciesResponse struct {
-	Policies []string `json:"policies, omitempty"`
-	Limit    int      `json:"limit, omitempty"`
-	Offset   int      `json:"offset, omitempty"`
-	Total    int      `json:"total, omitempty"`
+	Policies []string `json:"policies,omitempty"`
+	Limit    int      `json:"limit"`
+	Offset   int      `json:"offset"`
+	Total    int      `json:"total"`
 }
 
 type ListAllPoliciesResponse struct {
-	Policies []api.PolicyIdentity `json:"policies, omitempty"`
-	Limit    int                  `json:"limit, omitempty"`
-	Offset   int                  `json:"offset, omitempty"`
-	Total    int                  `json:"total, omitempty"`
+	Policies []api.PolicyIdentity `json:"policies,omitempty"`
+	Limit    int                  `json:"limit"`
+	Offset   int                  `json:"offset"`
+	Total    int                  `json:"total"`
 }
 
 type ListAttachedGroupsResponse struct {
-	Groups []api.PolicyGroups `json:"groups, omitempty"`
-	Limit  int                `json:"limit, omitempty"`
-	Offset int                `json:"offset, omitempty"`
-	Total  int                `json:"total, omitempty"`
+	Groups []api.PolicyGroups `json:"groups,omitempty"`
+	Limit  int                `json:"limit"`
+	Offset int                `json:"offset"`
+	Total  int                `json:"total"`
 }
 
 // HANDLERS
 
-func (h *WorkerHandler) HandleAddPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleAddPolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
 	request := &CreatePolicyRequest{}
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, request)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, request)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
 	// Call policy API to create policy
-	response, err := h.worker.PolicyApi.AddPolicy(requestInfo, request.Name, request.Path, filterData.Org, request.Statements)
-	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusCreated)
+	response, err := wh.worker.PolicyApi.AddPolicy(requestInfo, request.Name, request.Path, filterData.Org, request.Statements)
+	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusCreated)
 }
 
-func (h *WorkerHandler) HandleGetPolicyByName(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleGetPolicyByName(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
 	// Call policy API to retrieve policy
-	response, err := h.worker.PolicyApi.GetPolicyByName(requestInfo, filterData.Org, filterData.PolicyName)
-	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
+	response, err := wh.worker.PolicyApi.GetPolicyByName(requestInfo, filterData.Org, filterData.PolicyName)
+	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 
-func (h *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call policy API to list policies
-	result, total, err := h.worker.PolicyApi.ListPolicies(requestInfo, filterData)
+	result, total, err := wh.worker.PolicyApi.ListPolicies(requestInfo, filterData)
 	// Create response
 	policies := []string{}
 	for _, policy := range result {
@@ -93,18 +93,18 @@ func (h *WorkerHandler) HandleListPolicies(w http.ResponseWriter, r *http.Reques
 		Limit:    filterData.Limit,
 		Total:    total,
 	}
-	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
+	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 
-func (h *WorkerHandler) HandleListAllPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleListAllPolicies(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call policy API to list all policies
-	result, total, err := h.worker.PolicyApi.ListPolicies(requestInfo, filterData)
+	result, total, err := wh.worker.PolicyApi.ListPolicies(requestInfo, filterData)
 	// Create response
 	response := &ListAllPoliciesResponse{
 		Policies: result,
@@ -112,43 +112,43 @@ func (h *WorkerHandler) HandleListAllPolicies(w http.ResponseWriter, r *http.Req
 		Limit:    filterData.Limit,
 		Total:    total,
 	}
-	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
+	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 
-func (h *WorkerHandler) HandleUpdatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleUpdatePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
 	request := &UpdatePolicyRequest{}
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, request)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, request)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call policy API to update policy
-	response, err := h.worker.PolicyApi.UpdatePolicy(requestInfo, filterData.Org, filterData.PolicyName, request.Name, request.Path, request.Statements)
-	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
+	response, err := wh.worker.PolicyApi.UpdatePolicy(requestInfo, filterData.Org, filterData.PolicyName, request.Name, request.Path, request.Statements)
+	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 
-func (h *WorkerHandler) HandleRemovePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleRemovePolicy(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call policy API to remove policy
-	err := h.worker.PolicyApi.RemovePolicy(requestInfo, filterData.Org, filterData.PolicyName)
-	h.processHttpResponse(r, w, requestInfo, nil, err, http.StatusNoContent)
+	err := wh.worker.PolicyApi.RemovePolicy(requestInfo, filterData.Org, filterData.PolicyName)
+	wh.processHttpResponse(r, w, requestInfo, nil, err, http.StatusNoContent)
 }
 
-func (h *WorkerHandler) HandleListAttachedGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleListAttachedGroups(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call policy API to list attached groups
-	result, total, err := h.worker.PolicyApi.ListAttachedGroups(requestInfo, filterData)
+	result, total, err := wh.worker.PolicyApi.ListAttachedGroups(requestInfo, filterData)
 	// Create response
 	response := &ListAttachedGroupsResponse{
 		Groups: result,
@@ -156,5 +156,5 @@ func (h *WorkerHandler) HandleListAttachedGroups(w http.ResponseWriter, r *http.
 		Limit:  filterData.Limit,
 		Total:  total,
 	}
-	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
+	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }

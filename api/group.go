@@ -12,13 +12,13 @@ import (
 
 // Group domain
 type Group struct {
-	ID       string    `json:"id, omitempty"`
-	Name     string    `json:"name, omitempty"`
-	Path     string    `json:"path, omitempty"`
-	Org      string    `json:"org, omitempty"`
-	Urn      string    `json:"urn, omitempty"`
-	CreateAt time.Time `json:"createAt, omitempty"`
-	UpdateAt time.Time `json:"updateAt, omitempty"`
+	ID       string    `json:"id,omitempty"`
+	Name     string    `json:"name,omitempty"`
+	Path     string    `json:"path,omitempty"`
+	Org      string    `json:"org,omitempty"`
+	Urn      string    `json:"urn,omitempty"`
+	CreateAt time.Time `json:"createAt,omitempty"`
+	UpdateAt time.Time `json:"updateAt,omitempty"`
 }
 
 func (g Group) String() string {
@@ -32,18 +32,18 @@ func (g Group) GetUrn() string {
 
 // Group identifier to retrieve them from DB
 type GroupIdentity struct {
-	Org  string `json:"org, omitempty"`
-	Name string `json:"name, omitempty"`
+	Org  string `json:"org,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 type GroupMembers struct {
-	User     string    `json:"user, omitempty"`
-	CreateAt time.Time `json:"joined, omitempty"`
+	User     string    `json:"user,omitempty"`
+	CreateAt time.Time `json:"joined,omitempty"`
 }
 
 type GroupPolicies struct {
-	Policy   string    `json:"policy, omitempty"`
-	CreateAt time.Time `json:"attached, omitempty"`
+	Policy   string    `json:"policy,omitempty"`
+	CreateAt time.Time `json:"attached,omitempty"`
 }
 
 // GROUP API IMPLEMENTATION
@@ -352,7 +352,7 @@ func (api WorkerAPI) RemoveGroup(requestInfo RequestInfo, org string, name strin
 		}
 	}
 
-	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("Group deleted %+v", group))
+	LogOperation(requestInfo.RequestID, requestInfo.Identifier, fmt.Sprintf("Group deleted %v", group))
 	return nil
 }
 

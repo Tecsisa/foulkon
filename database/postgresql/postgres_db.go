@@ -45,7 +45,8 @@ func InitDb(datasourcename string, idleConns string, maxOpenConns string, connTT
 	}
 
 	// Create tables if not exist
-	err = db.AutoMigrate(&User{}, &Group{}, &Policy{}, &Statement{}, &GroupUserRelation{}, &GroupPolicyRelation{}, &ProxyResource{}).Error
+	err = db.AutoMigrate(&User{}, &Group{}, &Policy{}, &Statement{}, &GroupUserRelation{}, &GroupPolicyRelation{},
+		&ProxyResource{}, &OidcProvider{}, &OidcClient{}).Error
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +139,7 @@ func (GroupPolicyRelation) TableName() string {
 	return "group_policy_relations"
 }
 
-func (u PostgresRepo) OrderByValidColumns(action string) []string {
+func (pr PostgresRepo) OrderByValidColumns(action string) []string {
 	switch action {
 	case api.USER_ACTION_LIST_USERS:
 		return []string{"path", "external_id", "create_at", "update_at", "urn"}
@@ -157,6 +158,8 @@ func (u PostgresRepo) OrderByValidColumns(action string) []string {
 	case api.PROXY_ACTION_LIST_RESOURCES:
 		return []string{"name", "path", "org", "host", "path_resource", "method",
 			"urn_resource", "urn", "action", "create_at", "update_at"}
+	case api.AUTH_OIDC_ACTION_LIST_PROVIDERS:
+		return []string{"name", "path", "create_at", "update_at", "urn"}
 	default:
 		return nil
 	}
@@ -181,4 +184,32 @@ type ProxyResource struct {
 // ProxyResource's table name
 func (ProxyResource) TableName() string {
 	return "proxy_resources"
+}
+
+// Auth OIDC Provider table
+type OidcProvider struct {
+	ID        string `gorm:"primary_key"`
+	Name      string `gorm:"not null"`
+	Path      string `gorm:"not null"`
+	Urn       string `gorm:"not null;unique"`
+	CreateAt  int64  `gorm:"not null"`
+	UpdateAt  int64  `gorm:"not null"`
+	IssuerURL string `gorm:"not null"`
+}
+
+// OidcProvider's table name
+func (OidcProvider) TableName() string {
+	return "oidc_providers"
+}
+
+// Auth OIDC Client table
+type OidcClient struct {
+	ID             string `gorm:"primary_key"`
+	OidcProviderID string `gorm:"not null;unique_index:idx_oidc_client"`
+	Name           string `gorm:"not null;unique_index:idx_oidc_client"`
+}
+
+// OidcClient's table name
+func (OidcClient) TableName() string {
+	return "oidc_clients"
 }

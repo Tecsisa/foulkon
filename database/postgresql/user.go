@@ -10,7 +10,7 @@ import (
 
 // USER REPOSITORY IMPLEMENTATION
 
-func (u PostgresRepo) AddUser(user api.User) (*api.User, error) {
+func (pr PostgresRepo) AddUser(user api.User) (*api.User, error) {
 	// Create user model
 	userDB := &User{
 		ID:         user.ID,
@@ -22,7 +22,7 @@ func (u PostgresRepo) AddUser(user api.User) (*api.User, error) {
 	}
 
 	// Store user
-	err := u.Dbmap.Create(userDB).Error
+	err := pr.Dbmap.Create(userDB).Error
 
 	// Error handling
 	if err != nil {
@@ -35,9 +35,9 @@ func (u PostgresRepo) AddUser(user api.User) (*api.User, error) {
 	return dbUserToAPIUser(userDB), nil
 }
 
-func (u PostgresRepo) GetUserByExternalID(id string) (*api.User, error) {
+func (pr PostgresRepo) GetUserByExternalID(id string) (*api.User, error) {
 	user := &User{}
-	query := u.Dbmap.Where("external_id like ?", id).First(user)
+	query := pr.Dbmap.Where("external_id like ?", id).First(user)
 
 	// Check if user exists
 	if query.RecordNotFound() {
@@ -58,9 +58,9 @@ func (u PostgresRepo) GetUserByExternalID(id string) (*api.User, error) {
 	return dbUserToAPIUser(user), nil
 }
 
-func (u PostgresRepo) GetUserByID(id string) (*api.User, error) {
+func (pr PostgresRepo) GetUserByID(id string) (*api.User, error) {
 	user := &User{}
-	query := u.Dbmap.Where("id like ?", id).First(user)
+	query := pr.Dbmap.Where("id like ?", id).First(user)
 
 	// Check if user exists
 	if query.RecordNotFound() {
@@ -81,10 +81,10 @@ func (u PostgresRepo) GetUserByID(id string) (*api.User, error) {
 	return dbUserToAPIUser(user), nil
 }
 
-func (u PostgresRepo) GetUsersFiltered(filter *api.Filter) ([]api.User, int, error) {
+func (pr PostgresRepo) GetUsersFiltered(filter *api.Filter) ([]api.User, int, error) {
 	var total int
 	users := []User{}
-	query := u.Dbmap
+	query := pr.Dbmap
 
 	if len(filter.PathPrefix) > 0 {
 		query = query.Where("path like ?", filter.PathPrefix+"%")
@@ -113,7 +113,7 @@ func (u PostgresRepo) GetUsersFiltered(filter *api.Filter) ([]api.User, int, err
 	return apiusers, total, nil
 }
 
-func (u PostgresRepo) UpdateUser(user api.User) (*api.User, error) {
+func (pr PostgresRepo) UpdateUser(user api.User) (*api.User, error) {
 	userDB := User{
 		ID:         user.ID,
 		ExternalID: user.ExternalID,
@@ -124,7 +124,7 @@ func (u PostgresRepo) UpdateUser(user api.User) (*api.User, error) {
 	}
 
 	// Update user
-	query := u.Dbmap.Model(&User{ID: user.ID}).Updates(userDB)
+	query := pr.Dbmap.Model(&User{ID: user.ID}).Updates(userDB)
 
 	// Error Handling
 	if err := query.Error; err != nil {
@@ -137,8 +137,8 @@ func (u PostgresRepo) UpdateUser(user api.User) (*api.User, error) {
 	return &user, nil
 }
 
-func (u PostgresRepo) RemoveUser(id string) error {
-	transaction := u.Dbmap.Begin()
+func (pr PostgresRepo) RemoveUser(id string) error {
+	transaction := pr.Dbmap.Begin()
 	// Delete user
 	transaction.Where("id like ?", id).Delete(&User{})
 
@@ -167,10 +167,10 @@ func (u PostgresRepo) RemoveUser(id string) error {
 	return nil
 }
 
-func (u PostgresRepo) GetGroupsByUserID(id string, filter *api.Filter) ([]api.UserGroupRelation, int, error) {
+func (pr PostgresRepo) GetGroupsByUserID(id string, filter *api.Filter) ([]api.UserGroupRelation, int, error) {
 	var total int
 	relations := []GroupUserRelation{}
-	query := u.Dbmap
+	query := pr.Dbmap
 
 	if len(filter.OrderBy) > 0 {
 		query = query.Order(filter.OrderBy)
@@ -191,7 +191,7 @@ func (u PostgresRepo) GetGroupsByUserID(id string, filter *api.Filter) ([]api.Us
 	if relations != nil {
 		groups = make([]api.UserGroupRelation, len(relations), cap(relations))
 		for i, r := range relations {
-			group, err := u.GetGroupById(r.GroupID)
+			group, err := pr.GetGroupById(r.GroupID)
 			// Error handling
 			if err != nil {
 				return nil, total, &database.Error{

@@ -55,8 +55,77 @@ __Note:__ Use a strong password for admin user in production.
 |---------------|----------------------------------------------------------|--------|---------|----------|
 | type          | Type of connector that will be used. Only `oidc` at now. | `oidc` |         | No       |
 
-#### [authenticator.oidc]
-| OIDC      | OpenID Connect authenticatior connector configuration properties | Values                        | Default | Optional |
-|-----------|------------------------------------------------------------------|-------------------------------|---------|----------|
-| issuer    | Full url for token issuer.                                       | `https://accounts.google.com` |         | No       |
-| clientids | List of allowed clients separated by `;`.                        | `clientId1;clientId2`         |         | No       |
+## OIDC Providers
+The worker reads configuration from database at startup, and configures authenticator to use configured OIDC Providers with its clients.
+If you want to add, update o delete OIDC Providers you have to use the [OIDC Provider API](../api/oidc_provider.md). 
+If you change OIDC Providers you will need to restart the worker servers to take effect the changes.
+
+## Current configuration
+The worker server has an endpoint to see what configuration is active at this time, only for admin access. 
+
+#### Curl Example
+
+```bash
+$ curl -n -X POST /about \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Basic admin"
+```
+
+
+#### Response Example
+
+```
+HTTP/1.1 200 Ok
+```
+
+```json
+{
+  "logger": {
+    "type": "default",
+    "level": "info"
+  },
+  "database": {
+    "type": "postgres",
+    "idleconns": 5,
+    "maxopenconns": 20,
+    "connttl": 300
+  },
+  "authenticator": {
+    "type": "oidc",
+    "oidcProviders": [
+      {
+        "id": "cedd8d9b-ef69-4eda-a7d1-44548fa34107",
+        "name": "google",
+        "path": "/gapps/",
+        "urn": "urn:iws:auth::oidc/gapps/google",
+        "createAt": "2017-05-30T10:51:32.935174579Z",
+        "updateAt": "2017-05-30T10:51:32.935174628Z",
+        "issuerURL": "https://accounts.google.com",
+        "oidcClients": [
+          {
+            "name": "test-api-client"
+          },
+          {
+            "name": "test-api-client2"
+          }
+        ]
+      },
+      {
+        "id": "fe2863bf-a90f-4b54-a42c-e65fd1719774",
+        "name": "salesforce",
+        "path": "/salesforce/",
+        "urn": "urn:iws:auth::oidc/salesforce/salesforce",
+        "createAt": "2017-05-30T10:51:35.747331949Z",
+        "updateAt": "2017-05-30T10:51:35.747331978Z",
+        "issuerURL": "https://login.salesforce.com",
+        "oidcClients": [
+          {
+            "name": "test-client"
+          }
+        ]
+      }
+    ]
+  },
+  "version": "v0.4.0-SNAPSHOT"
+}
+```

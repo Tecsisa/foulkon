@@ -53,6 +53,7 @@ func TestAuthenticatorMiddleware_Action(t *testing.T) {
 		admin              bool
 		expectedLog        string
 		expectedStatusCode int
+		testConnectorNull  bool
 	}{
 		"OkCase": {
 			userID:             "UserId",
@@ -79,10 +80,21 @@ func TestAuthenticatorMiddleware_Action(t *testing.T) {
 			unauthenticated:    true,
 			expectedStatusCode: http.StatusUnauthorized,
 		},
+		"OkNoAuthAuthenticationMethod": {
+			userID:             "UserId",
+			unauthenticated:    true,
+			expectedStatusCode: http.StatusUnauthorized,
+			testConnectorNull:  true,
+		},
 	}
 
 	for n, testcase := range testcases {
-		mw := NewAuthenticatorMiddleware(&TestConnector{userID: testcase.userID, unauthenticated: testcase.unauthenticated}, "admin", "admin")
+		var mw *AuthenticatorMiddleware
+		if testcase.testConnectorNull {
+			mw = NewAuthenticatorMiddleware(nil, "admin", "admin")
+		} else {
+			mw = NewAuthenticatorMiddleware(&TestConnector{userID: testcase.userID, unauthenticated: testcase.unauthenticated}, "admin", "admin")
+		}
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		if testcase.admin {
 			req.SetBasicAuth(testcase.userID, testcase.password)

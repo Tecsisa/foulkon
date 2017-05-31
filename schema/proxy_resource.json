@@ -26,7 +26,7 @@
         },
         "urn": {
           "description": "Uniform Resource Name for this resource",
-          "example": "urn:example:*",
+          "example": "urn:examplews:application:v1:resource/get",
           "type": "string"
         },
         "action": {
@@ -61,7 +61,7 @@
       "type": "object",
       "definitions": {
         "id": {
-          "description": "Unique policy identifier",
+          "description": "Unique proxy resource identifier",
           "readOnly": true,
           "format": "uuid",
           "type": "string"

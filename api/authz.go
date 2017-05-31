@@ -17,19 +17,19 @@ type RequestInfo struct {
 }
 
 type EffectRestriction struct {
-	Effect       string        `json:"effect, omitempty"`
-	Restrictions *Restrictions `json:"restrictions, omitempty"`
+	Effect       string        `json:"effect,omitempty"`
+	Restrictions *Restrictions `json:"restrictions,omitempty"`
 }
 
 type Restrictions struct {
-	AllowedUrnPrefixes []string `json:"allowedUrnPrefixes, omitempty"`
-	AllowedFullUrns    []string `json:"allowedFullUrns, omitempty"`
-	DeniedUrnPrefixes  []string `json:"deniedUrnPrefixes, omitempty"`
-	DeniedFullUrns     []string `json:"deniedFullUrns, omitempty"`
+	AllowedUrnPrefixes []string `json:"allowedUrnPrefixes,omitempty"`
+	AllowedFullUrns    []string `json:"allowedFullUrns,omitempty"`
+	DeniedUrnPrefixes  []string `json:"deniedUrnPrefixes,omitempty"`
+	DeniedFullUrns     []string `json:"deniedFullUrns,omitempty"`
 }
 
 type ExternalResource struct {
-	Urn string `json:"urn, omitempty"`
+	Urn string `json:"urn,omitempty"`
 }
 
 func (e ExternalResource) GetUrn() string {
@@ -104,6 +104,23 @@ func (api WorkerAPI) GetAuthorizedProxyResources(requestInfo RequestInfo, resour
 		proxyResourcesFiltered = append(proxyResourcesFiltered, res.(ProxyResource))
 	}
 	return proxyResourcesFiltered, nil
+}
+
+// GetAuthorizedOidcProviders returns authorized OIDC providers for specified user combined with resource+action
+func (api WorkerAPI) GetAuthorizedOidcProviders(requestInfo RequestInfo, resourceUrn string, action string, oidcProviders []OidcProvider) ([]OidcProvider, error) {
+	resourcesToAuthorize := []Resource{}
+	for _, oidcProvider := range oidcProviders {
+		resourcesToAuthorize = append(resourcesToAuthorize, oidcProvider)
+	}
+	resources, err := api.getAuthorizedResources(requestInfo, resourceUrn, action, resourcesToAuthorize)
+	if err != nil {
+		return nil, err
+	}
+	oidcProvidersFiltered := []OidcProvider{}
+	for _, res := range resources {
+		oidcProvidersFiltered = append(oidcProvidersFiltered, res.(OidcProvider))
+	}
+	return oidcProvidersFiltered, nil
 }
 
 // GetAuthorizedExternalResources returns the resources where the specified user has the action granted

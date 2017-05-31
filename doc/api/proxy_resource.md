@@ -11,7 +11,7 @@ Entity with the external resource information
 | **host** | *string* | Scheme + registered name (hostname) or IP address | `"https://httpbin.org"` |
 | **method** | *string* | HTTP Method definition | `"GET"` |
 | **path** | *string* | Relative path for destination host. | `"/example"` |
-| **urn** | *string* | Uniform Resource Name for this resource | `"urn:example:*"` |
+| **urn** | *string* | Uniform Resource Name for this resource | `"urn:examplews:application:v1:resource/get"` |
 
 
 ## <a name="resource-order2_proxy_resource">Proxy Resource</a>
@@ -24,7 +24,7 @@ Proxy Resource API
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
 | **createdAt** | *date-time* | Proxy resource creation date | `"2015-01-01T12:00:00Z"` |
-| **id** | *uuid* | Unique policy identifier | `"01234567-89ab-cdef-0123-456789abcdef"` |
+| **id** | *uuid* | Unique proxy resource identifier | `"01234567-89ab-cdef-0123-456789abcdef"` |
 | **name** | *string* | Proxy resource name | `"Example"` |
 | **org** | *string* | Proxy resource organization | `"tecsisa"` |
 | **path** | *string* | Proxy resource location | `"/example/admin/"` |
@@ -32,7 +32,7 @@ Proxy Resource API
 | **[resource:host](#resource-order1_resource_entity)** | *string* | Scheme + registered name (hostname) or IP address | `"https://httpbin.org"` |
 | **[resource:method](#resource-order1_resource_entity)** | *string* | HTTP Method definition | `"GET"` |
 | **[resource:path](#resource-order1_resource_entity)** | *string* | Relative path for destination host. | `"/example"` |
-| **[resource:urn](#resource-order1_resource_entity)** | *string* | Uniform Resource Name for this resource | `"urn:example:*"` |
+| **[resource:urn](#resource-order1_resource_entity)** | *string* | Uniform Resource Name for this resource | `"urn:examplews:application:v1:resource/get"` |
 | **updateAt** | *date-time* | The date timestamp of the last update | `"2015-01-01T12:00:00Z"` |
 | **urn** | *string* | Uniform Resource Name | `"urn:iws:iam:org:proxy/example/admin"` |
 
@@ -54,7 +54,7 @@ POST /api/v1/organizations/{organization_id}/proxy-resources
 | **resource:host** | *string* | Scheme + registered name (hostname) or IP address | `"https://httpbin.org"` |
 | **resource:method** | *string* | HTTP Method definition | `"GET"` |
 | **resource:path** | *string* | Relative path for destination host. | `"/example"` |
-| **resource:urn** | *string* | Uniform Resource Name for this resource | `"urn:example:*"` |
+| **resource:urn** | *string* | Uniform Resource Name for this resource | `"urn:examplews:application:v1:resource/get"` |
 
 
 
@@ -69,7 +69,7 @@ $ curl -n -X POST /api/v1/organizations/$ORGANIZATION_ID/proxy-resources \
     "host": "https://httpbin.org",
     "path": "/example",
     "method": "GET",
-    "urn": "urn:example:*",
+    "urn": "urn:examplews:application:v1:resource/get",
     "action": "example:get"
   }
 }' \
@@ -97,7 +97,7 @@ HTTP/1.1 201 Created
     "host": "https://httpbin.org",
     "path": "/example",
     "method": "GET",
-    "urn": "urn:example:*",
+    "urn": "urn:examplews:application:v1:resource/get",
     "action": "example:get"
   }
 }
@@ -121,7 +121,7 @@ PUT /api/v1/organizations/{organization_id}/proxy-resources/{proxy_resource_name
 | **resource:host** | *string* | Scheme + registered name (hostname) or IP address | `"https://httpbin.org"` |
 | **resource:method** | *string* | HTTP Method definition | `"GET"` |
 | **resource:path** | *string* | Relative path for destination host. | `"/example"` |
-| **resource:urn** | *string* | Uniform Resource Name for this resource | `"urn:example:*"` |
+| **resource:urn** | *string* | Uniform Resource Name for this resource | `"urn:examplews:application:v1:resource/get"` |
 
 
 
@@ -136,7 +136,7 @@ $ curl -n -X PUT /api/v1/organizations/$ORGANIZATION_ID/proxy-resources/$PROXY_R
     "host": "https://httpbin.org",
     "path": "/example",
     "method": "GET",
-    "urn": "urn:example:*",
+    "urn": "urn:examplews:application:v1:resource/get",
     "action": "example:get"
   }
 }' \
@@ -164,7 +164,7 @@ HTTP/1.1 200 OK
     "host": "https://httpbin.org",
     "path": "/example",
     "method": "GET",
-    "urn": "urn:example:*",
+    "urn": "urn:examplews:application:v1:resource/get",
     "action": "example:get"
   }
 }
@@ -231,7 +231,7 @@ HTTP/1.1 200 OK
     "host": "https://httpbin.org",
     "path": "/example",
     "method": "GET",
-    "urn": "urn:example:*",
+    "urn": "urn:examplews:application:v1:resource/get",
     "action": "example:get"
   }
 }

@@ -27,33 +27,33 @@ const (
 // REQUESTS
 
 type CreateProxyResourceRequest struct {
-	Name     string             `json:"name, omitempty"`
-	Path     string             `json:"path, omitempty"`
-	Resource api.ResourceEntity `json:"resource, omitempty"`
+	Name     string             `json:"name,omitempty"`
+	Path     string             `json:"path,omitempty"`
+	Resource api.ResourceEntity `json:"resource,omitempty"`
 }
 
 type UpdateProxyResourceRequest struct {
-	Name     string             `json:"name, omitempty"`
-	Path     string             `json:"path, omitempty"`
-	Resource api.ResourceEntity `json:"resource, omitempty"`
+	Name     string             `json:"name,omitempty"`
+	Path     string             `json:"path,omitempty"`
+	Resource api.ResourceEntity `json:"resource,omitempty"`
 }
 
 // RESPONSES
 
 type ProxyResources struct {
-	Resources []api.ProxyResource `json:"resources, omitempty"`
+	Resources []api.ProxyResource `json:"resources,omitempty"`
 }
 
 type ListProxyResourcesResponse struct {
-	Resources []string `json:"resources, omitempty"`
-	Limit     int      `json:"limit, omitempty"`
-	Offset    int      `json:"offset, omitempty"`
-	Total     int      `json:"total, omitempty"`
+	Resources []string `json:"resources,omitempty"`
+	Limit     int      `json:"limit"`
+	Offset    int      `json:"offset"`
+	Total     int      `json:"total"`
 }
 
 var rUrnParam, _ = regexp.Compile(`\{(\w+)\}`)
 
-func (h *ProxyHandler) HandleRequest(proxyResource api.ProxyResource) httprouter.Handle {
+func (ph *ProxyHandler) HandleRequest(proxyResource api.ProxyResource) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		requestID := uuid.NewV4().String()
 		w.Header().Set(middleware.REQUEST_ID_HEADER, requestID)
@@ -63,7 +63,7 @@ func (h *ProxyHandler) HandleRequest(proxyResource api.ProxyResource) httprouter
 		for _, p := range parameters {
 			urn = strings.Replace(urn, p[0], ps.ByName(p[1]), -1)
 		}
-		if workerRequestID, err := h.checkAuthorization(r, urn, proxyResource.Resource.Action); err == nil {
+		if workerRequestID, err := ph.checkAuthorization(r, urn, proxyResource.Resource.Action); err == nil {
 			destURL, err := url.Parse(proxyResource.Resource.Host)
 			if err != nil {
 				apiErr := getErrorMessage(INVALID_DEST_HOST_URL, fmt.Sprintf("Error creating destination host URL: %v", err.Error()))
@@ -76,7 +76,7 @@ func (h *ProxyHandler) HandleRequest(proxyResource api.ProxyResource) httprouter
 			// Clean request URI because net/http send method force this
 			r.RequestURI = ""
 			// Retrieve requested resource
-			res, err := h.client.Do(r)
+			res, err := ph.client.Do(r)
 			if err != nil {
 				apiErr := getErrorMessage(HOST_UNREACHABLE, fmt.Sprintf("Error calling to destination host resource: %v", err.Error()))
 				api.TransactionProxyErrorLogWithStatus(requestID, workerRequestID, r, http.StatusInternalServerError, apiErr)
@@ -130,42 +130,42 @@ func (h *ProxyHandler) HandleRequest(proxyResource api.ProxyResource) httprouter
 
 // HANDLERS
 
-func (h *WorkerHandler) HandleAddProxyResource(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleAddProxyResource(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
 	request := &CreateProxyResourceRequest{}
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, request)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, request)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
 	// Call proxy Resource API to create proxyResource
-	response, err := h.worker.ProxyApi.AddProxyResource(requestInfo, request.Name, filterData.Org, request.Path, request.Resource)
-	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusCreated)
+	response, err := wh.worker.ProxyApi.AddProxyResource(requestInfo, request.Name, filterData.Org, request.Path, request.Resource)
+	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusCreated)
 }
 
-func (h *WorkerHandler) HandleGetProxyResourceByName(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleGetProxyResourceByName(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 
 	// Call policy API to retrieve policy
-	response, err := h.worker.ProxyApi.GetProxyResourceByName(requestInfo, filterData.Org, filterData.ProxyResourceName)
-	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
+	response, err := wh.worker.ProxyApi.GetProxyResourceByName(requestInfo, filterData.Org, filterData.ProxyResourceName)
+	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 
-func (h *WorkerHandler) HandleListProxyResource(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleListProxyResource(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call proxy Resource API to create proxyResource
-	result, total, err := h.worker.ProxyApi.ListProxyResources(requestInfo, filterData)
+	result, total, err := wh.worker.ProxyApi.ListProxyResources(requestInfo, filterData)
 	proxyResources := []string{}
 	for _, proxyResource := range result {
 		proxyResources = append(proxyResources, proxyResource.Name)
@@ -177,35 +177,35 @@ func (h *WorkerHandler) HandleListProxyResource(w http.ResponseWriter, r *http.R
 		Limit:     filterData.Limit,
 		Total:     total,
 	}
-	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
+	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 
-func (h *WorkerHandler) HandleUpdateProxyResource(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleUpdateProxyResource(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
 	request := &UpdateProxyResourceRequest{}
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, request)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, request)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call proxy resource API to update proxy resource
-	response, err := h.worker.ProxyApi.UpdateProxyResource(requestInfo, filterData.Org, filterData.ProxyResourceName, request.Name, request.Path, request.Resource)
-	h.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
+	response, err := wh.worker.ProxyApi.UpdateProxyResource(requestInfo, filterData.Org, filterData.ProxyResourceName, request.Name, request.Path, request.Resource)
+	wh.processHttpResponse(r, w, requestInfo, response, err, http.StatusOK)
 }
 
-func (h *WorkerHandler) HandleRemoveProxyResource(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (wh *WorkerHandler) HandleRemoveProxyResource(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Process request
-	requestInfo, filterData, apiErr := h.processHttpRequest(r, w, ps, nil)
+	requestInfo, filterData, apiErr := wh.processHttpRequest(r, w, ps, nil)
 	if apiErr != nil {
-		h.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
+		wh.processHttpResponse(r, w, requestInfo, nil, apiErr, http.StatusBadRequest)
 		return
 	}
 	// Call proxy resource API to remove proxy resource
-	err := h.worker.ProxyApi.RemoveProxyResource(requestInfo, filterData.Org, filterData.ProxyResourceName)
-	h.processHttpResponse(r, w, requestInfo, nil, err, http.StatusNoContent)
+	err := wh.worker.ProxyApi.RemoveProxyResource(requestInfo, filterData.Org, filterData.ProxyResourceName)
+	wh.processHttpResponse(r, w, requestInfo, nil, err, http.StatusNoContent)
 }
 
-func (h *ProxyHandler) checkAuthorization(r *http.Request, urn string, action string) (string, error) {
+func (ph *ProxyHandler) checkAuthorization(r *http.Request, urn string, action string) (string, error) {
 	workerRequestID := "None"
 	if !isFullUrn(urn) {
 		return workerRequestID,
@@ -226,14 +226,14 @@ func (h *ProxyHandler) checkAuthorization(r *http.Request, urn string, action st
 		return workerRequestID, getErrorMessage(api.UNKNOWN_API_ERROR, err.Error())
 	}
 
-	req, err := http.NewRequest(http.MethodPost, h.proxy.WorkerHost+RESOURCE_URL, bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodPost, ph.proxy.WorkerHost+RESOURCE_URL, bytes.NewBuffer(body))
 	if err != nil {
 		return workerRequestID, getErrorMessage(api.UNKNOWN_API_ERROR, err.Error())
 	}
 	// Add all headers from original request
 	req.Header = r.Header
 	// Call worker to retrieve authorization
-	res, err := h.client.Do(req)
+	res, err := ph.client.Do(req)
 	if err != nil {
 		return workerRequestID, getErrorMessage(HOST_UNREACHABLE, err.Error())
 	}

@@ -41,6 +41,31 @@ Google group resource example:
 ```
 urn:iws:iam:google:group/gapps/gmail/dev-mail
 ```
+### Authenticator resources
+Authenticator resources allow you to manage what kind of authentication you want. At this time, only OpenID Connect authentication is available.
+This is a representation of a authentication resource with its elements:
+
+```
+urn:iws:auth::kind/pathname
+```
+
+- urn: uniform resource name.
+- iws: internal web service.
+- auth: authentication resource type.
+- kind: type of authentication (oidc, saml, etc).
+- pathname: location for this resource.
+
+Examples:
+
+Google OIDC authentication:
+```
+urn:iws:auth::oidc/google/accounts
+```
+
+Salesforce OIDC authentication:
+```
+urn:iws:auth::oidc/salesforce/login
+```
 
 ### External resources
 IAM urns are reserved for AuthZ self-management, so, in order to prevent conflicts, external resources must have different names. This is the representation of an external resource:

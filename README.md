@@ -49,6 +49,7 @@ API docs:
 - [Group](doc/api/group.md)
 - [Policy](doc/api/policy.md)
 - [Proxy Resource](doc/api/proxy_resource.md)
+- [OIDC Provider](doc/api/oidc_provider.md)
 - [Authorization](doc/api/resource.md)
 
 You can also import this [Postman collection](schema/postman.json) file with all API methods.
