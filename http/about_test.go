@@ -46,8 +46,8 @@ func TestWorkerHandler_HandleGetCurrentConfig(t *testing.T) {
 							Path:      "/path/",
 							Urn:       api.CreateUrn("", api.RESOURCE_AUTH_OIDC_PROVIDER, "/path/", "test"),
 							IssuerURL: "https://test.com",
-							CreateAt:  time.Now().Truncate(time.Hour),
-							UpdateAt:  time.Now().Truncate(time.Hour),
+							CreateAt:  time.Now().UTC().Truncate(time.Hour),
+							UpdateAt:  time.Now().UTC().Truncate(time.Hour),
 							OidcClients: []api.OidcClient{
 								{
 									Name: "client1",

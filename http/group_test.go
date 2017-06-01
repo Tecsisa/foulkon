@@ -15,7 +15,7 @@ import (
 )
 
 func TestWorkerHandler_HandleAddGroup(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// API method args
 		org     string
@@ -178,7 +178,7 @@ func TestWorkerHandler_HandleAddGroup(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleGetGroupByName(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// API method args
 		org          string
@@ -615,7 +615,7 @@ func TestWorkerHandler_HandleListAllGroups(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleUpdateGroup(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// API method args
 		org     string
@@ -1235,7 +1235,7 @@ func TestWorkerHandler_HandleRemoveMember(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleListMembers(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// API method args
 		filter       *api.Filter
@@ -1722,7 +1722,7 @@ func TestWorkerHandler_HandleDetachPolicyToGroup(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleListAttachedGroupPolicies(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// API method args
 		filter       *api.Filter

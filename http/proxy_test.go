@@ -14,7 +14,7 @@ import (
 )
 
 func TestProxyHandler_HandleRequest(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		expectedStatusCode int
 		expectedError      *api.Error
@@ -215,7 +215,7 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleAddProxyResource(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// API method args
 		org     string
@@ -445,7 +445,7 @@ func TestWorkerHandler_HandleAddProxyResource(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleUpdateProxyResource(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// API method args
 		org     string
@@ -698,7 +698,7 @@ func TestWorkerHandler_HandleUpdateProxyResource(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleGetProxyResourceByName(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// API method args
 		org          string

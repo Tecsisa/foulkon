@@ -15,7 +15,7 @@ import (
 )
 
 func TestWorkerHandler_HandleAddUser(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// API method args
 		request *CreateUserRequest
@@ -169,7 +169,7 @@ func TestWorkerHandler_HandleAddUser(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleGetUserByExternalID(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// API method args
 		externalID   string
@@ -437,7 +437,7 @@ func TestWorkerHandler_HandleListUsers(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleUpdateUser(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// API method args
 		request *UpdateUserRequest
@@ -703,7 +703,7 @@ func TestWorkerHandler_HandleRemoveUser(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleListGroupsByUser(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// API method args
 		filter       *api.Filter

@@ -14,7 +14,7 @@ import (
 )
 
 func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// API method args
 		org     string
@@ -251,7 +251,7 @@ func TestWorkerHandler_HandleAddPolicy(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleGetPolicyByName(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// API method args
 		org          string
@@ -728,7 +728,7 @@ func TestWorkerHandler_HandleListAllPolicies(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleUpdatePolicy(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// API method args
 		org     string
@@ -1104,7 +1104,7 @@ func TestWorkerHandler_HandleRemovePolicy(t *testing.T) {
 }
 
 func TestWorkerHandler_HandleListAttachedGroups(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	testcases := map[string]struct {
 		// API method args
 		filter       *api.Filter
