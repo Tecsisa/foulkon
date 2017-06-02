@@ -93,7 +93,12 @@
                 "$ref": "#/definitions/order2_oidc_provider/definitions/issuerUrl"
               },
               "clients": {
-                "$ref": "#/definitions/order2_oidc_provider/definitions/clients"
+                "description": "OIDC Client identifiers associated",
+                "example": ["client-api-identifier"],
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               }
             },
             "required": [
@@ -126,7 +131,12 @@
                 "$ref": "#/definitions/order2_oidc_provider/definitions/issuerUrl"
               },
               "clients": {
-                "$ref": "#/definitions/order2_oidc_provider/definitions/clients"
+                "description": "OIDC Client identifiers associated",
+                "example": ["client-api-identifier"],
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               }
             },
             "required": [

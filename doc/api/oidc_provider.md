@@ -40,7 +40,7 @@ POST /api/v1/admin/auth/oidc/providers
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **clients** | *array* | OIDC Clients associated | `[{"name":"client-api-identifier"}]` |
+| **clients** | *array* | OIDC Client identifiers associated | `["client-api-identifier"]` |
 | **issuerUrl** | *string* | The issuer URL which issues the tokens | `"https://accounts.google.com"` |
 | **name** | *string* | OIDC Provider name | `"Example"` |
 | **path** | *string* | OIDC Provider location | `"/example/admin/"` |
@@ -56,9 +56,7 @@ $ curl -n -X POST /api/v1/admin/auth/oidc/providers \
   "path": "/example/admin/",
   "issuerUrl": "https://accounts.google.com",
   "clients": [
-    {
-      "name": "client-api-identifier"
-    }
+    "client-api-identifier"
   ]
 }' \
   -H "Content-Type: application/json" \
@@ -101,7 +99,7 @@ PUT /api/v1/admin/auth/oidc/providers/{oidc_provider_name}
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **clients** | *array* | OIDC Clients associated | `[{"name":"client-api-identifier"}]` |
+| **clients** | *array* | OIDC Client identifiers associated | `["client-api-identifier"]` |
 | **issuerUrl** | *string* | The issuer URL which issues the tokens | `"https://accounts.google.com"` |
 | **name** | *string* | OIDC Provider name | `"Example"` |
 | **path** | *string* | OIDC Provider location | `"/example/admin/"` |
@@ -117,9 +115,7 @@ $ curl -n -X PUT /api/v1/admin/auth/oidc/providers/$OIDC_PROVIDER_NAME \
   "path": "/example/admin/",
   "issuerUrl": "https://accounts.google.com",
   "clients": [
-    {
-      "name": "client-api-identifier"
-    }
+    "client-api-identifier"
   ]
 }' \
   -H "Content-Type: application/json" \
