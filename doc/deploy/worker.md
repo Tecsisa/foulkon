@@ -1,18 +1,18 @@
 # Deploy Foulkon Worker
 
  You have to specify configuration file using flag `-config-file`. Using binary file command is `worker -config-file=/path/config.toml`
- 
+
 ## Deploy with docker
 Then, you can run the docker image, mounting (-v) a config.toml inside the container (you could also make a custom Dockerfile with "ADD my-custom-conf.toml /my-custom-conf.toml").
-E.g. 
+E.g.
  ```
  docker run -v /home/myuser/foulkon/config.toml:/worker.toml tecsisa/foulkon worker
  ```
- 
-## Worker configuration file 
+
+## Worker configuration file
  This config file is a TOML file that has several parts:
- 
-### [server] 
+
+### [server]
 | Server   | Server config properties              | Values                     | Default | Optional |
 |----------|---------------------------------------|----------------------------|---------|----------|
 | host     | Worker's hostname.                    | `localhost`                |         | No       |
@@ -22,7 +22,7 @@ E.g.
 
 __Note:__ Don't use Foulkon worker without certificate in production.
 
-### [admin] 
+### [admin]
 | Admin user | Admin user configuration | Values     | Default | Optional |
 |------------|--------------------------|------------|---------|----------|
 | username   | Admin user name.         | `admin`    |         | No       |
@@ -30,7 +30,7 @@ __Note:__ Don't use Foulkon worker without certificate in production.
 
 __Note:__ Use a strong password for admin user in production.
 
-### [logger] 
+### [logger]
 | Logger | Logger configuration properties.                        | Values                                                | Default   | Optional                    |
 |--------|---------------------------------------------------------|-------------------------------------------------------|-----------|-----------------------------|
 | type   | Type of logger to use.                                  | `file`, `default`                                     | `default` | Yes                         |
@@ -49,19 +49,24 @@ __Note:__ Use a strong password for admin user in production.
 | idleconns      | Idle connection number.                                      | `10`                                                                   | 5       | Yes      |
 | maxopenconns   | Max open connection number.                                  | `20`                                                                   | 20      | Yes      |
 | connttl        | Timeout for conenctions                                      | `200`                                                                  | 300     | Yes      |
- 
+
 ### [authenticator]
-| Authenticator | Authenticatior connector configuration properties        | Values | Default | Optional |
-|---------------|----------------------------------------------------------|--------|---------|----------|
-| type          | Type of connector that will be used. Only `oidc` at now. | `oidc` |         | No       |
+| Authenticator | Authenticator connector configuration properties | Values           | Default | Optional |
+|---------------|--------------------------------------------------|------------------|---------|----------|
+| type          | Type of connector that will be used.             | `oidc`, `header` | None    | No       |
+
+#### [authenticator.name]
+| Header authenticator | Header authenticator connector configuration properties | Values           | Default | Optional |
+|----------------------|---------------------------------------------------------|------------------|---------|----------|
+| name                 | Trusted request header                                  | `X-Remote-User`  | None    | No       |
 
 ## OIDC Providers
-The worker reads configuration from database at startup, and configures authenticator to use configured OIDC Providers with its clients.
-If you want to add, update o delete OIDC Providers you have to use the [OIDC Provider API](../api/oidc_provider.md). 
-If you change OIDC Providers you will need to restart the worker servers to take effect the changes.
+The worker reads configuration from database at startup, and when configured to use the OIDC authenticator, initializes it to use configured OIDC Providers with its clients.
+If you want to add, update or delete OIDC Providers you have to use the [OIDC Provider API](../api/oidc_provider.md).
+If you change OIDC Providers you will need to restart the worker servers to have the changes take effect.
 
 ## Current configuration
-The worker server has an endpoint to see what configuration is active at this time, only for admin access. 
+The worker server has an endpoint to see what configuration is active at this time, only for admin access.
 
 #### Curl Example
 

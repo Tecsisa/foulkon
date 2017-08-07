@@ -61,7 +61,7 @@ func (a *AuthenticatorMiddleware) GetInfo(r *http.Request, mc *middleware.Middle
 	mc.UserId, mc.Admin = a.getAuthenticatedUser(r)
 }
 
-// GetAuthenticatedUser retrieves user from request
+// getAuthenticatedUser retrieves user from request
 func (a *AuthenticatorMiddleware) getAuthenticatedUser(r *http.Request) (string, bool) {
 	if isAdmin(r, a.adminUser, a.adminPassword) {
 		return a.adminUser, true
