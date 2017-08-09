@@ -1,5 +1,5 @@
 sudo: required
-dist: trusty
+dist: xenial
 
 services:
   - docker
@@ -13,11 +13,6 @@ go:
 branches:
   only:
     - master
-
-before_install:
-    - sudo apt-get update
-    - sudo apt-get install -y docker-engine
-    - sudo service docker restart
 
 install:
   - make bootstrap
