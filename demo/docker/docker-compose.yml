@@ -6,7 +6,7 @@ services:
     hostname: "postgrescompose"
     command: "postgres"
   foulkonworkercompose:
-    image: "tecsisa/foulkon:v0.2.0"
+    image: "tecsisa/foulkon:v0.3.0"
     container_name: "foulkonworkercompose"
     hostname: "foulkonworkercompose"
     environment:
@@ -23,14 +23,14 @@ services:
       - FOULKON_DB_POSTGRES_CONNTTL=300
       - FOULKON_AUTH_TYPE=oidc
       - FOULKON_AUTH_ISSUER=https://accounts.google.com
-      - FOULKON_AUTH_CLIENTID=953874647871-gco7i6urt1i4clafgoeuo2gnicj2sg2q.apps.googleusercontent.com
+      - FOULKON_AUTH_CLIENTID=GoogleClientId
     ports:
       - "8000:8000"
     command: "worker"
     depends_on:
       - postgrescompose
   foulkondemoproxycompose:
-    image: "tecsisa/foulkondemo:latest"
+    image: "tecsisa/foulkon:v0.3.0"
     container_name: "foulkondemoproxycompose"
     hostname: "foulkondemoproxycompose"
     environment:
@@ -39,6 +39,11 @@ services:
       - FOULKON_PROXY_LOG_TYPE=default
       - FOULKON_PROXY_LOG_LEVEL=info
       - FOULKON_WORKER_URL=http://foulkonworkercompose:8000
+      - FOULKON_DB=postgres
+      - FOULKON_DB_POSTGRES_DS=postgres://postgres:password@postgrescompose:5432/postgres?sslmode=disable
+      - FOULKON_DB_POSTGRES_IDLECONNS=10
+      - FOULKON_DB_POSTGRES_MAXCONNS=20
+      - FOULKON_DB_POSTGRES_CONNTTL=300
     ports:
       - "8001:8001"
     command: "proxy"
@@ -46,7 +51,7 @@ services:
       - postgrescompose
       - foulkonworkercompose
   foulkondemoapicompose:
-      image: "tecsisa/foulkondemo:latest"
+      image: "tecsisa/foulkondemo"
       container_name: "foulkondemoapicompose"
       hostname: "foulkondemoapicompose"
       environment:
@@ -71,8 +76,8 @@ services:
         - WEBPORT=8101
         - FOULKON_WORKER_HOST=foulkonworkercompose
         - FOULKON_WORKER_PORT=8000
-        - OIDC_CLIENT_ID=953874647871-gco7i6urt1i4clafgoeuo2gnicj2sg2q.apps.googleusercontent.com
-        - OIDC_CLIENT_SECRET=T2P-Q8hxq5jfdR5EhPFGuFVs
+        - OIDC_CLIENT_ID=GoogleClientId
+        - OIDC_CLIENT_SECRET=GoogleClientSecret
         - OIDC_IDP_DISCOVERY=https://accounts.google.com
       ports:
         - "8101:8101"

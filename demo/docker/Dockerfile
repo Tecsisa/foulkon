@@ -1,4 +1,4 @@
-FROM tecsisa/foulkon:v0.2.0
+FROM tecsisa/foulkon:v0.3.0
 MAINTAINER Tecsisa
 
 # Copy resources of this API
