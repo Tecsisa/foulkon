@@ -61,7 +61,7 @@ func InitOIDCConnector(oidcProviders []api.OidcProvider) (auth.AuthConnector, er
 
 }
 
-// This method retrieves data from request an checks if user is correctly authenticated
+// This method retrieves data from request and checks if user is correctly authenticated
 func (c OIDCAuthConnector) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userHandler := func(u *openid.User, w http.ResponseWriter, r *http.Request) {

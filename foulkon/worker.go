@@ -19,6 +19,7 @@ import (
 	"github.com/Tecsisa/foulkon/database/postgresql"
 	"github.com/Tecsisa/foulkon/middleware"
 	"github.com/Tecsisa/foulkon/middleware/auth"
+	"github.com/Tecsisa/foulkon/middleware/auth/header"
 	"github.com/Tecsisa/foulkon/middleware/auth/oidc"
 	"github.com/Tecsisa/foulkon/middleware/logger"
 	"github.com/Tecsisa/foulkon/middleware/xrequestid"
@@ -173,6 +174,14 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 	wc.AuthType = authType
 
 	switch authType {
+	case "header":
+		headerName, err := getMandatoryValue(config, "authenticator.header.name")
+		if err != nil {
+			api.Log.Warn("Header authenticator configured, but no header provided - only admin access allowed")
+		} else {
+			authConnector = header.InitHeaderConnector(headerName)
+			api.Log.Infof("Header authenticator configured with header: %v", headerName)
+		}
 	case "oidc":
 		oidcProviders, total, err := authApi.AuthOidcRepo.GetOidcProvidersFiltered(&api.Filter{})
 		if err != nil {
@@ -194,7 +203,7 @@ func NewWorker(config *toml.TomlTree) (*Worker, error) {
 			api.Log.Warn("No OIDC connectors retrieved, only admin access allowed")
 		}
 	default:
-		err := errors.New("Unexpected auth_connector_type value in configuration file (Maybe it is empty)")
+		err := fmt.Errorf("Unexpected auth_connector_type value in configuration file: '%s' (maybe it is empty)", authType)
 		api.Log.Error(err)
 		return nil, err
 	}
