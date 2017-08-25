@@ -8,31 +8,21 @@ worker-host = "${FOULKON_WORKER_URL}"
 
 # Logger
 [logger]
-type = "${FOULKON_PROXY_LOG_TYPE}"
-level = "debug"
+type = "${FOULKON_PROXY_LOG_TYPE}" #(default, file)
+level = "${FOULKON_PROXY_LOG_LEVEL}" #(debug,info,warn,error)
 	# Directory for file configuration
 	[logger.file]
 	dir = "${FOULKON_PROXY_LOG_PATH}"
 
-# Resources definition example
-[[resources]]
-    id = "resource1"
-    host = "https://httpbin.org/"
-    url = "/get"
-    method = "GET"
-    urn = "urn:ews:example:instance1:resource/get"
-    action = "example:get"
-[[resources]]
-    id = "resource2"
-    host = "https://httpbin.org/"
-    url = "/status/:code"
-    method = "GET"
-    urn = "urn:ews:example:instance1:resource/status/{code}"
-    action = "example:getCode"
-[[resources]]
-    id = "resource3"
-    host = "https://httpbin.org/"
-    url = "/post"
-    method = "POST"
-    urn = "urn:ews:example:instance1:resource/post"
-    action = "example:post"
+# Database config
+[database]
+type = "${FOULKON_DB}" #(postgres)
+    # Postgres database config
+    [database.postgres]
+    datasourcename = "${FOULKON_DB_POSTGRES_DS}"
+    idleconns = "${FOULKON_DB_POSTGRES_IDLECONNS}"
+    maxopenconns = "${FOULKON_DB_POSTGRES_MAXCONNS}"
+    connttl = "${FOULKON_DB_POSTGRES_CONNTTL}" # in seconds
+
+[resources]
+refresh = "${FOULKON_RESOURCES_REFRESH}"

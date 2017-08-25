@@ -26,14 +26,8 @@ type = "${FOULKON_DB}" #(postgres)
 	datasourcename = "${FOULKON_DB_POSTGRES_DS}"
 	idleconns = "${FOULKON_DB_POSTGRES_IDLECONNS}"
 	maxopenconns = "${FOULKON_DB_POSTGRES_MAXCONNS}"
-	connttl = "${FOULKON_DB_POSTGRES_CONNTTL}"  # in seconds
+	connttl = "${FOULKON_DB_POSTGRES_CONNTTL}" # in seconds
 
 # Authenticator config
 [authenticator]
 type = "${FOULKON_AUTH_TYPE}"
-
-	# OIDC connector config
-	[authenticator.oidc]
-	issuer = "${FOULKON_AUTH_ISSUER}"
-	clientids = "${FOULKON_AUTH_CLIENTID}"
-

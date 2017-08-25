@@ -31,4 +31,3 @@ type = "postgres"
 # Authenticator config
 [authenticator]
 type = "oidc"
-	
