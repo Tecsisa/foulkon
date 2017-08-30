@@ -47,7 +47,7 @@
 | **Delete Proxy Resource**| iam:DeleteProxyResource    | iam:GetProxyResource |
 | **Get Proxy Resource**   | iam:GetProxyResource       | None                 |
 | **Update Proxy Resource**| iam:UpdateProxyResource    | iam:GetProxyResource |
-| **List Proxy Resources** | iam:iam:ListProxyResources | None                 |
+| **List Proxy Resources** | iam:ListProxyResources     | None                 |
 
 ## OIDC Provider
 
