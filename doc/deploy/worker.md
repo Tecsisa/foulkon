@@ -133,6 +133,6 @@ HTTP/1.1 200 Ok
       }
     ]
   },
-  "version": "v0.4.0-SNAPSHOT"
+  "version": "v0.4.0"
 }
 ```

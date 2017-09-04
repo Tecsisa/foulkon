@@ -1,5 +1,21 @@
 # Change Log
 
+## [v0.4.0](https://github.com/Tecsisa/foulkon/tree/v0.4.0) ("2017-09-04")
+[Full Changelog](https://github.com/Tecsisa/foulkon/compare/v0.3.0...v0.4.0)
+
+**Implemented enhancements:**
+
+- Allow multiple issuers with their clients [\#86](https://github.com/Tecsisa/foulkon/issues/86)
+
+**Fixed bugs:**
+
+- Proxy doesn't start if two routes are duplicated in proxy\_resources table [\#91](https://github.com/Tecsisa/foulkon/issues/91)
+
+**Closed issues:**
+
+- policy endpoint: PUT gives 405 [\#107](https://github.com/Tecsisa/foulkon/issues/107)
+- Update Go Version [\#96](https://github.com/Tecsisa/foulkon/issues/96)
+
 ## [v0.3.0](https://github.com/Tecsisa/foulkon/tree/v0.3.0) ("2017-01-25")
 [Full Changelog](https://github.com/Tecsisa/foulkon/compare/v0.2.0...v0.3.0)
 

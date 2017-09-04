@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	FOULKON_VERSION = "v0.4.0-SNAPSHOT"
+	FOULKON_VERSION = "v0.4.0"
 )
 
 // aux var for ${OS_ENV_VAR} regex
