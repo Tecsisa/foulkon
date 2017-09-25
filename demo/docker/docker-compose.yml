@@ -6,7 +6,7 @@ services:
     hostname: "postgrescompose"
     command: "postgres"
   foulkonworkercompose:
-    image: "tecsisa/foulkon:v0.3.0"
+    image: "tecsisa/foulkon:v0.4.0"
     container_name: "foulkonworkercompose"
     hostname: "foulkonworkercompose"
     environment:
@@ -22,15 +22,13 @@ services:
       - FOULKON_DB_POSTGRES_MAXCONNS=20
       - FOULKON_DB_POSTGRES_CONNTTL=300
       - FOULKON_AUTH_TYPE=oidc
-      - FOULKON_AUTH_ISSUER=https://accounts.google.com
-      - FOULKON_AUTH_CLIENTID=GoogleClientId
     ports:
       - "8000:8000"
     command: "worker"
     depends_on:
       - postgrescompose
   foulkondemoproxycompose:
-    image: "tecsisa/foulkon:v0.3.0"
+    image: "tecsisa/foulkon:v0.4.0"
     container_name: "foulkondemoproxycompose"
     hostname: "foulkondemoproxycompose"
     environment:
@@ -44,6 +42,7 @@ services:
       - FOULKON_DB_POSTGRES_IDLECONNS=10
       - FOULKON_DB_POSTGRES_MAXCONNS=20
       - FOULKON_DB_POSTGRES_CONNTTL=300
+      - FOULKON_RESOURCES_REFRESH=10s
     ports:
       - "8001:8001"
     command: "proxy"

@@ -1,17 +1,8 @@
-<<<<<<< HEAD
-hash: 93d9eba9da07ecb1e8de03b355a36f05d853193e3107852c68713fd7aac5fd3c
-updated: 2017-09-04T10:16:05.262507613+02:00
-=======
-hash: f982b82d1f05b3ba8a0157938c1b843fbc0226b7adb6e78f3f00f806cd26f88c
-updated: 2016-10-27T12:24:03.814586358+02:00
->>>>>>> updated templates and script to start with "make demo"
+hash: c1aade463908be588aa9570dba8584c95269d410cd753f34729a75fd19f153cc
+updated: 2018-02-05T15:54:15.97488+01:00
 imports:
-- name: github.com/coreos/dex
-  version: 4b9bdf163db85373f3ea59bb227dec445c618cbf
-  subpackages:
-  - pkg/log
 - name: github.com/coreos/go-oidc
-  version: 9fae754a41cbdc3be9cb97a180eb323b625db614
+  version: a93f71fdfe73d2c0f5413c0565eea0af6523a6df
   subpackages:
   - http
   - jose
@@ -19,14 +10,13 @@ imports:
   - oauth2
   - oidc
 - name: github.com/coreos/pkg
-  version: fa94270d4bac0d8ae5dc6b71894e251aada93f74
+  version: 97fdf19511ea361ae1c100dd393cc47f8dcfa1e1
   subpackages:
-  - flagutil
   - health
   - httputil
   - timeutil
 - name: github.com/dgrijalva/jwt-go
-  version: 24c63f56522a87ec5339cc3567883f1039378fdb
+  version: dbeaa9332f19a944acb5736b4456cfcc02140e29
 - name: github.com/emanoelxavier/openid2go
   version: efe3c34772c5a961048a05e9483da2bd24debed0
   subpackages:
@@ -34,9 +24,9 @@ imports:
 - name: github.com/jinzhu/gorm
   version: 5174cc5c242a728b435ea2be8a2f7f998e15429b
 - name: github.com/jinzhu/inflection
-  version: 74387dc39a75e970e7a3ae6a3386b5bd2e5c5cff
+  version: 1c35d901db3da928c72a72d8458480cc9ade058f
 - name: github.com/jonboulle/clockwork
-  version: 3f831b65b61282ba6bece21b91beea2edc4c887a
+  version: bcac9884e7502bb2b474c0339d889cb981a2f27f
 - name: github.com/julienschmidt/httprouter
   version: 8c199fb6259ffc1af525cc3ad52ee60ba8359669
 - name: github.com/kylelemons/godebug
@@ -55,11 +45,11 @@ imports:
 - name: github.com/satori/go.uuid
   version: 879c5887cd475cd7864858769793b2ceb0d44feb
 - name: github.com/sirupsen/logrus
-  version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
+  version: d682213848ed68c0a260ca37d6dd5ace8423f5ba
   subpackages:
   - hooks/test
 - name: github.com/square/go-jose
-  version: 789a4c4bd4c118f7564954f441b29c153ccd6a96
+  version: 0210e50945bbf0685c3313c71cd243f0870b96e3
   subpackages:
   - cipher
   - json
@@ -68,13 +58,14 @@ imports:
   subpackages:
   - assert
 - name: golang.org/x/crypto
-  version: 1fbbd62cfec66bd39d91e97749579579d4d3037e
+  version: 1875d0a70c90e57f11972aefd42276df65e895b9
   subpackages:
   - ssh/terminal
 - name: golang.org/x/sys
-  version: c200b10b5d5e122be351b67af224adc6128af5bf
+  version: 37707fdb30a5b38865cfb95e5aab41707daec7fd
   subpackages:
   - unix
+  - windows
 testImports:
 - name: github.com/davecgh/go-spew
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9

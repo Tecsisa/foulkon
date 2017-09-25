@@ -7,8 +7,8 @@ import (
 
 	"bytes"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/julienschmidt/httprouter"
+	"github.com/sirupsen/logrus"
 )
 
 // CONSTANTS
