@@ -8,4 +8,4 @@ unreleased-only=false
 unreleased=true
 compare-link=true
 include-labels=bug,enhancement
-future-release=v0.4.0
+future-release=v0.5.0
