@@ -10,9 +10,9 @@ import (
 
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/pelletier/go-toml"
+	"github.com/sirupsen/logrus"
 
 	"github.com/Tecsisa/foulkon/database/postgresql"
 )
@@ -39,7 +39,7 @@ type Proxy struct {
 	RefreshTime time.Duration
 }
 
-func NewProxy(config *toml.TomlTree) (*Proxy, error) {
+func NewProxy(config *toml.Tree) (*Proxy, error) {
 	// Create logger
 	var logOut io.Writer
 	var err error

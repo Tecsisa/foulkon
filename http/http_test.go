@@ -10,7 +10,8 @@ import (
 
 	"time"
 
-	logrusTest "github.com/Sirupsen/logrus/hooks/test"
+	"sync"
+
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/foulkon"
 	"github.com/Tecsisa/foulkon/middleware"
@@ -18,6 +19,7 @@ import (
 	"github.com/Tecsisa/foulkon/middleware/logger"
 	"github.com/Tecsisa/foulkon/middleware/xrequestid"
 	"github.com/julienschmidt/httprouter"
+	logrusTest "github.com/sirupsen/logrus/hooks/test"
 )
 
 const (
@@ -91,6 +93,7 @@ var testFilter = &api.Filter{
 
 // Test API that implements all api manager interfaces
 type TestAPI struct {
+	resourceLock sync.Mutex
 	ArgsIn       map[string][]interface{}
 	ArgsOut      map[string][]interface{}
 	SpecialFuncs map[string]interface{}
@@ -743,6 +746,8 @@ func (t TestAPI) GetProxyResourceByName(authenticatedUser api.RequestInfo, org s
 }
 
 func (t TestAPI) GetProxyResources() ([]api.ProxyResource, error) {
+	defer t.resourceLock.Unlock()
+	t.resourceLock.Lock()
 	var proxyResources []api.ProxyResource
 	if t.ArgsOut[GetProxyResourcesMethod][0] != nil {
 		proxyResources = t.ArgsOut[GetProxyResourcesMethod][0].([]api.ProxyResource)

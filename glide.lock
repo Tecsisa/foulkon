@@ -1,5 +1,5 @@
-hash: 4207acdf069b21dc8b393b024d04ffb4f0721938874754d651e057f1f70b4dfa
-updated: 2016-10-17T10:56:26.769112348+02:00
+hash: 93d9eba9da07ecb1e8de03b355a36f05d853193e3107852c68713fd7aac5fd3c
+updated: 2017-09-04T10:16:05.262507613+02:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: 24c63f56522a87ec5339cc3567883f1039378fdb
@@ -14,7 +14,7 @@ imports:
 - name: github.com/julienschmidt/httprouter
   version: 8c199fb6259ffc1af525cc3ad52ee60ba8359669
 - name: github.com/kylelemons/godebug
-  version: eadb3ce320cbab8393bea5ca17bebac3f78a021b
+  version: d65d576e9348f5982d7f6d83682b694e731a45c6
   subpackages:
   - diff
   - pretty
@@ -23,13 +23,13 @@ imports:
   subpackages:
   - oid
 - name: github.com/pelletier/go-buffruneio
-  version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
+  version: c37440a7cf42ac63b919c752ca73a85067e05992
 - name: github.com/pelletier/go-toml
-  version: 64ff1ea4d585bc1fca65e6331eb8239f2ff31845
+  version: 5ccdfb18c776b740aecaf085c4d9a2779199c279
 - name: github.com/satori/go.uuid
   version: 879c5887cd475cd7864858769793b2ceb0d44feb
-- name: github.com/Sirupsen/logrus
-  version: 4b6ea7319e214d98c938f12692336f7ca9348d6b
+- name: github.com/sirupsen/logrus
+  version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
   subpackages:
   - hooks/test
 - name: github.com/square/go-jose
@@ -39,4 +39,22 @@ imports:
   - json
 - name: github.com/stretchr/testify
   version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
-testImports: []
+  subpackages:
+  - assert
+- name: golang.org/x/crypto
+  version: 1fbbd62cfec66bd39d91e97749579579d4d3037e
+  subpackages:
+  - ssh/terminal
+- name: golang.org/x/sys
+  version: c200b10b5d5e122be351b67af224adc6128af5bf
+  subpackages:
+  - unix
+testImports:
+- name: github.com/davecgh/go-spew
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib

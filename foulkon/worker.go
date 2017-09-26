@@ -14,7 +14,6 @@ import (
 
 	"strconv"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/database/postgresql"
 	"github.com/Tecsisa/foulkon/middleware"
@@ -24,6 +23,7 @@ import (
 	"github.com/Tecsisa/foulkon/middleware/logger"
 	"github.com/Tecsisa/foulkon/middleware/xrequestid"
 	"github.com/pelletier/go-toml"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -81,7 +81,7 @@ type WorkerConfig struct {
 }
 
 // NewWorker creates a Worker using configuration values
-func NewWorker(config *toml.TomlTree) (*Worker, error) {
+func NewWorker(config *toml.Tree) (*Worker, error) {
 	var wc WorkerConfig
 
 	// Create logger
@@ -285,7 +285,7 @@ func CloseWorker() int {
 }
 
 // This aux method returns mandatory config value or any error occurred
-func getMandatoryValue(config *toml.TomlTree, key string) (string, error) {
+func getMandatoryValue(config *toml.Tree, key string) (string, error) {
 	if !config.Has(key) {
 		return "", fmt.Errorf("Cannot retrieve configuration value %v", key)
 	}
@@ -298,7 +298,7 @@ func getMandatoryValue(config *toml.TomlTree, key string) (string, error) {
 }
 
 // This aux method returns a value if defined in config file. Else, returns default value
-func getDefaultValue(config *toml.TomlTree, key string, def string) string {
+func getDefaultValue(config *toml.Tree, key string, def string) string {
 	value := def
 	if config.Has(key) {
 		value = getVar(config, key)
@@ -311,7 +311,7 @@ func getDefaultValue(config *toml.TomlTree, key string, def string) string {
 // Check variables in TOML file.
 // If the value of a key is '${SOME_KEY}', we will search the value in the OS ENV vars
 // If the value of a key is 'something_else', returns that as the value
-func getVar(config *toml.TomlTree, key string) string {
+func getVar(config *toml.Tree, key string) string {
 	value := config.Get(key).(string)
 	match := rEnvVar.FindStringSubmatch(value)
 	if match != nil && len(match) > 1 {

@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // Log is API global logger for all domains
