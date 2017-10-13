@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"regexp"
 	"strings"
@@ -71,41 +72,11 @@ func (ph *ProxyHandler) HandleRequest(proxyResource api.ProxyResource) httproute
 				WriteHttpResponse(r, w, requestID, "", http.StatusInternalServerError, getErrorMessage(INVALID_DEST_HOST_URL, "Error creating destination host"))
 				return
 			}
-			r.URL.Host = destURL.Host
-			r.URL.Scheme = destURL.Scheme
-			// Clean request URI because net/http send method force this
-			r.RequestURI = ""
-			// Retrieve requested resource
-			res, err := ph.client.Do(r)
-			if err != nil {
-				apiErr := getErrorMessage(HOST_UNREACHABLE, fmt.Sprintf("Error calling to destination host resource: %v", err.Error()))
-				api.TransactionProxyErrorLogWithStatus(requestID, workerRequestID, r, http.StatusInternalServerError, apiErr)
-				WriteHttpResponse(r, w, requestID, "", http.StatusInternalServerError, getErrorMessage(HOST_UNREACHABLE, "Error calling destination resource"))
-				return
-			}
-
-			// Copy the response cookies
-			for _, cookie := range res.Cookies() {
-				http.SetCookie(w, cookie)
-			}
-			// Copy the response headers from the target server to the proxy response
-			for key, values := range res.Header {
-				for _, v := range values {
-					w.Header().Add(key, v)
-				}
-			}
-
-			defer res.Body.Close()
-			buffer := new(bytes.Buffer)
-			if _, err := buffer.ReadFrom(res.Body); err != nil {
-				apiErr := getErrorMessage(INTERNAL_SERVER_ERROR, fmt.Sprintf("Error reading response from destination: %v", err.Error()))
-				api.TransactionProxyErrorLogWithStatus(requestID, workerRequestID, r, http.StatusInternalServerError, apiErr)
-				WriteHttpResponse(r, w, requestID, "", http.StatusInternalServerError, apiErr)
-				return
-			}
-			w.WriteHeader(res.StatusCode)
-			w.Write(buffer.Bytes())
+			// Log request
 			api.TransactionProxyLog(requestID, workerRequestID, r, "Request accepted")
+			// Serve Request
+			reverseProxy := httputil.NewSingleHostReverseProxy(destURL)
+			reverseProxy.ServeHTTP(w, r)
 		} else {
 			apiError := err.(*api.Error)
 			var statusCode int

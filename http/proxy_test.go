@@ -86,12 +86,8 @@ func TestProxyHandler_HandleRequest(t *testing.T) {
 			getAuthorizedExternalResourcesResult: []string{"urn:ews:example:instance1:resource/invalid"},
 		},
 		"ErrorCaseHostUnreachable": {
-			expectedStatusCode: http.StatusInternalServerError,
+			expectedStatusCode: http.StatusBadGateway,
 			resource:           "/fail",
-			expectedError: &api.Error{
-				Code:    HOST_UNREACHABLE,
-				Message: "Error calling destination resource",
-			},
 			getAuthorizedExternalResourcesResult: []string{"urn:ews:example:instance1:resource/fail"},
 		},
 		"ErrorCaseUnauthenticated": {
