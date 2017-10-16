@@ -128,7 +128,7 @@ func NewProxy(config *toml.Tree) (*Proxy, error) {
 		return nil, err
 	}
 
-	proxy_flush_interval, err := time.ParseDuration(getDefaultValue(config, "server.proxy_flush_interval", "500ms"))
+	proxyFlushInterval, err := time.ParseDuration(getDefaultValue(config, "server.proxy_flush_interval", "500ms"))
 	if err != nil {
 		api.Log.Error(err)
 		return nil, err
@@ -147,7 +147,7 @@ func NewProxy(config *toml.Tree) (*Proxy, error) {
 		CertFile:           getDefaultValue(config, "server.certfile", ""),
 		KeyFile:            getDefaultValue(config, "server.keyfile", ""),
 		ProxyApi:           prApi,
-		ProxyFlushInterval: proxy_flush_interval,
+		ProxyFlushInterval: proxyFlushInterval,
 		RefreshTime:        refresh,
 	}, nil
 }
