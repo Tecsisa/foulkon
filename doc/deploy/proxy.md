@@ -13,13 +13,16 @@ E.g.
 This config file is a TOML file that has several parts:
  
 ### [server] 
-| Server      | Server config properties              | Values                     | Default | Optional |
-|-------------|---------------------------------------|----------------------------|---------|----------|
-| host        | Proxy's hostname.                     | `localhost`                |         | No       |
-| port        | Proxy's port.                         | `8001`                     |         | No       |
-| certfile    | Absolute path for public certificate. | `/etc/secrets/public.pem`  |         | Yes      |
-| keyfile     | Absolute path for private key.        | `/etc/secrets/private.pem` |         | Yes      |
-| worker-host | Full host where worker is.            | `http://localhost:8000`    |         | No       |
+|        Server        |                                Server config properties                                |           Values           | Default | Optional |
+|----------------------|----------------------------------------------------------------------------------------|----------------------------|---------|----------|
+| host                 | Proxy's hostname.                                                                      | `localhost`                |         | No       |
+| port                 | Proxy's port.                                                                          | `8001`                     |         | No       |
+| certfile             | Absolute path for public certificate.                                                  | `/etc/secrets/public.pem`  |         | Yes      |
+| keyfile              | Absolute path for private key.                                                         | `/etc/secrets/private.pem` |         | Yes      |
+| worker-host          | Full host where worker is.                                                             | `http://localhost:8000`    |         | No       |
+| proxy_flush_interval | Reverse proxy time to flush data to clients in remote calls (useful in data streaming) | `1s`                       | 500ms   | yes      |
+
+
 
 __Note:__ Don't use Foulkon proxy without certificate in production.
 

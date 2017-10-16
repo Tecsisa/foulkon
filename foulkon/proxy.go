@@ -28,6 +28,9 @@ type Proxy struct {
 	// Worker location
 	WorkerHost string
 
+	// Proxy Flush Interval Duration for flushing data in reverse proxy calls
+	ProxyFlushInterval time.Duration
+
 	// TLS configuration
 	CertFile string
 	KeyFile  string
@@ -125,6 +128,12 @@ func NewProxy(config *toml.Tree) (*Proxy, error) {
 		return nil, err
 	}
 
+	proxyFlushInterval, err := time.ParseDuration(getDefaultValue(config, "server.proxy_flush_interval", "500ms"))
+	if err != nil {
+		api.Log.Error(err)
+		return nil, err
+	}
+
 	refresh, err := time.ParseDuration(getDefaultValue(config, "resources.refresh", "10s"))
 	if err != nil {
 		api.Log.Error(err)
@@ -132,13 +141,14 @@ func NewProxy(config *toml.Tree) (*Proxy, error) {
 	}
 
 	return &Proxy{
-		Host:        host,
-		Port:        port,
-		WorkerHost:  workerHost,
-		CertFile:    getDefaultValue(config, "server.certfile", ""),
-		KeyFile:     getDefaultValue(config, "server.keyfile", ""),
-		ProxyApi:    prApi,
-		RefreshTime: refresh,
+		Host:               host,
+		Port:               port,
+		WorkerHost:         workerHost,
+		CertFile:           getDefaultValue(config, "server.certfile", ""),
+		KeyFile:            getDefaultValue(config, "server.keyfile", ""),
+		ProxyApi:           prApi,
+		ProxyFlushInterval: proxyFlushInterval,
+		RefreshTime:        refresh,
 	}, nil
 }
 

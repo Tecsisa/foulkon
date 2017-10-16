@@ -5,6 +5,7 @@ port = "8001"
 certfile = "/etc/secret/public.pem"
 keyfile = "/etc/secret/private.pem"
 worker-host = "http://localhost:8000"
+proxy_flush_interval = "500ms"
 
 # Logger
 [logger]

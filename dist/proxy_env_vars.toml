@@ -5,6 +5,7 @@ port = "${FOULKON_PROXY_PORT}"
 certfile = "${FOULKON_PROXY_CERT_FILE_PATH}"
 keyfile = "${FOULKON_PROXY_KEY_FILE_PATH}"
 worker-host = "${FOULKON_WORKER_URL}"
+proxy_flush_interval = "${FOULKON_PROXY_FLUSH_INTERVAL}
 
 # Logger
 [logger]
