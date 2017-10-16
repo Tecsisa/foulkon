@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -76,6 +77,10 @@ func (ph *ProxyHandler) HandleRequest(proxyResource api.ProxyResource) httproute
 			api.TransactionProxyLog(requestID, workerRequestID, r, "Request accepted")
 			// Serve Request
 			reverseProxy := httputil.NewSingleHostReverseProxy(destURL)
+			logWritter := api.Log.Writer()
+			defer logWritter.Close()
+			reverseProxy.ErrorLog = log.New(logWritter, "", 0)
+			reverseProxy.FlushInterval = ph.proxy.ProxyFlushInterval
 			reverseProxy.ServeHTTP(w, r)
 		} else {
 			apiError := err.(*api.Error)

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"sync"
 	"testing"
 
 	"crypto/tls"
@@ -406,6 +407,7 @@ func TestProxyServer_Run(t *testing.T) {
 
 		expectedResources []api.ProxyResource
 		expectedError     string
+		testLock          sync.Mutex
 	}{
 		"OKCase": {
 			proxy: &foulkon.Proxy{
@@ -439,13 +441,15 @@ func TestProxyServer_Run(t *testing.T) {
 		var err error
 		srv := NewProxy(test.proxy)
 		srv.Configuration()
-
 		if test.expectedError != "" {
+			test.testLock.Lock()
 			err = srv.Run()
 			if err != nil {
 				assert.True(t, strings.Contains(err.Error(), test.expectedError), "Error in test case %v", n)
 			}
+			test.testLock.Unlock()
 		} else {
+			testApi.resourceLock.Lock()
 			testApi.ArgsOut[GetProxyResourcesMethod][0] = []api.ProxyResource{
 				{
 					ID: "ID2",
@@ -458,6 +462,7 @@ func TestProxyServer_Run(t *testing.T) {
 					},
 				},
 			}
+			testApi.resourceLock.Unlock()
 
 			go func() {
 				srv.Run()
