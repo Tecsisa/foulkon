@@ -20,7 +20,7 @@ This config file is a TOML file that has several parts:
 | certfile             | Absolute path for public certificate.                                                  | `/etc/secrets/public.pem`  |         | Yes      |
 | keyfile              | Absolute path for private key.                                                         | `/etc/secrets/private.pem` |         | Yes      |
 | worker-host          | Full host where worker is.                                                             | `http://localhost:8000`    |         | No       |
-| proxy_flush_interval | Reverse proxy time to flush data to clients in remote calls (useful in data streaming) | 1s                         | 500ms   | yes      |
+| proxy_flush_interval | Reverse proxy time to flush data to clients in remote calls (useful in data streaming) | `1s`                       | 500ms   | yes      |
 
 
 
