@@ -1,7 +1,6 @@
 package http
 
 import (
-	"sync"
 	"testing"
 
 	"crypto/tls"
@@ -401,18 +400,15 @@ func TestWorkerServer_Run(t *testing.T) {
 }
 
 func TestProxyServer_Run(t *testing.T) {
-	testApi := makeTestApi()
 	testcases := map[string]struct {
 		proxy *foulkon.Proxy
 
 		expectedResources []api.ProxyResource
 		expectedError     string
-		testLock          sync.Mutex
 	}{
 		"OKCase": {
 			proxy: &foulkon.Proxy{
 				RefreshTime: 1 * time.Millisecond,
-				ProxyApi:    testApi,
 			},
 			expectedResources: []api.ProxyResource{
 				{
@@ -432,25 +428,23 @@ func TestProxyServer_Run(t *testing.T) {
 				Host:        "fail",
 				Port:        "53",
 				RefreshTime: 1 * time.Millisecond,
-				ProxyApi:    testApi,
 			},
 			expectedError: "listen tcp: lookup fail",
 		},
 	}
 	for n, test := range testcases {
 		var err error
+		testAPI := makeTestApi()
+		test.proxy.ProxyApi = testAPI
 		srv := NewProxy(test.proxy)
 		srv.Configuration()
 		if test.expectedError != "" {
-			test.testLock.Lock()
 			err = srv.Run()
 			if err != nil {
 				assert.True(t, strings.Contains(err.Error(), test.expectedError), "Error in test case %v", n)
 			}
-			test.testLock.Unlock()
 		} else {
-			testApi.resourceLock.Lock()
-			testApi.ArgsOut[GetProxyResourcesMethod][0] = []api.ProxyResource{
+			testAPI.ArgsOut[GetProxyResourcesMethod][0] = []api.ProxyResource{
 				{
 					ID: "ID2",
 					Resource: api.ResourceEntity{
@@ -462,7 +456,6 @@ func TestProxyServer_Run(t *testing.T) {
 					},
 				},
 			}
-			testApi.resourceLock.Unlock()
 
 			go func() {
 				srv.Run()
