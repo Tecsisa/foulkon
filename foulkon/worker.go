@@ -2,7 +2,6 @@ package foulkon
 
 import (
 	"io"
-	"regexp"
 
 	"errors"
 	"os"
@@ -30,8 +29,6 @@ const (
 	FOULKON_VERSION = "v0.5.0-SNAPSHOT"
 )
 
-// aux var for ${OS_ENV_VAR} regex
-var rEnvVar, _ = regexp.Compile(`^\$\{(\w+)\}$`)
 var db *sql.DB
 var workerLogfile *os.File
 
@@ -317,13 +314,8 @@ func getVar(config *toml.Tree, key string) string {
 	val := config.Get(key)
 	value, ok := val.(string)
 	if !ok { // try int64, might be a number
-		value = strconv.FormatInt(val.(int64), 10)
+		// No need to expand env if it hasn't been a string
+		return strconv.FormatInt(val.(int64), 10)
 	}
-	match := rEnvVar.FindStringSubmatch(value)
-	if match != nil && len(match) > 1 {
-		if match[1] != "" {
-			return os.Getenv(match[1])
-		}
-	}
-	return value
+	return os.ExpandEnv(value)
 }
