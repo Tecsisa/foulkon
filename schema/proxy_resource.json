@@ -76,7 +76,7 @@
           "example": "/example/admin/",
           "type": "string"
         },
-        "createdAt": {
+        "createAt": {
           "description": "Proxy resource creation date",
           "format": "date-time",
           "type": "string"
@@ -191,8 +191,8 @@
         "path": {
           "$ref": "#/definitions/order2_proxy_resource/definitions/path"
         },
-        "createdAt": {
-          "$ref": "#/definitions/order2_proxy_resource/definitions/createdAt"
+        "createAt": {
+          "$ref": "#/definitions/order2_proxy_resource/definitions/createAt"
         },
         "updateAt": {
           "$ref": "#/definitions/order2_proxy_resource/definitions/updateAt"

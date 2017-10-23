@@ -7,7 +7,7 @@ Group API
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **createdAt** | *date-time* | Group creation date | `"2015-01-01T12:00:00Z"` |
+| **createAt** | *date-time* | Group creation date | `"2015-01-01T12:00:00Z"` |
 | **id** | *uuid* | Unique group identifier | `"01234567-89ab-cdef-0123-456789abcdef"` |
 | **name** | *string* | Group name | `"group1"` |
 | **org** | *string* | Group organization | `"tecsisa"` |
@@ -56,7 +56,7 @@ HTTP/1.1 201 Created
   "id": "01234567-89ab-cdef-0123-456789abcdef",
   "name": "group1",
   "path": "/example/admin/",
-  "createdAt": "2015-01-01T12:00:00Z",
+  "createAt": "2015-01-01T12:00:00Z",
   "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam:tecsisa:group/example/admin/group1",
   "org": "tecsisa"
@@ -104,7 +104,7 @@ HTTP/1.1 200 OK
   "id": "01234567-89ab-cdef-0123-456789abcdef",
   "name": "group1",
   "path": "/example/admin/",
-  "createdAt": "2015-01-01T12:00:00Z",
+  "createAt": "2015-01-01T12:00:00Z",
   "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam:tecsisa:group/example/admin/group1",
   "org": "tecsisa"
@@ -164,7 +164,7 @@ HTTP/1.1 200 OK
   "id": "01234567-89ab-cdef-0123-456789abcdef",
   "name": "group1",
   "path": "/example/admin/",
-  "createdAt": "2015-01-01T12:00:00Z",
+  "createAt": "2015-01-01T12:00:00Z",
   "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam:tecsisa:group/example/admin/group1",
   "org": "tecsisa"

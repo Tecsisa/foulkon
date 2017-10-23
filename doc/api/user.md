@@ -7,7 +7,7 @@ User API
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **createdAt** | *date-time* | User creation date | `"2015-01-01T12:00:00Z"` |
+| **createAt** | *date-time* | User creation date | `"2015-01-01T12:00:00Z"` |
 | **externalId** | *string* | User's external identifier | `"user1"` |
 | **id** | *uuid* | Unique user identifier | `"01234567-89ab-cdef-0123-456789abcdef"` |
 | **path** | *string* | User location | `"/example/admin/"` |
@@ -55,7 +55,7 @@ HTTP/1.1 201 Created
   "id": "01234567-89ab-cdef-0123-456789abcdef",
   "externalId": "user1",
   "path": "/example/admin/",
-  "createdAt": "2015-01-01T12:00:00Z",
+  "createAt": "2015-01-01T12:00:00Z",
   "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam::user/example/admin/user1"
 }
@@ -100,7 +100,7 @@ HTTP/1.1 200 OK
   "id": "01234567-89ab-cdef-0123-456789abcdef",
   "externalId": "user1",
   "path": "/example/admin/",
-  "createdAt": "2015-01-01T12:00:00Z",
+  "createAt": "2015-01-01T12:00:00Z",
   "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam::user/example/admin/user1"
 }
@@ -159,7 +159,7 @@ HTTP/1.1 200 OK
   "id": "01234567-89ab-cdef-0123-456789abcdef",
   "externalId": "user1",
   "path": "/example/admin/",
-  "createdAt": "2015-01-01T12:00:00Z",
+  "createAt": "2015-01-01T12:00:00Z",
   "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam::user/example/admin/user1"
 }

@@ -137,7 +137,7 @@ __Best practice__: don’t use this admin account to manage your system. Create 
     "id": "01234567-89ab-cdef-0123-456789abcdef",
     "name": "policyAdmin",
     "path": "/admin/",
-    "createdAt": "2015-01-01T12:00:00Z",
+    "createAt": "2015-01-01T12:00:00Z",
     "urn": "urn:iws:iam:orgName:policy/admin/policyAdmin",
     "org": "orgName",
     "statements": [
@@ -166,7 +166,7 @@ An example of how Google could manage its application resources with a policy co
     "id": "01234567-89ab-cdef-0123-456789abcdef",
     "name": "GmailReadEmailUser123456",
     "path": "/gmail/",
-    "createdAt": "2015-01-01T12:00:00Z",
+    "createAt": "2015-01-01T12:00:00Z",
     "urn": "urn:iws:iam:orgName:policy/gmail/GmailReadEmailUser123456",
     "org": "orgName",
     "statements": [
