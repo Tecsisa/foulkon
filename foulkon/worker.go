@@ -310,9 +310,15 @@ func getDefaultValue(config *toml.Tree, key string, def string) string {
 
 // Check variables in TOML file.
 // If the value of a key is '${SOME_KEY}', we will search the value in the OS ENV vars
+// If the value of a key is not a string, but a number, it converts it to a string,
+// and returns that as the value
 // If the value of a key is 'something_else', returns that as the value
 func getVar(config *toml.Tree, key string) string {
-	value := config.Get(key).(string)
+	val := config.Get(key)
+	value, ok := val.(string)
+	if !ok { // try int64, might be a number
+		value = strconv.FormatInt(val.(int64), 10)
+	}
 	match := rEnvVar.FindStringSubmatch(value)
 	if match != nil && len(match) > 1 {
 		if match[1] != "" {
