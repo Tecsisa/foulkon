@@ -25,7 +25,7 @@
           "example": "/example/admin/",
           "type": "string"
         },
-        "createdAt": {
+        "createAt": {
           "description": "Group creation date",
           "format": "date-time",
           "type": "string"
@@ -128,8 +128,8 @@
         "path": {
           "$ref": "#/definitions/order1_group/definitions/path"
         },
-        "createdAt": {
-          "$ref": "#/definitions/order1_group/definitions/createdAt"
+        "createAt": {
+          "$ref": "#/definitions/order1_group/definitions/createAt"
         },
         "updateAt": {
           "$ref": "#/definitions/order1_group/definitions/updateAt"

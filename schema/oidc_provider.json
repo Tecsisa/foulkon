@@ -44,7 +44,7 @@
           "example": "/example/admin/",
           "type": "string"
         },
-        "createdAt": {
+        "createAt": {
           "description": "OIDC Provider creation date",
           "format": "date-time",
           "type": "string"
@@ -180,8 +180,8 @@
         "path": {
           "$ref": "#/definitions/order2_oidc_provider/definitions/path"
         },
-        "createdAt": {
-          "$ref": "#/definitions/order2_oidc_provider/definitions/createdAt"
+        "createAt": {
+          "$ref": "#/definitions/order2_oidc_provider/definitions/createAt"
         },
         "updateAt": {
           "$ref": "#/definitions/order2_oidc_provider/definitions/updateAt"

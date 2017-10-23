@@ -27,7 +27,7 @@
           "example": "/example/admin/",
           "type": "string"
         },
-        "createdAt": {
+        "createAt": {
           "description": "User creation date",
           "format": "date-time",
           "type": "string"
@@ -121,8 +121,8 @@
         "path": {
           "$ref": "#/definitions/order1_user/definitions/path"
         },
-        "createdAt": {
-          "$ref": "#/definitions/order1_user/definitions/createdAt"
+        "createAt": {
+          "$ref": "#/definitions/order1_user/definitions/createAt"
         },
         "updateAt": {
           "$ref": "#/definitions/order1_user/definitions/updateAt"

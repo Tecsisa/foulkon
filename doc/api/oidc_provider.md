@@ -20,7 +20,7 @@ Entity with the OIDC Provider configuration to use in Authentication Middleware
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
 | **clients** | *array* | OIDC Clients associated | `[{"name":"client-api-identifier"}]` |
-| **createdAt** | *date-time* | OIDC Provider creation date | `"2015-01-01T12:00:00Z"` |
+| **createAt** | *date-time* | OIDC Provider creation date | `"2015-01-01T12:00:00Z"` |
 | **id** | *uuid* | Unique OIDC Provider identifier | `"01234567-89ab-cdef-0123-456789abcdef"` |
 | **issuerUrl** | *string* | The issuer URL which issues the tokens | `"https://accounts.google.com"` |
 | **name** | *string* | OIDC Provider name | `"Example"` |
@@ -75,7 +75,7 @@ HTTP/1.1 201 Created
   "id": "01234567-89ab-cdef-0123-456789abcdef",
   "name": "Example",
   "path": "/example/admin/",
-  "createdAt": "2015-01-01T12:00:00Z",
+  "createAt": "2015-01-01T12:00:00Z",
   "updateAt": "2015-01-01T12:00:00Z",
   "issuerUrl": "https://accounts.google.com",
   "urn": "urn:iws:auth::oidc/example/admin/Example",
@@ -134,7 +134,7 @@ HTTP/1.1 200 OK
   "id": "01234567-89ab-cdef-0123-456789abcdef",
   "name": "Example",
   "path": "/example/admin/",
-  "createdAt": "2015-01-01T12:00:00Z",
+  "createAt": "2015-01-01T12:00:00Z",
   "updateAt": "2015-01-01T12:00:00Z",
   "issuerUrl": "https://accounts.google.com",
   "urn": "urn:iws:auth::oidc/example/admin/Example",
@@ -199,7 +199,7 @@ HTTP/1.1 200 OK
   "id": "01234567-89ab-cdef-0123-456789abcdef",
   "name": "Example",
   "path": "/example/admin/",
-  "createdAt": "2015-01-01T12:00:00Z",
+  "createAt": "2015-01-01T12:00:00Z",
   "updateAt": "2015-01-01T12:00:00Z",
   "issuerUrl": "https://accounts.google.com",
   "urn": "urn:iws:auth::oidc/example/admin/Example",

@@ -23,7 +23,7 @@ Proxy Resource API
 
 | Name | Type | Description | Example |
 | ------- | ------- | ------- | ------- |
-| **createdAt** | *date-time* | Proxy resource creation date | `"2015-01-01T12:00:00Z"` |
+| **createAt** | *date-time* | Proxy resource creation date | `"2015-01-01T12:00:00Z"` |
 | **id** | *uuid* | Unique proxy resource identifier | `"01234567-89ab-cdef-0123-456789abcdef"` |
 | **name** | *string* | Proxy resource name | `"Example"` |
 | **org** | *string* | Proxy resource organization | `"tecsisa"` |
@@ -89,7 +89,7 @@ HTTP/1.1 201 Created
   "id": "01234567-89ab-cdef-0123-456789abcdef",
   "name": "Example",
   "path": "/example/admin/",
-  "createdAt": "2015-01-01T12:00:00Z",
+  "createAt": "2015-01-01T12:00:00Z",
   "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam:org:proxy/example/admin",
   "org": "tecsisa",
@@ -156,7 +156,7 @@ HTTP/1.1 200 OK
   "id": "01234567-89ab-cdef-0123-456789abcdef",
   "name": "Example",
   "path": "/example/admin/",
-  "createdAt": "2015-01-01T12:00:00Z",
+  "createAt": "2015-01-01T12:00:00Z",
   "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam:org:proxy/example/admin",
   "org": "tecsisa",
@@ -223,7 +223,7 @@ HTTP/1.1 200 OK
   "id": "01234567-89ab-cdef-0123-456789abcdef",
   "name": "Example",
   "path": "/example/admin/",
-  "createdAt": "2015-01-01T12:00:00Z",
+  "createAt": "2015-01-01T12:00:00Z",
   "updateAt": "2015-01-01T12:00:00Z",
   "urn": "urn:iws:iam:org:proxy/example/admin",
   "org": "tecsisa",
