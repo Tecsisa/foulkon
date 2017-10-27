@@ -11,6 +11,7 @@ import (
 
 	"github.com/Tecsisa/foulkon/api"
 	"github.com/Tecsisa/foulkon/foulkon"
+	internalgrpc "github.com/Tecsisa/foulkon/grpc"
 	internalhttp "github.com/Tecsisa/foulkon/http"
 	"github.com/pelletier/go-toml"
 )
@@ -62,7 +63,20 @@ func main() {
 	api.Log.Infof("Server running in %v:%v", core.Host, core.Port)
 	ws := internalhttp.NewWorker(core, internalhttp.WorkerHandlerRouter(core))
 	ws.Configuration()
-	api.Log.Error(ws.Run().Error())
 
+	// TODO drive this by configuration
+	gs := internalgrpc.NewServer(core)
+	errc := make(chan error, 2)
+	go func() {
+		errc <- ws.Run()
+	}()
+	go func() {
+		errc <- gs.Run()
+	}()
+
+	select { // block until something goes wrong
+	case err := <-errc:
+		api.Log.Error(err.Error())
+	}
 	os.Exit(foulkon.CloseWorker())
 }

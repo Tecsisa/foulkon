@@ -1,0 +1,23 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+option go_package = "github.com/Tecsisa/foulkon/grpc";
+
+package grpc;
+
+message User {
+  string id = 1;
+  string external_id = 2;
+  string path = 3;
+  string urn = 4;
+  google.protobuf.Timestamp created = 5;
+  google.protobuf.Timestamp updated = 6;
+}
+
+message AddUserReq {
+  string external_id = 1;
+  string path = 2;
+}
+
+service UserService {
+	rpc AddUser(AddUserReq) returns (User) {};
+}

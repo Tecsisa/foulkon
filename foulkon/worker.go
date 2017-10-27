@@ -41,6 +41,10 @@ type Worker struct {
 	Host string
 	Port string
 
+	// GRPC Server config
+	GRPCHost string
+	GRPCPort string
+
 	// TLS configuration
 	CertFile string
 	KeyFile  string
@@ -258,6 +262,8 @@ func NewWorker(config *toml.Tree) (*Worker, error) {
 		Port:              port,
 		CertFile:          getDefaultValue(config, "server.certfile", ""),
 		KeyFile:           getDefaultValue(config, "server.keyfile", ""),
+		GRPCHost:          getDefaultValue(config, "grpc.host", ""),
+		GRPCPort:          getDefaultValue(config, "grpc.port", ""),
 		MiddlewareHandler: &middleware.MiddlewareHandler{Middlewares: middlewares},
 		UserApi:           authApi,
 		GroupApi:          authApi,
