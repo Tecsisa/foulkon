@@ -7,7 +7,7 @@ echo "" > coverage.txt
 
 echo "--> Running tests"
 echo -e '----> Running unit tests'
-for d in $(go list ./... | grep -v '/vendor/' | egrep -v '/database/|cmd/|auth/oidc|foulkon/foulkon'); do
+for d in $(go list ./... | grep -v '/vendor/' | egrep -v '/database/|demo/|cmd/|auth/oidc|foulkon/foulkon'); do
     go test -race -coverprofile=profile.out -covermode=atomic $d || exit 1
     if [ -f profile.out ]; then
         cat profile.out >> coverage.txt
