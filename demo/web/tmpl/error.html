@@ -1,0 +1,11 @@
+{{ template "header.html" }}
+    <div class="section center">
+        <span class="chip white-text red accent-1">
+            {{.HttpErrorStatusCode}}
+        </span>
+        <span class="red-text">
+            {{.ErrorMessage}}
+        </span>
+    </div>
+
+{{ template "footer.html" }}
